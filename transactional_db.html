@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Report: MongoDB vs. The Competition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Dark Mode with Brand-Aligned Accents -->
+    <!-- Application Structure Plan: A complete redesign based on user feedback. The structure is now highly organized. It starts with a high-level radar chart for an at-a-glance comparison. The main body is a tabbed interface for each head-to-head matchup. Crucially, within each tab, there are now explicit, clearly-labeled sections for Architecture, Features, Deployment, Performance, and Use Cases, directly addressing the user's request for a more structured and comprehensive breakdown. A new section on scaling challenges and enterprise pricing has been added. -->
+    <!-- Visualization & Content Choices: 
+        - High-Level Comparison -> Radar Chart (Chart.js) -> Provides a multi-dimensional summary.
+        - Architecture -> Interactive HTML/CSS diagrams -> Visually explains complex concepts like sharding vs. geo-partitioning.
+        - Features -> Detailed HTML table -> Allows for direct, easy-to-scan comparison of key attributes.
+        - Deployment Models -> Side-by-side lists -> Clearly presents options for each database.
+        - Performance -> Bar Chart (Chart.js) -> Uses benchmark data to starkly illustrate performance differences where applicable.
+        - Key Takeaways & Use Cases -> Bulleted lists -> Synthesizes the analysis into actionable advice.
+        - Pricing -> Detailed HTML table -> Breaks down estimated costs for enterprise-ready deployments.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #d1d5db;
+        }
+        .tab-button.active {
+            border-color: #4f46e5;
+            color: #c7d2fe;
+            background-color: #1f2937;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 45vh;
+            width: 90vw;
+            max-width: 650px;
+            max-height: 550px;
+        }
+        .arch-diagram-component {
+            transition: all 0.3s ease;
+            cursor: default;
+        }
+        .arch-diagram-component:hover {
+            transform: scale(1.03);
+            box-shadow: 0 0 20px rgba(165, 180, 252, 0.2);
+        }
+        .db-color-mongo { color: #22c55e; border-color: #22c55e; }
+        .db-color-cockroach { color: #60a5fa; border-color: #60a5fa; }
+        .db-color-scylla { color: #f97316; border-color: #f97316; }
+        .db-color-edb { color: #8b5cf6; border-color: #8b5cf6; }
+        
+        .section-heading {
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+
+        <header class="text-center mb-12 md:mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Database Architecture Showdown</h1>
+            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">A Comprehensive Comparison of MongoDB and its Alternatives</p>
+        </header>
+
+        <main>
+            <section id="overview" class="mb-16 bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                <h2 class="text-3xl font-bold text-center mb-8 text-white">High-Level Comparison</h2>
+                <div class="chart-container mx-auto">
+                    <canvas id="dbRadarChart"></canvas>
+                </div>
+                 <p class="text-center mt-8 text-slate-400 max-w-3xl mx-auto">This radar chart provides an at-a-glance summary of each database's relative strengths across key architectural dimensions. Use the tabs below to dive into detailed, head-to-head analysis.</p>
+            </section>
+
+            <section id="deep-dive">
+                <div id="tabs-container" class="mb-6 border-b border-gray-700 flex flex-wrap justify-center gap-2 md:gap-4">
+                    <button class="tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-tab="mongo-cockroach">MongoDB vs CockroachDB</button>
+                    <button class="tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-tab="mongo-scylla">MongoDB vs ScyllaDB</button>
+                    <button class="tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-tab="mongo-edb">MongoDB vs EDB Postgres</button>
+                    <button class="tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-tab="mongo-dynamo">MongoDB vs DynamoDB</button>
+                </div>
+
+                <div id="tab-content-container" class="mt-8">
+                    
+                    <!-- CONTENT FOR MongoDB vs CockroachDB -->
+                    <div id="tab-mongo-cockroach" class="tab-content space-y-12">
+                        <div class="text-center">
+                            <h3 class="text-3xl font-bold text-white">MongoDB vs CockroachDB</h3>
+                            <p class="text-slate-400 mt-2">The Battle of Flexibility vs. Uncompromising Consistency</p>
+                        </div>
+
+                        <!-- Architecture -->
+                        <section>
+                            <h4 class="section-heading">Architecture Deep Dive</h4>
+                            <div class="grid md:grid-cols-2 gap-8 items-start">
+                                <div>
+                                    <h5 class="font-bold text-center mb-4 text-lg db-color-mongo">MongoDB: Sharded Document Store</h5>
+                                    <div class="arch-diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="font-bold text-indigo-300 text-md">Query Router (`mongos`)</div>
+                                        <div class="text-2xl text-slate-400">&darr;</div>
+                                        <div class="flex justify-around gap-2">
+                                            <div class="w-1/3 p-3 bg-gray-800 rounded-lg border border-gray-600">Shard 1<br/><span class="text-xs text-slate-400">(Replica Set)</span></div>
+                                            <div class="w-1/3 p-3 bg-gray-800 rounded-lg border border-gray-600">Shard 2<br/><span class="text-xs text-slate-400">(Replica Set)</span></div>
+                                            <div class="w-1/3 p-3 bg-gray-800 rounded-lg border border-gray-600">Shard N<br/><span class="text-xs text-slate-400">(Replica Set)</span></div>
+                                        </div>
+                                        <p class="text-sm mt-4 text-slate-400">Data is partitioned by a shard key. `mongos` routes queries. Consistency is tunable per operation.</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-center mb-4 text-lg db-color-cockroach">CockroachDB: Geo-Distributed SQL</h5>
+                                    <div class="arch-diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="font-bold text-indigo-300 text-md">Symmetric SQL Gateway (Any Node)</div>
+                                        <div class="text-2xl text-slate-400">&darr;</div>
+                                        <div class="flex justify-around gap-2">
+                                            <div class="w-1/3 p-3 bg-gray-800 rounded-lg border border-gray-600">Node (US)<br/><span class="text-xs text-slate-400">(Ranges via Raft)</span></div>
+                                            <div class="w-1/3 p-3 bg-gray-800 rounded-lg border border-gray-600">Node (EU)<br/><span class="text-xs text-slate-400">(Ranges via Raft)</span></div>
+                                            <div class="w-1/3 p-3 bg-gray-800 rounded-lg border border-gray-600">Node (AP)<br/><span class="text-xs text-slate-400">(Ranges via Raft)</span></div>
+                                        </div>
+                                        <p class="text-sm mt-4 text-slate-400">Data is split into ranges, replicated via Raft. Any node can handle queries, ensuring strong consistency.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        
+
+                        <!-- Features -->
+                              <section>
+                            <h4 class="section-heading">Transactional Models & Guarantees</h4>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Multi-Document ACID</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB provides multi-document ACID transactions using a session-based approach. This allows developers to execute a sequence of operations as a single, atomic unit, ensuring data integrity across multiple documents and collections.</p>
+<pre><code><span class="comment">// JavaScript Example</span>
+const session = client.startSession();
+session.startTransaction();
+try {
+  await accounts.updateOne({ _id: 1 }, { $inc: { balance: -100 } }, { session });
+  await history.insertOne({ from: 1, to: 2, amount: 100 }, { session });
+  await session.commitTransaction();
+} catch (error) {
+  await session.abortTransaction();
+  throw error;
+} finally {
+  session.endSession();
+}</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>Transactions have a default time limit (e.g., 60 seconds).</li>
+                                        <li>They incur a performance overhead compared to single-document operations.</li>
+                                        <li>In a sharded cluster, transactions that span multiple shards are more complex and have higher latency.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-cockroach">CockroachDB: Distributed Serializable ACID</h5>
+                                    <p class="text-slate-400 mb-4">CockroachDB provides Serializable isolation by default, the strongest guarantee. Transactions are executed across the distributed cluster, ensuring correctness even with concurrent operations on a global scale.</p>
+<pre><code><span class="comment">-- SQL Example</span>
+BEGIN;
+UPDATE accounts SET balance = balance - 100 WHERE id = 1;
+INSERT INTO history (from_id, to_id, amount) VALUES (1, 2, 100);
+COMMIT;</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>The database automatically retries transactions that encounter contention, which the application must handle.</li>
+                                        <li>For read-modify-write operations, using `SELECT ... FOR UPDATE` is crucial to lock rows and prevent race conditions.</li>
+                                        <li>Latency is subject to the speed of light; a transaction requiring consensus across regions will be slower than a single-region one.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h4 class="section-heading">Indexing Models & Strategies</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Flexible Secondary Indexing</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB's strength lies in its ability to create secondary indexes on any field, including fields within arrays and sub-documents. This enables rich, ad-hoc querying.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> Extreme query flexibility. Compound indexes can satisfy complex queries efficiently. Multikey indexes automatically index array elements.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Each index consumes memory and disk space, and slows down write operations. Over-indexing is a common performance pitfall.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-cockroach">CockroachDB: SQL-Standard & Interleaving</h5>
+                                    <p class="text-slate-400 mb-4">CockroachDB uses standard SQL indexing (B-Trees). Its unique feature is `INTERLEAVE IN PARENT` which physically co-locates child rows with parent rows.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> Interleaving provides extremely efficient joins for hierarchical data. Standard SQL indexing is familiar and powerful.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Poor index design (e.g., on a sequential key) can create "hot spots" in a distributed environment, bottlenecking performance.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h4 class="section-heading">Feature Comparison</h4>
+                            <div class="overflow-x-auto bg-gray-900 rounded-lg border border-gray-700">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
+                                        <tr>
+                                            <th class="px-6 py-3">Feature</th>
+                                            <th class="px-6 py-3">MongoDB</th>
+                                            <th class="px-6 py-3">CockroachDB</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Data Model</td>
+                                            <td class="px-6 py-4">Document (Flexible BSON)</td>
+                                            <td class="px-6 py-4">Relational (Distributed SQL)</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Consistency</td>
+                                            <td class="px-6 py-4">Tunable (Eventual by default)</td>
+                                            <td class="px-6 py-4">Serializable ACID (Strong by default)</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Query Language</td>
+                                            <td class="px-6 py-4">MQL (JSON-based) + Aggregation Framework</td>
+                                            <td class="px-6 py-4">PostgreSQL-compatible SQL</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Geo-Distribution</td>
+                                            <td class="px-6 py-4">Global Clusters via sharding (complex setup)</td>
+                                            <td class="px-6 py-4">Native Geo-Partitioning (core feature)</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 font-medium">Schema</td>
+                                            <td class="px-6 py-4">Schema-on-Read (flexible)</td>
+                                            <td class="px-6 py-4">Schema-on-Write (strict)</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <!-- Deployment -->
+                        <section>
+                            <h4 class="section-heading">Deployment Models</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB</h5>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li>**Atlas Cloud:** Fully managed DBaaS on AWS, GCP, Azure.</li>
+                                        <li>**Enterprise Advanced:** Self-managed for on-premise/private cloud.</li>
+                                        <li>**Community Server:** Free, open-source version for self-hosting.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                                    <h5 class="font-bold text-lg mb-3 db-color-cockroach">CockroachDB</h5>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li>**CockroachDB Cloud:** Fully managed DBaaS (Serverless & Dedicated).</li>
+                                        <li>**Enterprise:** Self-managed with enterprise features.</li>
+                                        <li>**Core:** Free, open-source version for self-hosting.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Takeaways & Use Cases -->
+                        <section>
+                            <h4 class="section-heading">Key Takeaways & Use Cases</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-mongo">
+                                    <h5 class="font-bold text-xl mb-3">Choose MongoDB for...</h5>
+                                    <p class="mb-4 font-semibold">Agility and Developer Velocity.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>Content Management Systems</li>
+                                        <li>Product Catalogs & E-commerce Frontends</li>
+                                        <li>Applications with evolving data models</li>
+                                        <li>Real-time analytics dashboards</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-cockroach">
+                                    <h5 class="font-bold text-xl mb-3">Choose CockroachDB for...</h5>
+                                    <p class="mb-4 font-semibold">Consistency and Global Resilience.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>Financial Ledgers & Payment Systems</li>
+                                        <li>Globally Distributed Systems of Record</li>
+                                        <li>Inventory Management & Logistics</li>
+                                        <li>Mission-critical OLTP applications</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- CONTENT FOR MongoDB vs ScyllaDB -->
+                    <div id="tab-mongo-scylla" class="tab-content space-y-12">
+                         <div class="text-center">
+                            <h3 class="text-3xl font-bold text-white">MongoDB vs ScyllaDB</h3>
+                            <p class="text-slate-400 mt-2">The Battle of General Purpose vs. Raw Performance</p>
+                        </div>
+
+                        <!-- Architecture -->
+                        <section>
+                            <h4 class="section-heading">Architecture Deep Dive</h4>
+                            <div class="grid md:grid-cols-2 gap-8 items-start">
+                                <div>
+                                    <h5 class="font-bold text-center mb-4 text-lg db-color-mongo">MongoDB: B-Tree & Unbound Threads</h5>
+                                    <div class="arch-diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="font-bold text-indigo-300 text-md">OS Thread Pool</div>
+                                        <div class="text-2xl text-slate-400">&darr;</div>
+                                        <div class="p-3 bg-gray-800 rounded-lg border border-gray-600">WiredTiger Storage Engine<br/><span class="text-xs text-slate-400">(B-Tree based)</span></div>
+                                        <p class="text-sm mt-4 text-slate-400">Flexible threading model and B-Tree storage engine provide balanced performance for varied workloads.</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-center mb-4 text-lg db-color-scylla">ScyllaDB: Shard-per-Core & LSM-Tree</h5>
+                                    <div class="arch-diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="flex justify-around gap-2">
+                                            <div class="w-1/2 p-3 bg-gray-800 rounded-lg border border-gray-600">CPU Core 1<br/><span class="text-xs text-slate-400">(Own memory/data)</span></div>
+                                            <div class="w-1/2 p-3 bg-gray-800 rounded-lg border border-gray-600">CPU Core 2<br/><span class="text-xs text-slate-400">(Own memory/data)</span></div>
+                                        </div>
+                                        <div class="text-2xl text-slate-400">&darr;</div>
+                                        <div class="p-3 bg-gray-800 rounded-lg border border-gray-600">LSM-Tree Storage Engine</div>
+                                        <p class="text-sm mt-4 text-slate-400">"Shared nothing" design and write-optimized LSM-tree deliver extreme throughput and low latency.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h4 class="section-heading">Transactional Models & Guarantees</h4>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Multi-Document ACID</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB's session-based transactions provide full ACID guarantees across multiple documents, which is essential for complex business logic that cannot be contained within a single document update.</p>
+<pre><code><span class="comment">// JavaScript Example</span>
+const session = client.startSession();
+session.startTransaction();
+try {
+  await products.updateOne({ _id: "item1" }, { $inc: { stock: -1 } }, { session });
+  await orders.insertOne({ item: "item1", user: "userA" }, { session });
+  await session.commitTransaction();
+} catch (error) {
+  await session.abortTransaction();
+  throw error;
+} finally {
+  session.endSession();
+}</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>The document model's ability to embed related data often reduces the need for multi-document transactions in the first place.</li>
+                                        <li>Transactions add performance overhead and should be used judiciously, not for every write operation.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-scylla">ScyllaDB: Lightweight Transactions (LWT)</h5>
+                                    <p class="text-slate-400 mb-4">ScyllaDB does not support multi-row ACID transactions. Instead, it offers single-partition atomicity and provides Lightweight Transactions for "compare-and-set" operations using a `IF` clause. This ensures that a write only occurs if a condition is met.</p>
+<pre><code><span class="comment">-- CQL Example</span>
+UPDATE users SET email = 'new@email.com'
+WHERE user_id = 'userA'
+IF email = 'old@email.com';</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>LWTs are for conditional updates, not for grouping multiple operations into a single atomic unit.</li>
+                                        <li>They incur a significant performance penalty compared to regular writes because they require a Paxos-based consensus round trip.</li>
+                                        <li>The lack of multi-row transactions means complex business logic must be handled at the application layer, which can be complex and error-prone.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                         <section>
+                            <h4 class="section-heading">Indexing Models & Strategies</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Flexible Secondary Indexing</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB allows flexible secondary indexes on any field, enabling a wide range of ad-hoc queries beyond the primary key.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> Enables rich query patterns. Supports compound, multikey, and geospatial indexes. Easy to add new indexes to support new features.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Each index has a cost in terms of memory, disk, and write performance. Too many indexes can slow down the database.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-scylla">ScyllaDB: Primary Key is the Index</h5>
+                                    <p class="text-slate-400 mb-4">In ScyllaDB, the primary key (partition key + optional clustering columns) *is* the index. Queries are highly efficient but must leverage this key.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> Extremely fast and predictable query performance. Forces good data modeling practices based on known access patterns.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Very limited ad-hoc querying. Supporting a new query pattern often requires creating and populating a new table (a form of manual indexing).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        
+                        <!-- Performance -->
+                        <section>
+                            <h4 class="section-heading">Performance Profile (YCSB Benchmark)</h4>
+                            <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Benchmark data consistently shows ScyllaDB's architectural advantage in high-throughput workloads, achieving significantly more operations per second at lower latencies.</p>
+                            <div class="chart-container mx-auto" style="height: 300px; max-height: 350px;">
+                                <canvas id="performanceBarChart"></canvas>
+                            </div>
+                        </section>
+
+                        <!-- Features -->
+                        <section>
+                            <h4 class="section-heading">Feature Comparison</h4>
+                            <div class="overflow-x-auto bg-gray-900 rounded-lg border border-gray-700">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
+                                        <tr>
+                                            <th class="px-6 py-3">Feature</th>
+                                            <th class="px-6 py-3">MongoDB</th>
+                                            <th class="px-6 py-3">ScyllaDB</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Primary API</td>
+                                            <td class="px-6 py-4">MQL (MongoDB Protocol)</td>
+                                            <td class="px-6 py-4">CQL (Cassandra) & DynamoDB API</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Ad-hoc Querying</td>
+                                            <td class="px-6 py-4">Excellent (Aggregation Framework)</td>
+                                            <td class="px-6 py-4">Limited (Query-based modeling)</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Architecture</td>
+                                            <td class="px-6 py-4">Primary-based sharding</td>
+                                            <td class="px-6 py-4">Leaderless (Multi-Primary) Ring</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 font-medium">Core Strength</td>
+                                            <td class="px-6 py-4">Flexibility & Rich Features</td>
+                                            <td class="px-6 py-4">Raw Throughput & Low Latency</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                        
+                        <!-- Takeaways & Use Cases -->
+                        <section>
+                            <h4 class="section-heading">Key Takeaways & Use Cases</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-mongo">
+                                    <h5 class="font-bold text-xl mb-3">Choose MongoDB for...</h5>
+                                    <p class="mb-4 font-semibold">Balanced Workloads and Rich Querying.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>General-purpose web & mobile backends</li>
+                                        <li>Applications requiring complex, on-the-fly data aggregation</li>
+                                        <li>Systems where query patterns are not known in advance</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-scylla">
+                                    <h5 class="font-bold text-xl mb-3">Choose ScyllaDB for...</h5>
+                                    <p class="mb-4 font-semibold">Extreme Performance at Scale.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>High-velocity IoT data ingestion</li>
+                                        <li>Ad-Tech bidding and real-time personalization</li>
+                                        <li>Large-scale streaming data platforms</li>
+                                        <li>Any workload where P99 latency is critical</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                    <!-- CONTENT FOR MongoDB vs EDB Postgres -->
+                    <div id="tab-mongo-edb" class="tab-content space-y-12">
+                        <div class="text-center">
+                            <h3 class="text-3xl font-bold text-white">MongoDB vs EDB Postgres</h3>
+                            <p class="text-slate-400 mt-2">The Battle of Greenfield Development vs. Enterprise Modernization</p>
+                        </div>
+
+                        <!-- Architecture -->
+                        <section>
+                            <h4 class="section-heading">Core Philosophy & Architecture</h4>
+                             <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">This comparison is less about competing architectures and more about different strategic goals. MongoDB targets new, agile application development, while EDB provides a powerful, cost-effective path for enterprises to modernize legacy Oracle systems.</p>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB's Value: Developer Velocity</h5>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>**Flexible Document Model:** Maps directly to application objects, speeding up development.</li>
+                                        <li>**Schema-on-Read:** Evolve the data model without database downtime or complex migrations.</li>
+                                        <li>**Rich Ecosystem:** A vast ecosystem built for modern, cloud-native application patterns.</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                                    <h5 class="font-bold text-lg mb-3 db-color-edb">EDB Postgres's Value: Oracle Modernization</h5>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>**Deep Oracle Compatibility:** Native support for PL/SQL, data types, and syntax minimizes rewrite costs.</li>
+                                        <li>**Risk Reduction:** Provides a proven, low-risk path to migrate off expensive proprietary licenses.</li>
+                                        <li>**Enterprise-Grade Postgres:** Enhances open-source PostgreSQL with security, performance, and management tools.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h4 class="section-heading">Transactional Models & Guarantees</h4>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB:Transactions</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB's transactions provide snapshot isolation and all-or-nothing execution for operations spanning multiple documents, which is crucial for maintaining data integrity in document-centric applications.</p>
+<pre><code><span class="comment">// JavaScript Example</span>
+const session = client.startSession();
+session.startTransaction({
+  readConcern: { level: 'snapshot' },
+  writeConcern: { w: 'majority' }
+});
+try {
+  // Operations within the transaction...
+  await session.commitTransaction();
+} catch (error) {
+  await session.abortTransaction();
+} finally {
+  session.endSession();
+}</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>The document model itself provides atomicity for updates within a single document, which is often sufficient.</li>
+                                        <li>Developers must explicitly start and manage a session object in their application code to use transactions.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-edb">EDB Postgres: Traditional ACID</h5>
+                                    <p class="text-slate-400 mb-4">As an extension of PostgreSQL, EDB offers time-tested, robust ACID transactions with multiple isolation levels. This is the bedrock of relational databases and is ideal for complex, multi-table business logic.</p>
+<pre><code><span class="comment">-- SQL Example</span>
+BEGIN TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+UPDATE employees SET salary = salary * 1.05 WHERE department_id = 10;
+UPDATE department_budgets SET budget = budget - 50000 WHERE id = 10;
+COMMIT;</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>Developers must be aware of the different isolation levels (`READ COMMITTED`, `REPEATABLE READ`, `SERIALIZABLE`) and their trade-offs.</li>
+                                        <li>Long-running transactions can hold locks and block other operations, requiring careful query design.</li>
+                                        <li>The relational model often necessitates transactions for simple operations that would be atomic single-document updates in MongoDB.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                         <section>
+                            <h4 class="section-heading">Indexing Models & Strategies</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Flexible Secondary Indexing</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB's B-Tree based indexes can be created on any field, providing significant query flexibility.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> Supports ad-hoc queries efficiently. Compound and multikey indexes cater to complex document structures.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> High write workloads can be slowed by a large number of indexes. Indexes consume significant RAM.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-edb">EDB Postgres: Rich & Specialized Indexing</h5>
+                                    <p class="text-slate-400 mb-4">Postgres offers a wide array of index types beyond the standard B-Tree, each optimized for specific data types and query patterns.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> GIN indexes provide excellent performance for `JSONB` documents. GiST indexes are powerful for geospatial data. This specialization can lead to superior performance for specific use cases.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> The variety of index types can increase complexity for developers. Index maintenance (`VACUUM`, `REINDEX`) is a more significant operational concern.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        <!-- Features -->
+                        <section>
+                            <h4 class="section-heading">Feature Comparison: JSON Handling</h4>
+                             <div class="overflow-x-auto bg-gray-900 rounded-lg border border-gray-700">
+                                <table class="w-full text-sm text-left">
+                                    <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
+                                        <tr>
+                                            <th class="px-6 py-3">Aspect</th>
+                                            <th class="px-6 py-3">MongoDB (Native BSON)</th>
+                                            <th class="px-6 py-3">EDB Postgres (JSONB)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Architecture</td>
+                                            <td class="px-6 py-4">Fundamentally a document database. BSON is the core storage format.</td>
+                                            <td class="px-6 py-4">Fundamentally a relational database. JSONB is a highly optimized data type.</td>
+                                        </tr>
+                                        <tr class="border-b border-gray-700">
+                                            <td class="px-6 py-4 font-medium">Indexing</td>
+                                            <td class="px-6 py-4">Native, highly efficient indexing on any field within a BSON document.</td>
+                                            <td class="px-6 py-4">Powerful GIN indexes allow for efficient querying of keys within a JSONB column.</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 font-medium">Best Fit</td>
+                                            <td class="px-6 py-4">Applications that are document-centric by nature.</td>
+                                            <td class="px-6 py-4">Relational applications that need to store and query semi-structured data.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+                        
+                        <!-- Takeaways & Use Cases -->
+                        <section>
+                            <h4 class="section-heading">Key Takeaways & Use Cases</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-mongo">
+                                    <h5 class="font-bold text-xl mb-3">Choose MongoDB for...</h5>
+                                    <p class="mb-4 font-semibold">Greenfield Cloud-Native Apps.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>Building new web, mobile, or IoT applications</li>
+                                        <li>Projects where time-to-market is the primary driver</li>
+                                        <li>Systems with unpredictable or rapidly changing data</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-edb">
+                                    <h5 class="font-bold text-xl mb-3">Choose EDB Postgres for...</h5>
+                                    <p class="mb-4 font-semibold">Modernizing the Enterprise Core.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>Migrating legacy Oracle databases to the cloud</li>
+                                        <li>Reducing TCO and escaping proprietary vendor lock-in</li>
+                                        <li>Applications requiring strict relational integrity and enterprise support</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                </div>
+            </section>
+
+             <!-- CONTENT FOR MongoDB vs DynamoDB -->
+
+
+            <div id="tab-mongo-dynamo" class="tab-content space-y-12">
+                        <div class="text-center">
+                            <h3 class="text-3xl font-bold text-white">MongoDB vs Amazon DynamoDB</h3>
+                            <p class="text-slate-400 mt-2">The Flexible Document DB vs. The Cloud-Native Key-Value Store</p>
+                        </div>
+                        <section>
+                            <h4 class="section-heading">Architecture Deep Dive</h4>
+                            <div class="grid md:grid-cols-2 gap-8 items-start">
+                                <div>
+                                    <h5 class="font-bold text-center mb-4 text-lg db-color-mongo">MongoDB: Query Flexibility</h5>
+                                    <div class="arch-diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <p class="text-sm mt-4 text-slate-400">Designed for rich, ad-hoc querying. Allows secondary indexes on any field, enabling flexible query patterns without pre-defining every access path.</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-center mb-4 text-lg db-color-dynamo">DynamoDB: Access Pattern Rigidity</h5>
+                                    <div class="arch-diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <p class="text-sm mt-4 text-slate-400">Requires you to define your access patterns upfront by creating tables with specific primary keys and Global Secondary Indexes (GSIs). Optimized for speed on known queries.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h4 class="section-heading">Transactional Models & Guarantees</h4>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Session-Based Transactions</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB's session-based, multi-document ACID transactions provide a familiar and powerful model for developers needing to ensure data integrity across complex operations involving multiple documents.</p>
+<pre><code><span class="comment">// JavaScript Example</span>
+const session = client.startSession();
+session.startTransaction();
+try {
+  await users.updateOne({ _id: "user1" }, { $set: { status: "premium" } }, { session });
+  await subscriptions.insertOne({ userId: "user1", plan: "premium" }, { session });
+  await session.commitTransaction();
+} catch (error) {
+  await session.abortTransaction();
+  throw error;
+} finally {
+  session.endSession();
+}</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>Offers strong consistency and isolation, making it suitable as a system of record.</li>
+                                        <li>The document model often reduces the need for transactions as any operation on a single document is atomic.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-dynamo">DynamoDB: TransactWriteItems API</h5>
+                                    <p class="text-slate-400 mb-4">DynamoDB provides ACID transactions for multiple items across one or more tables using the `TransactWriteItems` and `TransactGetItems` API calls. This is a serverless, all-or-nothing operation.</p>
+<pre><code><span class="comment">// AWS SDK v3 for JavaScript Example</span>
+import { DynamoDBClient, TransactWriteItemsCommand } from "@aws-sdk/client-dynamodb";
+const client = new DynamoDBClient({});
+const command = new TransactWriteItemsCommand({
+  TransactItems: [
+    {
+      Update: {
+        TableName: "Users",
+        Key: { "userId": { S: "user1" } },
+        UpdateExpression: "SET #st = :s",
+        ExpressionAttributeNames: { "#st": "status" },
+        ExpressionAttributeValues: { ":s": { S: "premium" } },
+      },
+    },
+    {
+      Put: {
+        TableName: "Subscriptions",
+        Item: { "userId": { S: "user1" }, "plan": { S: "premium" } },
+      },
+    },
+  ],
+});
+await client.send(command);</code></pre>
+                                    <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li>Transactions are limited to a maximum of 100 items.It does not support multi statement transactions.</li>
+                                        <li>They consume twice the capacity units of a standard write, making them more expensive.</li>
+                                        <li>The API-based approach can be more verbose than the session-based model in MongoDB.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                        <section>
+                            <h4 class="section-heading">Indexing Models & Strategies</h4>
+                             <div class="grid md:grid-cols-2 gap-8">
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB: Flexible Secondary Indexing</h5>
+                                    <p class="text-slate-400 mb-4">MongoDB allows creating secondary indexes on any field, enabling developers to support new query patterns as the application evolves.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> High query flexibility. Supports a wide range of index types (compound, multikey, text, geospatial).</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Indexes are not free; they consume RAM and disk space and add overhead to write operations.</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold text-lg mb-3 db-color-dynamo">DynamoDB: Rigid Primary & Secondary Indexing</h5>
+                                    <p class="text-slate-400 mb-4">DynamoDB's query capabilities are strictly defined by its indexes: the Primary Key, Local Secondary Indexes (LSIs), and Global Secondary Indexes (GSIs).</p>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
+                                        <li><span class="font-semibold text-white">Merits:</span> Extremely fast and predictable performance for queries that use the defined indexes.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Very little ad-hoc query capability. GSIs are eventually consistent, have their own provisioned capacity (cost), and you are limited to 20 per table. You must know your access patterns in advance.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+
+                </div>
+            </section>
+
+          
+                    
+
+
+            <section id="scaling-challenges" class="mt-16">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-white"> Scaling from Gigabytes to Terabytes</h2>
+                    <p class="text-slate-400 mt-2 max-w-3xl mx-auto">A practical analysis of the challenges and pitfalls of scaling each database architecture.</p>
+                </div>
+
+                <div class="space-y-12">
+                    <!-- MongoDB Scaling -->
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                        <h3 class="text-2xl font-bold mb-6 db-color-mongo">MongoDB: The Sharding Journey</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">10GB to 1TB: The First Shard</h4>
+                                <p class="mt-2 text-slate-400">At this scale, the primary challenge is deciding <span class="font-bold text-white">when and how to shard</span>. A single replica set can often handle up to 1TB, but performance may degrade. The most critical decision is <span class="font-bold text-white">choosing a shard key</span>. A poor shard key can lead to unbalanced data distribution (some shards hot, others cold) or "jumbo" chunks that cannot be split, creating significant performance bottlenecks. The initial sharding process itself requires downtime or careful planning with a tool like `mongomirror`.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: The Multi-Shard Cluster</h4>
+                                <p class="mt-2 text-slate-400">At this scale, the system is fully sharded. Challenges become more operational and complex:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
+                                    <li><span class="font-bold text-white">Shard Key Immutability:</span> Once a collection is sharded, changing the shard key is extremely difficult, often requiring a full data migration. An early mistake becomes a massive future liability.</li>
+                                    <li><span class="font-bold text-white">Cross-Shard Queries:</span> Queries that cannot be targeted to a single shard (scatter-gather queries) become increasingly expensive as they must be broadcast to all shards, increasing latency and network traffic.</li>
+                                    <li><span class="font-bold text-white">Rebalancing:</span> The cluster's balancer is constantly working to keep data chunks evenly distributed. This process consumes I/O and can impact application performance, requiring careful management of balancing windows.</li>
+                                    <li><span class="font-bold text-white">Infrastructure Cost:</span> A 10TB cluster requires numerous shards, config servers, and `mongos` routers, leading to significant infrastructure and management overhead, especially if self-hosted.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CockroachDB Scaling -->
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                        <h3 class="text-2xl font-bold mb-6 db-color-cockroach">CockroachDB: The Seamless Expansion</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">10GB to 1TB: Adding Nodes</h4>
+                                <p class="mt-2 text-slate-400">Scaling CockroachDB is operationally simpler. The primary mechanism is <span class="font-bold text-white">adding more nodes</span> to the cluster. The database automatically splits data ranges and rebalances them across the new nodes with no downtime. The main challenge is <span class="font-bold text-white">schema design for performance</span>. Poorly designed primary keys or indexes can create "hot spots" on a single data range, limiting scalability even with more nodes. Understanding data access patterns to avoid transaction contention is key.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Geo-Distribution & Latency</h4>
+                                <p class="mt-2 text-slate-400">At a global scale, the challenges shift from capacity to latency and topology:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
+                                    <li><span class="font-bold text-white">Topology Patterns:</span> Correctly configuring geo-partitioning and leaseholder preferences becomes critical. A misconfigured topology can place data far from its users, negating the benefits of geo-distribution and increasing cross-region network costs.</li>
+                                    <li><span class="font-bold text-white">Transaction Latency:</span> While writes are consistent, they are subject to the speed of light. A write that requires consensus from nodes in New York, London, and Tokyo will have a minimum latency dictated by physics. Designing applications to tolerate this is a crucial architectural challenge.</li>
+                                    <li><span class="font-bold text-white">"Noisy Neighbor" Issues:</span> In a large, multi-tenant cluster, a single poorly optimized query can consume disproportionate resources. CockroachDB provides observability tools to identify these, but it requires active monitoring.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ScyllaDB Scaling -->
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                        <h3 class="text-2xl font-bold mb-6 db-color-scylla">ScyllaDB: The Linear Scale-Out</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">10GB to 1TB: Data Modeling is Everything</h4>
+                                <p class="mt-2 text-slate-400">Like CockroachDB, ScyllaDB scales horizontally by <span class="font-bold text-white">adding nodes to the ring</span>. The process is seamless. The single greatest challenge is <span class="font-bold text-white">data modeling</span>. Because ScyllaDB lacks joins, data must be denormalized for your query patterns. An incorrect data model at 1TB can lead to massive, expensive data migration efforts later. The pitfall is thinking you can "fix the queries later"; in ScyllaDB, the queries dictate the schema.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Compaction & Operational Tuning</h4>
+                                <p class="mt-2 text-slate-400">At very large scale, the operational characteristics of the LSM-Tree engine become the primary focus:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
+                                    <li><span class="font-bold text-white">Compaction Strategy:</span> ScyllaDB is constantly merging SSTables in the background. Choosing the right compaction strategy (Size-Tiered, Leveled, or Time-Windowed) is critical. A wrong choice can lead to massive write amplification (writing the same data many times) or read amplification, impacting performance and SSD endurance.</li>
+                                    <li><span class="font-bold text-white">Large Partitions:</span> A single partition that grows too large (e.g., hundreds of MB) can become a bottleneck, causing high latency for reads on that partition. This is a common pitfall that requires careful data modeling to avoid.</li>
+                                    <li><span class="font-bold text-white">Repair Operations:</span> Ensuring data consistency across all replicas requires running regular "repair" operations. While ScyllaDB has optimized this process, it still consumes resources and must be managed carefully in a large cluster.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EDB Postgres Scaling -->
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                        <h3 class="text-2xl font-bold mb-6 db-color-edb">EDB Postgres: The Scale-Up Challenge</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">10GB to 1TB: The Vertical Climb</h4>
+                                <p class="mt-2 text-slate-400">Postgres is fundamentally a <span class="font-bold text-white">scale-up architecture</span>. The primary way to handle growth to 1TB is vertical scaling: moving to a larger server with more CPU, more RAM, and faster storage. The main challenges are <span class="font-bold text-white">connection management</span> (using a pooler like PgBouncer is essential) and <span class="font-bold text-white">vacuum tuning</span>. The `autovacuum` process is critical for reclaiming space from dead rows, but at 1TB, default settings are often insufficient, requiring manual tuning to prevent table bloat and performance degradation.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: The Sharding Dilemma</h4>
+                                <p class="mt-2 text-slate-400">Scaling a single Postgres instance beyond a few terabytes becomes extremely expensive and technically challenging. At this scale, horizontal scaling (sharding) becomes necessary, but it is <span class="font-bold text-white">not a native feature</span>. This presents major pitfalls:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
+                                    <li><span class="font-bold text-white">Sharding Complexity:</span> Sharding must be implemented either at the application level (a huge undertaking) or using third-party extensions like Citus Data (now part of Microsoft). This adds significant architectural and operational complexity not present in natively distributed databases.</li>
+                                    <li><span class="font-bold text-white">Cross-Shard Joins:</span> Performing joins across different shards is either impossible or extremely inefficient, forcing significant application rewrites and data model changes.</li>
+                                    <li><span class="font-bold text-white">High Availability:</span> Managing high availability and failover for a sharded Postgres cluster is far more complex than for a single node, requiring sophisticated replication and failover management tools. EDB provides tools for this, but the underlying complexity remains. Postgres is an outstanding database, but scaling it to 10TB+ requires deep expertise and a willingness to manage a complex, multi-faceted infrastructure.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+                               
+
+                    <!-- DynamoDB Scaling -->
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                        <h3 class="text-2xl font-bold mb-6 db-color-dynamo">DynamoDB: The Serverless Scale</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">10GB to 1TB: Partition Key is King</h4>
+                                <p class="mt-2 text-slate-400">DynamoDB scales by automatically distributing data across partitions based on the hash of the <span class="font-bold text-white">partition key</span>. The primary challenge is designing a high-cardinality partition key that evenly distributes requests. A poor key (e.g., using `status` where most items are `active`) creates a "hot partition," throttling performance for the entire table, as each partition has a fixed capacity limit.</p>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Cost Management & Query Patterns</h4>
+                                <p class="mt-2 text-slate-400">At this scale, DynamoDB's fully managed nature handles the operational load, but challenges shift to cost and query flexibility:</p>
+                                <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
+                                    <li><span class="font-bold text-white">Cost Optimization:</span> The on-demand model is convenient but can be expensive at high, sustained throughput. Optimizing TCO requires careful capacity planning with Provisioned Capacity and Reserved Capacity, which demands a deep understanding of workload patterns.</li>
+                                    <li><span class="font-bold text-white">Query Rigidity:</span> DynamoDB is not a general-purpose query engine. Access patterns are limited to the defined primary key and secondary indexes. Any new query requirement that cannot be served by an existing index often requires creating a new Global Secondary Index (GSI) and backfilling it, or duplicating data into a different table structure.</li>
+                                    <li><span class="font-bold text-white">Secondary Index Limitations:</span> While powerful, GSIs are eventually consistent and have their own provisioned throughput, adding another layer of cost and performance management.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="pricing-analysis" class="mt-16">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-white"> Enterprise-Ready Pricing Analysis</h2>
+                    <p class="text-slate-400 mt-2 max-w-3xl mx-auto">A comparative TCO analysis for a minimum, enterprise-grade deployment with HA, DR, and backups.</p>
+                </div>
+                <div class="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 p-2">
+                    <table class="w-full text-sm text-left">
+                        <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
+                            <tr>
+                                <th class="px-6 py-4">Database</th>
+                                <th class="px-6 py-4">Minimum Enterprise-Ready Cluster</th>
+                                <th class="px-6 py-4">Estimated Monthly Cost (USD)</th>
+                                <th class="px-6 py-4">Key Cost Drivers & Licensing Model</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-700">
+                            <tr>
+                                <td class="px-6 py-4 font-bold db-color-mongo">MongoDB Atlas</td>
+                                <td class="px-6 py-4">3-node M30 Replica Set (Multi-AZ) with 2vCPU, 8GB RAM per node. Includes managed backups with PITR.</td>
+                                <td class="px-6 py-4 font-bold text-lg">~$400 - $600</td>
+                                <td class="px-6 py-4">Cost is driven by the cluster tier (M30+). <span class="font-bold text-white">The software license for enterprise features is bundled into the managed service fee.</span> Additional costs for storage, data transfer, and separate Atlas Search nodes apply.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-bold db-color-cockroach">CockroachDB Cloud</td>
+                                <td class="px-6 py-4">3-node Dedicated Standard cluster (Multi-AZ), each node with 2 vCPU and 8GB RAM. Includes managed backups with PITR.</td>
+                                <td class="px-6 py-4 font-bold text-lg">~$400 - $600</td>
+                                <td class="px-6 py-4">Cost is driven by vCPU count per node. <span class="font-bold text-white">The enterprise software license is bundled into the cloud service fee.</span> DR via multi-region clusters increases node count and data transfer costs.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-bold db-color-scylla">ScyllaDB Cloud</td>
+                                <td class="px-6 py-4">3-node cluster on performance-oriented instances (e.g., AWS i4i.large), 3 vCPU / 24GB RAM per node. Includes backups.</td>
+                                <td class="px-6 py-4 font-bold text-lg">~$800 - $1,200</td>
+                                <td class="px-6 py-4">Cost is driven by high-performance instance types. <span class="font-bold text-white">The enterprise license is bundled into the service fee.</span> The value proposition is superior price-performance for high-throughput workloads.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-bold db-color-edb">EDB Postgres AI</td>
+                                <td class="px-6 py-4">"Standard" HA Cluster: 1 Primary + 1 Replica (e.g., 4 vCPU, 16GB RAM each). EDB Postgres Advanced Server edition. Includes PITR.</td>
+                                <td class="px-6 py-4 font-bold text-lg">~$750 - $1,000</td>
+                                <td class="px-6 py-4">Total cost is a combination of the underlying cloud infrastructure cost <span class="font-bold text-white">plus a separate EDB software subscription fee</span>, which acts as the license for enterprise features and Oracle compatibility.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 font-bold db-color-dynamo">Amazon DynamoDB</td>
+                                <td class="px-6 py-4">On-Demand capacity with Global Tables for Multi-AZ/Multi-Region HA/DR. Includes PITR.</td>
+                                <td class="px-6 py-4 font-bold text-lg">Highly Variable</td>
+                                <td class="px-6 py-4">Cost is purely usage-based, driven by Read/Write Request Units (RRU/WRU) and storage. <span class="font-bold text-white">There is no separate license fee.</span> Predictable workloads can use cheaper Provisioned Capacity.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <p class="text-xs text-slate-500 p-4"><strong>Disclaimer:</strong> These are order-of-magnitude estimates based on publicly available pricing calculators as of mid-2024 for a small production cluster with ~100GB storage on AWS (us-east-1). Actual costs will vary significantly based on cloud provider, region, storage, data transfer, specific software editions, and workload. This table is for comparative purposes only.</p>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-16 text-slate-500 text-sm">
+            <p>Interactive report generated from a comparative analysis of modern database architectures.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Chart.defaults.color = '#9ca3af';
+            Chart.defaults.borderColor = 'rgba(107, 114, 128, 0.2)';
+
+            // Radar Chart
+           const radarCtx = document.getElementById('dbRadarChart').getContext('2d');
+            new Chart(radarCtx, {
+                type: 'radar',
+                data: {
+                    labels: ['Flexibility', 'Consistency', 'Performance', 'Scalability', 'Ecosystem'],
+                    datasets: [{
+                        label: 'MongoDB',
+                        data: [5, 3, 3, 4, 5],
+                        backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                        borderColor: 'rgba(34, 197, 94, 1)',
+                        pointBackgroundColor: 'rgba(34, 197, 94, 1)',
+                    }, {
+                        label: 'CockroachDB',
+                        data: [3, 5, 3, 5, 4],
+                        backgroundColor: 'rgba(96, 165, 250, 0.2)',
+                        borderColor: 'rgba(96, 165, 250, 1)',
+                        pointBackgroundColor: 'rgba(96, 165, 250, 1)',
+                    }, {
+                        label: 'ScyllaDB',
+                        data: [2, 3, 5, 5, 3],
+                        backgroundColor: 'rgba(249, 115, 22, 0.2)',
+                        borderColor: 'rgba(249, 115, 22, 1)',
+                        pointBackgroundColor: 'rgba(249, 115, 22, 1)',
+                    }, {
+                        label: 'EDB Postgres',
+                        data: [2, 5, 3, 2, 5],
+                        backgroundColor: 'rgba(139, 92, 246, 0.2)',
+                        borderColor: 'rgba(139, 92, 246, 1)',
+                        pointBackgroundColor: 'rgba(139, 92, 246, 1)',
+                    }, {
+                        label: 'DynamoDB',
+                        data: [4, 3, 4, 5, 4],
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                    }]
+                },
+                options: {
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: { color: 'rgba(107, 114, 128, 0.4)' },
+                            grid: { color: 'rgba(107, 114, 128, 0.4)' },
+                            pointLabels: { font: { size: 14 }, color: '#d1d5db' },
+                            ticks: {
+                                backdropColor: '#111827',
+                                color: '#9ca3af',
+                                stepSize: 1,
+                            },
+                            min: 0,
+                            max: 5
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#d1d5db'
+                            }
+                        }
+                    }
+                }
+            });
+            // Bar Chart
+            let performanceBarChart = null;
+            function renderBarChart() {
+                if (performanceBarChart) performanceBarChart.destroy();
+                const barCtx = document.getElementById('performanceBarChart').getContext('2d');
+                performanceBarChart = new Chart(barCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['MongoDB Atlas', 'ScyllaDB Cloud'],
+                        datasets: [{
+                            label: 'Throughput (kOps/sec)',
+                            data: [45, 894],
+                            backgroundColor: ['rgba(34, 197, 94, 0.5)', 'rgba(249, 115, 22, 0.5)'],
+                            borderColor: ['rgba(34, 197, 94, 1)', 'rgba(249, 115, 22, 1)'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        indexAxis: 'y',
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: 'YCSB Caching Workload Throughput (Higher is Better)',
+                                color: '#f9fafb',
+                                font: { size: 16 }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: { color: 'rgba(107, 114, 128, 0.2)' },
+                                ticks: { color: '#9ca3af' },
+                                title: { display: true, text: 'kOps / second', color: '#9ca3af'}
+                            },
+                            y: {
+                                grid: { color: 'rgba(107, 114, 128, 0.2)' },
+                                ticks: { color: '#d1d5db', font: { size: 14 } }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Tab functionality
+            const tabsContainer = document.getElementById('tabs-container');
+            const tabContents = document.querySelectorAll('.tab-content');
+            const tabButtons = document.querySelectorAll('.tab-button');
+
+            function switchTab(tabId) {
+                tabButtons.forEach(button => button.classList.remove('active'));
+                document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+
+                tabContents.forEach(content => content.classList.remove('active'));
+                document.getElementById(`tab-${tabId}`).classList.add('active');
+                
+                if (tabId === 'mongo-scylla' && !document.getElementById('performanceBarChart').classList.contains('chartjs-render-monitor')) {
+                   renderBarChart();
+                }
+            }
+            
+            tabsContainer.addEventListener('click', (e) => {
+                if (e.target.matches('.tab-button')) {
+                    switchTab(e.target.dataset.tab);
+                }
+            });
+
+            // Initialize first tab
+            switchTab('mongo-cockroach');
+        });
+    </script>
+</body>
+</html>

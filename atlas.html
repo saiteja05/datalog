@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide: MongoDB Atlas Advanced Deployments</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712;
+            color: #d1d5db;
+        }
+        .nav-link.active {
+            color: #22c55e;
+            font-weight: 600;
+        }
+        .section-heading {
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+        .diagram-component {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .diagram-component:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        }
+        .db-color-mongo { color: #22c55e; border-color: #22c55e; }
+        .cloud-aws { color: #ff9900; border-color: #ff9900; }
+        .cloud-gcp { color: #4285f4; border-color: #4285f4; }
+        .cloud-azure { color: #0078d4; border-color: #0078d4; }
+
+        .failover-node {
+            transition: all 0.5s ease-in-out;
+        }
+        .failover-node.failed {
+            opacity: 0.3;
+            border-color: #ef4444;
+            transform: scale(0.95);
+        }
+        .failover-node.failed .status-dot {
+             background-color: #ef4444;
+        }
+        .failover-node.primary .status-dot {
+            background-color: #22c55e;
+        }
+         .failover-node.secondary .status-dot {
+            background-color: #60a5fa;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        .connection-line {
+            stroke-dasharray: 5;
+            animation: dash 1s linear infinite;
+        }
+        @keyframes dash {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-700">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold text-white">MongoDB Atlas Guide</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#private-networking" class="nav-link text-slate-300 hover:text-green-400">Private Networking</a>
+                    <a href="#multi-region" class="nav-link text-slate-300 hover:text-green-400">Global clusters</a>
+                    <a href="#disaster-recovery" class="nav-link text-slate-300 hover:text-green-400">Disaster Recovery</a>
+                    <a href="#sharding" class="nav-link text-slate-300 hover:text-green-400">Sharding</a>
+                    <a href="#trial-env" class="nav-link text-slate-300 hover:text-green-400">Trial Environment</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">MongoDB Atlas Advanced Deployment Guide</h1>
+            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">An interactive exploration of multi-cloud networking, global deployments, and resilience.</p>
+        </header>
+
+        <main class="space-y-20">
+
+            
+            <section id="disaster-recovery">
+                <h2 class="section-heading">Disaster Recovery & Automated Failover</h2>
+                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">High availability is built into the core of MongoDB's replica set architecture. In the event of a primary node failure, Atlas automatically triggers an election to promote a healthy secondary to become the new primary, typically within seconds.</p>
+                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                    <div id="failover-diagram" class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
+                        <div id="node-1" class="failover-node diagram-component p-4 rounded-lg border db-color-mongo primary">
+                            <h4 class="font-bold"><span class="status-dot"></span>Node 1 (Primary)</h4>
+                            <p class="text-sm">Region: us-east-1</p>
+                        </div>
+                        <div id="node-2" class="failover-node diagram-component p-4 rounded-lg border secondary">
+                            <h4 class="font-bold"><span class="status-dot"></span>Node 2 (Secondary)</h4>
+                            <p class="text-sm">Region: us-east-2</p>
+                        </div>
+                        <div id="node-3" class="failover-node diagram-component p-4 rounded-lg border secondary">
+                            <h4 class="font-bold"><span class="status-dot"></span>Node 3 (Secondary)</h4>
+                            <p class="text-sm">Region: us-west-1</p>
+                        </div>
+                    </div>
+                    <div class="text-center mt-6">
+                        <button id="failover-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Simulate Primary Failure</button>
+                        <p id="failover-status" class="mt-4 text-lg text-green-400 h-6"></p>
+                    </div>
+                     <p class="text-center mt-4 text-slate-400">This automated failover ensures your application remains available with minimal disruption. For disaster recovery, placing a secondary node in a separate geographic region (like Node 2 and 3) ensures data durability and avalibility for reads and writes even in the event of a full regional outage. <a href="https://www.mongodb.com/docs/manual/replication/" target="_blank" class="text-indigo-400 hover:underline">[Ref: Replication Docs]</a></p>
+                </div>
+            </section>
+
+
+          
+            <section id="sharding">
+                <h2 class="section-heading">Sharding for Horizontal Scaling</h2>
+                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">When a dataset outgrows the capacity of a single server (vertical scaling), MongoDB uses sharding to distribute data across multiple servers (horizontal scaling). This allows for near-limitless scalability.</p>
+                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                    <div class="relative min-h-[400px]">
+                        <!-- Application -->
+                        <div class="absolute top-0 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">Application</div>
+
+                        <!-- Mongos -->
+                        <div class="absolute top-24 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">mongos (Router)</div>
+                        
+                        <!-- Connecting Lines -->
+                        <svg class="absolute top-0 left-0 w-full h-full" style="pointer-events: none;">
+                            <!-- App to Mongos -->
+                            <line x1="50%" y1="68px" x2="50%" y2="100px" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead)"/>
+                            <!-- Mongos to Shards -->
+                            <line x1="50%" y1="164px" x2="25%" y2="220px" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowhead)"/>
+                            <line x1="50%" y1="164px" x2="75%" y2="220px" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowhead)"/>
+                            <!-- Mongos to Config Servers -->
+                             <line x1="50%" y1="164px" x2="50%" y2="340px" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowhead)"/>
+                            <defs>
+                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                                    <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+                                </marker>
+                            </defs>
+                        </svg>
+
+                        <!-- Shards -->
+                        <div class="absolute top-56 w-full flex justify-around">
+                            <div class="w-1/3 text-center">
+                                <h4 class="font-bold mb-2">Shard A</h4>
+                                <div class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
+                                    <div>P</div>
+                                    <div>S</div>
+                                    <div>S</div>
+                                </div>
+                            </div>
+                            <div class="w-1/3 text-center">
+                                <h4 class="font-bold mb-2">Shard B</h4>
+                                <div class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
+                                    <div>P</div>
+                                    <div>S</div>
+                                    <div>S</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Config Servers -->
+                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
+                             <h4 class="font-bold mb-2">Config Server Replica Set</h4>
+                             <div class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 flex space-x-2">
+                                <div>P</div>
+                                <div>S</div>
+                                <div>S</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 text-slate-300 pt-4 border-t border-gray-700">
+                        <h4 class="font-bold text-lg text-white mb-2">Key Components:</h4>
+                        <ul class="list-disc list-inside space-y-2">
+                            <li><strong>Shards:</strong> Each shard is an independent replica set that stores a subset of the data.</li>
+                            <li><strong>mongos (Query Router):</strong> The application connects to `mongos`, not individual shards. This router acts as an intelligent proxy, directing queries to the correct shard(s) based on the shard key.</li>
+                            <li><strong>Config Servers:</strong> A dedicated replica set that stores the cluster's metadata, including the mapping of data ranges to shards. The `mongos` instances cache this data to route queries efficiently.</li>
+                        </ul>
+                        <h4 class="font-bold text-lg text-white mt-6 mb-2">The Shard Key is Critical</h4>
+                        <p>The choice of a <span class="font-semibold text-green-400">shard key</span> (a field or fields in your documents) is the most important decision in a sharded cluster. It determines how data is distributed. A poor key can lead to "hot shards" that become bottlenecks, while a good key ensures an even spread of data and workload. <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" class="text-indigo-400 hover:underline">[Ref: Sharding Docs]</a></p>
+                    </div>
+                </div>
+            </section>
+
+
+            <section id="multi-region">
+                <h2 class="section-heading">Global Deployments</h2>
+                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters allow you to deploy a single database across multiple cloud regions and providers, enabling low-latency reads and writes for a global user base in an active-active configuration.</p>
+                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
+                        <!-- Region 1 -->
+                        <div class="diagram-component p-4 rounded-lg border cloud-aws">
+                            <h4 class="font-bold cloud-aws">AWS (us-east-1)</h4>
+                            <p class="text-sm">App Server</p>
+                            <svg class="w-full h-16"><line x1="50%" y1="100%" x2="50%" y2="0" stroke="#ff9900" stroke-width="2" stroke-dasharray="4"/></svg>
+                            <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 1)</div>
+                        </div>
+                        <!-- Region 2 -->
+                        <div class="diagram-component p-4 rounded-lg border cloud-gcp">
+                            <h4 class="font-bold cloud-gcp">GCP (europe-west1)</h4>
+                            <p class="text-sm">App Server</p>
+                            <svg class="w-full h-16"><line x1="50%" y1="100%" x2="50%" y2="0" stroke="#4285f4" stroke-width="2" stroke-dasharray="4"/></svg>
+                            <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 2)</div>
+                        </div>
+                        <!-- Region 3 -->
+                        <div class="diagram-component p-4 rounded-lg border cloud-azure">
+                            <h4 class="font-bold cloud-azure">Azure (japaneast)</h4>
+                            <p class="text-sm">App Server</p>
+                            <svg class="w-full h-16"><line x1="50%" y1="100%" x2="50%" y2="0" stroke="#0078d4" stroke-width="2" stroke-dasharray="4"/></svg>
+                            <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 3)</div>
+                        </div>
+                    </div>
+                    <p class="text-center mt-6 text-slate-400">In this active-active scenario, an application server in any region can handle write operations. Atlas intelligently routes writes to the primary node in each shard while allowing local secondary nodes to serve low-latency reads. This setup provides global data locality and resilience. <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank" class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a></p>
+                </div>
+            </section>
+
+
+
+            <section id="private-networking">
+                <h2 class="section-heading">Private Network Routing Across Clouds</h2>
+                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas enables secure, private connections between your application's virtual network and your Atlas cluster, even across different cloud providers. This is achieved primarily through VPC/VNet Peering and AWS PrivateLink.</p>
+                <div class="grid md:grid-cols-2 gap-12">
+                    <!-- VPC Peering Diagram -->
+                    <div>
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">VPC/VNet Peering</h3>
+                        <div class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                            <div class="flex justify-around items-center">
+                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)</div>
+                                <div class="text-2xl font-bold text-white">↔</div>
+                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-gcp">Atlas VPC (AWS)</div>
+                            </div>
+                            <p class="text-sm mt-4 text-slate-400">Creates a direct, private network connection between your application's VPC and the Atlas VPC. Traffic does not traverse the public internet. This is supported for peering between the same or different cloud providers.</p>
+                             <a href="https://www.mongodb.com/docs/atlas/security-network-peering/" target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas Peering Docs]</a>
+                        </div>
+                    </div>
+                    <!-- PrivateLink Diagram -->
+                    <div>
+                        <h3 class="text-xl font-bold text-center mb-4 text-white">AWS PrivateLink</h3>
+                        <div class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                            <div class="flex justify-around items-center">
+                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)</div>
+                                <div class="text-2xl font-bold text-white">→</div>
+                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">Atlas VPC (AWS)</div>
+                            </div>
+                            <p class="text-sm mt-4 text-slate-400">Creates a secure, one-way endpoint from your VPC to the Atlas cluster. This simplifies network security as it doesn't require opening firewall ports or managing CIDR blocks, but it is specific to AWS.</p>
+                            <a href="https://www.mongodb.com/docs/atlas/security-private-endpoint/" target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas Private Endpoint Docs]</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+                <section id="trial-env">
+                <h2 class="section-heading">Getting Started: Trial Environment</h2>
+                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 max-w-2xl mx-auto">
+                    <h3 class="text-2xl font-bold mb-4 text-white">M0 Free Tier</h3>
+                    <p class="text-slate-400 mb-4">Atlas offers a perpetual free tier called "M0 Sandbox." It's ideal for learning, prototyping, and early development.</p>
+                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                        <li>512 MB of storage</li>
+                        <li>Shared RAM and vCPU</li>
+                        <li>Basic monitoring and security features</li>
+                        <li>Available on AWS, GCP, and Azure</li>
+                    </ul>
+                     <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank" class="mt-6 inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Start Free</a>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-16 text-slate-500 text-sm">
+            <p>Interactive guide to MongoDB Atlas Advanced Deployment Concepts.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const failoverBtn = document.getElementById('failover-btn');
+            const failoverStatus = document.getElementById('failover-status');
+            const node1 = document.getElementById('node-1');
+            const node2 = document.getElementById('node-2');
+            const node3 = document.getElementById('node-3');
+
+            let isFailedOver = false;
+
+            failoverBtn.addEventListener('click', () => {
+                if (isFailedOver) {
+                    // Reset state
+                    failoverStatus.textContent = '';
+                    node1.classList.remove('failed');
+                    node1.classList.add('primary');
+                    node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Primary)';
+                    
+                    node2.classList.remove('primary');
+                    node2.classList.add('secondary');
+                    node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Secondary)';
+                    
+                    failoverBtn.textContent = 'Simulate Primary Failure';
+                    failoverBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    failoverBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                    isFailedOver = false;
+                } else {
+                    // Simulate failure
+                    failoverStatus.textContent = 'Primary node failed! Initiating election...';
+                    node1.classList.add('failed');
+                    node1.classList.remove('primary');
+                    node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Failed)';
+
+                    setTimeout(() => {
+                        failoverStatus.textContent = 'Election complete. Node 2 is the new primary!';
+                        node2.classList.remove('secondary');
+                        node2.classList.add('primary');
+                        node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Primary)';
+                        
+                        failoverBtn.textContent = 'Restore System';
+                        failoverBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                        failoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                        isFailedOver = true;
+                    }, 2000);
+                }
+            });
+
+            // Active nav link scrolling
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
