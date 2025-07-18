@@ -18,6 +18,12 @@
         }
         .tab-button {
             transition: all 0.3s ease;
+            color: #9CA3AF; /* gray-400 */
+            border-color: transparent;
+        }
+        .tab-button:hover {
+            color: #34D399; /* emerald-400 */
+            border-color: #6EE7B7; /* emerald-300 */
         }
         .tab-button.active {
             border-color: #34D399; /* emerald-400 */
@@ -40,7 +46,7 @@
 <body class="bg-gray-900 text-gray-200">
 
     <!-- Header -->
-    <header class="bg-gray-800 shadow-md">
+    <header class="bg-gray-800 shadow-md sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center space-x-3">
                 <svg class="w-10 h-10 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -70,33 +76,34 @@
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                         Defend
                     </button>
-                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-gray-400 hover:text-green-400 hover:border-green-400" data-tab="auth">
+                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="auth">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                         Authenticate & Authorize
                     </button>
-                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-gray-400 hover:text-green-400 hover:border-green-400" data-tab="detect">
+                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="detect">
                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        Detect
+                        Detect & Monitor
                     </button>
-                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg text-gray-400 hover:text-green-400 hover:border-green-400" data-tab="compliance">
+                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="compliance">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                        Security & Compliance
+                        Governance & Compliance
                     </button>
                 </nav>
             </div>
 
             <!-- Defend Tab Content -->
             <div id="defend" class="tab-content active">
-                <h3 class="text-3xl font-bold mb-6 text-white">Defend: Securing Your Infrastructure</h3>
+                <h3 class="text-3xl font-bold mb-6 text-white">Defend: Infrastructure & Data Protection</h3>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Network Security -->
                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Network Isolation & Connectivity</h4>
                             <ul class="space-y-2 text-gray-300 list-disc list-inside">
+                                <li><strong class="text-gray-100">VPC Isolation:</strong> Dedicated clusters are deployed in a fully isolated VPC/VNet.</li>
                                 <li><strong class="text-gray-100">IP Access List:</strong> Restrict cluster access to trusted IP addresses.</li>
                                 <li><strong class="text-gray-100">VPC Peering:</strong> Connect your application's virtual network directly to Atlas.</li>
-                                <li><strong class="text-gray-100">Private Endpoints:</strong> Ensure traffic never traverses the public internet.</li>
+                                <li><strong class="text-gray-100">Private Endpoints:</strong> Ensure traffic never traverses the public internet using AWS PrivateLink, Azure Private Link, or Google Private Service Connect.</li>
                             </ul>
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/security/network-access/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -106,8 +113,8 @@
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Encryption at Rest</h4>
                              <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Always-On Disk Encryption:</strong> Transparently encrypts all data on disk.</li>
-                                <li><strong class="text-gray-100">Bring Your Own Key (BYOK):</strong> Encrypt data using your own keys from AWS KMS, Azure Key Vault, or GCP KMS.</li>
+                                <li><strong class="text-gray-100">Always-On Disk Encryption:</strong> Transparently encrypts all data on disk using AES-256.</li>
+                                <li><strong class="text-gray-100">Bring Your Own Key (BYOK):</strong> Encrypt data using your own keys from AWS KMS, Azure Key Vault, or GCP KMS for enhanced control.</li>
                             </ul>
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/security/encryption-at-rest/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -117,7 +124,7 @@
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Encryption in Transit</h4>
                             <p class="text-gray-300">
-                                TLS/SSL is enabled by default for all connections to your Atlas cluster, protecting your data as it moves between your application and the database.
+                                TLS 1.2+ is required for all connections to your Atlas cluster, protecting your data as it moves. Uses OpenSSL FIPS module for strong cryptographic standards.
                             </p>
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/security-tls-ssl/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -142,6 +149,16 @@
                         </div>
                         <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
                     </div>
+                    <!-- Secure Configuration -->
+                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <div class="feature-card-content">
+                            <h4 class="text-xl font-semibold mb-3 text-green-400">Secure by Default Configuration</h4>
+                            <p class="text-gray-300">
+                                Atlas is designed with strong security defaults, including always-on authentication, authorization, and encryption. Bastion hosts with MFA and strict approvals are required for any potential backend access by MongoDB personnel.
+                            </p>
+                        </div>
+                        <a href="https://www.mongodb.com/cloud/trust/security" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
+                    </div>
                 </div>
             </div>
 
@@ -154,7 +171,7 @@
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Atlas Control Plane Authentication</h4>
                             <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Multi-Factor Authentication (MFA):</strong> Require a second factor for all users to log in to the Atlas UI.</li>
+                                <li><strong class="text-gray-100">Multi-Factor Authentication (MFA):</strong> Require a second factor (app, device, SMS) for all users to log in to the Atlas UI.</li>
                                 <li><strong class="text-gray-100">Identity Federation (SSO):</strong> Integrate with your IdP (e.g., Okta, Azure AD) via SAML or OpenID Connect.</li>
                             </ul>
                         </div>
@@ -165,7 +182,7 @@
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Database Authentication</h4>
                             <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">SCRAM:</strong> Default username/password authentication.</li>
+                                <li><strong class="text-gray-100">SCRAM:</strong> Default username/password authentication (NIST 800-63 compliant).</li>
                                 <li><strong class="text-gray-100">X.509 Certificates:</strong> Authenticate using client certificates from your own PKI.</li>
                                 <li><strong class="text-gray-100">LDAP:</strong> Integrate with your corporate LDAP or Active Directory.</li>
                                 <li><strong class="text-gray-100">AWS IAM:</strong> Use AWS IAM roles for passwordless authentication.</li>
@@ -178,7 +195,7 @@
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Authorization (RBAC)</h4>
                             <p class="text-gray-300">
-                                Implement the principle of least privilege with Role-Based Access Control. Use built-in or custom roles to grant specific permissions to users.
+                                Implement the principle of least privilege with Role-Based Access Control. Use built-in or custom roles to grant specific permissions to users at the Organization and Project levels.
                             </p>
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/security/database-access-control/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -193,19 +210,29 @@
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/reference/atlas-hashicorp-vault/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
                     </div>
+                     <!-- Privileged Access -->
+                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
+                        <div class="feature-card-content">
+                            <h4 class="text-xl font-semibold mb-3 text-green-400">Privileged User Access</h4>
+                            <p class="text-gray-300">
+                                MongoDB personnel do not have default access to customer clusters. Access by a small group of Privileged Users is gated, requires MFA, management approval, and is limited to the minimum time necessary to resolve critical issues. All access is logged and reviewed.
+                            </p>
+                        </div>
+                        <a href="https://www.mongodb.com/cloud/trust/security" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
+                    </div>
                 </div>
             </div>
 
             <!-- Detect Tab Content -->
             <div id="detect" class="tab-content">
-                <h3 class="text-3xl font-bold mb-6 text-white">Detect: Monitoring and Auditing</h3>
+                <h3 class="text-3xl font-bold mb-6 text-white">Detect & Monitor: Accountability and Logging</h3>
                 <div class="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
                      <!-- Auditing -->
                      <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="feature-card-content">
                             <h4 class="text-xl font-semibold mb-3 text-green-400">Database Auditing</h4>
                             <p class="text-gray-300">
-                                Capture all administrative and DML/DDL activities. Configure fine-grained audit filters and send logs to your preferred destination for analysis.
+                                Capture all administrative and DML/DDL activities with granular filters. Track actions by users, roles, and LDAP groups. Audit logs can be downloaded via UI/API for analysis and integration with SIEM tools like Splunk, Imperva, and Guardium.
                             </p>
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/database-auditing/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -213,9 +240,9 @@
                      <!-- Activity Feed -->
                      <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Project Activity Feed</h4>
+                            <h4 class="text-xl font-semibold mb-3 text-green-400">Organization & Project Activity Feeds</h4>
                             <p class="text-gray-300">
-                                Track all administrative actions taken within your Atlas project through the UI or API, providing a chronological log of events.
+                                Track all administrative actions taken within your Atlas Organization and Projects through the UI or API. The activity feed provides a chronological, filterable log of events like user access changes, cluster modifications, and network configuration updates.
                             </p>
                         </div>
                         <a href="https://www.mongodb.com/docs/atlas/reference/activity-feed/" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -225,7 +252,7 @@
 
             <!-- Security & Compliance Tab Content -->
             <div id="compliance" class="tab-content">
-                <h3 class="text-3xl font-bold mb-6 text-white">Security & Compliance Impact with Atlas</h3>
+                <h3 class="text-3xl font-bold mb-6 text-white">Governance & Compliance Impact with Atlas</h3>
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <!-- Security Governance -->
                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
@@ -240,28 +267,24 @@
                         </div>
                          <a href="https://www.mongodb.com/licensing/master-agreement" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
                     </div>
-                    <!-- Infrastructure Security -->
+                    <!-- Shared Responsibility -->
                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Infrastructure Security & Data Protection</h4>
-                            <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Strong Encryption:</strong> In-transit encryption uses the OpenSSL FIPS module for strong cryptographic standards.</li>
-                                <li><strong class="text-gray-100">Key Management:</strong> Robust governance for secure key use, rotation, and storage.</li>
-                                <li><strong class="text-gray-100">Ephemeral Session Keys:</strong> TLS with ephemeral keys ensures encryption keys aren't stored.</li>
-                                <li><strong class="text-gray-100">Hardened Configurations:</strong> Automated, secure configurations for all deployments.</li>
-                            </ul>
+                            <h4 class="text-xl font-semibold mb-3 text-green-400">Shared Responsibility Model</h4>
+                            <p class="text-gray-300">
+                                Atlas minimizes the customer's security burden with strong defaults like always-on authentication and encryption. The customer remains responsible for securely configuring their side, including network access rules, user permissions, and application-level security.
+                            </p>
                         </div>
                         <a href="https://www.mongodb.com/cloud/trust/security" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
                     </div>
                      <!-- Resilience -->
                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
                         <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Resilience, Availability & Continuity</h4>
+                            <h4 class="text-xl font-semibold mb-3 text-green-400">Resilience & Business Continuity</h4>
                             <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Self-Healing Replica Sets:</strong> Ensure high availability and automatic failover across availability zones.</li>
-                                <li><strong class="text-gray-100">Fast Recovery:</strong> Automatic failover and real-time replication ensure minimal downtime.</li>
-                                <li><strong class="text-gray-100">Multi-Region & Multi-Cloud:</strong> Enhance resilience and data locality with flexible deployment options.</li>
-                                <li><strong class="text-gray-100">BCDR Plan:</strong> A comprehensive plan aligned with ISO 22301 ensures tested RPOs and RTOs.</li>
+                                <li><strong class="text-gray-100">Self-Healing Replica Sets:</strong> Ensure high availability and automatic failover.</li>
+                                <li><strong class="text-gray-100">Backup & Restore:</strong> Easily distribute backup snapshots across multiple geographic regions.</li>
+                                <li><strong class="text-gray-100">BCDR Plan:</strong> A comprehensive plan aligned with ISO 22301 ensures tested RPOs and RTOs for service continuity.</li>
                             </ul>
                         </div>
                         <a href="https://www.mongodb.com/cloud/trust/compliance" target="_blank" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
@@ -289,20 +312,23 @@
         const tabContents = document.querySelectorAll('.tab-content');
 
         tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
+            tab.addEventListener('click', (event) => {
+                event.preventDefault();
+
                 // Deactivate all tabs and content
                 tabs.forEach(item => {
-                    item.classList.remove('active', 'text-green-400');
-                    item.classList.add('text-gray-400', 'hover:text-green-400', 'hover:border-green-400');
+                    item.classList.remove('active');
                 });
                 tabContents.forEach(content => {
                     content.classList.remove('active');
                 });
 
                 // Activate the clicked tab and its content
-                tab.classList.add('active', 'text-green-400');
-                tab.classList.remove('text-gray-400', 'hover:text-green-400', 'hover:border-green-400');
-                document.getElementById(tab.dataset.tab).classList.add('active');
+                tab.classList.add('active');
+                const targetContent = document.getElementById(tab.dataset.tab);
+                if (targetContent) {
+                    targetContent.classList.add('active');
+                }
             });
         });
     </script>
