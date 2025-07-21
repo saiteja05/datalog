@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive AI Search Platform Comparison: Azure vs. Atlas vs. Kendra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Refined Dark Theme for Readability */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d1117; /* GitHub Dark Background */
+            color: #c9d1d9; /* GitHub Dark Text */
+            font-size: 1.1rem; /* Increased font size */
+            line-height: 1.8; /* Increased line spacing */
+        }
+        .section-container {
+            background-color: #161b22; /* Darker Slate */
+            border: 1px solid #30363d;
+            border-radius: 0.75rem;
+        }
+        .section-header {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .section-header:hover {
+            background-color: #21262d;
+        }
+        .section-content {
+            transition: max-height 0.5s ease-in-out, opacity 0.5s ease-in-out;
+            overflow: hidden;
+        }
+        .section-content.collapsed {
+            max-height: 0;
+            opacity: 0;
+        }
+        .section-header svg.arrow {
+            transition: transform 0.3s ease;
+        }
+        .section-header.expanded svg.arrow {
+            transform: rotate(90deg);
+        }
+        .reference-link, .source-link {
+            cursor: pointer;
+            color: #58a6ff; /* Softer Blue for links */
+            font-weight: 500;
+            text-decoration: none;
+        }
+        .reference-link:hover, .source-link:hover {
+            text-decoration: underline;
+        }
+        .highlight {
+            animation: highlight-anim 2s ease-out;
+        }
+        @keyframes highlight-anim {
+            0% { background-color: rgba(88, 166, 255, 0.3); }
+            100% { background-color: transparent; }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+        }
+        th, td {
+            border: 1px solid #30363d;
+            padding: 1rem 1.25rem;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #21262d;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #21262d;
+        }
+        h1, h2, h3, h4 {
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: #f0f6fc;
+        }
+        h1 { color: #58a6ff; }
+        h2 { border-bottom: 1px solid #30363d; padding-bottom: 0.5rem; }
+        h3 { color: #8b949e; }
+        p { margin-bottom: 1rem; }
+        ul {
+            list-style-type: disc;
+            padding-left: 1.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        /* Interactive Diagram Styles */
+        .diagram-container {
+            background-color: #0d1117;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            border: 1px solid #30363d;
+        }
+        .diagram-container svg {
+            width: 100%;
+            height: auto;
+        }
+        .diagram-component {
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .diagram-component:hover > rect, .diagram-component:hover > path {
+            filter: brightness(1.2);
+            stroke-width: 2;
+        }
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(17, 24, 39, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+            pointer-events: none;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background-color: #161b22;
+            color: #c9d1d9;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transform: scale(0.95);
+            transition: transform 0.3s ease-in-out;
+            border: 1px solid #30363d;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="max-w-5xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">AI Search Platform Competitive Analysis</h1>
+            <p class="text-lg text-gray-400">Azure AI Search vs. Atlas Search vs. AWS Kendra</p>
+        </header>
+
+        <!-- Audio Player -->
+        <div class="section-container shadow-md p-6 mb-8 flex items-center justify-between">
+            <div class="flex items-center space-x-4">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M18 3a1 1 0 00-1.447-.894L4 6.4v1.2l10.553-4.11a1 1 0 00.894-1.447zM18 8a1 1 0 00-1.447-.894L4 11.4v1.2l10.553-4.11a1 1 0 00.894-1.447zM4 16.4V18l14-5.4V11l-14 5.4z" />
+                </svg>
+                <h2 class="text-xl font-semibold border-none p-0">Audio Overview</h2>
+            </div>
+            <button id="audio-toggle-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition-all duration-300 shadow-lg">
+                <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
+                </svg>
+                <svg id="stop-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 001 1h4a1 1 0 001-1V8a1 1 0 00-1-1H8z" clip-rule="evenodd" />
+                </svg>
+                <span id="audio-button-text">Play Summary</span>
+            </button>
+        </div>
+
+        <!-- Main Content Sections -->
+        <div class="space-y-6">
+            <!-- Section 1: Executive Summary -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-1" class="section-header expanded p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">1. Executive Summary</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-1-content" class="section-content px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>The landscape of enterprise information retrieval is undergoing a fundamental transformation, driven by the dual imperatives of understanding user intent and grounding generative AI in proprietary data. This report provides an exhaustive comparative analysis of three leading solutions: Microsoft's Azure AI Search, MongoDB's Atlas Search with its forthcoming Voyage AI capabilities, and Amazon's AWS Kendra.</p>
+                    <p>The core finding is that the choice between these platforms is not a matter of identifying a single "best" solution, but of aligning with a specific architectural philosophy and set of strategic priorities.</p>
+                </div>
+            </div>
+
+            <!-- Section 2: Visual Summary -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-2" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">2. Visual Summary & Key Differentiators</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-2-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>This chart provides a high-level visual comparison of the platforms across key strategic dimensions. It helps in quickly identifying which platform aligns best with your organization's priorities.</p>
+                    <div class="chart-container relative h-96 w-full mt-6">
+                        <canvas id="comparison-radar-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 3: Architecture Deep Dive with Interactive Diagrams -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-3" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">3. Architecture Deep Dive (Interactive)</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-3-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>Click on the components within each diagram to learn more about their function.</p>
+                    
+                    <h3 class="text-xl font-semibold mt-6 mb-2">3.1 Azure AI Search: Decoupled PaaS</h3>
+                    <div class="diagram-container">
+                        <svg viewBox="0 0 535 150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="12" color="#e2e8f0">
+                            <defs><marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker></defs>
+                            <line x1="95" y1="75" x2="135" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+                            <line x1="245" y1="75" x2="285" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+                            <line x1="395" y1="75" x2="435" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead)"/>
+                            <g class="diagram-component" data-id="azure-sources"><rect x="10" y="50" width="85" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="52.5" y="70" text-anchor="middle">Data</text><text x="52.5" y="85" text-anchor="middle">Sources</text></g>
+                            <g class="diagram-component" data-id="azure-indexers"><rect x="140" y="50" width="105" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="192.5" y="70" text-anchor="middle">Indexers &</text><text x="192.5" y="85" text-anchor="middle">Skillsets</text></g>
+                            <g class="diagram-component" data-id="azure-search-service"><rect x="290" y="50" width="105" height="50" rx="5" fill="#2b6cb0" stroke="#63b3ed"/><text x="342.5" y="70" text-anchor="middle">Azure AI</text><text x="342.5" y="85" text-anchor="middle">Search Service</text></g>
+                            <g class="diagram-component" data-id="azure-app"><rect x="440" y="50" width="85" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="482.5" y="70" text-anchor="middle">Your App</text><text x="482.5" y="85" text-anchor="middle">(RAG)</text></g>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mt-8 mb-2">3.2 AWS Kendra: Managed Service</h3>
+                    <div class="diagram-container">
+                         <svg viewBox="0 0 535 150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="12" color="#e2e8f0">
+                            <defs><marker id="arrowhead-k" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker></defs>
+                            <line x1="95" y1="75" x2="135" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-k)"/>
+                            <line x1="245" y1="75" x2="285" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-k)"/>
+                            <line x1="395" y1="75" x2="435" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-k)"/>
+                            <g class="diagram-component" data-id="kendra-connectors"><rect x="10" y="50" width="85" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="52.5" y="75" text-anchor="middle">Connectors</text></g>
+                            <g class="diagram-component" data-id="kendra-index"><rect x="140" y="50" width="105" height="50" rx="5" fill="#6d4c36" stroke="#d69a58"/><text x="192.5" y="70" text-anchor="middle">Kendra</text><text x="192.5" y="85" text-anchor="middle">Intelligent Index</text></g>
+                            <g class="diagram-component" data-id="kendra-retriever"><rect x="290" y="50" width="105" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="342.5" y="70" text-anchor="middle">Retriever API</text><text x="342.5" y="85" text-anchor="middle">for RAG</text></g>
+                            <g class="diagram-component" data-id="kendra-app"><rect x="440" y="50" width="85" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="482.5" y="70" text-anchor="middle">Q&A App</text><text x="482.5" y="85" text-anchor="middle">(RAG)</text></g>
+                        </svg>
+                    </div>
+
+                    <h3 class="text-xl font-semibold mt-8 mb-2">3.3 MongoDB Atlas Search: Integrated Engine</h3>
+                     <div class="diagram-container">
+                        <svg viewBox="0 0 535 150" xmlns="http://www.w3.org/2000/svg" font-family="Inter, sans-serif" font-size="12" color="#e2e8f0">
+                            <defs><marker id="arrowhead-a" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker></defs>
+                            <path d="M 95 75 C 115 55, 115 95, 135 75" stroke="#6b7280" stroke-width="1.5" fill="none" marker-end="url(#arrowhead-a)"/><path d="M 135 75 C 115 95, 115 55, 95 75" stroke="#6b7280" stroke-width="1.5" fill="none" marker-end="url(#arrowhead-a)"/>
+                            <line x1="325" y1="75" x2="355" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-a)"/>
+                            <g class="diagram-component" data-id="atlas-app"><rect x="10" y="50" width="85" height="50" rx="5" fill="#22543d" stroke="#48bb78"/><text x="52.5" y="70" text-anchor="middle">Your</text><text x="52.5" y="85" text-anchor="middle">Application</text></g>
+                            <g class="diagram-component" data-id="atlas-cluster"><rect x="140" y="35" width="185" height="80" rx="8" fill="#1c4532" stroke="#38a169" stroke-dasharray="4 2"/><text x="232.5" y="50" text-anchor="middle" font-weight="bold">MongoDB Atlas Cluster</text><rect x="150" y="65" width="75" height="40" rx="5" fill="#22543d" stroke="#48bb78"/><text x="187.5" y="80" text-anchor="middle">Database</text><text x="187.5" y="95" text-anchor="middle">(mongod)</text><rect x="240" y="65" width="75" height="40" rx="5" fill="#22543d" stroke="#48bb78"/><text x="277.5" y="80" text-anchor="middle">Search</text><text x="277.5" y="95" text-anchor="middle">(mongot)</text></g>
+                            <g class="diagram-component" data-id="atlas-voyage"><path d="M 190 30 C 200 0, 260 0, 270 30" stroke="#38a169" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/><rect x="205" y="0" width="70" height="25" rx="12.5" fill="#276749"/><text x="240" y="17" text-anchor="middle">Voyage AI</text></g>
+                            <g class="diagram-component" data-id="atlas-rag"><rect x="360" y="50" width="85" height="50" rx="5" fill="#22543d" stroke="#48bb78"/><text x="402.5" y="70" text-anchor="middle">Unified</text><text x="402.5" y="85" text-anchor="middle">RAG Pipeline</text></g>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Deployment Models -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-4" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">4. Deployment Models</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-4-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>The deployment model of each platform directly reflects its architectural philosophy, impacting how it integrates into an enterprise's existing technology landscape.</p>
+                    <h3 class="text-xl font-semibold mt-4 mb-2">Azure AI Search: Decoupled PaaS</h3>
+                    <p>As a standalone PaaS, Azure AI Search is deployed as a separate resource in your Azure subscription. It is designed to be decoupled from your primary data stores. This model is ideal for heterogeneous environments where data is spread across multiple systems (e.g., Azure SQL, Cosmos DB, Blob Storage, external sources). It offers flexibility but requires managing the data synchronization process (the "synchronization tax") between the data sources and the search service itself.<span class="reference-link" data-ref="ref-9">[9]</span></p>
+                    <h3 class="text-xl font-semibold mt-4 mb-2">AWS Kendra: Managed Service</h3>
+                    <p>Kendra is deployed as a fully managed service, abstracting nearly all underlying infrastructure. You create a Kendra Index, and AWS manages the compute and storage resources. Its primary deployment model revolves around connecting to various data sources via its extensive connector library.<span class="reference-link" data-ref="ref-23">[23]</span> This is best for organizations that want a "solution in a box" for enterprise search and prefer to offload infrastructure management to the cloud provider.</p>
+                    <h3 class="text-xl font-semibold mt-4 mb-2">MongoDB Atlas Search: Integrated Database Feature</h3>
+                    <p>Atlas Search is not deployed as a separate service at all. It is an integrated feature of a MongoDB Atlas cluster. You enable it on a specific database collection.<span class="reference-link" data-ref="ref-13">[13]</span> This model is unique and powerful for applications built on MongoDB, as it completely eliminates data synchronization pipelines and simplifies the architecture. The deployment is inherently tied to the database, making it the premier choice for MongoDB-centric applications but less suitable as a general-purpose search solution for external, non-MongoDB data sources.</p>
+                </div>
+            </div>
+
+            <!-- Section 5: Core Capabilities Comparison -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-5" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">5. Core Capabilities Comparison</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-5-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                     <div class="overflow-x-auto">
+                        <h4 class="text-lg font-semibold mt-4 mb-2">Table 1: High-Level Feature and Architecture Comparison</h4>
+                        <table>
+                            <thead>
+                                <tr><th>Feature/Capability</th><th>Azure AI Search</th><th>AWS Kendra</th><th>MongoDB Atlas Search (w/ Voyage AI)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Core Architecture</strong></td><td>Standalone, decoupled Search-as-a-Service (PaaS) <span class="reference-link" data-ref="ref-9">[9]</span></td><td>Fully managed, ML-powered "intelligent search" service <span class="reference-link" data-ref="ref-11">[11]</span></td><td>Integrated search engine embedded within the database platform <span class="reference-link" data-ref="ref-13">[13]</span></td></tr>
+                                <tr><td><strong>Primary Use Case</strong></td><td>Building highly customized, enterprise-grade search applications</td><td>Enabling natural language Q&A over unstructured enterprise content</td><td>Adding fast, relevance-based search to applications built on MongoDB</td></tr>
+                                <tr><td><strong>Data Ingestion Model</strong></td><td>'Pull' via Indexers for Azure sources; 'Push' via API for any source <span class="reference-link" data-ref="ref-9">[9]</span><span class="reference-link" data-ref="ref-25">[25]</span></td><td>'Pull' via a large library of connectors; 'Push' via API <span class="reference-link" data-ref="ref-23">[23]</span><span class="reference-link" data-ref="ref-26">[26]</span></td><td>Automatic synchronization from the database to the search index <span class="reference-link" data-ref="ref-13">[13]</span></td></tr>
+                                <tr><td><strong>Query Abstraction</strong></td><td>High control; offers both simple and full Lucene query syntax <span class="reference-link" data-ref="ref-17">[17]</span></td><td>High abstraction; focuses on natural language questions and answers <span class="reference-link" data-ref="ref-7">[7]</span></td><td>Medium abstraction; unified query API via database aggregation stages <span class="reference-link" data-ref="ref-19">[19]</span></td></tr>
+                                <tr><td><strong>RAG Strategy</strong></td><td>Integrated data chunking/vectorization via Skillsets; deep integration with Azure OpenAI <span class="reference-link" data-ref="ref-6">[6]</span><span class="reference-link" data-ref="ref-15">[15]</span></td><td>Managed retriever API optimized for RAG; abstracts chunking/embeddings <span class="reference-link" data-ref="ref-7">[7]</span><span class="reference-link" data-ref="ref-8">[8]</span></td><td>Unified vector database and search; native embedding/reranking via Voyage AI <span class="reference-link" data-ref="ref-14">[14]</span></td></tr>
+                                <tr><td><strong>Pricing Philosophy</strong></td><td>Predictable, capacity-based (per Search Unit) <span class="reference-link" data-ref="ref-27">[27]</span></td><td>Complex, usage-based with multiple dimensions (editions, connectors, capacity) <span class="reference-link" data-ref="ref-28">[28]</span></td><td>Included with Atlas cluster; additive cost for optional dedicated Search Nodes <span class="reference-link" data-ref="ref-29">[29]</span></td></tr>
+                                <tr><td><strong>Ecosystem Alignment</strong></td><td>Microsoft Azure (Azure OpenAI, Azure Data)</td><td>Amazon Web Services (AWS Bedrock, S3)</td><td>Multi-cloud (AWS, Azure, GCP); developer-centric</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 6: Granular Feature and Performance Analysis -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-6" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">6. Granular Feature and Performance Analysis</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-6-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>This section moves beyond high-level strategy to compare the tactical features and performance characteristics that directly impact developers and end-users.</p>
+                    
+                    <h4 class="text-lg font-semibold mt-4 mb-2">At-a-Glance Feature Comparison</h4>
+                    <table>
+                        <thead>
+                            <tr><th>Feature</th><th>Winner(s)</th><th>Why?</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>UI Features (Facets, Geo)</strong></td><td>Azure & Atlas Search</td><td>They provide rich, developer-controlled APIs essential for building modern search UIs. Kendra is not designed for this.</td></tr>
+                            <tr><td><strong>Query Speed (Latency)</strong></td><td>Atlas Search</td><td>The integrated architecture eliminates network overhead for data already in MongoDB, resulting in the lowest possible latency.</td></tr>
+                            <tr><td><strong>Data Freshness (Indexing)</strong></td><td>Atlas Search</td><td>Real-time synchronization means data is searchable in seconds. Azure and Kendra rely on scheduled jobs with potential delays.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-xl font-semibold mt-8 mb-2">Detailed Breakdown</h3>
+                    <ul>
+                        <li><strong>Faceting and Filtering:</strong> Both Azure AI Search and Atlas Search provide powerful, developer-controlled faceting capabilities, which are essential for building modern e-commerce and data exploration UIs. They allow for the dynamic calculation of categories and counts based on a query's result set. Kendra's approach is more about "refining" a search based on metadata, which is less flexible than the programmatic faceting offered by its competitors.</li>
+                        <li><strong>Geospatial Search:</strong> This is a key strength for both Azure and Atlas Search. They support indexing location data and performing complex geospatial queries, such as finding all documents within a certain radius or inside a defined polygon. This is a critical feature for location-aware applications that is not a primary focus for AWS Kendra.</li>
+                        <li><strong>Autocomplete & Suggestions:</strong> All three platforms offer capabilities for type-ahead suggestions. Azure and Atlas provide more granular control through dedicated `autocomplete` operators, allowing developers to fine-tune the suggestion logic based on specific fields and scoring profiles. Kendra's implementation is more automated and tied to its general query understanding.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 7: Scaling from Gigabytes to Terabytes -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-7" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">7. Scaling from Gigabytes to Terabytes</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-7-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>Scaling is about adding more power as your application grows. Each platform offers a different philosophy.</p>
+                    
+                    <h4 class="text-lg font-semibold mt-4 mb-2">At-a-Glance Scaling Models</h4>
+                    <table>
+                        <thead>
+                            <tr><th>Platform</th><th>Model</th><th>Best For</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Azure AI Search</strong></td><td>Manual (Replicas & Partitions)</td><td>Experts who need granular control over performance and cost.</td></tr>
+                            <tr><td><strong>AWS Kendra</strong></td><td>Automatic (Capacity Units)</td><td>Teams who want simplicity and are willing to trade control for ease of use.</td></tr>
+                            <tr><td><strong>Atlas Search</strong></td><td>Hybrid (Cluster & Search Nodes)</td><td>Efficient growth, starting simple and adding dedicated power only when needed.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-xl font-semibold mt-8 mb-2">Detailed Breakdown</h3>
+                    <p><strong>Azure AI Search (The Manual Transmission):</strong> You have two separate knobs to turn: **Replicas** for handling more users and **Partitions** for storing more data. This gives you maximum control but requires you to be the expert driver.<span class="reference-link" data-ref="ref-27">[27]</span></p>
+                    <p><strong>AWS Kendra (The Automatic Transmission):</strong> You don't worry about the engine parts. You just buy abstract **"capacity units."** If things are slow, you buy more units from AWS. It's simple, but you have less direct control.<span class="reference-link" data-ref="ref-28">[28]</span></p>
+                    <p><strong>MongoDB Atlas Search (The Hybrid Car):</strong> It starts by efficiently using your main database's power. For extreme demand, you can add dedicated **"Search Nodes,"** like a turbocharger just for search, ensuring your database isn't slowed down. This provides a flexible path from simple to powerful.<span class="reference-link" data-ref="ref-20">[20]</span></p>
+                </div>
+            </div>
+            
+            <!-- Section 8: Enterprise-Ready Pricing Analysis -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-8" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">8. Enterprise-Ready Pricing Analysis</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-8-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <p>The pricing models for these platforms are complex. The best choice depends heavily on your specific usage patterns and scale.</p>
+                    
+                    <h4 class="text-lg font-semibold mt-4 mb-2">At-a-Glance Pricing Philosophies</h4>
+                    <table>
+                        <thead>
+                            <tr><th>Platform</th><th>Model</th><th>Key Characteristic</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Azure AI Search</strong></td><td>PaaS (Pay for Provisioned Resources)</td><td>Predictable but requires careful capacity planning to be cost-effective.</td></tr>
+                            <tr><td><strong>AWS Kendra</strong></td><td>SaaS (Pay for a Managed Service)</td><td>Simple to start, but complex usage-based dimensions can lead to unpredictable costs.</td></tr>
+                            <tr><td><strong>Atlas Search</strong></td><td>Integrated (Included with Database)</td><td>Lowest barrier to entry; costs scale transparently with your database cluster.</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-xl font-semibold mt-8 mb-2">Detailed Breakdown & TCO Scenarios</h3>
+                    <p>With a **PaaS model like Azure**, you pay for the raw infrastructure you provision. This can be cheaper for smaller, well-defined workloads where you don't need the overhead of a managed SaaS. However, as you scale to handle complex tasks (like RAG), you must provision very powerful and expensive hardware (e.g., high-tier Search Units), causing costs to rise sharply.</p>
+                    <p>With a **SaaS model like Kendra**, you pay a premium for the managed service, including its complex ML models. This often results in a higher entry price. However, for specific high-volume workloads that the service is optimized for (like RAG), its usage-based pricing might scale more economically than provisioning massive PaaS hardware.</p>
+                    <p>The table below provides illustrative TCO estimates. Note how Azure is more cost-effective for the smaller scenario, while Kendra's specialized GenAI edition is more economical for the large-scale RAG scenario.</p>
+                    
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr><th>Cost Component</th><th>Scenario 1: Mid-Sized Departmental Search</th><th>Scenario 2: Large-Scale RAG Application</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td colspan="3" class="font-bold bg-gray-700">Azure AI Search</td></tr>
+                                <tr><td>Base Service</td><td>~$245/month (S1 Tier, 1 SU)</td><td>~$7,848/month (S3 Tier, 4 SUs)</td></tr>
+                                <tr><td>Semantic Ranker</td><td>~$9/month</td><td>~$1,500/month</td></tr>
+                                <tr><td class="font-semibold">Estimated Monthly Total</td><td class="font-semibold">~$254/month</td><td class="font-semibold">~$9,348/month</td></tr>
+
+                                <tr><td colspan="3" class="font-bold bg-gray-700">AWS Kendra</td></tr>
+                                <tr><td>Base Service</td><td>$1,008/month (Basic Enterprise)</td><td>$230/month (GenAI Enterprise)</td></tr>
+                                <tr><td>Additional Storage</td><td>$504/month</td><td>~$4,950/month</td></tr>
+                                <tr><td>Additional Queries</td><td>$504/month</td><td>~$368/month</td></tr>
+                                <tr><td>Connector Usage</td><td>~$5/month</td><td>~$30/month</td></tr>
+                                <tr><td class="font-semibold">Estimated Monthly Total</td><td class="font-semibold">~$2,021/month</td><td class="font-semibold">~$5,578/month</td></tr>
+
+                                <tr><td colspan="3" class="font-bold bg-gray-700">MongoDB Atlas Search</td></tr>
+                                <tr><td>Base Cluster</td><td>~$760/month (e.g., M40 Dedicated)</td><td>~$5,329/month (e.g., M80 Dedicated 3-node replica set)</td></tr>
+                                <tr><td>Dedicated Search Nodes</td><td>$0 (included with cluster)</td><td>~$2,340/month (e.g., 2x S30 Search Nodes)</td></tr>
+                                <tr><td class="font-semibold">Estimated Monthly Total</td><td class="font-semibold">~$760/month</td><td class="font-semibold">~$7,669/month</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 9: Key Takeaways & Use Cases -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-9" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">9. Key Takeaways & Use Cases</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-9-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <h3 class="text-xl font-semibold mt-4 mb-2">Azure AI Search</h3>
+                    <p><strong>Key Takeaway:</strong> The best choice for maximum control, customizability, and deep integration within the Microsoft ecosystem.</p>
+                    <p><strong>Top Use Cases:</strong></p>
+                    <ul>
+                        <li>Public-facing e-commerce website search with custom relevance tuning.</li>
+                        <li>Complex log and data analytics platforms requiring advanced query syntax.</li>
+                        <li>RAG applications built entirely on the Azure OpenAI stack.</li>
+                    </ul>
+
+                    <h3 class="text-xl font-semibold mt-4 mb-2">AWS Kendra</h3>
+                    <p><strong>Key Takeaway:</strong> The fastest way to deploy an intelligent, natural language Q&A solution over diverse enterprise content.</p>
+                    <p><strong>Top Use Cases:</strong></p>
+                    <ul>
+                        <li>Internal corporate knowledge base search (e.g., "Ask HR" chatbot).</li>
+                        <li>Customer support portals for self-service troubleshooting.</li>
+                        <li>Research and document discovery for legal or scientific domains.</li>
+                    </ul>
+
+                    <h3 class="text-xl font-semibold mt-4 mb-2">MongoDB Atlas Search (w/ Voyage AI)</h3>
+                    <p><strong>Key Takeaway:</strong> The ultimate choice for developer velocity and architectural simplicity for applications built on MongoDB.</p>
+                    <p><strong>Top Use Cases:</strong></p>
+                    <ul>
+                        <li>Adding fast, relevance-based search to an existing MongoDB-powered application.</li>
+                        <li>Building next-generation RAG applications that leverage Voyage AI's native embedding and reranking for state-of-the-art retrieval accuracy and a simplified architecture.</li>
+                        <li>Real-time inventory or content catalog search within a multi-cloud application.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Section 10: Strategic Recommendations -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="section-10" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                    <h2 class="text-2xl font-bold">10. Strategic Recommendations</h2>
+                    <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                </div>
+                <div id="section-10-content" class="section-content collapsed px-6 pb-6 text-gray-300 leading-relaxed">
+                    <h4 class="text-lg font-semibold mt-4 mb-2">Table 3: Final Decision Matrix</h4>
+                    <div class="overflow-x-auto">
+                        <table>
+                            <thead>
+                                <tr><th>Requirement/Decision Factor</th><th>Azure AI Search</th><th>AWS Kendra</th><th>MongoDB Atlas Search (w/ Voyage AI)</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td><strong>Architectural Integration</strong></td><td>Decoupled PaaS; best for heterogeneous sources</td><td>Decoupled Service; best for connector-based sources</td><td>Integrated; best for unified MongoDB data platform</td></tr>
+                                <tr><td><strong>Developer Velocity</strong></td><td>Medium; requires learning search-specific concepts</td><td>High; abstracts complexity for rapid deployment</td><td>Highest; leverages existing database skills and API</td></tr>
+                                <tr><td><strong>RAG Pipeline Simplicity</strong></td><td>Medium; integrated tools but requires configuration</td><td>High; managed retriever abstracts key steps</td><td>Highest (Future); native embedding/reranking</td></tr>
+                                <tr><td><strong>Relevance Tuning Control</strong></td><td>Highest; full Lucene syntax, semantic ranker</td><td>Low; primarily managed by ML, some boosting</td><td>High; rich operators, future native reranker</td></tr>
+                                <tr><td><strong>Breadth of Connectors</strong></td><td>Good (focused on Azure sources)</td><td>Highest; extensive library for many SaaS/enterprise apps</td><td>N/A (relies on automatic DB sync)</td></tr>
+                                <tr><td><strong>Cost Predictability</strong></td><td>High; predictable capacity-based model</td><td>Low; complex, multi-dimensional usage model</td><td>High; tied to predictable cluster/node costs</td></tr>
+                                <tr><td><strong>Ecosystem Alignment</strong></td><td>Highest for Microsoft Azure</td><td>Highest for Amazon Web Services</td><td>Highest for developer-centric, multi-cloud strategy</td></tr>
+                                <tr><td><strong>Multi-Cloud Strategy</strong></td><td>No (Azure only)</td><td>No (AWS only)</td><td>Yes (AWS, Azure, GCP)</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- References Section -->
+            <div class="section-container shadow-md overflow-hidden">
+                <div id="references-section-header" class="p-6">
+                    <h2 class="text-2xl font-bold">11. References</h2>
+                </div>
+                <div id="references-list" class="px-6 pb-6 text-gray-300 leading-relaxed">
+                    <ul class="space-y-3 text-sm">
+                        <li id="ref-1"><strong>[1]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/vector-search-overview" target="_blank" class="source-link">Microsoft. (2024). "Vector search overview." Azure AI Search.</a></li>
+                        <li id="ref-2"><strong>[2]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/vector-search-algorithms" target="_blank" class="source-link">Microsoft. (2024). "Vector search algorithm." Azure AI Search.</a></li>
+                        <li id="ref-3"><strong>[3]</strong> <a href="https://docs.aws.amazon.com/kendra/latest/dg/what-is-kendra.html" target="_blank" class="source-link">AWS. (2024). "What Is Amazon Kendra?"</a></li>
+                        <li id="ref-4"><strong>[4]</strong> <a href="https://www.mongodb.com/docs/atlas/atlas-search/" target="_blank" class="source-link">MongoDB. (2024). "MongoDB Atlas Search."</a></li>
+                        <li id="ref-5"><strong>[5]</strong> <a href="https://arxiv.org/abs/2005.11401" target="_blank" class="source-link">Lewis, P., et al. (2000). "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks."</a></li>
+                        <li id="ref-6"><strong>[6]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/retrieval-augmented-generation-overview" target="_blank" class="source-link">Microsoft. (2024). "Retrieval Augmented Generation (RAG) in Azure AI Search."</a></li>
+                        <li id="ref-7"><strong>[7]</strong> <a href="https://aws.amazon.com/kendra/features/" target="_blank" class="source-link">AWS. (2024). "Amazon Kendra Features."</a></li>
+                        <li id="ref-8"><strong>[8]</strong> <a href="https://aws.amazon.com/blogs/machine-learning/building-advanced-rag-applications-with-amazon-kendra-and-the-new-retrieve-api/" target="_blank" class="source-link">AWS. (2024). "Building advanced RAG applications with Amazon Kendra."</a></li>
+                        <li id="ref-9"><strong>[9]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/search-what-is-azure-search" target="_blank" class="source-link">Microsoft. (2024). "What is Azure AI Search?"</a></li>
+                        <li id="ref-10"><strong>[10]</strong> <a href="https://azure.microsoft.com/en-us/products/ai-services/ai-search" target="_blank" class="source-link">Microsoft. (2024). "Azure AI Search Features."</a></li>
+                        <li id="ref-11"><strong>[11]</strong> <a href="https://docs.aws.amazon.com/kendra/latest/dg/how-kendra-works.html" target="_blank" class="source-link">AWS. (2024). "How Amazon Kendra works."</a></li>
+                        <li id="ref-12"><strong>[12]</strong> <a href="https://aws.amazon.com/kendra/" target="_blank" class="source-link">AWS. (2024). "Amazon Kendra - Intelligent Search."</a></li>
+                        <li id="ref-13"><strong>[13]</strong> <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-architecture/" target="_blank" class="source-link">MongoDB. (2024). "Atlas Search Architecture."</a></li>
+                        <li id="ref-14"><strong>[14]</strong> <a href="https://www.mongodb.com/press/mongodb-acquires-voyage-ai-to-extend-its-industry-leading-developer-data-platform-with-state-of-the-art-ai-technology" target="_blank" class="source-link">MongoDB. (2024). "MongoDB Acquires Voyage AI."</a></li>
+                        <li id="ref-15"><strong>[15]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/search-what-is-an-index" target="_blank" class="source-link">Microsoft. (2024). "Indexers in Azure AI Search."</a></li>
+                        <li id="ref-16"><strong>[16]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/search-service-overview" target="_blank" class="source-link">Microsoft. (2024). "Service components in Azure AI Search."</a></li>
+                        <li id="ref-17"><strong>[17]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/query-lucene-syntax" target="_blank" class="source-link">Microsoft. (2024). "Lucene query syntax in Azure AI Search."</a></li>
+                        <li id="ref-18"><strong>[18]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/semantic-search-overview" target="_blank" class="source-link">Microsoft. (2024). "Semantic ranking in Azure AI Search."</a></li>
+                        <li id="ref-19"><strong>[19]</strong> <a href="https://www.mongodb.com/docs/atlas/atlas-search/query-syntax/" target="_blank" class="source-link">MongoDB. (2024). "$search (aggregation)."</a></li>
+                        <li id="ref-20"><strong>[20]</strong> <a href="https://www.mongodb.com/docs/atlas/atlas-search/manage-search-nodes/" target="_blank" class="source-link">MongoDB. (2024). "Atlas Search Nodes."</a></li>
+                        <li id="ref-21"><strong>[21]</strong> <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-stage/" target="_blank" class="source-link">MongoDB. (2024). "$vectorSearch (aggregation)."</a></li>
+                        <li id="ref-22"><strong>[22]</strong> <a href="https://www.mongodb.com/atlas/search" target="_blank" class="source-link">MongoDB. (2024). "Atlas Search Features."</a></li>
+                        <li id="ref-23"><strong>[23]</strong> <a href="https://docs.aws.amazon.com/kendra/latest/dg/data-sources.html" target="_blank" class="source-link">AWS. (2024). "Data sources for Amazon Kendra."</a></li>
+                        <li id="ref-24"><strong>[24]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/search-query-overview" target="_blank" class="source-link">Microsoft. (2024). "Full-text search in Azure AI Search."</a></li>
+                        <li id="ref-25"><strong>[25]</strong> <a href="https://learn.microsoft.com/en-us/rest/api/searchservice/addupdate-or-delete-documents" target="_blank" class="source-link">Microsoft. (2024). "Add, Update or Delete Documents (REST API)."</a></li>
+                        <li id="ref-26"><strong>[26]</strong> <a href="https://docs.aws.amazon.com/kendra/latest/dg/BatchPutDocument-API.html" target="_blank" class="source-link">AWS. (2024). "BatchPutDocument API."</a></li>
+                        <li id="ref-27"><strong>[27]</strong> <a href="https://learn.microsoft.com/en-us/azure/search/search-capacity-planning" target="_blank" class="source-link">Microsoft. (2024). "Estimate and manage costs of Azure AI Search."</a></li>
+                        <li id="ref-28"><strong>[28]</strong> <a href="https://aws.amazon.com/kendra/pricing/" target="_blank" class="source-link">AWS. (2024). "Amazon Kendra Pricing."</a></li>
+                        <li id="ref-29"><strong>[29]</strong> <a href="https://www.mongodb.com/atlas/pricing" target="_blank" class="source-link">MongoDB. (2024). "Atlas Search Pricing."</a></li>
+                        <li id="ref-68"><strong>[68]</strong> <a href="https://www.mongodb.com/docs/atlas/reference/multi-cloud-clusters/" target="_blank" class="source-link">MongoDB. (2024). "Multi-Cloud Clusters."</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="diagram-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modal-title" class="text-2xl font-bold mb-4"></h3>
+            <p id="modal-description" class="text-gray-300 leading-relaxed"></p>
+            <button id="modal-close-button" class="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full w-full transition-all duration-300">Close</button>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Collapsible Sections Logic ---
+            const sectionHeaders = document.querySelectorAll('.section-header');
+            sectionHeaders.forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = document.getElementById(header.id + '-content');
+                    if (content) {
+                        header.classList.toggle('expanded');
+                        content.classList.toggle('collapsed');
+                    }
+                });
+            });
+
+            // --- Reference Link Scrolling Logic ---
+            const refLinks = document.querySelectorAll('.reference-link');
+            refLinks.forEach(link => {
+                link.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    const refId = link.getAttribute('data-ref');
+                    const targetElement = document.getElementById(refId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetElement.classList.add('highlight');
+                        setTimeout(() => {
+                            targetElement.classList.remove('highlight');
+                        }, 2000);
+                    }
+                });
+            });
+
+            // --- Text-to-Speech Audio Logic ---
+            const audioButton = document.getElementById('audio-toggle-button');
+            const audioButtonText = document.getElementById('audio-button-text');
+            const playIcon = document.getElementById('play-icon');
+            const stopIcon = document.getElementById('stop-icon');
+            let isPlaying = false;
+            let utterance = null;
+            window.addEventListener('beforeunload', () => { if (isPlaying) { speechSynthesis.cancel(); } });
+            audioButton.addEventListener('click', () => {
+                if (!('speechSynthesis' in window)) { return; }
+                if (isPlaying) {
+                    speechSynthesis.cancel();
+                } else {
+                    const summaryText = document.getElementById('section-1-content').textContent.trim();
+                    utterance = new SpeechSynthesisUtterance(summaryText);
+                    utterance.lang = 'en-US';
+                    utterance.rate = 1;
+                    utterance.onstart = () => { isPlaying = true; audioButtonText.textContent = 'Stop'; playIcon.classList.add('hidden'); stopIcon.classList.remove('hidden'); };
+                    utterance.onend = () => { isPlaying = false; audioButtonText.textContent = 'Play Summary'; playIcon.classList.remove('hidden'); stopIcon.classList.add('hidden'); utterance = null; };
+                    utterance.onerror = () => { isPlaying = false; audioButtonText.textContent = 'Play Summary'; playIcon.classList.remove('hidden'); stopIcon.classList.add('hidden'); };
+                    speechSynthesis.speak(utterance);
+                }
+            });
+
+            // --- Interactive Diagram Modal Logic ---
+            const modal = document.getElementById('diagram-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const modalCloseButton = document.getElementById('modal-close-button');
+
+            const modalData = {
+                'azure-sources': { title: 'Data Sources', description: 'Represents various heterogeneous data stores that Azure AI Search can pull from, such as Azure Blob Storage, Cosmos DB, Azure SQL, or any data pushed via the API.' },
+                'azure-indexers': { title: 'Indexers & Skillsets', description: 'Indexers automate data ingestion from Azure sources. Skillsets are AI enrichment pipelines that extract text, structure, and features from raw content. This is where data chunking and vectorization happen for RAG.' },
+                'azure-search-service': { title: 'Azure AI Search Service', description: 'The core PaaS. It is composed of replicas (for query load) and partitions (for data storage), allowing for granular, independent scaling. It hosts the Lucene and vector search indexes.' },
+                'azure-app': { title: 'Your Application / RAG', description: 'The end-user application that sends query requests to the search service and receives ranked results. In a RAG architecture, this layer sends the retrieved context to an LLM.' },
+                'kendra-connectors': { title: 'Data Source Connectors', description: 'A key strength of Kendra. It offers a vast library of pre-built connectors to enterprise systems like SharePoint, Confluence, S3, and Salesforce, simplifying data ingestion.' },
+                'kendra-index': { title: 'Kendra Intelligent Index', description: 'A managed, ML-powered index that abstracts away complexity. It automatically handles document chunking, embedding, and relevance modeling using pre-trained deep learning models.' },
+                'kendra-retriever': { title: 'Retriever API for RAG', description: 'A purpose-built API optimized for RAG applications. It fetches semantically relevant passages to be used as context for LLMs, like those on Amazon Bedrock.' },
+                'kendra-app': { title: 'Q&A App / RAG', description: 'Kendra is designed to power natural language question-answering applications or serve as the retrieval component in a larger RAG workflow.' },
+                'atlas-app': { title: 'Your Application', description: 'The application interacts directly with the MongoDB Atlas database using standard drivers. There is no separate endpoint for search; it\'s part of the database query.' },
+                'atlas-cluster': { title: 'MongoDB Atlas Cluster', description: 'The unified data platform. The database process (mongod) and the search process (mongot) run together, enabling real-time, automatic data synchronization between the database and the search index.' },
+                'atlas-voyage': { title: 'Voyage AI (Native Integration)', description: 'Represents the future state where state-of-the-art embedding and reranking models from Voyage AI are natively integrated, creating a streamlined, end-to-end retrieval pipeline within the database.' },
+                'atlas-rag': { title: 'Unified RAG Pipeline', description: 'The application performs a single query to the Atlas cluster, which can handle vector search, filtering, and reranking in one go, providing highly relevant context to the LLM.' }
+            };
+
+            document.querySelectorAll('.diagram-component').forEach(el => {
+                el.addEventListener('click', () => {
+                    const id = el.getAttribute('data-id');
+                    if (modalData[id]) {
+                        modalTitle.textContent = modalData[id].title;
+                        modalDescription.textContent = modalData[id].description;
+                        modal.classList.add('active');
+                    }
+                });
+            });
+
+            const closeModal = () => modal.classList.remove('active');
+            modalCloseButton.addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeModal();
+                }
+            });
+
+            // --- Radar Chart Logic ---
+            const ctx = document.getElementById('comparison-radar-chart');
+            if(ctx) {
+                new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: ['Developer Velocity', 'Relevance Control', 'RAG Simplicity', 'Cost Predictability', 'Multi-Cloud', 'Ease of Use'],
+                        datasets: [{
+                            label: 'Azure AI Search',
+                            data: [3, 5, 3, 4, 1, 3],
+                            fill: true,
+                            backgroundColor: 'rgba(88, 166, 255, 0.2)',
+                            borderColor: 'rgb(88, 166, 255)',
+                            pointBackgroundColor: 'rgb(88, 166, 255)',
+                        }, {
+                            label: 'AWS Kendra',
+                            data: [4, 2, 4, 2, 1, 5],
+                            fill: true,
+                            backgroundColor: 'rgba(214, 154, 88, 0.2)',
+                            borderColor: 'rgb(214, 154, 88)',
+                            pointBackgroundColor: 'rgb(214, 154, 88)',
+                        }, {
+                            label: 'Atlas Search (w/ Voyage AI)',
+                            data: [5, 4, 5, 5, 5, 4],
+                            fill: true,
+                            backgroundColor: 'rgba(72, 187, 120, 0.2)',
+                            borderColor: 'rgb(72, 187, 120)',
+                            pointBackgroundColor: 'rgb(72, 187, 120)',
+                        }]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            r: {
+                                angleLines: { color: 'rgba(226, 232, 240, 0.2)' },
+                                grid: { color: 'rgba(226, 232, 240, 0.2)' },
+                                suggestedMin: 0,
+                                suggestedMax: 5,
+                                pointLabels: { font: { size: 14 }, color: '#e2e8f0' },
+                                ticks: { stepSize: 1, color: '#a0aec0', backdropColor: 'transparent' }
+                            }
+                        },
+                        plugins: {
+                            legend: { labels: { color: '#e2e8f0' } },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        label += context.raw;
+                                        return label;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
