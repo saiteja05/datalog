@@ -23,6 +23,7 @@
         }
         .section-header {
             transition: background-color 0.2s ease-in-out;
+            cursor: pointer;
         }
         .section-header:hover {
             background-color: #21262d;
@@ -73,8 +74,14 @@
             font-weight: 600;
             color: #f0f6fc;
         }
+        tbody tr {
+            transition: background-color 0.2s ease-in-out;
+        }
         tbody tr:nth-child(even) {
             background-color: #21262d;
+        }
+        tbody tr:hover {
+            background-color: #2e343b;
         }
         h1, h2, h3, h4 {
             font-weight: 700;
@@ -165,7 +172,7 @@
                 </svg>
                 <h2 class="text-xl font-semibold border-none p-0">Audio Overview</h2>
             </div>
-            <button id="audio-toggle-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition-all duration-300 shadow-lg">
+            <button id="audio-toggle-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full flex items-center space-x-2 transition-all duration-300 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" aria-label="Play audio summary">
                 <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd" />
                 </svg>
@@ -180,7 +187,7 @@
         <div class="space-y-6">
             <!-- Section 1: Executive Summary -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-1" class="section-header expanded p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-1" class="section-header expanded p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="true" aria-controls="section-1-content">
                     <h2 class="text-2xl font-bold">1. Executive Summary</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -192,7 +199,7 @@
 
             <!-- Section 2: Visual Summary -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-2" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-2" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-2-content">
                     <h2 class="text-2xl font-bold">2. Visual Summary & Key Differentiators</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -206,7 +213,7 @@
 
             <!-- Section 3: Architecture Deep Dive with Interactive Diagrams -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-3" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-3" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-3-content">
                     <h2 class="text-2xl font-bold">3. Architecture Deep Dive (Interactive)</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -220,10 +227,10 @@
                             <line x1="95" y1="75" x2="135" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead)"/>
                             <line x1="245" y1="75" x2="285" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead)"/>
                             <line x1="395" y1="75" x2="435" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead)"/>
-                            <g class="diagram-component" data-id="azure-sources"><rect x="10" y="50" width="85" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="52.5" y="70" text-anchor="middle">Data</text><text x="52.5" y="85" text-anchor="middle">Sources</text></g>
-                            <g class="diagram-component" data-id="azure-indexers"><rect x="140" y="50" width="105" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="192.5" y="70" text-anchor="middle">Indexers &</text><text x="192.5" y="85" text-anchor="middle">Skillsets</text></g>
-                            <g class="diagram-component" data-id="azure-search-service"><rect x="290" y="50" width="105" height="50" rx="5" fill="#2b6cb0" stroke="#63b3ed"/><text x="342.5" y="70" text-anchor="middle">Azure AI</text><text x="342.5" y="85" text-anchor="middle">Search Service</text></g>
-                            <g class="diagram-component" data-id="azure-app"><rect x="440" y="50" width="85" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="482.5" y="70" text-anchor="middle">Your App</text><text x="482.5" y="85" text-anchor="middle">(RAG)</text></g>
+                            <g class="diagram-component" data-id="azure-sources" tabindex="0" role="button" aria-label="Diagram Component: Data Sources"><rect x="10" y="50" width="85" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="52.5" y="70" text-anchor="middle">Data</text><text x="52.5" y="85" text-anchor="middle">Sources</text></g>
+                            <g class="diagram-component" data-id="azure-indexers" tabindex="0" role="button" aria-label="Diagram Component: Indexers and Skillsets"><rect x="140" y="50" width="105" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="192.5" y="70" text-anchor="middle">Indexers &</text><text x="192.5" y="85" text-anchor="middle">Skillsets</text></g>
+                            <g class="diagram-component" data-id="azure-search-service" tabindex="0" role="button" aria-label="Diagram Component: Azure AI Search Service"><rect x="290" y="50" width="105" height="50" rx="5" fill="#2b6cb0" stroke="#63b3ed"/><text x="342.5" y="70" text-anchor="middle">Azure AI</text><text x="342.5" y="85" text-anchor="middle">Search Service</text></g>
+                            <g class="diagram-component" data-id="azure-app" tabindex="0" role="button" aria-label="Diagram Component: Your Application or RAG pipeline"><rect x="440" y="50" width="85" height="50" rx="5" fill="#2c5282" stroke="#63b3ed"/><text x="482.5" y="70" text-anchor="middle">Your App</text><text x="482.5" y="85" text-anchor="middle">(RAG)</text></g>
                         </svg>
                     </div>
 
@@ -234,10 +241,10 @@
                             <line x1="95" y1="75" x2="135" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-k)"/>
                             <line x1="245" y1="75" x2="285" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-k)"/>
                             <line x1="395" y1="75" x2="435" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-k)"/>
-                            <g class="diagram-component" data-id="kendra-connectors"><rect x="10" y="50" width="85" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="52.5" y="75" text-anchor="middle">Connectors</text></g>
-                            <g class="diagram-component" data-id="kendra-index"><rect x="140" y="50" width="105" height="50" rx="5" fill="#6d4c36" stroke="#d69a58"/><text x="192.5" y="70" text-anchor="middle">Kendra</text><text x="192.5" y="85" text-anchor="middle">Intelligent Index</text></g>
-                            <g class="diagram-component" data-id="kendra-retriever"><rect x="290" y="50" width="105" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="342.5" y="70" text-anchor="middle">Retriever API</text><text x="342.5" y="85" text-anchor="middle">for RAG</text></g>
-                            <g class="diagram-component" data-id="kendra-app"><rect x="440" y="50" width="85" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="482.5" y="70" text-anchor="middle">Q&A App</text><text x="482.5" y="85" text-anchor="middle">(RAG)</text></g>
+                            <g class="diagram-component" data-id="kendra-connectors" tabindex="0" role="button" aria-label="Diagram Component: Connectors"><rect x="10" y="50" width="85" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="52.5" y="75" text-anchor="middle">Connectors</text></g>
+                            <g class="diagram-component" data-id="kendra-index" tabindex="0" role="button" aria-label="Diagram Component: Kendra Intelligent Index"><rect x="140" y="50" width="105" height="50" rx="5" fill="#6d4c36" stroke="#d69a58"/><text x="192.5" y="70" text-anchor="middle">Kendra</text><text x="192.5" y="85" text-anchor="middle">Intelligent Index</text></g>
+                            <g class="diagram-component" data-id="kendra-retriever" tabindex="0" role="button" aria-label="Diagram Component: Retriever API for RAG"><rect x="290" y="50" width="105" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="342.5" y="70" text-anchor="middle">Retriever API</text><text x="342.5" y="85" text-anchor="middle">for RAG</text></g>
+                            <g class="diagram-component" data-id="kendra-app" tabindex="0" role="button" aria-label="Diagram Component: Q&A App or RAG pipeline"><rect x="440" y="50" width="85" height="50" rx="5" fill="#4a3a2a" stroke="#d69a58"/><text x="482.5" y="70" text-anchor="middle">Q&A App</text><text x="482.5" y="85" text-anchor="middle">(RAG)</text></g>
                         </svg>
                     </div>
 
@@ -247,10 +254,10 @@
                             <defs><marker id="arrowhead-a" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#6b7280"/></marker></defs>
                             <path d="M 95 75 C 115 55, 115 95, 135 75" stroke="#6b7280" stroke-width="1.5" fill="none" marker-end="url(#arrowhead-a)"/><path d="M 135 75 C 115 95, 115 55, 95 75" stroke="#6b7280" stroke-width="1.5" fill="none" marker-end="url(#arrowhead-a)"/>
                             <line x1="325" y1="75" x2="355" y2="75" stroke="#6b7280" stroke-width="1.5" marker-end="url(#arrowhead-a)"/>
-                            <g class="diagram-component" data-id="atlas-app"><rect x="10" y="50" width="85" height="50" rx="5" fill="#22543d" stroke="#48bb78"/><text x="52.5" y="70" text-anchor="middle">Your</text><text x="52.5" y="85" text-anchor="middle">Application</text></g>
-                            <g class="diagram-component" data-id="atlas-cluster"><rect x="140" y="35" width="185" height="80" rx="8" fill="#1c4532" stroke="#38a169" stroke-dasharray="4 2"/><text x="232.5" y="50" text-anchor="middle" font-weight="bold">MongoDB Atlas Cluster</text><rect x="150" y="65" width="75" height="40" rx="5" fill="#22543d" stroke="#48bb78"/><text x="187.5" y="80" text-anchor="middle">Database</text><text x="187.5" y="95" text-anchor="middle">(mongod)</text><rect x="240" y="65" width="75" height="40" rx="5" fill="#22543d" stroke="#48bb78"/><text x="277.5" y="80" text-anchor="middle">Search</text><text x="277.5" y="95" text-anchor="middle">(mongot)</text></g>
-                            <g class="diagram-component" data-id="atlas-voyage"><path d="M 190 30 C 200 0, 260 0, 270 30" stroke="#38a169" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/><rect x="205" y="0" width="70" height="25" rx="12.5" fill="#276749"/><text x="240" y="17" text-anchor="middle">Voyage AI</text></g>
-                            <g class="diagram-component" data-id="atlas-rag"><rect x="360" y="50" width="85" height="50" rx="5" fill="#22543d" stroke="#48bb78"/><text x="402.5" y="70" text-anchor="middle">Unified</text><text x="402.5" y="85" text-anchor="middle">RAG Pipeline</text></g>
+                            <g class="diagram-component" data-id="atlas-app" tabindex="0" role="button" aria-label="Diagram Component: Your Application"><rect x="10" y="50" width="85" height="50" rx="5" fill="#22543d" stroke="#48bb78"/><text x="52.5" y="70" text-anchor="middle">Your</text><text x="52.5" y="85" text-anchor="middle">Application</text></g>
+                            <g class="diagram-component" data-id="atlas-cluster" tabindex="0" role="button" aria-label="Diagram Component: MongoDB Atlas Cluster"><rect x="140" y="35" width="185" height="80" rx="8" fill="#1c4532" stroke="#38a169" stroke-dasharray="4 2"/><text x="232.5" y="50" text-anchor="middle" font-weight="bold">MongoDB Atlas Cluster</text><rect x="150" y="65" width="75" height="40" rx="5" fill="#22543d" stroke="#48bb78"/><text x="187.5" y="80" text-anchor="middle">Database</text><text x="187.5" y="95" text-anchor="middle">(mongod)</text><rect x="240" y="65" width="75" height="40" rx="5" fill="#22543d" stroke="#48bb78"/><text x="277.5" y="80" text-anchor="middle">Search</text><text x="277.5" y="95" text-anchor="middle">(mongot)</text></g>
+                            <g class="diagram-component" data-id="atlas-voyage" tabindex="0" role="button" aria-label="Diagram Component: Voyage AI Native Integration"><path d="M 190 30 C 200 0, 260 0, 270 30" stroke="#38a169" stroke-width="1.5" fill="none" stroke-dasharray="3 3"/><rect x="205" y="0" width="70" height="25" rx="12.5" fill="#276749"/><text x="240" y="17" text-anchor="middle">Voyage AI</text></g>
+                            <g class="diagram-component" data-id="atlas-rag" tabindex="0" role="button" aria-label="Diagram Component: Unified RAG Pipeline"><rect x="360" y="50" width="85" height="50" rx="5" fill="#22543d" stroke="#48bb78"/><text x="402.5" y="70" text-anchor="middle">Unified</text><text x="402.5" y="85" text-anchor="middle">RAG Pipeline</text></g>
                         </svg>
                     </div>
                 </div>
@@ -258,7 +265,7 @@
 
             <!-- Section 4: Deployment Models -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-4" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-4" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-4-content">
                     <h2 class="text-2xl font-bold">4. Deployment Models</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -275,7 +282,7 @@
 
             <!-- Section 5: Core Capabilities Comparison -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-5" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-5" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-5-content">
                     <h2 class="text-2xl font-bold">5. Core Capabilities Comparison</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -302,7 +309,7 @@
             
             <!-- Section 6: Granular Feature and Performance Analysis -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-6" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-6" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-6-content">
                     <h2 class="text-2xl font-bold">6. Granular Feature and Performance Analysis</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -332,7 +339,7 @@
 
             <!-- Section 7: Scaling from Gigabytes to Terabytes -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-7" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-7" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-7-content">
                     <h2 class="text-2xl font-bold">7. Scaling from Gigabytes to Terabytes</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -360,7 +367,7 @@
             
             <!-- Section 8: Enterprise-Ready Pricing Analysis -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-8" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-8" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-8-content">
                     <h2 class="text-2xl font-bold">8. Enterprise-Ready Pricing Analysis</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -414,7 +421,7 @@
 
             <!-- Section 9: Key Takeaways & Use Cases -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-9" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-9" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-9-content">
                     <h2 class="text-2xl font-bold">9. Key Takeaways & Use Cases</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -450,7 +457,7 @@
 
             <!-- Section 10: Strategic Recommendations -->
             <div class="section-container shadow-md overflow-hidden">
-                <div id="section-10" class="section-header p-6 cursor-pointer flex justify-between items-center">
+                <div id="section-10" class="section-header p-6 flex justify-between items-center" role="button" tabindex="0" aria-expanded="false" aria-controls="section-10-content">
                     <h2 class="text-2xl font-bold">10. Strategic Recommendations</h2>
                     <svg class="arrow h-6 w-6 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
                 </div>
@@ -536,8 +543,15 @@
                 header.addEventListener('click', () => {
                     const content = document.getElementById(header.id + '-content');
                     if (content) {
-                        header.classList.toggle('expanded');
+                        const isExpanded = header.classList.toggle('expanded');
+                        header.setAttribute('aria-expanded', isExpanded);
                         content.classList.toggle('collapsed');
+                    }
+                });
+                header.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        header.click();
                     }
                 });
             });
@@ -568,7 +582,11 @@
             let utterance = null;
             window.addEventListener('beforeunload', () => { if (isPlaying) { speechSynthesis.cancel(); } });
             audioButton.addEventListener('click', () => {
-                if (!('speechSynthesis' in window)) { return; }
+                if (!('speechSynthesis' in window)) {
+                    audioButton.disabled = true;
+                    audioButtonText.textContent = "Not Supported";
+                    return;
+                }
                 if (isPlaying) {
                     speechSynthesis.cancel();
                 } else {
@@ -576,9 +594,9 @@
                     utterance = new SpeechSynthesisUtterance(summaryText);
                     utterance.lang = 'en-US';
                     utterance.rate = 1;
-                    utterance.onstart = () => { isPlaying = true; audioButtonText.textContent = 'Stop'; playIcon.classList.add('hidden'); stopIcon.classList.remove('hidden'); };
-                    utterance.onend = () => { isPlaying = false; audioButtonText.textContent = 'Play Summary'; playIcon.classList.remove('hidden'); stopIcon.classList.add('hidden'); utterance = null; };
-                    utterance.onerror = () => { isPlaying = false; audioButtonText.textContent = 'Play Summary'; playIcon.classList.remove('hidden'); stopIcon.classList.add('hidden'); };
+                    utterance.onstart = () => { isPlaying = true; audioButtonText.textContent = 'Stop'; playIcon.classList.add('hidden'); stopIcon.classList.remove('hidden'); audioButton.setAttribute('aria-label', 'Stop audio summary'); };
+                    utterance.onend = () => { isPlaying = false; audioButtonText.textContent = 'Play Summary'; playIcon.classList.remove('hidden'); stopIcon.classList.add('hidden'); utterance = null; audioButton.setAttribute('aria-label', 'Play audio summary'); };
+                    utterance.onerror = (e) => { console.error("Speech synthesis error:", e); isPlaying = false; audioButtonText.textContent = 'Play Summary'; playIcon.classList.remove('hidden'); stopIcon.classList.add('hidden'); };
                     speechSynthesis.speak(utterance);
                 }
             });
@@ -588,6 +606,17 @@
             const modalTitle = document.getElementById('modal-title');
             const modalDescription = document.getElementById('modal-description');
             const modalCloseButton = document.getElementById('modal-close-button');
+
+            const openModal = (id) => {
+                 if (modalData[id]) {
+                    modalTitle.textContent = modalData[id].title;
+                    modalDescription.textContent = modalData[id].description;
+                    modal.classList.add('active');
+                    modalCloseButton.focus();
+                }
+            }
+
+            const closeModal = () => modal.classList.remove('active');
 
             const modalData = {
                 'azure-sources': { title: 'Data Sources', description: 'Represents various heterogeneous data stores that Azure AI Search can pull from, such as Azure Blob Storage, Cosmos DB, Azure SQL, or any data pushed via the API.' },
@@ -605,81 +634,80 @@
             };
 
             document.querySelectorAll('.diagram-component').forEach(el => {
-                el.addEventListener('click', () => {
-                    const id = el.getAttribute('data-id');
-                    if (modalData[id]) {
-                        modalTitle.textContent = modalData[id].title;
-                        modalDescription.textContent = modalData[id].description;
-                        modal.classList.add('active');
+                el.addEventListener('click', () => openModal(el.dataset.id));
+                el.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        openModal(el.dataset.id);
                     }
                 });
             });
 
-            const closeModal = () => modal.classList.remove('active');
             modalCloseButton.addEventListener('click', closeModal);
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeModal();
-                }
-            });
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+            window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('active')) closeModal(); });
 
             // --- Radar Chart Logic ---
-            const ctx = document.getElementById('comparison-radar-chart');
-            if(ctx) {
-                new Chart(ctx, {
-                    type: 'radar',
-                    data: {
-                        labels: ['Developer Velocity', 'Relevance Control', 'RAG Simplicity', 'Cost Predictability', 'Multi-Cloud', 'Ease of Use'],
-                        datasets: [{
-                            label: 'Azure AI Search',
-                            data: [3, 5, 3, 4, 1, 3],
-                            fill: true,
-                            backgroundColor: 'rgba(88, 166, 255, 0.2)',
-                            borderColor: 'rgb(88, 166, 255)',
-                            pointBackgroundColor: 'rgb(88, 166, 255)',
-                        }, {
-                            label: 'AWS Kendra',
-                            data: [4, 2, 4, 2, 1, 5],
-                            fill: true,
-                            backgroundColor: 'rgba(214, 154, 88, 0.2)',
-                            borderColor: 'rgb(214, 154, 88)',
-                            pointBackgroundColor: 'rgb(214, 154, 88)',
-                        }, {
-                            label: 'Atlas Search (w/ Voyage AI)',
-                            data: [5, 4, 5, 5, 5, 4],
-                            fill: true,
-                            backgroundColor: 'rgba(72, 187, 120, 0.2)',
-                            borderColor: 'rgb(72, 187, 120)',
-                            pointBackgroundColor: 'rgb(72, 187, 120)',
-                        }]
-                    },
-                    options: {
-                        maintainAspectRatio: false,
-                        scales: {
-                            r: {
-                                angleLines: { color: 'rgba(226, 232, 240, 0.2)' },
-                                grid: { color: 'rgba(226, 232, 240, 0.2)' },
-                                suggestedMin: 0,
-                                suggestedMax: 5,
-                                pointLabels: { font: { size: 14 }, color: '#e2e8f0' },
-                                ticks: { stepSize: 1, color: '#a0aec0', backdropColor: 'transparent' }
-                            }
+            try {
+                const ctx = document.getElementById('comparison-radar-chart');
+                if(ctx) {
+                    new Chart(ctx, {
+                        type: 'radar',
+                        data: {
+                            labels: ['Developer Velocity', 'Relevance Control', 'RAG Simplicity', 'Cost Predictability', 'Multi-Cloud', 'Ease of Use'],
+                            datasets: [{
+                                label: 'Azure AI Search',
+                                data: [3, 5, 3, 4, 1, 3],
+                                fill: true,
+                                backgroundColor: 'rgba(88, 166, 255, 0.2)',
+                                borderColor: 'rgb(88, 166, 255)',
+                                pointBackgroundColor: 'rgb(88, 166, 255)',
+                            }, {
+                                label: 'AWS Kendra',
+                                data: [4, 2, 4, 2, 1, 5],
+                                fill: true,
+                                backgroundColor: 'rgba(214, 154, 88, 0.2)',
+                                borderColor: 'rgb(214, 154, 88)',
+                                pointBackgroundColor: 'rgb(214, 154, 88)',
+                            }, {
+                                label: 'Atlas Search (w/ Voyage AI)',
+                                data: [5, 4, 5, 5, 5, 4],
+                                fill: true,
+                                backgroundColor: 'rgba(72, 187, 120, 0.2)',
+                                borderColor: 'rgb(72, 187, 120)',
+                                pointBackgroundColor: 'rgb(72, 187, 120)',
+                            }]
                         },
-                        plugins: {
-                            legend: { labels: { color: '#e2e8f0' } },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(context) {
-                                        let label = context.dataset.label || '';
-                                        if (label) { label += ': '; }
-                                        label += context.raw;
-                                        return label;
+                        options: {
+                            maintainAspectRatio: false,
+                            scales: {
+                                r: {
+                                    angleLines: { color: 'rgba(226, 232, 240, 0.2)' },
+                                    grid: { color: 'rgba(226, 232, 240, 0.2)' },
+                                    suggestedMin: 0,
+                                    suggestedMax: 5,
+                                    pointLabels: { font: { size: 14 }, color: '#e2e8f0' },
+                                    ticks: { stepSize: 1, color: '#a0aec0', backdropColor: 'transparent' }
+                                }
+                            },
+                            plugins: {
+                                legend: { labels: { color: '#e2e8f0' } },
+                                tooltip: {
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) { label += ': '; }
+                                            label += context.raw;
+                                            return label;
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
-                });
+                    });
+                }
+            } catch (e) {
+                console.error("Failed to initialize radar chart:", e);
             }
         });
     </script>
