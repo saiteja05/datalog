@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Sentinel | AI-Powered Operations at Cognizant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: MongoDB Black & Green -->
+    <!-- Application Structure Plan: The application is designed as a "Solution-Oriented Dashboard". This structure moves away from the linear format of the source report to a more engaging, explorable interface. The user lands on a high-level vision and can then dive into four distinct, interactive "Solution" modules (Discover, Code-Sight, Talent-Verse, Proposal-Gen). This task-oriented design allows different stakeholders (executives, developers, HR) to quickly access the information most relevant to them. The user flow encourages exploration, with key sections like Technology, Roadmap, and ROI providing overarching context. This structure was chosen to make dense, strategic information digestible and to highlight the practical applications and benefits of the proposed initiatives, enhancing user understanding and buy-in. -->
+    <!-- Visualization & Content Choices: 
+        - Vision Section: Goal: Inform. Method: Side-by-side cards comparing keyword vs. semantic search. Interaction: Subtle hover animations. Justification: Visually contrasts the core problem and solution.
+        - Solutions Section: Goal: Organize/Inform. Method: A grid of interactive cards. Interaction: Click to scroll to a detailed section. Justification: Provides a clear, high-level overview of the four key initiatives and serves as the main navigation hub.
+        - Architecture Diagrams: Goal: Organize. Method: Recreated using HTML/CSS (Tailwind). NO SVG. Interaction: Tooltips on key components. Justification: Makes technical diagrams accessible without external graphics, maintaining a consistent style.
+        - Roadmap: Goal: Change. Method: A vertical timeline built with HTML/CSS. Interaction: Highlighting phases on hover/click. Justification: Presents time-based information intuitively.
+        - ROI Chart: Goal: Compare/Inform. Method: An interactive bar chart using Chart.js. Interaction: Buttons to dynamically update the chart data to show different ROI metrics. Justification: Allows users to explore the financial impact from multiple perspectives, making the data more engaging and understandable.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* gray-900 */
+            color: #d1d5db; /* gray-300 */
+        }
+        .nav-link {
+            transition: color 0.2s ease-in-out;
+        }
+        .nav-link:hover {
+            color: #22c55e; /* green-500 */
+        }
+        .solution-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .solution-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .chartjs-tooltip {
+            background: rgba(31, 41, 55, 0.9);
+            border-radius: 0.5rem;
+            color: white;
+            padding: 0.5rem 0.75rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Header & Navigation -->
+    <header class="bg-gray-900/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-700">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center">
+                    <span class="font-bold text-xl text-green-500">Project Sentinel</span>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#vision" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300">The Vision</a>
+                        <a href="#solutions" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300">Solutions</a>
+                        <a href="#technology" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300">Technology</a>
+                        <a href="#roadmap" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300">Roadmap</a>
+                        <a href="#roi" class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-300">ROI</a>
+                    </div>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="vision" class="py-20 sm:py-28">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-gray-100">
+                    From Searching for Words to<br>Finding <span class="text-green-500">Meaning</span>.
+                </h1>
+                <p class="mt-6 max-w-3xl mx-auto text-lg sm:text-xl text-gray-400">
+                    This is Project Sentinel: A strategic vision to transform Cognizant's internal operations by replacing outdated keyword search with a new era of semantic intelligence, powered by MongoDB Atlas Vector Search.
+                </p>
+            </div>
+            <div class="mt-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-sm">
+                    <h3 class="text-2xl font-semibold text-gray-100">The Old Way: Keyword Search</h3>
+                    <p class="mt-2 text-gray-400">Relies on exact word matching. Fails to understand user intent, leading to missed information and wasted time.</p>
+                    <div class="mt-4 p-4 border border-red-900 bg-red-900/20 rounded-lg">
+                        <p class="font-mono text-sm">Search: <span class="text-red-400">"secure token validation"</span></p>
+                        <hr class="my-2 border-gray-600">
+                        <p class="text-sm text-gray-500">Misses document titled <span class="font-medium text-gray-300">"Authentication Credential Parser Guide"</span>.</p>
+                        <p class="mt-2 text-lg font-semibold text-red-500 text-center">→ 0 Relevant Results</p>
+                    </div>
+                </div>
+                <div class="bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-sm">
+                    <h3 class="text-2xl font-semibold text-gray-100">The Sentinel Way: Semantic Search</h3>
+                    <p class="mt-2 text-gray-400">Understands the meaning and context behind a query, finding conceptually related information.</p>
+                    <div class="mt-4 p-4 border border-green-900 bg-green-900/20 rounded-lg">
+                        <p class="font-mono text-sm">Search: <span class="text-green-400">"how to validate a security token"</span></p>
+                        <hr class="my-2 border-gray-600">
+                        <p class="text-sm text-gray-500">Finds document titled <span class="font-medium text-gray-300">"Authentication Credential Parser Guide"</span>.</p>
+                        <p class="mt-2 text-lg font-semibold text-green-500 text-center">→ Finds The Best Answer</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solutions Section -->
+        <section id="solutions" class="py-20 bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-gray-100">The Sentinel AI Suite</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-400">
+                        Four powerful applications built on MongoDB Atlas Vector Search to solve critical internal challenges, turning IT into an engine for innovation and revenue. 
+                    </p>
+                    <h6>The try me sections below are illustrative only.</h6>
+                </div>
+
+                <div class="mt-16 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Solution Card: Discover -->
+                    <a href="#solution-discover" class="solution-card block p-8 bg-gray-900 rounded-xl border border-gray-700 text-center">
+                        <div class="text-4xl text-green-500">🔍</div>
+                        <h3 class="mt-4 text-xl font-semibold text-gray-100">Cognizant Discover</h3>
+                        <p class="mt-2 text-gray-400">A unified knowledge hub to find any document or piece of information across the entire enterprise instantly.</p>
+                    </a>
+                    <!-- Solution Card: Code-Sight -->
+                    <a href="#solution-codesight" class="solution-card block p-8 bg-gray-900 rounded-xl border border-gray-700 text-center">
+                        <div class="text-4xl text-green-500">💻</div>
+                        <h3 class="mt-4 text-xl font-semibold text-gray-100">Cognizant Code-Sight</h3>
+                        <p class="mt-2 text-gray-400">A semantic code search engine to find reusable code and assets based on their function, not just keywords.</p>
+                    </a>
+                    <!-- Solution Card: Talent-Verse -->
+                    <a href="#solution-talentverse" class="solution-card block p-8 bg-gray-900 rounded-xl border border-gray-700 text-center">
+                        <div class="text-4xl text-green-500">👥</div>
+                        <h3 class="mt-4 text-xl font-semibold text-gray-100">Cognizant Talent-Verse</h3>
+                        <p class="mt-2 text-gray-400">An AI-powered marketplace to match the right people with the right skills to the right opportunities.</p>
+                    </a>
+                    <!-- Solution Card: Proposal-Gen -->
+                    <a href="#solution-proposalgen" class="solution-card block p-8 bg-gray-900 rounded-xl border border-gray-700 text-center">
+                        <div class="text-4xl text-green-500">📄</div>
+                        <h3 class="mt-4 text-xl font-semibold text-gray-100">Cognizant Proposal-Gen</h3>
+                        <p class="mt-2 text-gray-400">An automated engine to accelerate sales by generating high-quality RFP responses in a fraction of the time.</p>
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Solution Details Sections -->
+        <div class="space-y-24 py-24">
+            <!-- Discover Details -->
+            <section id="solution-discover" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-3xl font-bold text-gray-100">🔍 Cognizant Discover: The Unified Knowledge Hub</h3>
+                        <p class="mt-4 text-lg text-gray-400">This platform will serve as a single, intelligent search layer across all of Cognizant's siloed knowledge repositories like SharePoint, Confluence, and Teams. It ends knowledge fragmentation and the high cost of employees hunting for information.</p>
+                        <div class="mt-8 p-6 bg-gray-800 rounded-xl border border-gray-700">
+                            <label for="discover-search" class="block text-sm font-medium text-gray-300">Try the "Discover" Experience</label>
+                            <input type="text" id="discover-search" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-gray-200 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" placeholder="Ask a question, e.g., 'Best practices for cloud migration?'">
+                            <div id="discover-results" class="mt-4 space-y-3"></div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gray-800 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-center text-gray-100">Ingestion & Security Architecture</h4>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <div class="flex items-center space-x-2 justify-center">
+                                <span class="font-mono bg-gray-700 text-blue-300 px-2 py-1 rounded">SharePoint</span>
+                                <span class="font-mono bg-gray-700 text-blue-300 px-2 py-1 rounded">Confluence</span>
+                                <span class="font-mono bg-gray-700 text-blue-300 px-2 py-1 rounded">Teams</span>
+                            </div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-gray-700 rounded-md text-center text-gray-300">Event-Driven Ingestion Pipeline (Kafka)</div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-green-900/30 text-green-300 rounded-md text-center font-semibold">MongoDB Atlas Vector Search Index</div>
+                            <div class="text-xs text-gray-500 text-center">Embeddings + Metadata + Source ACLs for Security</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Code-Sight Details -->
+            <section id="solution-codesight" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 lg:order-2">
+                        <h4 class="font-semibold text-center text-gray-100">Code Processing Pipeline</h4>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <div class="flex items-center space-x-2 justify-center">
+                                <span class="font-mono bg-gray-700 text-gray-300 px-2 py-1 rounded">GitHub</span>
+                                <span class="font-mono bg-gray-700 text-gray-300 px-2 py-1 rounded">Azure DevOps</span>
+                            </div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-gray-700 rounded-md text-center text-gray-300">Parse into Abstract Syntax Trees (ASTs)</div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-gray-700 rounded-md text-center text-gray-300">Generate Embeddings with Code-Specific Model</div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-green-900/30 text-green-300 rounded-md text-center font-semibold">Code-Sight Vector Index</div>
+                        </div>
+                    </div>
+                    <div class="lg:order-1">
+                        <h3 class="text-3xl font-bold text-gray-100">💻 Cognizant Code-Sight: Intelligent Asset Repository</h3>
+                        <p class="mt-4 text-lg text-gray-400">Code-Sight allows developers to search for code based on its *functionality* described in natural language, not just keywords. It makes code reuse a reality, accelerates onboarding, and helps proactively manage technical debt and security.</p>
+                        <div class="mt-8 p-6 bg-gray-800 rounded-xl border border-gray-700">
+                             <label for="codesight-search" class="block text-sm font-medium text-gray-300">Try the "Code-Sight" Experience</label>
+                            <input type="text" id="codesight-search" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-gray-200 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" placeholder="e.g., 'Java function for retry with exponential backoff'">
+                            <div id="codesight-results" class="mt-4 space-y-3"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Talent-Verse Details -->
+            <section id="solution-talentverse" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h3 class="text-3xl font-bold text-gray-100">👥 Cognizant Talent-Verse: AI-Powered Opportunity Marketplace</h3>
+                        <p class="mt-4 text-lg text-gray-400">Moves beyond static job titles to a dynamic, skills-based talent marketplace. It analyzes performance reviews, project contributions, and more to build a true picture of employee expertise, connecting the right people to the right projeCognizant.</p>
+                        <div class="mt-8 p-6 bg-gray-800 rounded-xl border border-gray-700">
+                             <label for="talentverse-search" class="block text-sm font-medium text-gray-300">Try the "Talent-Verse" Experience</label>
+                            <input type="text" id="talentverse-search" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-gray-200 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" placeholder="e.g., 'Expert in Azure data engineering and financial services'">
+                            <div id="talentverse-results" class="mt-4 space-y-3"></div>
+                        </div>
+                    </div>
+                    <div class="p-6 bg-gray-800 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-center text-gray-100">Skills Matching Engine</h4>
+                        <div class="mt-4 space-y-2 text-sm flex justify-around items-center">
+                            <div class="text-center">
+                                <div class="p-3 bg-blue-900/40 text-blue-300 rounded-md">Employee Skill Vectors</div>
+                                <div class="text-xs text-gray-500">(from reviews, docs, etc.)</div>
+                            </div>
+                            <div class="text-3xl text-green-500 font-thin">+</div>
+                            <div class="text-center">
+                                <div class="p-3 bg-emerald-900/40 text-emerald-300 rounded-md">Opportunity Vectors</div>
+                                <div class="text-xs text-gray-500">(from project needs)</div>
+                            </div>
+                        </div>
+                        <div class="text-center text-2xl mt-2 text-gray-500">↓</div>
+                        <div class="p-3 bg-green-900/30 text-green-300 rounded-md text-center font-semibold">Semantic Match in Atlas</div>
+                        <div class="text-center text-2xl mt-2 text-gray-500">↓</div>
+                        <div class="text-center font-medium text-gray-200">Ranked List of Best-Fit Candidates</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Proposal-Gen Details -->
+            <section id="solution-proposalgen" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 section-fade-in">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    <div class="p-6 bg-gray-800 rounded-xl border border-gray-700 lg:order-2">
+                        <h4 class="font-semibold text-center text-gray-100">RAG-Powered Workflow</h4>
+                        <div class="mt-4 space-y-2 text-sm">
+                            <div class="p-3 bg-gray-700 rounded-md text-center text-gray-300">1. Ingest RFP Document</div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-green-900/30 text-green-300 rounded-md text-center font-semibold">2. Retrieve Relevant Content from Knowledge Base using Vector Search</div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-gray-700 rounded-md text-center text-gray-300">3. Generate Draft Answer with LLM (Grounded in Retrieved FaCognizant)</div>
+                            <div class="text-center text-2xl text-gray-500">↓</div>
+                            <div class="p-3 bg-emerald-900/40 text-emerald-300 rounded-md text-center font-semibold">4. Assemble 75% Complete First Draft for Human Review</div>
+                        </div>
+                    </div>
+                    <div class="lg:order-1">
+                        <h3 class="text-3xl font-bold text-gray-100">📄 Cognizant Proposal-Gen: Automated Sales Engine</h3>
+                        <p class="mt-4 text-lg text-gray-400">A powerful AI co-pilot for the sales team. It automates the most time-consuming parts of responding to RFPs by finding the best past content and generating high-quality draft answers, freeing the team to focus on strategy and winning deals.</p>
+                        <div class="mt-8 p-6 bg-gray-800 rounded-xl border border-gray-700">
+                             <label for="proposalgen-search" class="block text-sm font-medium text-gray-300">Try the "Proposal-Gen" Experience</label>
+                            <textarea id="proposalgen-search" rows="3" class="mt-1 block w-full rounded-md border-gray-600 bg-gray-900 text-gray-200 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" placeholder="Paste an RFP question here, e.g., 'Describe your data security and privacy policies.'"></textarea>
+                            <div id="proposalgen-results" class="mt-4 p-4 bg-gray-900 rounded-md text-sm text-gray-300 hidden"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+        
+        <!-- Technology Section -->
+        <section id="technology" class="py-20 bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-gray-100">Core Technology Capabilities</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-400">
+                        These three features of MongoDB Atlas Vector Search are the foundation of every Sentinel application.
+                    </p>
+                </div>
+                <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="p-6 bg-gray-900 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-lg text-gray-200">Semantic Search</h4>
+                        <p class="mt-2 text-gray-400">Finds data based on conceptual meaning, not just keywords. The core of understanding user intent.</p>
+                    </div>
+                    <div class="p-6 bg-gray-900 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-lg text-gray-200">Hybrid Search</h4>
+                        <p class="mt-2 text-gray-400">Combines semantic search with precise metadata filtering (e.g., by date, client, or project) for unparalleled accuracy.</p>
+                    </div>
+                    <div class="p-6 bg-gray-900 rounded-xl border border-gray-700">
+                        <h4 class="font-semibold text-lg text-gray-200">Retrieval-Augmented Generation (RAG)</h4>
+                        <p class="mt-2 text-gray-400">Grounds generative AI answers in your own trusted data, preventing "hallucinations" and ensuring factual, verifiable responses.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Roadmap Section -->
+        <section id="roadmap" class="py-20">
+            <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-gray-100">Implementation Roadmap</h2>
+                    <p class="mt-4 text-lg text-gray-400">A pragmatic, three-phase approach to deliver value early and build momentum.</p>
+                </div>
+                <div class="mt-12 flow-root">
+                    <ul class="-mb-8">
+                        <li>
+                            <div class="relative pb-8">
+                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-700" aria-hidden="true"></span>
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center ring-8 ring-gray-900">
+                                            <span class="text-white font-bold">1</span>
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">Phase 1 (Months 1-6)</p>
+                                            <p class="font-medium text-gray-200">Foundation & Knowledge Hub</p>
+                                            <p class="mt-1 text-sm text-gray-400">Deploy Cognizant Discover MVP, set up core infrastructure, and implement the security framework.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="relative pb-8">
+                                <span class="absolute top-4 left-4 -ml-px h-full w-0.5 bg-gray-700" aria-hidden="true"></span>
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center ring-8 ring-gray-900">
+                                            <span class="text-white font-bold">2</span>
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">Phase 2 (Months 7-18)</p>
+                                            <p class="font-medium text-gray-200">High-Value Verticals: Code & Talent</p>
+                                            <p class="mt-1 text-sm text-gray-400">Develop Cognizant Code-Sight and Cognizant Talent-Verse. Establish AI ethics and governance.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="relative">
+                                <div class="relative flex space-x-3">
+                                    <div>
+                                        <span class="h-8 w-8 rounded-full bg-green-600 flex items-center justify-center ring-8 ring-gray-900">
+                                            <span class="text-white font-bold">3</span>
+                                        </span>
+                                    </div>
+                                    <div class="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
+                                        <div>
+                                            <p class="text-sm text-gray-500">Phase 3 (Months 19+)</p>
+                                            <p class="font-medium text-gray-200">Scaling & Optimization</p>
+                                            <p class="mt-1 text-sm text-gray-400">Launch Cognizant Proposal-Gen, scale all platforms enterprise-wide, and establish an AI Center of Excellence.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- ROI Section -->
+        <section id="roi" class="py-20 bg-gray-800">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-gray-100">Return on Intelligence</h2>
+                    <p class="mt-4 max-w-2xl mx-auto text-lg text-gray-400">
+                        Project Sentinel delivers quantifiable financial impact and powerful strategic advantages.
+                    </p>
+                </div>
+                <div class="mt-12">
+                    <div class="flex justify-center mb-8">
+                        <div id="roi-controls" class="inline-flex rounded-md shadow-sm" role="group">
+                            <button type="button" data-metric="productivity" class="roi-button bg-green-600 text-white px-4 py-2 text-sm font-medium border border-green-600 rounded-l-lg">Productivity Gain</button>
+                            <button type="button" data-metric="savings" class="roi-button bg-gray-700 text-gray-300 px-4 py-2 text-sm font-medium border-t border-b border-gray-600 hover:bg-gray-600">Cost Savings</button>
+                            <button type="button" data-metric="revenue" class="roi-button bg-gray-700 text-gray-300 px-4 py-2 text-sm font-medium border border-gray-600 rounded-r-md hover:bg-gray-600">Revenue Growth</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="roiChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="bg-gray-900">
+        <div class="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-2xl font-semibold text-green-500">Project Sentinel</p>
+            <p class="mt-2 text-base text-gray-400">Transforming Cognizant with Semantic Intelligence.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- FADE-IN ANIMATION ON SCROLL ---
+            const sections = document.querySelectorAll('.section-fade-in');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            sections.forEach(section => observer.observe(section));
+
+            // --- SIMULATED SEARCH DEMOS ---
+            const discoverInput = document.getElementById('discover-search');
+            const discoverResults = document.getElementById('discover-results');
+            discoverInput.addEventListener('keyup', (e) => {
+                if (e.key === 'Enter' && e.target.value) {
+                    discoverResults.innerHTML = `
+                        <div class="p-3 bg-gray-900 rounded-md border border-gray-700">
+                            <p class="font-semibold text-green-500">Cloud Migration Best Practices Guide.pdf</p>
+                            <p class="text-sm text-gray-400">...our framework for <span class="bg-yellow-400/30 text-yellow-300">cloud migration</span> involves three key phases: Assessment, Planning, and Execution. We recommend starting with non-critical workloads...</p>
+                            <p class="text-xs text-gray-500 mt-1">Source: SharePoint / Project Documents</p>
+                        </div>
+                        <div class="p-3 bg-gray-900 rounded-md border border-gray-700">
+                            <p class="font-semibold text-green-500">Project Apollo - Lessons Learned</p>
+                            <p class="text-sm text-gray-400">...a key takeaway from the Apollo <span class="bg-yellow-400/30 text-yellow-300">cloud migration</span> was the importance of early stakeholder buy-in and robust data governance...</p>
+                            <p class="text-xs text-gray-500 mt-1">Source: Confluence / PMO Space</p>
+                        </div>`;
+                }
+            });
+
+            const codesightInput = document.getElementById('codesight-search');
+            const codesightResults = document.getElementById('codesight-results');
+            codesightInput.addEventListener('keyup', (e) => {
+                 if (e.key === 'Enter' && e.target.value) {
+                    codesightResults.innerHTML = `
+                        <div class="p-3 bg-gray-900 text-gray-200 font-mono text-sm rounded-md border border-gray-700">
+                            <p class="text-gray-500">// Found in: common-utils/HttpClient.java</p>
+                            <p><span class="text-cyan-400">public void</span> <span class="text-yellow-300">makeRequestWithRetry</span>(...) {</p>
+                            <p class="ml-4"><span class="text-purple-400">int</span> attempts = 0;</p>
+                            <p class="ml-4"><span class="text-purple-400">while</span> (attempts < MAX_RETRIES) {</p>
+                            <p class="ml-8"><span class="text-gray-500">// ... implementation with exponential backoff</span></p>
+                            <p class="ml-4">}</p>
+                            <p>}</p>
+                        </div>`;
+                }
+            });
+
+            const talentverseInput = document.getElementById('talentverse-search');
+            const talentverseResults = document.getElementById('talentverse-results');
+            talentverseInput.addEventListener('keyup', (e) => {
+                 if (e.key === 'Enter' && e.target.value) {
+                    talentverseResults.innerHTML = `
+                        <div class="p-3 bg-gray-900 rounded-md border border-gray-700 flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-green-900/50 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-green-400">AS</div>
+                            <div>
+                                <p class="font-semibold text-green-500">Anjali Sharma</p>
+                                <p class="text-sm text-gray-400">Top Skills: Data Engineering, Apache Spark, Azure Synapse</p>
+                                <p class="text-xs text-gray-500 mt-1">Match Score: 94%</p>
+                            </div>
+                        </div>
+                        <div class="p-3 bg-gray-900 rounded-md border border-gray-700 flex items-center space-x-4">
+                            <div class="w-12 h-12 bg-green-900/50 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-green-400">BC</div>
+                            <div>
+                                <p class="font-semibold text-green-500">Ben Carter</p>
+                                <p class="text-sm text-gray-400">Top Skills: Data Architecture, Azure Data Factory, Financial Modeling</p>
+                                <p class="text-xs text-gray-500 mt-1">Match Score: 89%</p>
+                            </div>
+                        </div>`;
+                }
+            });
+
+            const proposalgenInput = document.getElementById('proposalgen-search');
+            const proposalgenResults = document.getElementById('proposalgen-results');
+            proposalgenInput.addEventListener('keyup', (e) => {
+                 if (e.target.value) {
+                    proposalgenResults.classList.remove('hidden');
+                    proposalgenResults.innerHTML = `
+                        <p class="font-semibold mb-2 text-gray-200">Generated Draft Answer (from Knowledge Base):</p>
+                        <p>Cognizant adheres to a comprehensive data security and privacy program, compliant with global standards such as ISO 27001 and SOC 2 Type II. Our policies ensure that all client data is encrypted both at rest and in transit. Access is strictly controlled via Role-Based Access Control (RBAC) and the principle of least privilege. We are fully compliant with GDPR and CCPA regulations... [Source: Standard Compliance Doc v3.4]</p>`;
+                } else {
+                    proposalgenResults.classList.add('hidden');
+                }
+            });
+
+            // --- ROI CHART LOGIC ---
+            const roiData = {
+                productivity: {
+                    labels: ['Cognizant Discover', 'Cognizant Code-Sight'],
+                    values: [25, 20],
+                    title: 'Annual Productivity Gain (Estimated %)',
+                    backgroundColor: 'rgba(34, 197, 94, 0.6)',
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                },
+                savings: {
+                    labels: ['Cognizant Talent-Verse', 'Cognizant Code-Sight'],
+                    values: [15, 10],
+                    title: 'Annual Cost Savings (Estimated %)',
+                    backgroundColor: 'rgba(16, 185, 129, 0.6)',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                },
+                revenue: {
+                    labels: ['Cognizant Proposal-Gen'],
+                    values: [12],
+                    title: 'Annual Revenue Growth (Estimated %)',
+                    backgroundColor: 'rgba(52, 211, 153, 0.6)',
+                    borderColor: 'rgba(52, 211, 153, 1)',
+                }
+            };
+
+            const ctx = document.getElementById('roiChart').getContext('2d');
+            let roiChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: roiData.productivity.labels,
+                    datasets: [{
+                        label: roiData.productivity.title,
+                        data: roiData.productivity.values,
+                        backgroundColor: roiData.productivity.backgroundColor,
+                        borderColor: roiData.productivity.borderColor,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: {
+                            display: true,
+                            text: roiData.productivity.title,
+                            font: { size: 16 },
+                            color: '#f3f4f6' // gray-100
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: {
+                                color: '#d1d5db', // gray-300
+                                callback: function(value) { return value + '%' }
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#d1d5db' } // gray-300
+                        }
+                    }
+                }
+            });
+
+            const roiButtons = document.querySelectorAll('.roi-button');
+            roiButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const metric = button.dataset.metric;
+                    const chartData = roiData[metric];
+                    
+                    roiChart.data.labels = chartData.labels;
+                    roiChart.data.datasets[0].data = chartData.values;
+                    roiChart.data.datasets[0].backgroundColor = chartData.backgroundColor;
+                    roiChart.data.datasets[0].borderColor = chartData.borderColor;
+                    roiChart.options.plugins.title.text = chartData.title;
+                    roiChart.update();
+
+                    roiButtons.forEach(btn => {
+                        btn.classList.remove('bg-green-600', 'text-white');
+                        btn.classList.add('bg-gray-700', 'text-gray-300');
+                    });
+                    button.classList.add('bg-green-600', 'text-white');
+                    button.classList.remove('bg-gray-700', 'text-gray-300');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
