@@ -1,0 +1,3199 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>MongoDB CRUD Operations - Comprehensive Guide</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+        />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+        <style>
+            body {
+                font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+                line-height: 1.6;
+                margin: 0;
+                padding: 20px;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            }
+            .container {
+                max-width: 1200px;
+                margin: 0 auto;
+                background: white;
+                padding: 30px;
+                border-radius: 12px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            }
+            h1 {
+                color: #00684a;
+                text-align: center;
+                border-bottom: 4px solid #00ed64;
+                padding-bottom: 15px;
+                margin-bottom: 30px;
+                font-size: 2.2em;
+            }
+            h1 small {
+                display: block;
+                color: #13aa52;
+                font-size: 0.6em;
+                margin-top: 10px;
+            }
+            h2 {
+                background: linear-gradient(135deg, #00684a 0%, #13aa52 100%);
+                color: white;
+                padding: 15px 20px;
+                border-radius: 8px;
+                margin: 40px 0 20px 0;
+                font-size: 1.4em;
+                border-left: 5px solid #00ed64;
+            }
+            h3 {
+                color: #00684a;
+                border-left: 4px solid #13aa52;
+                padding-left: 15px;
+                margin-top: 30px;
+                font-size: 1.2em;
+            }
+            .code-container {
+                position: relative;
+                margin: 20px 0;
+            }
+            .code-header {
+                background: #00684a;
+                color: #00ed64;
+                padding: 8px 15px;
+                border-radius: 8px 8px 0 0;
+                font-size: 12px;
+                font-weight: bold;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .copy-btn {
+                background: #00ed64;
+                color: #00684a;
+                border: none;
+                padding: 4px 8px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 11px;
+                font-weight: bold;
+                transition: all 0.2s;
+            }
+            .copy-btn:hover {
+                background: #13aa52;
+                color: white;
+            }
+            .copy-btn.copied {
+                background: #27ae60;
+                color: white;
+            }
+            .code-block {
+                background: #1e2a3a !important;
+                color: #e8f4f8;
+                padding: 20px;
+                margin: 0;
+                border-radius: 0 0 8px 8px;
+                overflow-x: auto;
+                border-left: 5px solid #00ed64;
+                font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+                font-size: 14px;
+                line-height: 1.5;
+            }
+            .code-block code {
+                background: none !important;
+                padding: 0 !important;
+            }
+            .explanation {
+                background: linear-gradient(135deg, #f8fffa 0%, #e8f5e8 100%);
+                padding: 20px;
+                border-radius: 8px;
+                margin: 15px 0;
+                border-left: 4px solid #13aa52;
+                border: 1px solid #00ed64;
+            }
+            .explanation h4 {
+                color: #00684a;
+                margin-top: 0;
+                margin-bottom: 10px;
+            }
+            .reference {
+                background: #fff9e6;
+                border: 1px solid #00ed64;
+                padding: 15px;
+                border-radius: 8px;
+                margin: 15px 0;
+                border-left: 4px solid #ffcc00;
+            }
+            .reference strong {
+                color: #00684a;
+            }
+            .reference a {
+                color: #13aa52;
+                text-decoration: none;
+                font-weight: 500;
+            }
+            .reference a:hover {
+                text-decoration: underline;
+            }
+            .warning {
+                background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+                border-left: 4px solid #e53e3e;
+                padding: 15px;
+                margin: 15px 0;
+                border-radius: 8px;
+            }
+            .warning strong {
+                color: #c53030;
+            }
+            .success {
+                background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+                border-left: 4px solid #00ed64;
+                padding: 15px;
+                margin: 15px 0;
+                border-radius: 8px;
+            }
+            .success strong {
+                color: #00684a;
+            }
+            .mongodb-logo {
+                display: inline-block;
+                background: #00684a;
+                color: #00ed64;
+                padding: 5px 10px;
+                border-radius: 20px;
+                font-size: 0.8em;
+                font-weight: bold;
+                margin-left: 10px;
+            }
+            .concept-box {
+                background: linear-gradient(135deg, #e6fffa 0%, #b2f5ea 100%);
+                border: 2px solid #13aa52;
+                padding: 20px;
+                border-radius: 10px;
+                margin: 20px 0;
+            }
+            .concept-box h4 {
+                color: #00684a;
+                margin-top: 0;
+            }
+            ul li {
+                margin-bottom: 5px;
+            }
+            .highlight {
+                background: #00ed64;
+                color: #00684a;
+                padding: 2px 6px;
+                border-radius: 4px;
+                font-weight: 500;
+            }
+            .mongo-green {
+                color: #13aa52;
+            }
+            .mongo-dark-green {
+                color: #00684a;
+            }
+            .mongo-bright-green {
+                color: #00ed64;
+            }
+
+            /* Highlight.js customization for MongoDB theme */
+            .hljs {
+                background: #1e2a3a !important;
+                color: #e8f4f8 !important;
+            }
+            .hljs-keyword {
+                color: #00ed64 !important;
+            }
+            .hljs-string {
+                color: #a8cc8c !important;
+            }
+            .hljs-number {
+                color: #d19a66 !important;
+            }
+            .hljs-comment {
+                color: #5c6370 !important;
+            }
+            .hljs-function {
+                color: #61afef !important;
+            }
+            .hljs-variable {
+                color: #e06c75 !important;
+            }
+            .hljs-built_in {
+                color: #13aa52 !important;
+            }
+            .hljs-literal {
+                color: #56b6c2 !important;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>
+                MongoDB CRUD Operations<span class="mongodb-logo"
+                    >MongoDB 8.0</span
+                >
+                <small>Comprehensive Guide to Database Operations</small>
+            </h1>
+
+            <div class="concept-box">
+                <h4>📚 MongoDB CRUD Operations Overview</h4>
+                <p>
+                    <strong>CRUD Operations</strong> form the foundation of
+                    database interactions in MongoDB. These operations allow you
+                    to <strong>Create</strong>, <strong>Read</strong>,
+                    <strong>Update</strong>, and
+                    <strong>Delete</strong> documents within collections,
+                    providing the essential functionality needed for any
+                    data-driven application.
+                </p>
+                <p>
+                    <strong>Key Concepts:</strong> Documents, Collections, BSON
+                    data types, Query operators, Aggregation framework, Indexing
+                    strategies, and Transaction management.
+                </p>
+            </div>
+
+            <h2>1. Database Setup & Schema Design</h2>
+
+            <h3>1.1 Database Initialization and Collection Creation</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Database Setup</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Switch to database (creates if doesn't exist)
+use sampleDatabase
+
+// Create collection with schema validation
+db.createCollection("users", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["userId", "email", "firstName", "lastName", "createdAt"],
+      properties: {
+        userId: {
+          bsonType: "string",
+          pattern: "^USR[0-9]{6}$",
+          description: "Unique user identifier format: USR######"
+        },
+        email: {
+          bsonType: "string",
+          pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$",
+          description: "Valid email address format required"
+        },
+        firstName: {
+          bsonType: "string",
+          minLength: 1,
+          maxLength: 50
+        },
+        lastName: {
+          bsonType: "string",
+          minLength: 1,
+          maxLength: 50
+        },
+        age: {
+          bsonType: "int",
+          minimum: 13,
+          maximum: 120,
+          description: "User age between 13 and 120"
+        },
+        status: {
+          enum: ["active", "inactive", "suspended", "pending"],
+          description: "User account status"
+        },
+        createdAt: {
+          bsonType: "date",
+          description: "Account creation timestamp"
+        }
+      }
+    }
+  },
+  validationLevel: "strict",
+  validationAction: "error"
+})</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🔧 Schema Validation in MongoDB</h4>
+                <p>
+                    <strong>JSON Schema Validation</strong> provides document
+                    structure enforcement at the database level. MongoDB 8.0
+                    enhances validation capabilities with improved performance
+                    and extended operator support.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">validationLevel: "strict"</span>
+                        - Applies validation to all insert and update operations
+                    </li>
+                    <li>
+                        <span class="highlight">validationAction: "error"</span>
+                        - Rejects documents that fail validation
+                    </li>
+                    <li>
+                        <span class="highlight">Pattern validation</span> - Uses
+                        regular expressions for format enforcement
+                    </li>
+                    <li>
+                        <span class="highlight">Range validation</span> -
+                        Enforces numeric bounds and constraints
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/core/schema-validation/"
+                    target="_blank"
+                    >Schema Validation - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/operator/query/jsonSchema/"
+                    target="_blank"
+                    >$jsonSchema Operator Reference</a
+                >
+            </div>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Collection with Indexes</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Create products collection with validation
+db.createCollection("products", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["productId", "name", "price", "category"],
+      properties: {
+        productId: {
+          bsonType: "string",
+          pattern: "^PRD[0-9]{6}$"
+        },
+        name: {
+          bsonType: "string",
+          minLength: 1,
+          maxLength: 100
+        },
+        price: {
+          bsonType: "decimal",
+          minimum: 0,
+          description: "Product price using Decimal128 for precision"
+        },
+        category: {
+          bsonType: "string",
+          enum: ["electronics", "clothing", "books", "home", "sports"]
+        },
+        tags: {
+          bsonType: "array",
+          items: { bsonType: "string" },
+          maxItems: 10
+        },
+        inStock: {
+          bsonType: "bool",
+          description: "Availability status"
+        },
+        specifications: {
+          bsonType: "object",
+          description: "Product specifications as embedded document"
+        }
+      }
+    }
+  }
+})
+
+// Create orders collection for transaction examples
+db.createCollection("orders", {
+  validator: {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["orderId", "userId", "items", "totalAmount", "orderDate"],
+      properties: {
+        orderId: {
+          bsonType: "string",
+          pattern: "^ORD[0-9]{8}$"
+        },
+        userId: {
+          bsonType: "string",
+          pattern: "^USR[0-9]{6}$"
+        },
+        items: {
+          bsonType: "array",
+          minItems: 1,
+          items: {
+            bsonType: "object",
+            required: ["productId", "quantity", "price"],
+            properties: {
+              productId: { bsonType: "string" },
+              quantity: { bsonType: "int", minimum: 1 },
+              price: { bsonType: "decimal", minimum: 0 }
+            }
+          }
+        },
+        totalAmount: {
+          bsonType: "decimal",
+          minimum: 0
+        },
+        status: {
+          enum: ["pending", "confirmed", "shipped", "delivered", "cancelled"]
+        },
+        orderDate: {
+          bsonType: "date"
+        }
+      }
+    }
+  }
+})</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>📊 Data Types and BSON Considerations</h4>
+                <p>
+                    <strong>BSON (Binary JSON)</strong> extends JSON with
+                    additional data types optimized for storage and traversal.
+                    MongoDB 8.0 introduces enhanced BSON handling and new data
+                    type features.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Decimal128</span> - 128-bit
+                        decimal floating point for precise numeric calculations
+                    </li>
+                    <li>
+                        <span class="highlight">ObjectId</span> - 12-byte
+                        identifier consisting of timestamp, machine, process,
+                        and counter
+                    </li>
+                    <li>
+                        <span class="highlight">ISODate</span> - UTC datetime
+                        with millisecond precision
+                    </li>
+                    <li>
+                        <span class="highlight">Embedded Documents</span> -
+                        Nested objects for hierarchical data modeling
+                    </li>
+                </ul>
+            </div>
+
+            <h3>1.2 Sample Data Insertion with Best Practices</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Sample Data Creation</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Insert sample users with comprehensive data
+db.users.insertMany([
+  {
+    userId: "USR000001",
+    email: "alice.johnson@example.com",
+    firstName: "Alice",
+    lastName: "Johnson",
+    age: NumberInt(28),
+    address: {
+      street: "123 Tech Avenue",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94105",
+      country: "USA"
+    },
+    preferences: {
+      newsletter: true,
+      notifications: true,
+      language: "en",
+      timezone: "America/Los_Angeles"
+    },
+    tags: ["premium", "early_adopter"],
+    status: "active",
+    lastLoginAt: new Date(),
+    createdAt: new Date(),
+    metadata: {
+      source: "web_signup",
+      referrer: "google",
+      device: "desktop"
+    }
+  },
+  {
+    userId: "USR000002",
+    email: "bob.smith@example.com",
+    firstName: "Bob",
+    lastName: "Smith",
+    age: NumberInt(35),
+    address: {
+      street: "456 Business District",
+      city: "New York",
+      state: "NY",
+      zipCode: "10001",
+      country: "USA"
+    },
+    preferences: {
+      newsletter: false,
+      notifications: true,
+      language: "en",
+      timezone: "America/New_York"
+    },
+    tags: ["business", "frequent_buyer"],
+    status: "active",
+    lastLoginAt: new Date(),
+    createdAt: new Date(),
+    metadata: {
+      source: "mobile_app",
+      referrer: "direct",
+      device: "mobile"
+    }
+  }
+], {
+  ordered: true,
+  writeConcern: { w: "majority", j: true }
+})
+
+// Insert sample products
+db.products.insertMany([
+  {
+    productId: "PRD000001",
+    name: "Wireless Headphones",
+    price: NumberDecimal("299.99"),
+    category: "electronics",
+    tags: ["audio", "wireless", "premium"],
+    inStock: true,
+    specifications: {
+      brand: "TechCorp",
+      model: "WH-1000XM4",
+      color: "black",
+      batteryLife: "30 hours",
+      features: ["noise-cancelling", "bluetooth", "voice-assistant"]
+    },
+    ratings: {
+      average: NumberDecimal("4.5"),
+      count: NumberInt(1250)
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  },
+  {
+    productId: "PRD000002",
+    name: "Programming JavaScript Book",
+    price: NumberDecimal("45.99"),
+    category: "books",
+    tags: ["programming", "javascript", "education"],
+    inStock: true,
+    specifications: {
+      author: "Jane Developer",
+      pages: NumberInt(450),
+      publisher: "Tech Publications",
+      isbn: "978-0123456789",
+      language: "English"
+    },
+    ratings: {
+      average: NumberDecimal("4.8"),
+      count: NumberInt(892)
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  }
+], { writeConcern: { w: "majority", j: true } })</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>💡 Write Concern and Data Durability</h4>
+                <p>
+                    <strong>Write Concern</strong> controls the acknowledgment
+                    of write operations. MongoDB 8.0 provides enhanced write
+                    concern options for improved data safety and performance
+                    tuning.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">w: "majority"</span> - Requires
+                        acknowledgment from majority of replica set members
+                    </li>
+                    <li>
+                        <span class="highlight">j: true</span> - Requires write
+                        to be written to journal for durability
+                    </li>
+                    <li>
+                        <span class="highlight">ordered: true</span> - Stops
+                        batch operation on first error
+                    </li>
+                    <li>
+                        <span class="highlight"
+                            >NumberInt() & NumberDecimal()</span
+                        >
+                        - Explicit type casting for precision
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/write-concern/"
+                    target="_blank"
+                    >Write Concern - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/method/db.collection.insertMany/"
+                    target="_blank"
+                    >insertMany() Method Reference</a
+                >
+            </div>
+
+            <h2>2. CREATE Operations (Insert Patterns)</h2>
+
+            <h3>2.1 Single Document Insertion</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - insertOne() Method</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Insert single document with comprehensive error handling
+try {
+  const result = db.users.insertOne({
+    userId: "USR000003",
+    email: "charlie.brown@example.com",
+    firstName: "Charlie",
+    lastName: "Brown",
+    age: NumberInt(42),
+    address: {
+      street: "789 Innovation Boulevard",
+      city: "Austin",
+      state: "TX",
+      zipCode: "78701",
+      country: "USA"
+    },
+    preferences: {
+      newsletter: true,
+      notifications: false,
+      language: "en",
+      timezone: "America/Chicago"
+    },
+    tags: ["beta_tester", "feedback_provider"],
+    status: "active",
+    lastLoginAt: null, // Never logged in
+    createdAt: new Date(),
+    metadata: {
+      source: "referral",
+      referrer: "friend",
+      device: "tablet",
+      campaignId: "SUMMER2024"
+    }
+  }, {
+    writeConcern: { w: "majority", j: true, wtimeout: 5000 }
+  })
+
+  print("Document inserted successfully:")
+  print("Inserted ID:", result.insertedId)
+  print("Acknowledged:", result.acknowledged)
+
+} catch (error) {
+  print("Insertion failed:", error.message)
+  if (error.code === 11000) {
+    print("Duplicate key error - document already exists")
+  }
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>⚡ insertOne() Method Characteristics</h4>
+                <p>
+                    <strong>Single document insertion</strong> provides atomic
+                    operation guarantees at the document level. MongoDB 8.0
+                    enhances insertion performance with improved write path
+                    optimizations.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Atomic operation</span> -
+                        Document insertion is always atomic
+                    </li>
+                    <li>
+                        <span class="highlight">Auto-generated _id</span> -
+                        ObjectId automatically created if not provided
+                    </li>
+                    <li>
+                        <span class="highlight">Error handling</span> - Proper
+                        exception handling for validation failures
+                    </li>
+                    <li>
+                        <span class="highlight">Write timeout</span> - wtimeout
+                        prevents indefinite blocking
+                    </li>
+                </ul>
+            </div>
+
+            <h3>2.2 Bulk Insert Operations</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Bulk insertMany() Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Bulk insert with unordered execution for performance
+const orderBatch = [
+  {
+    orderId: "ORD00000001",
+    userId: "USR000001",
+    items: [
+      {
+        productId: "PRD000001",
+        quantity: NumberInt(1),
+        price: NumberDecimal("299.99")
+      }
+    ],
+    totalAmount: NumberDecimal("299.99"),
+    status: "confirmed",
+    orderDate: new Date(),
+    shippingAddress: {
+      street: "123 Tech Avenue",
+      city: "San Francisco",
+      state: "CA",
+      zipCode: "94105",
+      country: "USA"
+    },
+    paymentMethod: {
+      type: "credit_card",
+      last4: "1234"
+    }
+  },
+  {
+    orderId: "ORD00000002",
+    userId: "USR000002",
+    items: [
+      {
+        productId: "PRD000002",
+        quantity: NumberInt(2),
+        price: NumberDecimal("45.99")
+      },
+      {
+        productId: "PRD000001",
+        quantity: NumberInt(1),
+        price: NumberDecimal("299.99")
+      }
+    ],
+    totalAmount: NumberDecimal("391.97"),
+    status: "pending",
+    orderDate: new Date(),
+    shippingAddress: {
+      street: "456 Business District",
+      city: "New York",
+      state: "NY",
+      zipCode: "10001",
+      country: "USA"
+    },
+    paymentMethod: {
+      type: "paypal",
+      email: "bob.smith@example.com"
+    }
+  }
+]
+
+try {
+  const result = db.orders.insertMany(orderBatch, {
+    ordered: false, // Continue processing on errors
+    writeConcern: { w: "majority", j: true }
+  })
+
+  print("Bulk insert results:")
+  print("Documents inserted:", result.insertedCount)
+  print("Inserted IDs:", Object.keys(result.insertedIds).length)
+
+} catch (BulkWriteError) {
+  print("Bulk write completed with errors:")
+  print("Successful inserts:", BulkWriteError.result.nInserted)
+  print("Write errors:", BulkWriteError.writeErrors.length)
+
+  // Log specific errors for debugging
+  BulkWriteError.writeErrors.forEach((error, index) => {
+    print(`Error ${index + 1}: ${error.errmsg}`)
+    print(`Failed document index: ${error.index}`)
+  })
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🚀 Bulk Operations Performance</h4>
+                <p>
+                    <strong>Bulk insert operations</strong> optimize network
+                    round trips and provide better throughput for large
+                    datasets. MongoDB 8.0 introduces enhanced bulk operation
+                    algorithms.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">ordered: false</span> - Parallel
+                        processing improves performance
+                    </li>
+                    <li>
+                        <span class="highlight">BulkWriteError</span> -
+                        Comprehensive error reporting for failed operations
+                    </li>
+                    <li>
+                        <span class="highlight">Batch size optimization</span> -
+                        Automatic batching based on document size
+                    </li>
+                    <li>
+                        <span class="highlight">Continue on error</span> -
+                        Processes remaining documents despite failures
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/core/bulk-write-operations/"
+                    target="_blank"
+                    >Bulk Write Operations - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/method/db.collection.insertMany/"
+                    target="_blank"
+                    >insertMany() Method Reference</a
+                >
+            </div>
+
+            <h2>3. READ Operations (Query Patterns)</h2>
+
+            <h3>3.1 Basic Query Operations</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Basic find() Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Find single document by unique identifier
+db.users.findOne({ userId: "USR000001" })
+
+// Find with multiple conditions and projection
+db.users.find({
+  status: "active",
+  age: { $gte: 25, $lte: 40 }
+}, {
+  userId: 1,
+  firstName: 1,
+  lastName: 1,
+  email: 1,
+  age: 1,
+  _id: 0
+})
+
+// Query embedded documents using dot notation
+db.users.find({
+  "address.state": "CA",
+  "address.city": "San Francisco",
+  "preferences.newsletter": true
+})
+
+// Array element queries
+db.users.find({
+  tags: { $in: ["premium", "early_adopter"] }
+})
+
+// Complex query with logical operators
+db.products.find({
+  $and: [
+    { inStock: true },
+    { price: { $lte: NumberDecimal("500.00") } },
+    { category: { $in: ["electronics", "books"] } },
+    { "ratings.average": { $gte: NumberDecimal("4.0") } }
+  ]
+}).sort({ price: 1 }).limit(10)
+
+// Regular expression queries for text patterns
+db.users.find({
+  email: { $regex: /@example\.com$/, $options: "i" },
+  firstName: { $regex: /^A/, $options: "i" }
+})</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🔍 Query Operator Fundamentals</h4>
+                <p>
+                    <strong>MongoDB Query Language</strong> provides rich query
+                    operators for precise document retrieval. MongoDB 8.0
+                    introduces new query operators and performance
+                    optimizations.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Comparison operators</span> -
+                        $eq, $ne, $gt, $gte, $lt, $lte, $in, $nin
+                    </li>
+                    <li>
+                        <span class="highlight">Logical operators</span> - $and,
+                        $or, $not, $nor for complex conditions
+                    </li>
+                    <li>
+                        <span class="highlight">Dot notation</span> - Access
+                        nested document fields efficiently
+                    </li>
+                    <li>
+                        <span class="highlight">Projection</span> - Control
+                        returned fields to optimize network usage
+                    </li>
+                </ul>
+            </div>
+
+            <h3>3.2 Advanced Query Patterns</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Advanced Query Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Date range queries with ISODate
+db.orders.find({
+  orderDate: {
+    $gte: ISODate("2024-01-01T00:00:00.000Z"),
+    $lt: ISODate("2024-12-31T23:59:59.999Z")
+  },
+  status: { $ne: "cancelled" }
+}).sort({ orderDate: -1 })
+
+// Text search queries (requires text index)
+db.products.find({
+  $text: {
+    $search: "wireless headphones",
+    $caseSensitive: false,
+    $language: "en"
+  }
+}, {
+  score: { $meta: "textScore" }
+}).sort({ score: { $meta: "textScore" } })
+
+// Array queries with $elemMatch
+db.orders.find({
+  items: {
+    $elemMatch: {
+      quantity: { $gte: 2 },
+      price: { $lte: NumberDecimal("100.00") }
+    }
+  }
+})
+
+// Exists and type queries
+db.users.find({
+  lastLoginAt: { $exists: true, $ne: null },
+  age: { $type: "int" },
+  "preferences.timezone": { $exists: true }
+})
+
+// Aggregation-style queries with $expr
+db.products.find({
+  $expr: {
+    $gt: [
+      { $multiply: ["$ratings.average", "$ratings.count"] },
+      1000 // Products with high total rating points
+    ]
+  }
+})
+
+// Geospatial queries (assuming location field exists)
+db.stores.find({
+  location: {
+    $near: {
+      $geometry: {
+        type: "Point",
+        coordinates: [-122.4194, 37.7749] // San Francisco
+      },
+      $maxDistance: 5000 // 5km radius
+    }
+  }
+})</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🌟 Advanced Query Capabilities</h4>
+                <p>
+                    <strong>Advanced query patterns</strong> enable
+                    sophisticated data retrieval scenarios. MongoDB 8.0 enhances
+                    query execution with improved optimizer and new features.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">$text operator</span> -
+                        Full-text search with relevance scoring
+                    </li>
+                    <li>
+                        <span class="highlight">$elemMatch</span> - Match array
+                        elements with multiple conditions
+                    </li>
+                    <li>
+                        <span class="highlight">$expr</span> - Use aggregation
+                        expressions in queries
+                    </li>
+                    <li>
+                        <span class="highlight">Geospatial queries</span> -
+                        Location-based document retrieval
+                    </li>
+                </ul>
+            </div>
+
+            <h3>3.3 Aggregation Pipeline Queries</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Aggregation Pipeline</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// User order summary with aggregation pipeline
+db.orders.aggregate([
+  // Stage 1: Match completed orders
+  {
+    $match: {
+      status: { $in: ["confirmed", "shipped", "delivered"] }
+    }
+  },
+
+  // Stage 2: Join with user information
+  {
+    $lookup: {
+      from: "users",
+      localField: "userId",
+      foreignField: "userId",
+      as: "userInfo",
+      pipeline: [
+        {
+          $project: {
+            firstName: 1,
+            lastName: 1,
+            email: 1,
+            "address.state": 1
+          }
+        }
+      ]
+    }
+  },
+
+  // Stage 3: Unwind user array
+  {
+    $unwind: "$userInfo"
+  },
+
+  // Stage 4: Unwind items for detailed analysis
+  {
+    $unwind: "$items"
+  },
+
+  // Stage 5: Join with product information
+  {
+    $lookup: {
+      from: "products",
+      localField: "items.productId",
+      foreignField: "productId",
+      as: "productInfo"
+    }
+  },
+
+  // Stage 6: Unwind product array
+  {
+    $unwind: "$productInfo"
+  },
+
+  // Stage 7: Group by user with order statistics
+  {
+    $group: {
+      _id: "$userId",
+      customerName: {
+        $first: {
+          $concat: ["$userInfo.firstName", " ", "$userInfo.lastName"]
+        }
+      },
+      email: { $first: "$userInfo.email" },
+      state: { $first: "$userInfo.address.state" },
+      totalSpent: { $sum: "$totalAmount" },
+      orderCount: { $addToSet: "$orderId" },
+      itemCount: { $sum: "$items.quantity" },
+      categoriesPurchased: { $addToSet: "$productInfo.category" },
+      avgOrderValue: { $avg: "$totalAmount" },
+      lastOrderDate: { $max: "$orderDate" }
+    }
+  },
+
+  // Stage 8: Add calculated fields
+  {
+    $addFields: {
+      orderCount: { $size: "$orderCount" },
+      categoryCount: { $size: "$categoriesPurchased" },
+      customerTier: {
+        $switch: {
+          branches: [
+            { case: { $gte: ["$totalSpent", NumberDecimal("1000.00")] }, then: "Gold" },
+            { case: { $gte: ["$totalSpent", NumberDecimal("500.00")] }, then: "Silver" },
+            { case: { $gte: ["$totalSpent", NumberDecimal("100.00")] }, then: "Bronze" }
+          ],
+          default: "Standard"
+        }
+      }
+    }
+  },
+
+  // Stage 9: Sort by total spent
+  {
+    $sort: { totalSpent: -1 }
+  },
+
+  // Stage 10: Limit results
+  {
+    $limit: 20
+  }
+])
+
+// Time-based aggregation for sales analysis
+db.orders.aggregate([
+  {
+    $match: {
+      orderDate: {
+        $gte: ISODate("2024-01-01T00:00:00.000Z")
+      },
+      status: { $ne: "cancelled" }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        year: { $year: "$orderDate" },
+        month: { $month: "$orderDate" },
+        status: "$status"
+      },
+      totalRevenue: { $sum: "$totalAmount" },
+      orderCount: { $sum: 1 },
+      avgOrderValue: { $avg: "$totalAmount" },
+      maxOrderValue: { $max: "$totalAmount" }
+    }
+  },
+  {
+    $sort: {
+      "_id.year": 1,
+      "_id.month": 1,
+      "_id.status": 1
+    }
+  }
+])</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>📊 Aggregation Framework Power</h4>
+                <p>
+                    <strong>Aggregation Pipeline</strong> provides powerful data
+                    processing capabilities for analytics and reporting. MongoDB
+                    8.0 introduces new aggregation operators and performance
+                    improvements.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">$lookup with pipeline</span> -
+                        Efficient joins with sub-pipelines
+                    </li>
+                    <li>
+                        <span class="highlight">$group operations</span> -
+                        Statistical calculations and data summarization
+                    </li>
+                    <li>
+                        <span class="highlight">$addFields</span> - Dynamic
+                        field computation and transformation
+                    </li>
+                    <li>
+                        <span class="highlight">Pipeline optimization</span> -
+                        Automatic stage reordering for performance
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/aggregation/"
+                    target="_blank"
+                    >Aggregation Pipeline - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/"
+                    target="_blank"
+                    >Aggregation Pipeline Operators</a
+                >
+            </div>
+
+            <h2>4. UPDATE Operations (Document Modification)</h2>
+
+            <h3>4.1 Single Document Updates</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - updateOne() Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Update single document with $set operator
+db.users.updateOne(
+  { userId: "USR000001" },
+  {
+    $set: {
+      lastLoginAt: new Date(),
+      "preferences.language": "es",
+      status: "active"
+    },
+    $inc: {
+      loginCount: 1
+    },
+    $push: {
+      tags: "frequent_user"
+    }
+  },
+  {
+    writeConcern: { w: "majority", j: true }
+  }
+)
+
+// Conditional update with array filters
+db.orders.updateOne(
+  {
+    orderId: "ORD00000001",
+    "items.productId": "PRD000001"
+  },
+  {
+    $set: {
+      "items.$.quantity": NumberInt(2),
+      "items.$.lastModified": new Date()
+    },
+    $inc: {
+      totalAmount: NumberDecimal("299.99")
+    }
+  }
+)
+
+// Update with upsert option
+db.userPreferences.updateOne(
+  { userId: "USR000001" },
+  {
+    $set: {
+      userId: "USR000001",
+      theme: "dark",
+      notifications: {
+        email: true,
+        push: false,
+        sms: true
+      },
+      updatedAt: new Date()
+    },
+    $setOnInsert: {
+      createdAt: new Date(),
+      version: 1
+    }
+  },
+  {
+    upsert: true,
+    writeConcern: { w: "majority" }
+  }
+)
+
+// Atomic increment operations
+db.products.updateOne(
+  { productId: "PRD000001" },
+  {
+    $inc: {
+      "ratings.count": NumberInt(1),
+      viewCount: NumberInt(1)
+    },
+    $set: {
+      lastViewedAt: new Date()
+    }
+  }
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>⚛️ Atomic Update Operations</h4>
+                <p>
+                    <strong>Document-level atomicity</strong> ensures consistent
+                    updates within single documents. MongoDB 8.0 enhances atomic
+                    operations with improved performance and new operators.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">$set operator</span> - Replace
+                        field values or add new fields
+                    </li>
+                    <li>
+                        <span class="highlight">$inc operator</span> - Atomic
+                        numeric increment/decrement
+                    </li>
+                    <li>
+                        <span class="highlight">Positional operator ($)</span> -
+                        Update specific array elements
+                    </li>
+                    <li>
+                        <span class="highlight">Upsert operations</span> -
+                        Insert if document doesn't exist
+                    </li>
+                </ul>
+            </div>
+
+            <h3>4.2 Multiple Document Updates</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - updateMany() Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Bulk update multiple documents
+const updateResult = db.products.updateMany(
+  {
+    category: "electronics",
+    inStock: true,
+    price: { $lte: NumberDecimal("1000.00") }
+  },
+  {
+    $set: {
+      promotionActive: true,
+      promotionEndDate: new Date(Date.now() + 30*24*60*60*1000), // 30 days
+      updatedAt: new Date()
+    },
+    $inc: {
+      promotionCount: 1
+    }
+  },
+  {
+    writeConcern: { w: "majority", j: true }
+  }
+)
+
+print(`Updated ${updateResult.modifiedCount} products`)
+
+// Update with aggregation pipeline (MongoDB 4.2+)
+db.orders.updateMany(
+  { status: "pending" },
+  [
+    {
+      $set: {
+        totalWithTax: {
+          $multiply: ["$totalAmount", 1.08] // Add 8% tax
+        },
+        lastModified: new Date(),
+        processingDays: {
+          $dateDiff: {
+            startDate: "$orderDate",
+            endDate: new Date(),
+            unit: "day"
+          }
+        }
+      }
+    }
+  ]
+)
+
+// Conditional updates with $cond
+db.users.updateMany(
+  { status: "active" },
+  [
+    {
+      $set: {
+        membershipTier: {
+          $cond: {
+            if: { $gte: ["$age", 65] },
+            then: "senior",
+            else: {
+              $cond: {
+                if: { $gte: ["$age", 18] },
+                then: "adult",
+                else: "junior"
+              }
+            }
+          }
+        },
+        updatedAt: new Date()
+      }
+    }
+  ]
+)
+
+// Update documents based on array size
+db.users.updateMany(
+  {},
+  [
+    {
+      $set: {
+        tagCount: { $size: { $ifNull: ["$tags", []] } },
+        hasMultipleTags: {
+          $gt: [{ $size: { $ifNull: ["$tags", []] } }, 1]
+        }
+      }
+    }
+  ]
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🔄 Advanced Update Patterns</h4>
+                <p>
+                    <strong>Aggregation pipeline updates</strong> enable complex
+                    document transformations during update operations. MongoDB
+                    8.0 expands pipeline update capabilities with new stages and
+                    operators.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Pipeline updates</span> - Use
+                        aggregation expressions for complex logic
+                    </li>
+                    <li>
+                        <span class="highlight">$cond operator</span> -
+                        Conditional value assignment
+                    </li>
+                    <li>
+                        <span class="highlight">Date arithmetic</span> -
+                        Calculate date differences and additions
+                    </li>
+                    <li>
+                        <span class="highlight">Array operations</span> -
+                        Calculate array sizes and manipulate arrays
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/method/db.collection.updateOne/"
+                    target="_blank"
+                    >updateOne() - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/method/db.collection.updateMany/"
+                    target="_blank"
+                    >updateMany() - MongoDB Manual</a
+                >
+            </div>
+
+            <h2>5. DELETE Operations (Document Removal)</h2>
+
+            <h3>5.1 Single Document Deletion</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - deleteOne() Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Delete single document with specific criteria
+const deleteResult = db.users.deleteOne({
+  userId: "USR000003",
+  status: "inactive"
+})
+
+if (deleteResult.deletedCount === 1) {
+  print("User successfully deleted")
+} else {
+  print("No user found matching criteria")
+}
+
+// Soft delete pattern (recommended approach)
+db.users.updateOne(
+  { userId: "USR000003" },
+  {
+    $set: {
+      status: "deleted",
+      deletedAt: new Date(),
+      deletedBy: "admin_user",
+      deletedReason: "user_request"
+    },
+    $unset: {
+      // Remove sensitive information
+      email: "",
+      "address.street": ""
+    }
+  }
+)
+
+// Create deletion audit record
+db.deletionAudit.insertOne({
+  documentType: "user",
+  documentId: "USR000003",
+  deletedAt: new Date(),
+  deletedBy: "admin_user",
+  reason: "user_request",
+  recoverable: true,
+  retentionPolicy: "7_years"
+})
+
+// Conditional deletion with validation
+const userToDelete = db.users.findOne({ userId: "USR000003" })
+if (userToDelete && userToDelete.status === "inactive") {
+  const deleteResult = db.users.deleteOne({ userId: "USR000003" })
+  print(`Deleted ${deleteResult.deletedCount} user(s)`)
+} else {
+  print("User not eligible for deletion")
+}</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🗂️ Document Deletion Strategies</h4>
+                <p>
+                    <strong>Deletion patterns</strong> vary based on data
+                    retention requirements and business logic. MongoDB 8.0
+                    provides enhanced deletion performance and audit
+                    capabilities.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Hard deletion</span> - Permanent
+                        removal with deleteOne()/deleteMany()
+                    </li>
+                    <li>
+                        <span class="highlight">Soft deletion</span> -
+                        Status-based marking for logical removal
+                    </li>
+                    <li>
+                        <span class="highlight">Audit trails</span> - Maintain
+                        deletion history for compliance
+                    </li>
+                    <li>
+                        <span class="highlight">Conditional deletion</span> -
+                        Validate before deletion operations
+                    </li>
+                </ul>
+            </div>
+
+            <h3>5.2 Multiple Document Deletion</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - deleteMany() Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Delete multiple documents with date-based criteria
+const cutoffDate = new Date(Date.now() - 90*24*60*60*1000) // 90 days ago
+
+const deleteResult = db.orders.deleteMany({
+  status: "cancelled",
+  orderDate: { $lt: cutoffDate }
+})
+
+print(`Deleted ${deleteResult.deletedCount} cancelled orders`)
+
+// Delete with complex criteria
+db.products.deleteMany({
+  $and: [
+    { inStock: false },
+    { "ratings.count": { $lt: 5 } },
+    { createdAt: { $lt: new Date(Date.now() - 365*24*60*60*1000) } }
+  ]
+})
+
+// Bulk soft delete with updateMany
+db.users.updateMany(
+  {
+    lastLoginAt: { $lt: new Date(Date.now() - 2*365*24*60*60*1000) }, // 2 years
+    status: "active"
+  },
+  {
+    $set: {
+      status: "archived",
+      archivedAt: new Date(),
+      archivedReason: "inactivity_2_years"
+    }
+  }
+)
+
+// Delete with limit (using aggregation for complex logic)
+// First, find documents to delete
+const documentsToDelete = db.logs.aggregate([
+  {
+    $match: {
+      level: "debug",
+      timestamp: { $lt: new Date(Date.now() - 7*24*60*60*1000) }
+    }
+  },
+  { $limit: 1000 },
+  { $project: { _id: 1 } }
+]).toArray()
+
+// Extract IDs and delete
+const idsToDelete = documentsToDelete.map(doc => doc._id)
+const batchDeleteResult = db.logs.deleteMany({
+  _id: { $in: idsToDelete }
+})
+
+print(`Batch deleted ${batchDeleteResult.deletedCount} log entries`)
+
+// Cleanup orphaned references
+db.orderItems.deleteMany({
+  orderId: {
+    $nin: db.orders.distinct("orderId")
+  }
+})</code></pre>
+                </div>
+            </div>
+
+            <div class="warning">
+                <strong>⚠️ Deletion Best Practices:</strong> Always implement
+                proper authorization checks, maintain audit trails, and consider
+                soft deletion for critical business data. Use transactions when
+                deleting related documents across collections.
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/method/db.collection.deleteOne/"
+                    target="_blank"
+                    >deleteOne() - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/reference/method/db.collection.deleteMany/"
+                    target="_blank"
+                    >deleteMany() - MongoDB Manual</a
+                >
+            </div>
+
+            <h2>6. ACID Transactions (Multi-Document Operations)</h2>
+
+            <h3>6.1 Basic Transaction Implementation</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Multi-Document Transactions</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Basic transaction with session management
+function transferOrder(fromUserId, toUserId, orderId) {
+  const session = db.getMongo().startSession({
+    readConcern: { level: "snapshot" },
+    writeConcern: { w: "majority", j: true }
+  })
+
+  try {
+    session.startTransaction({
+      readConcern: { level: "snapshot" },
+      writeConcern: { w: "majority", j: true, wtimeout: 10000 }
+    })
+
+    const ordersCol = session.getDatabase("sampleDatabase").orders
+    const usersCol = session.getDatabase("sampleDatabase").users
+
+    // Step 1: Verify order exists and belongs to fromUser
+    const order = ordersCol.findOne(
+      {
+        orderId: orderId,
+        userId: fromUserId,
+        status: "confirmed"
+      },
+      { session: session }
+    )
+
+    if (!order) {
+      throw new Error("Order not found or not transferable")
+    }
+
+    // Step 2: Verify target user exists
+    const targetUser = usersCol.findOne(
+      { userId: toUserId, status: "active" },
+      { session: session }
+    )
+
+    if (!targetUser) {
+      throw new Error("Target user not found or inactive")
+    }
+
+    // Step 3: Update order ownership
+    const updateResult = ordersCol.updateOne(
+      {
+        orderId: orderId,
+        userId: fromUserId
+      },
+      {
+        $set: {
+          userId: toUserId,
+          transferredFrom: fromUserId,
+          transferredAt: new Date(),
+          status: "transferred"
+        }
+      },
+      { session: session }
+    )
+
+    if (updateResult.modifiedCount === 0) {
+      throw new Error("Failed to transfer order")
+    }
+
+    // Step 4: Update user statistics
+    usersCol.updateOne(
+      { userId: fromUserId },
+      {
+        $inc: { ordersTransferred: 1 },
+        $set: { lastActivity: new Date() }
+      },
+      { session: session }
+    )
+
+    usersCol.updateOne(
+      { userId: toUserId },
+      {
+        $inc: { ordersReceived: 1 },
+        $set: { lastActivity: new Date() }
+      },
+      { session: session }
+    )
+
+    // Commit transaction
+    session.commitTransaction()
+
+    print("Order transfer completed successfully")
+    return { success: true, orderId: orderId }
+
+  } catch (error) {
+    print("Transaction failed:", error.message)
+    session.abortTransaction()
+    return { success: false, error: error.message }
+
+  } finally {
+    session.endSession()
+  }
+}
+
+// Execute transaction
+const result = transferOrder("USR000001", "USR000002", "ORD00000001")</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🏛️ ACID Transaction Properties</h4>
+                <p>
+                    <strong>Multi-document transactions</strong> provide ACID
+                    guarantees across multiple documents and collections.
+                    MongoDB 8.0 enhances transaction performance with improved
+                    concurrency control.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Atomicity</span> - All
+                        operations succeed or all fail
+                    </li>
+                    <li>
+                        <span class="highlight">Consistency</span> - Database
+                        remains in valid state
+                    </li>
+                    <li>
+                        <span class="highlight">Isolation</span> - Concurrent
+                        transactions don't interfere
+                    </li>
+                    <li>
+                        <span class="highlight">Durability</span> - Committed
+                        changes persist permanently
+                    </li>
+                </ul>
+            </div>
+
+            <h3>6.2 Complex Business Logic Transactions</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Complex Transaction Operations</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Complex order processing with inventory management
+function processOrderWithInventory(userId, orderItems) {
+  const session = db.getMongo().startSession()
+
+  try {
+    session.startTransaction({
+      readConcern: { level: "snapshot" },
+      writeConcern: { w: "majority", j: true }
+    })
+
+    const usersCol = session.getDatabase("sampleDatabase").users
+    const productsCol = session.getDatabase("sampleDatabase").products
+    const ordersCol = session.getDatabase("sampleDatabase").orders
+    const inventoryCol = session.getDatabase("sampleDatabase").inventory
+
+    // Step 1: Validate user
+    const user = usersCol.findOne(
+      { userId: userId, status: "active" },
+      { session: session }
+    )
+
+    if (!user) {
+      throw new Error("User not found or inactive")
+    }
+
+    let totalAmount = NumberDecimal("0.00")
+    const processedItems = []
+
+    // Step 2: Process each item
+    for (const item of orderItems) {
+      // Check product availability
+      const product = productsCol.findOne(
+        {
+          productId: item.productId,
+          inStock: true
+        },
+        { session: session }
+      )
+
+      if (!product) {
+        throw new Error(`Product ${item.productId} not available`)
+      }
+
+      // Check inventory
+      const inventory = inventoryCol.findOne(
+        { productId: item.productId },
+        { session: session }
+      )
+
+      if (!inventory || inventory.quantity < item.quantity) {
+        throw new Error(`Insufficient inventory for ${item.productId}`)
+      }
+
+      // Calculate item total
+      const itemTotal = product.price.multiply(NumberDecimal(item.quantity.toString()))
+      totalAmount = totalAmount.add(itemTotal)
+
+      // Reserve inventory
+      const inventoryUpdate = inventoryCol.updateOne(
+        {
+          productId: item.productId,
+          quantity: { $gte: item.quantity }
+        },
+        {
+          $inc: {
+            quantity: -item.quantity,
+            reserved: item.quantity
+          },
+          $set: { lastUpdated: new Date() }
+        },
+        { session: session }
+      )
+
+      if (inventoryUpdate.modifiedCount === 0) {
+        throw new Error(`Failed to reserve inventory for ${item.productId}`)
+      }
+
+      processedItems.push({
+        productId: item.productId,
+        quantity: NumberInt(item.quantity),
+        price: product.price,
+        total: itemTotal
+      })
+    }
+
+    // Step 3: Create order
+    const orderId = "ORD" + Date.now() + Math.random().toString(36).substr(2, 4).toUpperCase()
+
+    const order = {
+      orderId: orderId,
+      userId: userId,
+      items: processedItems,
+      totalAmount: totalAmount,
+      status: "confirmed",
+      orderDate: new Date(),
+      inventoryReserved: true,
+      paymentStatus: "pending"
+    }
+
+    ordersCol.insertOne(order, { session: session })
+
+    // Step 4: Update user statistics
+    usersCol.updateOne(
+      { userId: userId },
+      {
+        $inc: {
+          totalOrders: 1,
+          totalSpent: totalAmount
+        },
+        $set: { lastOrderDate: new Date() }
+      },
+      { session: session }
+    )
+
+    // Step 5: Create audit trail
+    const auditCol = session.getDatabase("sampleDatabase").auditLogs
+    auditCol.insertOne({
+      eventType: "order_created",
+      orderId: orderId,
+      userId: userId,
+      totalAmount: totalAmount,
+      itemCount: processedItems.length,
+      timestamp: new Date(),
+      sessionId: session.getSessionId().toString()
+    }, { session: session })
+
+    session.commitTransaction()
+
+    print("Order processed successfully:")
+    print("Order ID:", orderId)
+    print("Total Amount:", totalAmount.toString())
+
+    return { success: true, orderId: orderId, totalAmount: totalAmount }
+
+  } catch (error) {
+    print("Order processing failed:", error.message)
+    session.abortTransaction()
+    return { success: false, error: error.message }
+
+  } finally {
+    session.endSession()
+  }
+}
+
+// Execute complex transaction
+const orderItems = [
+  { productId: "PRD000001", quantity: 1 },
+  { productId: "PRD000002", quantity: 2 }
+]
+
+const orderResult = processOrderWithInventory("USR000001", orderItems)</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🔄 Transaction Best Practices</h4>
+                <p>
+                    <strong>Complex transactions</strong> require careful design
+                    to ensure performance and avoid deadlocks. MongoDB 8.0
+                    provides enhanced transaction monitoring and optimization
+                    features.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Session management</span> -
+                        Proper session lifecycle and cleanup
+                    </li>
+                    <li>
+                        <span class="highlight">Error handling</span> -
+                        Comprehensive rollback on failures
+                    </li>
+                    <li>
+                        <span class="highlight">Read/write concerns</span> -
+                        Ensure data consistency requirements
+                    </li>
+                    <li>
+                        <span class="highlight">Transaction timeouts</span> -
+                        Prevent long-running transactions
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/core/transactions/"
+                    target="_blank"
+                    >Transactions - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/core/transactions-production-consideration/"
+                    target="_blank"
+                    >Production Considerations for Transactions</a
+                >
+            </div>
+
+            <h2>7. Indexing Strategies for Optimal Performance</h2>
+
+            <h3>7.1 Essential Index Types</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Index Creation</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Single field indexes
+db.users.createIndex(
+  { userId: 1 },
+  {
+    unique: true,
+    name: "idx_user_id_unique",
+    background: true
+  }
+)
+
+db.users.createIndex(
+  { email: 1 },
+  {
+    unique: true,
+    name: "idx_email_unique",
+    background: true,
+    collation: { locale: "en", strength: 2 } // Case-insensitive
+  }
+)
+
+// Compound indexes for query optimization
+db.orders.createIndex(
+  {
+    userId: 1,
+    status: 1,
+    orderDate: -1
+  },
+  {
+    name: "idx_orders_user_status_date",
+    background: true
+  }
+)
+
+// Multi-key index for array fields
+db.users.createIndex(
+  { tags: 1 },
+  {
+    name: "idx_user_tags",
+    background: true
+  }
+)
+
+// Embedded document indexes
+db.users.createIndex(
+  {
+    "address.state": 1,
+    "address.city": 1
+  },
+  {
+    name: "idx_user_location",
+    background: true
+  }
+)
+
+// Partial indexes for specific subsets
+db.products.createIndex(
+  {
+    price: 1,
+    category: 1
+  },
+  {
+    partialFilterExpression: {
+      inStock: true,
+      price: { $lt: NumberDecimal("1000.00") }
+    },
+    name: "idx_available_products_under_1000",
+    background: true
+  }
+)
+
+// Sparse indexes for optional fields
+db.users.createIndex(
+  { phoneNumber: 1 },
+  {
+    sparse: true,
+    unique: true,
+    name: "idx_phone_sparse"
+  }
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>📈 Index Design Principles</h4>
+                <p>
+                    <strong>Effective indexing</strong> is crucial for query
+                    performance at scale. MongoDB 8.0 introduces improved index
+                    algorithms and new index types for better performance.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">ESR Rule</span> - Equality,
+                        Sort, Range field ordering in compound indexes
+                    </li>
+                    <li>
+                        <span class="highlight">Selectivity</span> - Index
+                        fields with high cardinality first
+                    </li>
+                    <li>
+                        <span class="highlight">Query patterns</span> - Design
+                        indexes to match application query patterns
+                    </li>
+                    <li>
+                        <span class="highlight">Index intersection</span> -
+                        MongoDB can use multiple indexes for complex queries
+                    </li>
+                </ul>
+            </div>
+
+            <h3>7.2 Advanced Index Features</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Advanced Indexing</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Text indexes for full-text search
+db.products.createIndex(
+  {
+    name: "text",
+    "specifications.brand": "text",
+    tags: "text"
+  },
+  {
+    weights: {
+      name: 10,
+      "specifications.brand": 5,
+      tags: 1
+    },
+    name: "idx_product_text_search",
+    default_language: "english"
+  }
+)
+
+// Geospatial indexes for location-based queries
+db.stores.createIndex(
+  { location: "2dsphere" },
+  {
+    name: "idx_store_location"
+  }
+)
+
+// TTL indexes for automatic document expiration
+db.sessions.createIndex(
+  { createdAt: 1 },
+  {
+    expireAfterSeconds: 3600, // 1 hour
+    name: "idx_session_ttl"
+  }
+)
+
+// Hashed indexes for sharding
+db.users.createIndex(
+  { userId: "hashed" },
+  {
+    name: "idx_user_id_hashed"
+  }
+)
+
+// Wildcard indexes for flexible schema queries (MongoDB 4.2+)
+db.products.createIndex(
+  { "specifications.$**": 1 },
+  {
+    name: "idx_product_specs_wildcard",
+    background: true
+  }
+)
+
+// Clustered indexes (MongoDB 5.3+)
+db.createCollection("timeSeries", {
+  clusteredIndex: {
+    key: { _id: 1 },
+    unique: true
+  }
+})
+
+// Columnstore indexes for analytics (MongoDB 6.0+)
+db.analytics.createIndex(
+  { "$**": "columnstore" },
+  {
+    name: "idx_analytics_columnstore"
+  }
+)</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🌟 Specialized Index Types</h4>
+                <p>
+                    <strong>Advanced index features</strong> provide specialized
+                    functionality for different use cases. MongoDB 8.0 expands
+                    these capabilities with new index types and optimizations.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Text indexes</span> - Full-text
+                        search with language-specific stemming
+                    </li>
+                    <li>
+                        <span class="highlight">Geospatial indexes</span> -
+                        Efficient location-based queries
+                    </li>
+                    <li>
+                        <span class="highlight">TTL indexes</span> - Automatic
+                        document cleanup based on time
+                    </li>
+                    <li>
+                        <span class="highlight">Wildcard indexes</span> - Index
+                        unknown or dynamic field patterns
+                    </li>
+                </ul>
+            </div>
+
+            <h3>7.3 Index Performance Analysis</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Index Performance Monitoring</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Analyze query execution plans
+db.orders.find({
+  userId: "USR000001",
+  status: "confirmed",
+  orderDate: { $gte: ISODate("2024-01-01") }
+}).explain("executionStats")
+
+// Check index usage statistics
+db.orders.aggregate([
+  { $indexStats: {} }
+]).forEach(stat => {
+  print("Index:", stat.name)
+  print("Operations:", stat.accesses.ops)
+  print("Since:", stat.accesses.since)
+  print("---")
+})
+
+// Identify slow queries using profiler
+db.setProfilingLevel(2, {
+  slowms: 100,  // Operations slower than 100ms
+  sampleRate: 0.1  // Sample 10% of operations
+})
+
+// Query profile collection for analysis
+db.system.profile.find({
+  "command.find": "orders",
+  millis: { $gt: 100 }
+}).sort({ ts: -1 }).limit(5).forEach(op => {
+  print("Collection:", op.command.find || op.command.aggregate)
+  print("Duration (ms):", op.millis)
+  print("Docs examined:", op.docsExamined)
+  print("Docs returned:", op.docsReturned)
+  print("Index used:", op.planSummary)
+  print("---")
+})
+
+// Check collection and index statistics
+const stats = db.orders.stats()
+print("Collection Statistics:")
+print("Document count:", stats.count)
+print("Average document size:", stats.avgObjSize)
+print("Total size:", stats.size)
+print("Index count:", stats.nindexes)
+print("Total index size:", stats.totalIndexSize)
+
+// List all indexes with details
+db.orders.getIndexes().forEach(index => {
+  print("Index:", index.name)
+  print("Key:", JSON.stringify(index.key))
+  print("Unique:", index.unique || false)
+  print("Sparse:", index.sparse || false)
+  print("---")
+})
+
+// Hint query to use specific index
+db.orders.find({
+  userId: "USR000001",
+  orderDate: { $gte: ISODate("2024-01-01") }
+}).hint("idx_orders_user_status_date")
+
+// Get query plan cache information
+db.orders.getPlanCache().listQueryShapes().forEach(shape => {
+  print("Query pattern:", JSON.stringify(shape.query))
+  print("Sort pattern:", JSON.stringify(shape.sort))
+  print("Projection:", JSON.stringify(shape.projection))
+  print("---")
+})
+
+// Clear plan cache for testing
+db.runCommand({ planCacheClear: "orders" })</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>📊 Performance Monitoring Best Practices</h4>
+                <p>
+                    <strong>Index monitoring</strong> ensures optimal query
+                    performance as data grows. MongoDB 8.0 provides enhanced
+                    monitoring tools and query optimization features.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">explain() output</span> -
+                        Understand query execution paths
+                    </li>
+                    <li>
+                        <span class="highlight">Index statistics</span> -
+                        Monitor index usage and effectiveness
+                    </li>
+                    <li>
+                        <span class="highlight">Query profiler</span> - Identify
+                        performance bottlenecks
+                    </li>
+                    <li>
+                        <span class="highlight">Plan cache</span> - Understand
+                        query plan caching behavior
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/indexes/"
+                    target="_blank"
+                    >Indexes - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/tutorial/analyze-query-plan/"
+                    target="_blank"
+                    >Analyze Query Performance</a
+                >
+            </div>
+
+            <h2>8. Advanced MongoDB Concepts</h2>
+
+            <h3>8.1 Data Modeling Patterns</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Data Modeling Patterns</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Embedded Document Pattern
+db.blogPosts.insertOne({
+  title: "MongoDB Best Practices",
+  content: "Content here...",
+  author: {
+    name: "John Developer",
+    email: "john@example.com",
+    bio: "Senior MongoDB Developer"
+  },
+  tags: ["mongodb", "database", "nosql"],
+  comments: [
+    {
+      author: "Alice",
+      content: "Great article!",
+      timestamp: new Date(),
+      likes: 5
+    },
+    {
+      author: "Bob",
+      content: "Very helpful",
+      timestamp: new Date(),
+      likes: 3
+    }
+  ],
+  createdAt: new Date(),
+  updatedAt: new Date()
+})
+
+// Reference Pattern for normalized data
+db.authors.insertOne({
+  authorId: "AUTH001",
+  name: "John Developer",
+  email: "john@example.com",
+  bio: "Senior MongoDB Developer",
+  socialMedia: {
+    twitter: "@johndev",
+    linkedin: "linkedin.com/in/johndev"
+  }
+})
+
+db.blogPosts.insertOne({
+  title: "Advanced MongoDB Patterns",
+  content: "Content here...",
+  authorId: "AUTH001", // Reference to authors collection
+  tags: ["mongodb", "advanced", "patterns"],
+  createdAt: new Date()
+})
+
+// Extended Reference Pattern with frequently accessed data
+db.blogPosts.insertOne({
+  title: "MongoDB Indexing Guide",
+  content: "Content here...",
+  author: {
+    authorId: "AUTH001",
+    name: "John Developer", // Denormalized for quick access
+    email: "john@example.com"
+  },
+  tags: ["mongodb", "indexing"],
+  createdAt: new Date()
+})
+
+// Bucket Pattern for time-series data
+db.sensorData.insertOne({
+  sensorId: "SENSOR001",
+  bucketDate: ISODate("2024-07-24T00:00:00Z"),
+  readings: [
+    {
+      timestamp: ISODate("2024-07-24T00:00:00Z"),
+      temperature: 23.5,
+      humidity: 65.2
+    },
+    {
+      timestamp: ISODate("2024-07-24T00:05:00Z"),
+      temperature: 23.7,
+      humidity: 65.0
+    }
+    // ... more readings for this hour
+  ],
+  readingCount: 12,
+  avgTemperature: 23.6,
+  avgHumidity: 65.1
+})
+
+// Polymorphic Pattern for varied document structures
+db.vehicles.insertMany([
+  {
+    vehicleId: "VEH001",
+    type: "car",
+    brand: "Toyota",
+    model: "Camry",
+    year: 2023,
+    doors: 4,
+    fuelType: "gasoline"
+  },
+  {
+    vehicleId: "VEH002",
+    type: "motorcycle",
+    brand: "Honda",
+    model: "CBR600RR",
+    year: 2023,
+    engineSize: "600cc",
+    bikeType: "sport"
+  },
+  {
+    vehicleId: "VEH003",
+    type: "truck",
+    brand: "Ford",
+    model: "F-150",
+    year: 2023,
+    payload: 1500,
+    bedLength: "6.5ft"
+  }
+])</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🏗️ Data Modeling Strategies</h4>
+                <p>
+                    <strong>Data modeling</strong> in MongoDB balances query
+                    performance, data consistency, and application requirements.
+                    Choose patterns based on access patterns and relationships.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Embedded documents</span> -
+                        One-to-few relationships, atomic updates
+                    </li>
+                    <li>
+                        <span class="highlight">References</span> - One-to-many,
+                        many-to-many relationships
+                    </li>
+                    <li>
+                        <span class="highlight">Bucket pattern</span> -
+                        Time-series and IoT data optimization
+                    </li>
+                    <li>
+                        <span class="highlight">Polymorphic pattern</span> -
+                        Varied document structures in one collection
+                    </li>
+                </ul>
+            </div>
+
+            <h3>8.2 Aggregation Framework Advanced Features</h3>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - Advanced Aggregation</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Window functions for analytics (MongoDB 5.0+)
+db.orders.aggregate([
+  {
+    $setWindowFields: {
+      partitionBy: "$userId",
+      sortBy: { orderDate: 1 },
+      output: {
+        runningTotal: {
+          $sum: "$totalAmount",
+          window: {
+            documents: ["unbounded", "current"]
+          }
+        },
+        orderRank: {
+          $rank: {}
+        },
+        avgOrderLast3: {
+          $avg: "$totalAmount",
+          window: {
+            documents: [-2, "current"]
+          }
+        }
+      }
+    }
+  },
+  {
+    $match: {
+      orderRank: { $lte: 5 } // Top 5 orders per user
+    }
+  }
+])
+
+// Time series aggregation with date operators
+db.orders.aggregate([
+  {
+    $match: {
+      orderDate: {
+        $gte: ISODate("2024-01-01"),
+        $lt: ISODate("2025-01-01")
+      }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        year: { $year: "$orderDate" },
+        month: { $month: "$orderDate" },
+        week: { $week: "$orderDate" }
+      },
+      totalRevenue: { $sum: "$totalAmount" },
+      orderCount: { $sum: 1 },
+      avgOrderValue: { $avg: "$totalAmount" },
+      uniqueCustomers: { $addToSet: "$userId" }
+    }
+  },
+  {
+    $addFields: {
+      uniqueCustomerCount: { $size: "$uniqueCustomers" },
+      revenuePerCustomer: {
+        $divide: ["$totalRevenue", { $size: "$uniqueCustomers" }]
+      }
+    }
+  },
+  {
+    $sort: {
+      "_id.year": 1,
+      "_id.month": 1,
+      "_id.week": 1
+    }
+  }
+])
+
+// Complex lookup with pipeline
+db.users.aggregate([
+  {
+    $lookup: {
+      from: "orders",
+      let: { userId: "$userId" },
+      pipeline: [
+        {
+          $match: {
+            $expr: { $eq: ["$userId", "$userId"] },
+            status: { $in: ["confirmed", "delivered"] }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalSpent: { $sum: "$totalAmount" },
+            orderCount: { $sum: 1 },
+            avgOrderValue: { $avg: "$totalAmount" },
+            lastOrderDate: { $max: "$orderDate" }
+          }
+        }
+      ],
+      as: "orderStats"
+    }
+  },
+  {
+    $unwind: {
+      path: "$orderStats",
+      preserveNullAndEmptyArrays: true
+    }
+  },
+  {
+    $addFields: {
+      customerTier: {
+        $switch: {
+          branches: [
+            {
+              case: { $gte: [{ $ifNull: ["$orderStats.totalSpent", 0] }, 1000] },
+              then: "Gold"
+            },
+            {
+              case: { $gte: [{ $ifNull: ["$orderStats.totalSpent", 0] }, 500] },
+              then: "Silver"
+            }
+          ],
+          default: "Bronze"
+        }
+      },
+      daysSinceLastOrder: {
+        $dateDiff: {
+          startDate: { $ifNull: ["$orderStats.lastOrderDate", "$createdAt"] },
+          endDate: new Date(),
+          unit: "day"
+        }
+      }
+    }
+  }
+])
+
+// Graph lookup for hierarchical data
+db.employees.aggregate([
+  {
+    $graphLookup: {
+      from: "employees",
+      startWith: "$managerId",
+      connectFromField: "managerId",
+      connectToField: "employeeId",
+      as: "managementChain",
+      maxDepth: 5
+    }
+  },
+  {
+    $addFields: {
+      managementLevels: { $size: "$managementChain" }
+    }
+  }
+])
+
+// Faceted search for multiple aggregations
+db.products.aggregate([
+  {
+    $facet: {
+      categoryCounts: [
+        {
+          $group: {
+            _id: "$category",
+            count: { $sum: 1 },
+            avgPrice: { $avg: "$price" }
+          }
+        }
+      ],
+      priceRanges: [
+        {
+          $bucket: {
+            groupBy: "$price",
+            boundaries: [0, 50, 100, 500, 1000, 5000],
+            default: "Other",
+            output: {
+              count: { $sum: 1 },
+              products: { $push: "$name" }
+            }
+          }
+        }
+      ],
+      topRated: [
+        {
+          $match: { "ratings.average": { $gte: 4.5 } }
+        },
+        {
+          $sort: { "ratings.average": -1 }
+        },
+        {
+          $limit: 10
+        }
+      ]
+    }
+  }
+])</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🔧 Advanced Aggregation Capabilities</h4>
+                <p>
+                    <strong>Advanced aggregation features</strong> enable
+                    complex analytics and data processing. MongoDB 8.0
+                    introduces new aggregation operators and performance
+                    optimizations.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Window functions</span> -
+                        Analytical queries with row-based calculations
+                    </li>
+                    <li>
+                        <span class="highlight">Graph operations</span> -
+                        Traverse hierarchical and graph-like relationships
+                    </li>
+                    <li>
+                        <span class="highlight">Faceted search</span> - Multiple
+                        aggregation pipelines in single operation
+                    </li>
+                    <li>
+                        <span class="highlight">Time series</span> - Built-in
+                        time-based aggregation operators
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Official Documentation:</strong>
+                <a
+                    href="https://www.mongodb.com/docs/manual/data-modeling/"
+                    target="_blank"
+                    >Data Modeling - MongoDB Manual</a
+                ><br />
+                <a
+                    href="https://www.mongodb.com/docs/manual/aggregation/"
+                    target="_blank"
+                    >Aggregation Framework</a
+                >
+            </div>
+
+            <h2>9. MongoDB 8.0 New Features & Enhancements</h2>
+
+            <div class="code-container">
+                <div class="code-header">
+                    <span>MongoDB Shell - MongoDB 8.0 Features</span>
+                    <button class="copy-btn" onclick="copyCode(this)">
+                        Copy
+                    </button>
+                </div>
+                <div class="code-block">
+                    <pre><code class="language-javascript">// Enhanced query optimization and performance
+// MongoDB 8.0 introduces improved query planner
+db.products.find({
+  $and: [
+    { category: "electronics" },
+    { price: { $gte: 100, $lte: 500 } },
+    { inStock: true }
+  ]
+}).explain("queryPlanner")
+
+// Improved aggregation performance
+db.orders.aggregate([
+  {
+    $match: {
+      orderDate: { $gte: ISODate("2024-01-01") }
+    }
+  },
+  {
+    $group: {
+      _id: "$userId",
+      totalSpent: { $sum: "$totalAmount" },
+      orderCount: { $sum: 1 }
+    }
+  },
+  {
+    $sort: { totalSpent: -1 }
+  }
+], { allowDiskUse: true })
+
+// Enhanced time series collections (MongoDB 8.0)
+db.createCollection("metrics", {
+  timeseries: {
+    timeField: "timestamp",
+    metaField: "metadata",
+    granularity: "seconds",
+    bucketMaxSpanSeconds: 3600 // 1 hour buckets
+  }
+})
+
+// Insert time series data
+db.metrics.insertMany([
+  {
+    timestamp: new Date(),
+    metadata: { sensor: "temp_01", location: "warehouse_a" },
+    value: 23.5,
+    unit: "celsius"
+  },
+  {
+    timestamp: new Date(),
+    metadata: { sensor: "humidity_01", location: "warehouse_a" },
+    value: 65.2,
+    unit: "percent"
+  }
+])
+
+// Enhanced change streams with improved filtering
+const changeStream = db.orders.watch([
+  {
+    $match: {
+      "fullDocument.totalAmount": { $gte: 1000 },
+      operationType: { $in: ["insert", "update"] }
+    }
+  }
+], {
+  fullDocument: "updateLookup",
+  fullDocumentBeforeChange: "whenAvailable"
+})
+
+changeStream.on("change", (change) => {
+  print("High-value order change detected:")
+  printjson(change)
+})
+
+// Improved validation with custom expressions
+db.createCollection("advancedValidation", {
+  validator: {
+    $expr: {
+      $and: [
+        { $gte: ["$endDate", "$startDate"] },
+        {
+          $or: [
+            { $eq: ["$status", "draft"] },
+            { $ne: ["$approvedBy", null] }
+          ]
+        }
+      ]
+    }
+  }
+})
+
+// Enhanced connection pooling and monitoring
+db.runCommand({
+  serverStatus: 1,
+  connections: 1,
+  network: 1
+})
+
+// Queryable encryption (MongoDB Enterprise 8.0)
+// Note: Requires proper key management setup
+const encryptedFields = {
+  "personalInfo.ssn": {
+    keyId: UUID("12345678-1234-5678-9abc-123456789012"),
+    bsonType: "string",
+    queries: { queryType: "equality" }
+  }
+}
+
+// Create collection with queryable encryption
+db.createCollection("sensitiveData", {
+  encryptedFields: encryptedFields
+})</code></pre>
+                </div>
+            </div>
+
+            <div class="explanation">
+                <h4>🚀 MongoDB 8.0 Key Enhancements</h4>
+                <p>
+                    <strong>MongoDB 8.0</strong> introduces significant
+                    performance improvements, enhanced security features, and
+                    new capabilities for modern applications.
+                </p>
+                <ul>
+                    <li>
+                        <span class="highlight">Query optimization</span> -
+                        Improved query planner and execution engine
+                    </li>
+                    <li>
+                        <span class="highlight">Time series enhancements</span>
+                        - Better performance and new configuration options
+                    </li>
+                    <li>
+                        <span class="highlight">Change streams</span> - Enhanced
+                        filtering and before/after document access
+                    </li>
+                    <li>
+                        <span class="highlight">Queryable encryption</span> -
+                        Search encrypted data while maintaining security
+                    </li>
+                </ul>
+            </div>
+
+            <h2>10. Best Practices Summary</h2>
+
+            <div class="success">
+                <strong>✅ MongoDB CRUD Operations Best Practices:</strong>
+                <ul>
+                    <li>
+                        <span class="highlight">Schema Design:</span> Model data
+                        based on query patterns and access requirements
+                    </li>
+                    <li>
+                        <span class="highlight">Indexing:</span> Create indexes
+                        that match your query patterns using ESR principles
+                    </li>
+                    <li>
+                        <span class="highlight">Transactions:</span> Use
+                        multi-document transactions for complex operations
+                        requiring ACID properties
+                    </li>
+                    <li>
+                        <span class="highlight">Error Handling:</span> Implement
+                        comprehensive error handling with proper retry logic
+                    </li>
+                    <li>
+                        <span class="highlight">Write Concerns:</span> Configure
+                        appropriate write concerns for data durability
+                        requirements
+                    </li>
+                    <li>
+                        <span class="highlight">Aggregation:</span> Leverage
+                        aggregation framework for complex data processing and
+                        analytics
+                    </li>
+                    <li>
+                        <span class="highlight">Monitoring:</span> Implement
+                        query profiling and performance monitoring
+                    </li>
+                    <li>
+                        <span class="highlight">Data Types:</span> Use
+                        appropriate BSON types (Decimal128 for precise numbers,
+                        ISODate for timestamps)
+                    </li>
+                </ul>
+            </div>
+
+            <div class="concept-box">
+                <h4>🎯 Production Deployment Considerations</h4>
+                <p>
+                    <strong>Enterprise MongoDB Deployment:</strong> Key
+                    considerations for production environments:
+                </p>
+                <ul>
+                    <li>
+                        <strong>Replica Sets:</strong> Deploy with at least 3
+                        members for high availability
+                    </li>
+                    <li>
+                        <strong>Sharding:</strong> Implement sharding for
+                        horizontal scaling of large datasets
+                    </li>
+                    <li>
+                        <strong>Security:</strong> Enable authentication,
+                        authorization, and encryption
+                    </li>
+                    <li>
+                        <strong>Backup Strategy:</strong> Implement regular
+                        backups with point-in-time recovery
+                    </li>
+                    <li>
+                        <strong>Monitoring:</strong> Use MongoDB Atlas, Ops
+                        Manager, or custom monitoring solutions
+                    </li>
+                    <li>
+                        <strong>Performance:</strong> Regular index optimization
+                        and query performance analysis
+                    </li>
+                    <li>
+                        <strong>Capacity Planning:</strong> Monitor storage,
+                        memory, and connection usage patterns
+                    </li>
+                </ul>
+            </div>
+
+            <div class="reference">
+                <strong>📚 Essential MongoDB Resources:</strong>
+                <ul>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/"
+                            target="_blank"
+                            >MongoDB Manual - Official Documentation</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/tutorial/getting-started/"
+                            target="_blank"
+                            >Getting Started with MongoDB</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/core/data-model-design/"
+                            target="_blank"
+                            >Data Model Design Guide</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/administration/production-notes/"
+                            target="_blank"
+                            >Production Deployment Guide</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/reference/operator/"
+                            target="_blank"
+                            >Query and Projection Operators</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/tutorial/optimize-query-performance-with-indexes-and-projections/"
+                            target="_blank"
+                            >Query Performance Optimization</a
+                        >
+                    </li>
+                    <li>
+                        <a
+                            href="https://www.mongodb.com/docs/manual/core/security/"
+                            target="_blank"
+                            >Security in MongoDB</a
+                        >
+                    </li>
+                </ul>
+            </div>
+
+            <div class="concept-box">
+                <h4>📋 CRUD Operations Summary</h4>
+                <p>
+                    This comprehensive guide covers all essential MongoDB
+                    operations:
+                </p>
+                <div
+                    style="
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 20px;
+                        margin-top: 15px;
+                    "
+                >
+                    <div>
+                        <ul>
+                            <li>
+                                ✅ <strong>CREATE:</strong> insertOne(),
+                                insertMany(), bulk operations
+                            </li>
+                            <li>
+                                ✅ <strong>READ:</strong> find(), findOne(),
+                                aggregation pipelines
+                            </li>
+                            <li>
+                                ✅ <strong>UPDATE:</strong> updateOne(),
+                                updateMany(), upsert operations
+                            </li>
+                            <li>
+                                ✅ <strong>DELETE:</strong> deleteOne(),
+                                deleteMany(), soft delete patterns
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <ul>
+                            <li>
+                                ✅ <strong>Transactions:</strong> Multi-document
+                                ACID operations
+                            </li>
+                            <li>
+                                ✅ <strong>Indexing:</strong> Performance
+                                optimization strategies
+                            </li>
+                            <li>
+                                ✅
+                                <strong>Advanced Features:</strong> Aggregation,
+                                text search, geospatial
+                            </li>
+                            <li>
+                                ✅ <strong>MongoDB 8.0:</strong> Latest features
+                                and enhancements
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Initialize syntax highlighting
+            hljs.highlightAll();
+
+            // Copy code functionality
+            function copyCode(button) {
+                const codeBlock = button
+                    .closest(".code-container")
+                    .querySelector("code");
+                const text = codeBlock.textContent;
+
+                navigator.clipboard
+                    .writeText(text)
+                    .then(function () {
+                        button.textContent = "Copied!";
+                        button.classList.add("copied");
+
+                        setTimeout(function () {
+                            button.textContent = "Copy";
+                            button.classList.remove("copied");
+                        }, 2000);
+                    })
+                    .catch(function (err) {
+                        console.error("Failed to copy text: ", err);
+                        button.textContent = "Error";
+                        setTimeout(function () {
+                            button.textContent = "Copy";
+                        }, 2000);
+                    });
+            }
+
+            // Add keyboard shortcut for copying
+            document.addEventListener("keydown", function (e) {
+                if (e.ctrlKey && e.key === "c") {
+                    const activeElement = document.activeElement;
+                    if (
+                        activeElement &&
+                        activeElement.closest(".code-container")
+                    ) {
+                        const copyBtn = activeElement
+                            .closest(".code-container")
+                            .querySelector(".copy-btn");
+                        if (copyBtn) {
+                            copyCode(copyBtn);
+                            e.preventDefault();
+                        }
+                    }
+                }
+            });
+        </script>
+    </body>
+</html>
