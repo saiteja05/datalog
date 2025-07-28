@@ -185,6 +185,30 @@
             </div>
         </section>
 
+        <!-- Intelligent Automation Section -->
+        <section id="automation" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div class="scroll-reveal">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Intelligent, Automated Operations.</h2>
+                        <p class="text-lg text-gray-300 mb-4">Focus on your application, not your database. Atlas automates capacity management, so your cluster always has the right resources. Define your scaling policies, and Atlas will handle the rest, ensuring performance and availability without manual intervention.</p>
+                        <ul class="space-y-3 text-lg text-gray-300">
+                            <li><span class="text-mongodb-green font-semibold">Storage Auto-Scaling:</span> Enabled by default, additional disk space is provisioned when usage reaches 90%.</li>
+                            <li><span class="text-mongodb-green font-semibold">Compute Auto-Scaling:</span> Opt-in to automatically scale your cluster tier up or down based on CPU and RAM utilization, with configurable min/max sizes.</li>
+                        </ul>
+                    </div>
+                    <div class="relative h-96 scroll-reveal flex items-center justify-center">
+                        <svg class="w-64 h-64 text-mongodb-green/20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M50 10 V 90 M10 50 H 90" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="50" cy="50" r="30" stroke="currentColor" stroke-width="2" stroke-dasharray="4 4" class="animate-spin" style="animation-duration: 4s;"/>
+                            <circle cx="50" cy="50" r="45" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/>
+                        </svg>
+                        <div class="absolute text-white font-bold text-xl">Auto-Scaling</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Voyage AI Section -->
         <section id="voyage-ai" class="py-24 bg-dark-gradient">
             <div class="container mx-auto px-6">
@@ -633,24 +657,19 @@ exports = function(changeEvent) {
             </div>
         </div>
     </footer>
-
     <script>
-        // Simple scroll reveal animation
-        const revealElements = document.querySelectorAll('.scroll-reveal');
-
-        const revealOnScroll = () => {
-            const windowHeight = window.innerHeight;
-            revealElements.forEach(el => {
-                const elementTop = el.getBoundingClientRect().top;
-                if (elementTop < windowHeight - 100) {
-                    el.classList.add('visible');
-                }
-            });
-        };
-
-        window.addEventListener('scroll', revealOnScroll);
-        // Initial check in case elements are already in view on load
-        document.addEventListener('DOMContentLoaded', revealOnScroll);
+        document.addEventListener('DOMContentLoaded', () => {
+            // Simple scroll reveal animation
+            const revealElements = document.querySelectorAll('.scroll-reveal');
+            const revealObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.1 });
+            revealElements.forEach(el => revealObserver.observe(el));
+        });
     </script>
 
 </body>
