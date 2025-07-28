@@ -125,6 +125,93 @@
 
         <main class="space-y-20">
 
+
+
+    <main class="p-4 sm:p-6 lg:p-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl lg:text-4xl font-bold text-gray-100">Explore the MongoDB Atlas Platform</h2>
+            <p class="max-w-3xl mx-auto mt-4 text-lg text-gray-400">
+                Click on any component of the diagram below to learn more about its function. The details will appear in the panel on the right (or at the bottom on smaller screens).
+            </p>
+        </div>
+
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Main Diagram Area -->
+            <div class="flex-grow">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                    <!-- Application Drivers -->
+                    <div class="flex flex-col items-center gap-4">
+                        <h3 class="font-bold text-lg text-center mb-2">MongoDB Application Drivers</h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div data-info="csharp" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">C#</div>
+                            <div data-info="go" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Go</div>
+                            <div data-info="java" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Java</div>
+                            <div data-info="nodejs" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">JS</div>
+                            <div data-info="python" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Python</div>
+                            <div data-info="php" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">PHP</div>
+                        </div>
+                    </div>
+
+                    <!-- Core Atlas Cluster -->
+                    <div data-info="atlas" class="diagram-component bg-gray-800 p-6 rounded-xl border-2 border-green-500 relative">
+                        <h3 class="text-center font-bold text-green-400 mb-2">MongoDB Atlas</h3>
+                        <div data-info="api" class="diagram-component bg-gray-700 p-2 rounded-md text-center text-sm mb-4">
+                            MongoDB Universal Query API
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <!-- Electable Nodes -->
+                            <div class="col-span-1 space-y-4">
+                                <div data-info="primary" class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">P</div>
+                                <div data-info="secondary" class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">S</div>
+                                <div data-info="secondary" class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">S</div>
+                            </div>
+                            <!-- Workload Isolation Nodes -->
+                            <div class="col-span-1 space-y-4">
+                                <div data-info="analytics" class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">A</div>
+                                <div data-info="readonly" class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">R</div>
+                                <div data-info="search" class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">🔍</div>
+                            </div>
+                        </div>
+                        <div class="text-xs text-gray-400 mt-4 text-center">
+                            Multi-region, Multi-cloud on AWS, Azure, and GCP
+                        </div>
+                    </div>
+
+                    <!-- Data Ecosystem -->
+                    <div class="flex flex-col items-center gap-4">
+                         <h3 class="font-bold text-lg text-center mb-2">Data Ecosystem</h3>
+                        <div class="space-y-4 w-full max-w-xs">
+                            <div data-info="datascience" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Data Science Platforms</div>
+                            <div data-info="charts" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">MongoDB Charts</div>
+                            <div data-info="cdc" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Change Data Capture</div>
+                            <div data-info="bi" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Third-party BI & Reporting</div>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Tools -->
+                <div class="mt-12">
+                    <h3 class="font-bold text-lg text-center mb-4">Developer Tools</h3>
+                    <div class="flex justify-center gap-4 flex-wrap">
+                        <div data-info="compass" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">MongoDB Compass</div>
+                        <div data-info="shell" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">MongoDB Shell</div>
+                        <div data-info="vscode" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">VS Code Extension</div>
+                        <div data-info="explorer" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Data Explorer</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Panel -->
+            <div class="lg:w-1/3 lg:max-w-sm flex-shrink-0">
+                <div id="details-panel" class="sticky top-24 bg-gray-800 p-6 rounded-xl border border-gray-700 min-h-[300px]">
+                    <h3 id="details-title" class="text-xl font-bold text-green-400 mb-4">Select a Component</h3>
+                    <div id="details-content" class="text-gray-300 space-y-2">
+                        <p>Click on any part of the diagram to see more information here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
             
             <section id="disaster-recovery">
                 <h2 class="section-heading">Disaster Recovery & Automated Failover</h2>
@@ -346,14 +433,85 @@
     </div>
 
     <script>
+
+        
         document.addEventListener('DOMContentLoaded', function() {
+
+            const components = document.querySelectorAll('.diagram-component');
+            const detailsTitle = document.getElementById('details-title');
+            const detailsContent = document.getElementById('details-content');
+            let activeComponent = null;
+
+            const infoMap = {
+                // Default
+                default: {
+                    title: 'Select a Component',
+                    content: '<p>Click on any part of the diagram to see more information here.</p>'
+                },
+                // Drivers
+                csharp: { title: 'C# / .NET Driver', content: '<p>Provides an interface for .NET applications to connect and interact with MongoDB, supporting LINQ and asynchronous operations.</p>' },
+                go: { title: 'Go Driver', content: '<p>A modern, idiomatic driver for Go applications, designed for high performance and concurrency.</p>' },
+                java: { title: 'Java Driver', content: '<p>A robust driver for the JVM ecosystem, supporting synchronous and asynchronous operations for enterprise applications.</p>' },
+                nodejs: { title: 'Node.js Driver', content: '<p>The official driver for Node.js, enabling JavaScript and TypeScript applications to work with MongoDB in an asynchronous, non-blocking manner.</p>' },
+                python: { title: 'Python Driver (PyMongo)', content: '<p>The standard driver for Python, widely used in web applications (Django, Flask) and data science workflows.</p>' },
+                php: { title: 'PHP Driver', content: '<p>Allows PHP applications to connect to MongoDB, commonly used in web development with frameworks like Laravel and Symfony.</p>' },
+                // Core Atlas
+                atlas: { title: 'MongoDB Atlas', content: '<p>MongoDB\'s fully managed, multi-cloud developer data platform. It automates deployment, scaling, and maintenance, allowing developers to focus on building applications.</p>' },
+                api: { title: 'Universal Query API', content: '<p>A single, unified interface that allows applications to perform queries for transactional, analytical, and search workloads without needing different APIs for different data types.</p>' },
+                primary: { title: 'Electable Node: Primary (P)', content: '<h4>Transactional/Operational Workload</h4><p>The Primary node in a replica set receives all write operations. It provides strong data consistency and is the main point of interaction for transactional workloads. Part of a high-availability setup with a 99.995% uptime SLA.</p>' },
+                secondary: { title: 'Electable Node: Secondary (S)', content: '<h4>Transactional/Operational Workload</h4><p>Secondary nodes replicate data from the Primary node. They ensure data redundancy and high availability. If the Primary node fails, a Secondary is automatically elected to become the new Primary.</p>' },
+                analytics: { title: 'Workload Isolation: Analytics Node (A)', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A dedicated node optimized for reporting, business intelligence, and complex analytical queries. It isolates analytical workloads from transactional traffic, ensuring that long-running queries do not impact application performance.</p>' },
+                readonly: { title: 'Workload Isolation: Read-only Node (R)', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A read-only node used for scaling read operations for local reads. It helps distribute the read load from the main electable nodes.</p>' },
+                search: { title: 'Workload Isolation: Search Node', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A specialized node that powers Atlas Search for full-text search and Atlas Vector Search for semantic search. It offloads complex search operations, providing high-performance search without impacting the core database.</p>' },
+                // Data Ecosystem
+                datascience: { title: 'Data Science Platforms', content: '<p>Integrates with popular data science tools and platforms like Iguazio, TensorFlow, and cloud services from AWS and Google Cloud. Enables building and deploying machine learning models using data stored in Atlas.</p>' },
+                charts: { title: 'MongoDB Charts', content: '<p>A native data visualization tool for MongoDB. It allows users to create, share, and embed real-time dashboards and charts based on their Atlas data without complex data movement.</p>' },
+                cdc: { title: 'Change Data Capture', content: '<p>Using Change Streams or integrations with tools like Kafka, applications can react to data changes in real-time. This is crucial for building event-driven architectures, real-time analytics, and data synchronization pipelines.</p>' },
+                bi: { title: 'Third-party BI & Reporting', content: '<p>The Atlas SQL Interface allows standard BI and reporting tools like Tableau, Power BI, Qlik, and MicroStrategy to connect to and query MongoDB data using familiar SQL syntax, bridging the gap between NoSQL data and traditional analytics.</p>' },
+                // Tools
+                compass: { title: 'MongoDB Compass', content: '<p>The official GUI for MongoDB. It provides a graphical way to explore data, run queries, manage indexes, and analyze performance.</p>' },
+                shell: { title: 'MongoDB Shell (mongosh)', content: '<p>A modern command-line interface for MongoDB. It offers a powerful scripting environment for interacting with and managing your databases.</p>' },
+                vscode: { title: 'VS Code Extension', content: '<p>An extension for Visual Studio Code that allows developers to connect to Atlas, browse databases and collections, and create playgrounds for running queries directly within their editor.</p>' },
+                explorer: { title: 'Data Explorer', content: '<p>A web-based tool within the MongoDB Atlas UI that allows for browsing, querying, and managing data directly in your browser without needing to install any tools.</p>' },
+            };
+
+            function updateDetails(infoKey) {
+                const info = infoMap[infoKey] || infoMap.default;
+                detailsTitle.textContent = info.title;
+                detailsContent.innerHTML = info.content;
+            }
+
+            components.forEach(component => {
+                component.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const infoKey = component.dataset.info;
+
+                    if (activeComponent) {
+                        activeComponent.classList.remove('active');
+                    }
+                    component.classList.add('active');
+                    activeComponent = component;
+
+                    updateDetails(infoKey);
+                });
+            });
+
+             // Reset when clicking outside
+            document.body.addEventListener('click', () => {
+                if(activeComponent) {
+                    activeComponent.classList.remove('active');
+                    activeComponent = null;
+                }
+                updateDetails('default');
+            });
+
             const failoverBtn = document.getElementById('failover-btn');
             const failoverStatus = document.getElementById('failover-status');
             const node1 = document.getElementById('node-1');
             const node2 = document.getElementById('node-2');
             const node3 = document.getElementById('node-3');
 
-            let isFailedOver = false;
+            let isFailedOver = false;            
 
             failoverBtn.addEventListener('click', () => {
                 if (isFailedOver) {
@@ -390,6 +548,8 @@
                         isFailedOver = true;
                     }, 2000);
                 }
+
+                
             });
 
             // Active nav link scrolling
