@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Atlas - Developer Data Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: MongoDB Black & Green (Apple Inspired) -->
+    <!-- Application Structure Plan: The application is designed as an "Interactive Architectural Explorer". The layout is centered around the core MongoDB Atlas cluster, with surrounding ecosystem components organized into logical, clickable sections (Application Drivers, Developer Tools, Data Ecosystem). The primary user flow is non-linear, encouraging exploration. Clicking any component updates a dedicated "Details Panel", providing context without leaving the main view. This structure was chosen to deconstruct a dense technical diagram into digestible, interactive pieces, making it easier to understand the role of each component and the platform's overall value. -->
+    <!-- Visualization & Content Choices: 
+        - Core Architecture Diagram: Goal: Organize/Inform. Method: Recreated using HTML/CSS Flexbox and Grid. Interaction: Clicking on any node (Primary, Secondary, Analytics) updates the Details Panel with its specific function. Justification: This is the most intuitive way to explore a complex diagram, turning a passive viewing experience into an active learning one.
+        - Ecosystem Components: Goal: Organize/Inform. Method: Clickable cards. Interaction: Clicking a card updates the Details Panel. Justification: A clean way to represent integrations.
+        - Details Panel: Goal: Inform. Method: A `div` whose content is dynamically updated via JavaScript. Justification: Provides a persistent, contextual information hub.
+        - CONFIRMATION: NO SVG graphics used (except for logo). NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #e5e7eb; /* gray-200 */
+        }
+        .component {
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            border-color: #374151; /* gray-700 */
+            background-color: #111827; /* gray-900 */
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+        }
+        .component:hover {
+            border-color: #4ade80; /* green-400 */
+            transform: translateY(-2px);
+        }
+        .component.active {
+            border-color: #22c55e; /* green-500 */
+            background-color: #1f2937; /* gray-800 */
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+        .line {
+            position: absolute;
+            background-color: #4b5563; /* gray-600 */
+            z-index: 0;
+        }
+        .component {
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="flex flex-col min-h-screen">
+        <!-- Header -->
+        <header class="border-b border-gray-800 bg-black/50 backdrop-blur-md">
+            <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-center gap-4">
+                <svg class="w-8 h-8 text-green-500" viewBox="0 0 101 114" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M44.5833 2.80556C47.4167 1.25 51.5833 1.25 54.4167 2.80556L91.4167 24.25C94.25 25.8056 96.3333 28.8889 96.3333 32.2778V75.1667C96.3333 78.5556 94.25 81.6389 91.4167 83.1944L54.4167 104.639C51.5833 106.194 47.4167 106.194 44.5833 104.639L7.58333 83.1944C4.75 81.6389 2.66667 78.5556 2.66667 75.1667V32.2778C2.66667 28.8889 4.75 25.8056 7.58333 24.25L44.5833 2.80556Z" stroke="currentColor" stroke-width="5"/>
+                    <path d="M49.5 91.5C69.1091 91.5 85 75.6091 85 56C85 36.3909 69.1091 20.5 49.5 20.5C29.8909 20.5 14 36.3909 14 56C14 69.3523 21.933 80.9139 32.5 86.5" stroke="currentColor" stroke-width="5"/>
+                </svg>
+                <div>
+                    <h1 class="text-xl font-bold text-white">MongoDB Atlas</h1>
+                    <p class="text-sm text-gray-400">Click any component to learn more.</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-grow p-4 sm:p-6 lg:p-8 flex flex-col xl:flex-row items-start justify-center gap-8">
+            
+            <!-- Diagram Container -->
+            <div class="w-full xl:w-2/3 flex-shrink-0">
+                <div id="diagram-container" class="relative mx-auto" style="width: 900px; height: 700px;">
+                    <!-- Components -->
+                    <div data-component="encryption" class="component absolute p-3 rounded-lg border text-center" style="width: 160px; top: 0; left: 0;">Encryption</div>
+                    <div data-component="api" class="component absolute p-3 rounded-lg border text-center" style="width: 120px; top: 120px; left: 40px;">API</div>
+                    <div data-component="analytics" class="component absolute p-3 rounded-lg border text-center" style="width: 120px; top: 240px; left: 0;">Analytics</div>
+                    <div data-component="search" class="component absolute p-3 rounded-lg border text-center" style="width: 120px; top: 320px; left: 40px;">Atlas Search</div>
+                    <div data-component="profiler" class="component absolute p-3 rounded-lg border text-center" style="width: 120px; top: 440px; left: 120px;">Query Profiler</div>
+                    <div data-component="dashboard" class="component absolute p-3 rounded-lg border text-center" style="width: 160px; top: 560px; left: 80px;">Operations Dashboard</div>
+                    
+                    <div data-component="core-db" class="component absolute p-3 rounded-lg border text-center border-green-500" style="width: 180px; top: 60px; left: 50%; transform: translateX(-50%);">MongoDB Core Database</div>
+                    <div data-component="main-cluster" class="component absolute p-4 rounded-2xl border-2 border-green-600 flex items-center justify-center" style="width: 220px; height: 180px; top: 180px; left: 50%; transform: translateX(-50%);">
+                        <img src="https://webassets.mongodb.com/_com_assets/cms/autocaling-las-clr-aahl2y3cb6.svg" alt="Autoscaling Icon" class="w-24 h-24 opacity-80"/>
+                    </div>
+                    <div data-component="dev-platform" class="component absolute p-3 rounded-lg border text-center" style="width: 220px; top: 380px; left: 50%; transform: translateX(-50%);">MongoDB Atlas<br>Developer Data Platform</div>
+
+                    <div data-component="use-cases" class="component absolute p-3 rounded-lg border text-center" style="width: 200px; top: 0; right: 0;">Key-value, Time Series...</div>
+                    <div data-component="maintenance" class="component absolute p-3 rounded-lg border text-center" style="width: 200px; top: 120px; right: 40px;">Zero Downtime Maintenance</div>
+                    <div data-component="pitr" class="component absolute p-3 rounded-lg border text-center" style="width: 80px; top: 200px; right: 160px;">PITR</div>
+                    <div data-component="backup" class="component absolute p-3 rounded-lg border text-center" style="width: 80px; top: 200px; right: 40px;">Backup</div>
+                    <div data-component="stream" class="component absolute p-3 rounded-lg border text-center" style="width: 140px; top: 320px; right: 0;">Stream Processor</div>
+                    <div data-component="sql" class="component absolute p-3 rounded-lg border text-center" style="width: 180px; top: 400px; right: 80px;">Charts and SQL support</div>
+                    <div data-component="alerting" class="component absolute p-3 rounded-lg border text-center" style="width: 200px; top: 500px; right: 0;">Alerting & Perf. Advisor</div>
+                    <div data-component="index" class="component absolute p-3 rounded-lg border text-center" style="width: 140px; top: 600px; right: 120px;">Index Suggestions</div>
+                    <div data-component="schema" class="component absolute p-3 rounded-lg border text-center" style="width: 140px; top: 600px; right: -40px;">Schema Advisor</div>
+
+                    <!-- Lines -->
+                    <div class="line" style="width: 2px; height: 60px; top: 60px; left: 80px;"></div>
+                    <div class="line" style="width: 195px; height: 2px; top: 120px; left: 80px;"></div>
+                    <div class="line" style="width: 2px; height: 120px; top: 120px; left: 274px;"></div>
+                    <div class="line" style="width: 155px; height: 2px; top: 240px; left: 120px;"></div>
+                    <div class="line" style="width: 195px; height: 2px; top: 335px; left: 160px;"></div>
+                    <div class="line" style="width: 2px; height: 105px; top: 335px; left: 160px;"></div>
+                    <div class="line" style="width: 2px; height: 105px; top: 440px; left: 329px;"></div>
+                    <div class="line" style="width: 140px; height: 2px; top: 490px; right: 200px;"></div>
+                    <div class="line" style="width: 2px; height: 80px; top: 240px; right: 140px;"></div>
+                    <div class="line" style="width: 2px; height: 60px; top: 60px; right: 100px;"></div>
+                    <div class="line" style="width: 180px; height: 2px; top: 120px; right: 140px;"></div>
+                    <div class="line" style="width: 2px; height: 60px; top: 260px; right: 70px;"></div>
+                    <div class="line" style="width: 2px; height: 80px; top: 525px; right: 200px;"></div>
+                </div>
+            </div>
+
+            <!-- Details Panel -->
+            <div class="w-full xl:w-1/3 xl:max-w-md">
+                <div id="details-panel" class="bg-gray-900 p-6 rounded-lg border border-gray-700 sticky top-24">
+                    <h3 id="details-title" class="text-xl font-bold text-green-400 mb-2">Select a Component</h3>
+                    <p id="details-text" class="text-gray-400">Click on any part of the diagram to see more information here.</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const componentDetails = {
+                'encryption': { title: 'Encryption', text: 'Atlas provides comprehensive security, including end-to-end encryption. Advanced features like Queryable Encryption allow you to process queries on fully encrypted data, ensuring sensitive information remains protected throughout its lifecycle.' },
+                'api': { title: 'Secure API', text: 'Applications connect to Atlas through a secure API endpoint. Access can be restricted using IP Access Lists and VPC Peering, ensuring only authorized clients can communicate with your database.' },
+                'analytics': { title: 'Analytics Nodes', text: 'Isolate analytical queries from your operational workload. This allows you to run complex, long-running queries for business intelligence or data science without impacting your application\'s performance.' },
+                'search': { title: 'Atlas Search', text: 'A fully integrated search engine to build rich, modern search experiences. It includes full-text search, faceting, and Atlas Vector Search for building generative AI and semantic search applications.' },
+                'profiler': { title: 'Query Profiler', text: 'Provides detailed performance metrics for every query running against your cluster. It helps you identify slow or inefficient queries and pinpoint opportunities for optimization.' },
+                'dashboard': { title: 'Operations Dashboard', text: 'The Atlas UI provides a real-time dashboard to monitor the health and performance of your cluster, visualizing key metrics like query latency, network traffic, and hardware utilization.' },
+                'core-db': { title: 'MongoDB Core Database', text: 'The foundational document database. Its flexible data model is ideal for a wide variety of use cases, allowing you to store data of any structure and evolve your schema easily as your application grows.' },
+                'main-cluster': { title: 'Atlas Cluster', text: 'The core of the platform. A fully-managed, distributed database cluster that provides high availability through a self-healing replica set architecture, horizontal scalability with sharding, and automated operations like autoscaling. It runs on your choice of AWS, Azure, or Google Cloud.' },
+                'dev-platform': { title: 'Developer Data Platform', text: 'MongoDB Atlas is a unified platform that integrates all the data services developers need to build modern applications, from search and analytics to mobile sync and serverless functions.' },
+                'use-cases': { title: 'Multi-Workload Support', text: 'Atlas is a multi-model database designed to handle a wide range of workloads. It natively supports key-value stores, time-series data, geospatial indexing, and is fully ACID compliant for transactional and operational analytics.' },
+                'maintenance': { title: 'Zero Downtime Maintenance', text: 'Atlas automates database maintenance, including software patches and version upgrades. These operations are performed on a rolling basis across the cluster, ensuring your application remains online and available without any scheduled downtime.' },
+                'pitr': { title: 'Point-in-Time Recovery (PITR)', text: 'An advanced backup feature that allows you to restore your database to a specific moment in time, critical for recovering from logical errors like accidental data deletion.' },
+                'backup': { title: 'Managed Backup', text: 'Atlas provides continuous, fully-managed cloud backups of your database. It creates regular snapshots and stores them securely, allowing you to easily restore your data in case of a disaster or system failure.' },
+                'stream': { title: 'Stream Processor Integration', text: 'Through MongoDB Change Streams, Atlas can act as a real-time data source for stream processing systems like Apache Kafka, enabling you to build event-driven architectures.' },
+                'sql': { title: 'Charts and SQL Support', text: 'MongoDB Charts is a native tool for creating real-time visualizations of your data. Additionally, the Atlas SQL Interface allows you to connect your existing BI tools (like Tableau or Power BI) and query your data using standard SQL.' },
+                'alerting': { title: 'Alerting & Performance Advisor', text: 'Get real-time monitoring of over 100 metrics and set up custom alerts. The Performance Advisor is an intelligent tool that automatically analyzes slow queries and suggests new indexes to improve performance.' },
+                'index': { title: 'Index Suggestions', text: 'A key feature of the Performance Advisor. It identifies queries that could be made more efficient and automatically recommends the optimal index to create, helping you easily optimize database performance.' },
+                'schema': { title: 'Schema Advisor', text: 'This tool analyzes the schema of your collections and suggests improvements based on your application\'s access patterns. It can help you identify opportunities to apply schema design patterns that improve efficiency and performance.' }
+            };
+
+            const diagramContainer = document.getElementById('diagram-container');
+            const detailsTitle = document.getElementById('details-title');
+            const detailsText = document.getElementById('details-text');
+            let activeComponent = null;
+
+            diagramContainer.addEventListener('click', (e) => {
+                const componentEl = e.target.closest('.component');
+                if (!componentEl) return;
+
+                const componentId = componentEl.dataset.component;
+                if (componentDetails[componentId]) {
+                    detailsTitle.textContent = componentDetails[componentId].title;
+                    detailsText.textContent = componentDetails[componentId].text;
+
+                    if (activeComponent) {
+                        activeComponent.classList.remove('active');
+                    }
+                    componentEl.classList.add('active');
+                    activeComponent = componentEl;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

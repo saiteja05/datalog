@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Atlas - The Developer Data Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: MongoDB Black & Green (Apple Inspired) -->
+    <!-- Application Structure Plan: This application uses a "scrollytelling" approach, inspired by Apple's product pages, to present the dense information from the PDF in a sleek, digestible format. A simplified, interactive architecture diagram remains fixed on the left, acting as a visual anchor. As the user scrolls through the narrative content on the right, corresponding components in the diagram highlight, creating a guided tour. Users can also click any diagram component to instantly scroll to its explanation. This design deconstructs a complex technical overview into a simple, elegant, and easy-to-understand story. -->
+    <!-- Visualization & Content Choices: 
+        - Architecture Diagram: Goal: Organize/Inform. Method: A conceptual diagram recreated with HTML/CSS. Interaction: Components highlight based on scroll position and are clickable for navigation. Justification: Transforms a static, complex diagram into an engaging, guided experience that feels premium and modern.
+        - Narrative Sections: Goal: Inform/Explain. Method: Sequenced text blocks with large, clear headings. Interaction: Scrolling triggers diagram highlights. Justification: Provides a clear, linear path through the platform's features, explaining each part in context.
+        - Icons: Goal: Inform. Method: Inline SVGs for key features. Justification: Adds visual interest and reinforces concepts without relying on external images, aligning with a sleek, minimalist aesthetic.
+        - CONFIRMATION: NO SVG graphics used (except for logo/icons). NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000000;
+            color: #f0f0f0;
+        }
+        .diagram-component {
+            transition: all 0.4s ease-in-out;
+            border-color: #374151; /* gray-700 */
+            background-color: #1f2937; /* gray-800 */
+            opacity: 0.5;
+        }
+        .diagram-component.active {
+            border-color: #22c55e; /* green-500 */
+            background-color: #1f2937;
+            opacity: 1;
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
+        }
+        .story-section {
+            padding: 2rem 0;
+            margin-bottom: 80vh;
+            opacity: 0.3;
+            transition: opacity 0.4s ease-in-out;
+        }
+        .story-section.active {
+            opacity: 1;
+        }
+        .story-section:last-child {
+            margin-bottom: 25vh;
+        }
+        .story-section h3 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+            color: #ffffff;
+        }
+        .story-section p {
+            font-size: 1.125rem;
+            color: #9ca3af; /* gray-400 */
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+        }
+        .feature-item {
+            background-color: #1f2937;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #374151;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="py-20 text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <svg class="w-24 h-24 mx-auto mb-6 text-green-500" viewBox="0 0 101 114" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M44.5833 2.80556C47.4167 1.25 51.5833 1.25 54.4167 2.80556L91.4167 24.25C94.25 25.8056 96.3333 28.8889 96.3333 32.2778V75.1667C96.3333 78.5556 94.25 81.6389 91.4167 83.1944L54.4167 104.639C51.5833 106.194 47.4167 106.194 44.5833 104.639L7.58333 83.1944C4.75 81.6389 2.66667 78.5556 2.66667 75.1667V32.2778C2.66667 28.8889 4.75 25.8056 7.58333 24.25L44.5833 2.80556Z" stroke="currentColor" stroke-width="5"/>
+                <path d="M49.5 91.5C69.1091 91.5 85 75.6091 85 56C85 36.3909 69.1091 20.5 49.5 20.5C29.8909 20.5 14 36.3909 14 56C14 69.3523 21.933 80.9139 32.5 86.5" stroke="currentColor" stroke-width="5"/>
+            </svg>
+            <h1 class="text-5xl lg:text-7xl font-bold text-white tracking-tighter">The MongoDB Atlas Developer Data Platform.</h1>
+            <p class="max-w-2xl mx-auto mt-6 text-xl text-gray-400">
+                An integrated suite of data services centered around a core database, designed to accelerate and simplify how you build with data.
+            </p>
+        </div>
+    </main>
+
+    <section class="max-w-screen-xl mx-auto p-4 sm:p-6 lg:p-8">
+        <div class="flex flex-col lg:flex-row gap-8 lg:gap-24">
+            <!-- Left Column: Sticky Diagram -->
+            <div class="lg:w-1/2">
+                <div class="sticky top-24 h-[70vh]">
+                    <div id="diagram-container" class="relative w-full h-full flex items-center justify-center">
+                        <!-- Simplified Diagram -->
+                        <div class="w-full max-w-md space-y-4">
+                            <div data-section="section-app" class="diagram-component p-4 rounded-xl border-2 text-center text-lg font-semibold">Application & Developer Tools</div>
+                            <div class="flex justify-center items-center h-12"><div class="w-0.5 h-full bg-gray-700"></div></div>
+                            <div data-section="section-core" class="diagram-component p-6 rounded-2xl border-2 text-center">
+                                <h3 class="text-xl font-bold text-green-400">MongoDB Atlas</h3>
+                                <p class="text-gray-400">Core Database & Platform</p>
+                            </div>
+                            <div class="flex justify-center items-center h-12"><div class="w-0.5 h-full bg-gray-700"></div></div>
+                            <div data-section="section-services" class="diagram-component p-4 rounded-xl border-2 text-center text-lg font-semibold">Integrated Data Services</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column: Scrolling Story -->
+            <div class="lg:w-1/2">
+                <div id="story-container">
+                    <div id="section-core" class="story-section">
+                        <h3>A flexible foundation.</h3>
+                        <p>It all starts with the document model, which maps directly to objects in your code. Store data of any structure and modify the schema at any time, without downtime or complex migrations. This is the core of developer velocity.</p>
+                        <div class="feature-grid mt-8">
+                            <div class="feature-item"><strong>JSON Documents</strong><p class="text-sm text-gray-400">The modern standard for application stacks.</p></div>
+                            <div class="feature-item"><strong>Flexible Schema</strong><p class="text-sm text-gray-400">Evolve your application without database constraints.</p></div>
+                            <div class="feature-item"><strong>Rich Data Types</strong><p class="text-sm text-gray-400">Natively handle numbers, strings, dates, arrays, and more.</p></div>
+                        </div>
+                    </div>
+                    <div id="section-app" class="story-section">
+                        <h3>Built for developers.</h3>
+                        <p>A rich ecosystem of tools and drivers that integrate seamlessly into your workflow, making it faster and easier to build, test, and optimize your applications.</p>
+                         <div class="feature-grid mt-8">
+                            <div class="feature-item"><strong>Idiomatic Drivers</strong><p class="text-sm text-gray-400">Support for all major programming languages.</p></div>
+                            <div class="feature-item"><strong>Compass GUI</strong><p class="text-sm text-gray-400">Explore and manage your data visually.</p></div>
+                            <div class="feature-item"><strong>VS Code Extension</strong><p class="text-sm text-gray-400">Work with MongoDB without leaving your editor.</p></div>
+                            <div class="feature-item"><strong>Atlas CLI</strong><p class="text-sm text-gray-400">Automate and manage your infrastructure from the command line.</p></div>
+                        </div>
+                    </div>
+                    <div id="section-services" class="story-section">
+                        <h3>More than a database.</h3>
+                        <p>Go beyond basic CRUD. Atlas integrates powerful data services that let you build sophisticated features without the complexity of managing separate systems.</p>
+                         <div class="feature-grid mt-8">
+                            <div class="feature-item"><strong>Atlas Vector Search</strong><p class="text-sm text-gray-400">Build generative AI and semantic search applications.</p></div>
+                            <div class="feature-item"><strong>Atlas Search</strong><p class="text-sm text-gray-400">Create rich, full-text search experiences.</p></div>
+                            <div class="feature-item"><strong>Stream Processing</strong><p class="text-sm text-gray-400">React to data changes in real-time with Kafka.</p></div>
+                            <div class="feature-item"><strong>Atlas Charts</strong><p class="text-sm text-gray-400">Visualize your data with native dashboards.</p></div>
+                        </div>
+                    </div>
+                     <div id="section-scale" class="story-section">
+                        <h3>Built for global scale.</h3>
+                        <p>Scale effortlessly from prototype to planet-scale production. Atlas provides automated scalability and high availability, so your application is always on and always fast, for every user.</p>
+                         <div class="feature-grid mt-8">
+                            <div class="feature-item"><strong>Auto-Scaling</strong><p class="text-sm text-gray-400">Automatically adjust capacity to meet demand.</p></div>
+                            <div class="feature-item"><strong>Global Clusters</strong><p class="text-sm text-gray-400">Distribute data for low-latency reads and writes.</p></div>
+                            <div class="feature-item"><strong>Multi-Cloud</strong><p class="text-sm text-gray-400">Run on AWS, Azure, and Google Cloud.</p></div>
+                        </div>
+                    </div>
+                     <div id="section-security" class="story-section">
+                        <h3>Secure by design.</h3>
+                        <p>Comprehensive, multi-layered security features that protect your data at every stage, helping you meet the strictest compliance and data privacy requirements.</p>
+                         <div class="feature-grid mt-8">
+                            <div class="feature-item"><strong>End-to-End Encryption</strong><p class="text-sm text-gray-400">Data is encrypted in transit, at rest, and in use.</p></div>
+                            <div class="feature-item"><strong>Queryable Encryption</strong><p class="text-sm text-gray-400">An industry-first technology to query fully encrypted data.</p></div>
+                            <div class="feature-item"><strong>Advanced Auditing</strong><p class="text-sm text-gray-400">Track all activity with granular audit logs.</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const storySections = document.querySelectorAll('.story-section');
+            const diagramComponents = document.querySelectorAll('.diagram-component');
+            let activeSectionId = null;
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const sectionId = entry.target.id;
+                        if (sectionId !== activeSectionId) {
+                            activeSectionId = sectionId;
+                            
+                            entry.target.classList.add('active');
+
+                            diagramComponents.forEach(comp => {
+                                if (comp.dataset.section === sectionId) {
+                                    comp.classList.add('active');
+                                } else {
+                                    comp.classList.remove('active');
+                                }
+                            });
+                            
+                            storySections.forEach(sec => {
+                                if (sec.id !== sectionId) {
+                                    sec.classList.remove('active');
+                                }
+                            });
+                        }
+                    }
+                });
+            }, {
+                root: null,
+                threshold: 0.6, 
+            });
+
+            storySections.forEach(section => {
+                observer.observe(section);
+            });
+
+            diagramComponents.forEach(comp => {
+                comp.addEventListener('click', () => {
+                    const sectionId = comp.dataset.section;
+                    const targetSection = document.getElementById(sectionId);
+                    if (targetSection) {
+                        targetSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

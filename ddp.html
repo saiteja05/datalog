@@ -7,212 +7,338 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Chosen Palette: MongoDB Black & Green (Apple Inspired) -->
-    <!-- Application Structure Plan: This application uses a "scrollytelling" approach, inspired by Apple's product pages, to present the dense information from the PDF in a sleek, digestible format. A simplified, interactive architecture diagram remains fixed on the left, acting as a visual anchor. As the user scrolls through the narrative content on the right, corresponding components in the diagram highlight, creating a guided tour. Users can also click any diagram component to instantly scroll to its explanation. This design deconstructs a complex technical overview into a simple, elegant, and easy-to-understand story. -->
-    <!-- Visualization & Content Choices: 
-        - Architecture Diagram: Goal: Organize/Inform. Method: A conceptual diagram recreated with HTML/CSS. Interaction: Components highlight based on scroll position and are clickable for navigation. Justification: Transforms a static, complex diagram into an engaging, guided experience that feels premium and modern.
-        - Narrative Sections: Goal: Inform/Explain. Method: Sequenced text blocks with large, clear headings. Interaction: Scrolling triggers diagram highlights. Justification: Provides a clear, linear path through the platform's features, explaining each part in context.
-        - Icons: Goal: Inform. Method: Inline SVGs for key features. Justification: Adds visual interest and reinforces concepts without relying on external images, aligning with a sleek, minimalist aesthetic.
-        - CONFIRMATION: NO SVG graphics used (except for logo/icons). NO Mermaid JS used. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #000000;
-            color: #f0f0f0;
+            color: #E2E8F0;
         }
-        .diagram-component {
-            transition: all 0.4s ease-in-out;
-            border-color: #374151; /* gray-700 */
-            background-color: #1f2937; /* gray-800 */
-            opacity: 0.5;
+        .mongodb-green {
+            color: #13aa52;
         }
-        .diagram-component.active {
-            border-color: #22c55e; /* green-500 */
-            background-color: #1f2937;
+        .bg-mongodb-green {
+            background-color: #13aa52;
+        }
+        .border-mongodb-green {
+            border-color: #13aa52;
+        }
+        .bg-dark-gradient {
+            background: linear-gradient(180deg, #111827 0%, #000000 100%);
+        }
+        .hero-glow {
+            background-image: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(19, 170, 82, 0.3), rgba(19, 170, 82, 0));
+        }
+        .feature-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .feature-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 25px -5px rgba(19, 170, 82, 0.1), 0 10px 10px -5px rgba(19, 170, 82, 0.04);
+        }
+        .scroll-reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .scroll-reveal.visible {
             opacity: 1;
-            transform: scale(1.05);
-            box-shadow: 0 0 25px rgba(34, 197, 94, 0.4);
+            transform: translateY(0);
         }
-        .story-section {
-            padding: 2rem 0;
-            margin-bottom: 80vh;
-            opacity: 0.3;
-            transition: opacity 0.4s ease-in-out;
-        }
-        .story-section.active {
-            opacity: 1;
-        }
-        .story-section:last-child {
-            margin-bottom: 25vh;
-        }
-        .story-section h3 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            letter-spacing: -0.025em;
-            color: #ffffff;
-        }
-        .story-section p {
-            font-size: 1.125rem;
-            color: #9ca3af; /* gray-400 */
-        }
-        .feature-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 1rem;
-        }
-        .feature-item {
-            background-color: #1f2937;
-            padding: 1rem;
-            border-radius: 0.75rem;
+        .tier-card {
             border: 1px solid #374151;
+            transition: border-color 0.3s ease, transform 0.3s ease;
+        }
+        .tier-card:hover {
+            transform: scale(1.02);
+            border-color: #13aa52;
         }
     </style>
 </head>
 <body class="antialiased">
 
-    <header class="py-20 text-center">
-        <div class="max-w-4xl mx-auto px-4">
-            <svg class="w-24 h-24 mx-auto mb-6 text-green-500" viewBox="0 0 101 114" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M44.5833 2.80556C47.4167 1.25 51.5833 1.25 54.4167 2.80556L91.4167 24.25C94.25 25.8056 96.3333 28.8889 96.3333 32.2778V75.1667C96.3333 78.5556 94.25 81.6389 91.4167 83.1944L54.4167 104.639C51.5833 106.194 47.4167 106.194 44.5833 104.639L7.58333 83.1944C4.75 81.6389 2.66667 78.5556 2.66667 75.1667V32.2778C2.66667 28.8889 4.75 25.8056 7.58333 24.25L44.5833 2.80556Z" stroke="currentColor" stroke-width="5"/>
-                <path d="M49.5 91.5C69.1091 91.5 85 75.6091 85 56C85 36.3909 69.1091 20.5 49.5 20.5C29.8909 20.5 14 36.3909 14 56C14 69.3523 21.933 80.9139 32.5 86.5" stroke="currentColor" stroke-width="5"/>
-            </svg>
-            <h1 class="text-5xl lg:text-7xl font-bold text-white tracking-tighter">The MongoDB Atlas Developer Data Platform.</h1>
-            <p class="max-w-2xl mx-auto mt-6 text-xl text-gray-400">
-                An integrated suite of data services centered around a core database, designed to accelerate and simplify how you build with data.
-            </p>
-        </div>
+    <!-- Header -->
+    <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-gray-800">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center">
+                <img src="http://googleusercontent.com/file_content/0" alt="MongoDB Logo" class="h-8 w-auto mr-4">
+                <span class="text-2xl font-bold text-white">Atlas</span>
+            </div>
+            <div class="hidden md:flex items-center space-x-6 lg:space-x-8">
+                <a href="#features" class="text-gray-300 hover:text-mongodb-green transition-colors">Features</a>
+                <a href="#platform" class="text-gray-300 hover:text-mongodb-green transition-colors">Platform</a>
+                <a href="#scalability" class="text-gray-300 hover:text-mongodb-green transition-colors">Global Scale</a>
+                <a href="#security" class="text-gray-300 hover:text-mongodb-green transition-colors">Security</a>
+                <a href="#devops" class="text-gray-300 hover:text-mongodb-green transition-colors">DevOps</a>
+            </div>
+            <a href="#cta" class="bg-mongodb-green text-white font-semibold px-5 py-2 rounded-lg hover:bg-opacity-90 transition-all">Start Free</a>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="relative h-screen flex items-center justify-center text-center overflow-hidden pt-20 bg-dark-gradient">
+            <div class="absolute inset-0 hero-glow"></div>
+            <div class="relative z-10 px-4">
+                <h1 class="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-tight mb-4 animate-fade-in-down">
+                    Build Faster. <br class="hidden md:block"> Scale Further.
+                </h1>
+                <p class="max-w-3xl mx-auto text-lg md:text-xl text-gray-300 mb-8 animate-fade-in-up">
+                    MongoDB Atlas is the developer data platform that provides an integrated suite of data and application services in the cloud. Go beyond the database and build modern, data-driven applications for a new generation of user experiences.
+                </p>
+                <div class="flex justify-center space-x-4">
+                    <a href="#cta" class="bg-mongodb-green text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-opacity-90 transform hover:scale-105 transition-all">Try Atlas Free</a>
+                    <a href="#" class="bg-gray-800 text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-gray-700 transform hover:scale-105 transition-all">Contact Sales</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Why Atlas Section -->
+        <section id="why-atlas" class="py-24 bg-black">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">The Foundation for Modern Applications</h2>
+                    <p class="text-lg text-gray-400 mt-4 max-w-3xl mx-auto scroll-reveal">Atlas gives you a unified, elegant, and intelligent way to work with data, so you can focus on what matters most: building great applications.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Developer Data Platform</h3>
+                        <p class="text-gray-400">An integrated suite of data services, from search to analytics to AI, all accessible through a single, unified API.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Global by Design</h3>
+                        <p class="text-gray-400">Deploy across 125+ regions on AWS, Google Cloud, and Azure to serve users anywhere with low latency and high availability.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Uncompromising Security</h3>
+                        <p class="text-gray-400">Best-in-class security and data privacy controls are built-in, not bolted on. Innovate with confidence.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Intelligent Automation</h3>
+                        <p class="text-gray-400">Automated provisioning, scaling, and performance optimization frees you from database administration.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Platform / Document Model Section -->
+        <section id="platform" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div class="scroll-reveal">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">The Power of the Document Model.</h2>
+                        <p class="text-lg text-gray-300 mb-4">Relational databases force you to shred your objects into tables. The document model lets you store data the way you think: as rich, hierarchical objects. This intuitive approach means faster development, more natural queries, and a schema that evolves with your application.</p>
+                        <p class="text-lg text-gray-300">With the expressive <span class="text-mongodb-green font-semibold">MongoDB Query API</span>, you can perform powerful aggregations, JOINs, and graph traversals, all in a single, consistent interface.</p>
+                    </div>
+                    <div class="relative h-96 scroll-reveal">
+                        <div class="absolute inset-0 bg-gray-900/50 p-6 rounded-2xl border border-gray-700 font-mono text-sm text-gray-400 overflow-hidden">
+                            <pre><code><span class="text-mongodb-green">db.customers.aggregate</span>([
+  { <span class="text-purple-400">$match</span>: { "address.location": "home" } },
+  {
+    <span class="text-purple-400">$group</span>: {
+      _id: "$address.city",
+      totalSpend: { <span class="text-purple-400">$sum</span>: "$annualSpend" },
+      customers: { <span class="text-purple-400">$sum</span>: 1 }
+    }
+  }
+])</code></pre>
+                            <div class="absolute bottom-4 right-4 text-white font-bold text-xl opacity-50">Aggregation Pipeline</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Expanded Features Section -->
+        <section id="features" class="py-24 bg-black">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">An Integrated Data Platform</h2>
+                    <p class="text-lg text-gray-400 mt-4 max-w-2xl mx-auto scroll-reveal">Go beyond a simple database. Atlas provides everything you need to build sophisticated, data-rich experiences.</p>
+                </div>
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">AI-Ready with Vector Search</h3>
+                        <p class="text-gray-400">Build intelligent, generative AI-powered applications. Store and query vector embeddings to create semantic search, recommendation engines, and more.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Real-Time Stream Processing</h3>
+                        <p class="text-gray-400">Act on data as it arrives. Build reactive, event-driven applications with our integrated stream processing capabilities and Change Streams API.</p>
+                    </div>
+                     <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Native Time Series</h3>
+                        <p class="text-gray-400">Purpose-built for IoT and financial data. Benefit from optimized storage, fast ingestion, and powerful temporal queries out of the box.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Atlas Search</h3>
+                        <p class="text-gray-400">Create rich, fast, and relevant full-text search experiences without the complexity of managing a separate search system. Powered by Apache Lucene.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Data Federation</h3>
+                        <p class="text-gray-400">Query data across Atlas clusters and AWS S3 in a single request. Unify your data landscape without costly and complex ETL pipelines.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Online Archive</h3>
+                        <p class="text-gray-400">Automatically archive historical data to low-cost cloud object storage while keeping it fully queryable. Optimize cost without sacrificing access.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Scalability & Global Section -->
+        <section id="scalability" class="py-24 bg-dark-gradient overflow-hidden">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 scroll-reveal">Run Anywhere. Scale Everywhere.</h2>
+                <p class="text-lg text-gray-300 mb-12 max-w-3xl mx-auto scroll-reveal">Atlas is the only database that lets you run on AWS, Google Cloud, and Azure simultaneously. Deploy Global Clusters to pin data to specific regions for data sovereignty and deliver single-digit millisecond latency to a global user base.</p>
+                <div class="relative flex justify-center items-center scroll-reveal">
+                    <img src="https://web-assets.mongodb.com/_com_assets/cms/dots-map-2-v2-vignette-1552x776-2x-p4w8k9fgyq.png" alt="Global network map" class="w-full max-w-6xl mx-auto opacity-40"/>
+                    <div class="absolute inset-0 flex flex-col justify-center items-center text-white">
+                        <h3 class="text-3xl lg:text-5xl font-bold">Multi-Cloud. Multi-Region.</h3>
+                        <p class="text-lg lg:text-2xl text-gray-300 mt-2">True freedom and flexibility.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Security Section -->
+        <section id="security" class="py-24 bg-black">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div class="relative h-96 order-last md:order-first scroll-reveal">
+                        <div class="absolute inset-0 border-2 border-mongodb-green/30 rounded-2xl flex items-center justify-center">
+                            <svg class="w-48 h-48 text-mongodb-green opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                            </svg>
+                             <div class="absolute text-white font-bold text-xl">Queryable Encryption</div>
+                        </div>
+                    </div>
+                     <div class="scroll-reveal">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Built for Developers. <br>Trusted by Enterprises.</h2>
+                        <p class="text-lg text-gray-300 mb-4">Atlas provides best-in-class security features out of the box. With end-to-end encryption, robust access controls, and compliance with major standards like PCI-DSS, HIPAA, and FedRAMP, your data is always protected.</p>
+                        <p class="text-lg text-mongodb-green font-semibold">Innovate with confidence using Queryable Encryption—the industry's first solution for querying fully encrypted data while it remains encrypted on the server.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DevOps & Tooling Section -->
+        <section id="devops" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">Integrates with Your Workflow</h2>
+                    <p class="text-lg text-gray-400 mt-4 max-w-2xl mx-auto scroll-reveal">Atlas fits seamlessly into your existing ecosystem with powerful tools for automation and development.</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                    <div class="text-center p-6 bg-gray-900 rounded-xl scroll-reveal">
+                        <h3 class="text-xl font-bold text-white">Atlas CLI</h3>
+                        <p class="text-gray-400 mt-2">Manage your entire Atlas environment from the command line.</p>
+                    </div>
+                    <div class="text-center p-6 bg-gray-900 rounded-xl scroll-reveal">
+                        <h3 class="text-xl font-bold text-white">Terraform Provider</h3>
+                        <p class="text-gray-400 mt-2">Define and manage your Atlas infrastructure as code.</p>
+                    </div>
+                     <div class="text-center p-6 bg-gray-900 rounded-xl scroll-reveal">
+                        <h3 class="text-xl font-bold text-white">Kubernetes Operator</h3>
+                        <p class="text-gray-400 mt-2">Deploy and manage Atlas in your Kubernetes clusters.</p>
+                    </div>
+                     <div class="text-center p-6 bg-gray-900 rounded-xl scroll-reveal">
+                        <h3 class="text-xl font-bold text-white">VS Code Extension</h3>
+                        <p class="text-gray-400 mt-2">Explore data and build pipelines directly in your IDE.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tiers Section -->
+        <section id="tiers" class="py-24 bg-black">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">Find the Right Tier for You</h2>
+                    <p class="text-lg text-gray-400 mt-4 max-w-2xl mx-auto scroll-reveal">From side projects to mission-critical enterprise applications, there's an Atlas tier designed for your journey.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                    <div class="p-8 rounded-2xl tier-card scroll-reveal">
+                        <h3 class="text-3xl font-bold text-white">Free</h3>
+                        <p class="text-mongodb-green text-xl font-semibold my-4">Free Forever</p>
+                        <p class="text-gray-400">Ideal for learning, prototyping, and early development. Get started with a shared cluster at no cost.</p>
+                    </div>
+                    <div class="p-8 rounded-2xl tier-card scroll-reveal">
+                        <h3 class="text-3xl font-bold text-white">Flex</h3>
+                        <p class="text-mongodb-green text-xl font-semibold my-4">Pay-as-you-go</p>
+                        <p class="text-gray-400">Perfect for applications with variable or unpredictable traffic. Scale compute and storage on demand.</p>
+                    </div>
+                    <div class="p-8 rounded-2xl tier-card scroll-reveal">
+                        <h3 class="text-3xl font-bold text-white">Dedicated</h3>
+                        <p class="text-mongodb-green text-xl font-semibold my-4">Enterprise-Grade</p>
+                        <p class="text-gray-400">For production applications requiring maximum performance, security, and availability with dedicated infrastructure.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Customers/Partners Section -->
+        <section id="customers" class="py-20 bg-gray-900/50">
+            <div class="container mx-auto px-6">
+                <h2 class="text-center text-3xl font-bold text-white mb-10 scroll-reveal">Trusted by the world's most innovative companies</h2>
+                <div class="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
+                    <!-- Replace with actual customer logos -->
+                    <p class="text-4xl font-bold text-gray-500 scroll-reveal">Google</p>
+                    <p class="text-4xl font-bold text-gray-500 scroll-reveal">Adobe</p>
+                    <p class="text-4xl font-bold text-gray-500 scroll-reveal">Cisco</p>
+                    <p class="text-4xl font-bold text-gray-500 scroll-reveal">Forbes</p>
+                    <p class="text-4xl font-bold text-gray-500 scroll-reveal">Toyota</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Final CTA Section -->
+        <section id="cta" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6 text-center">
+                <div class="max-w-4xl mx-auto">
+                    <h2 class="text-4xl md:text-6xl font-black text-white mb-6 scroll-reveal">Start Building Today.</h2>
+                    <p class="text-lg md:text-xl text-gray-300 mb-10 scroll-reveal">Experience the future of data. Get started with a perpetual free tier on Atlas, or talk to our experts to design the perfect solution for your enterprise.</p>
+                    <div class="flex flex-col sm:flex-row justify-center items-center gap-4 scroll-reveal">
+                        <a href="#" class="w-full sm:w-auto bg-mongodb-green text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-opacity-90 transform hover:scale-105 transition-all">
+                            Sign Up Free
+                        </a>
+                        <a href="#" class="w-full sm:w-auto bg-transparent border-2 border-mongodb-green text-mongodb-green font-bold px-8 py-4 rounded-lg text-lg hover:bg-mongodb-green hover:text-white transition-all">
+                            Explore Documentation
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <section class="max-w-screen-xl mx-auto p-4 sm:p-6 lg:p-8">
-        <div class="flex flex-col lg:flex-row gap-8 lg:gap-24">
-            <!-- Left Column: Sticky Diagram -->
-            <div class="lg:w-1/2">
-                <div class="sticky top-24 h-[70vh]">
-                    <div id="diagram-container" class="relative w-full h-full flex items-center justify-center">
-                        <!-- Simplified Diagram -->
-                        <div class="w-full max-w-md space-y-4">
-                            <div data-section="section-app" class="diagram-component p-4 rounded-xl border-2 text-center text-lg font-semibold">Application & Developer Tools</div>
-                            <div class="flex justify-center items-center h-12"><div class="w-0.5 h-full bg-gray-700"></div></div>
-                            <div data-section="section-core" class="diagram-component p-6 rounded-2xl border-2 text-center">
-                                <h3 class="text-xl font-bold text-green-400">MongoDB Atlas</h3>
-                                <p class="text-gray-400">Core Database & Platform</p>
-                            </div>
-                            <div class="flex justify-center items-center h-12"><div class="w-0.5 h-full bg-gray-700"></div></div>
-                            <div data-section="section-services" class="diagram-component p-4 rounded-xl border-2 text-center text-lg font-semibold">Integrated Data Services</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right Column: Scrolling Story -->
-            <div class="lg:w-1/2">
-                <div id="story-container">
-                    <div id="section-core" class="story-section">
-                        <h3>A flexible foundation.</h3>
-                        <p>It all starts with the document model, which maps directly to objects in your code. Store data of any structure and modify the schema at any time, without downtime or complex migrations. This is the core of developer velocity.</p>
-                        <div class="feature-grid mt-8">
-                            <div class="feature-item"><strong>JSON Documents</strong><p class="text-sm text-gray-400">The modern standard for application stacks.</p></div>
-                            <div class="feature-item"><strong>Flexible Schema</strong><p class="text-sm text-gray-400">Evolve your application without database constraints.</p></div>
-                            <div class="feature-item"><strong>Rich Data Types</strong><p class="text-sm text-gray-400">Natively handle numbers, strings, dates, arrays, and more.</p></div>
-                        </div>
-                    </div>
-                    <div id="section-app" class="story-section">
-                        <h3>Built for developers.</h3>
-                        <p>A rich ecosystem of tools and drivers that integrate seamlessly into your workflow, making it faster and easier to build, test, and optimize your applications.</p>
-                         <div class="feature-grid mt-8">
-                            <div class="feature-item"><strong>Idiomatic Drivers</strong><p class="text-sm text-gray-400">Support for all major programming languages.</p></div>
-                            <div class="feature-item"><strong>Compass GUI</strong><p class="text-sm text-gray-400">Explore and manage your data visually.</p></div>
-                            <div class="feature-item"><strong>VS Code Extension</strong><p class="text-sm text-gray-400">Work with MongoDB without leaving your editor.</p></div>
-                            <div class="feature-item"><strong>Atlas CLI</strong><p class="text-sm text-gray-400">Automate and manage your infrastructure from the command line.</p></div>
-                        </div>
-                    </div>
-                    <div id="section-services" class="story-section">
-                        <h3>More than a database.</h3>
-                        <p>Go beyond basic CRUD. Atlas integrates powerful data services that let you build sophisticated features without the complexity of managing separate systems.</p>
-                         <div class="feature-grid mt-8">
-                            <div class="feature-item"><strong>Atlas Vector Search</strong><p class="text-sm text-gray-400">Build generative AI and semantic search applications.</p></div>
-                            <div class="feature-item"><strong>Atlas Search</strong><p class="text-sm text-gray-400">Create rich, full-text search experiences.</p></div>
-                            <div class="feature-item"><strong>Stream Processing</strong><p class="text-sm text-gray-400">React to data changes in real-time with Kafka.</p></div>
-                            <div class="feature-item"><strong>Atlas Charts</strong><p class="text-sm text-gray-400">Visualize your data with native dashboards.</p></div>
-                        </div>
-                    </div>
-                     <div id="section-scale" class="story-section">
-                        <h3>Built for global scale.</h3>
-                        <p>Scale effortlessly from prototype to planet-scale production. Atlas provides automated scalability and high availability, so your application is always on and always fast, for every user.</p>
-                         <div class="feature-grid mt-8">
-                            <div class="feature-item"><strong>Auto-Scaling</strong><p class="text-sm text-gray-400">Automatically adjust capacity to meet demand.</p></div>
-                            <div class="feature-item"><strong>Global Clusters</strong><p class="text-sm text-gray-400">Distribute data for low-latency reads and writes.</p></div>
-                            <div class="feature-item"><strong>Multi-Cloud</strong><p class="text-sm text-gray-400">Run on AWS, Azure, and Google Cloud.</p></div>
-                        </div>
-                    </div>
-                     <div id="section-security" class="story-section">
-                        <h3>Secure by design.</h3>
-                        <p>Comprehensive, multi-layered security features that protect your data at every stage, helping you meet the strictest compliance and data privacy requirements.</p>
-                         <div class="feature-grid mt-8">
-                            <div class="feature-item"><strong>End-to-End Encryption</strong><p class="text-sm text-gray-400">Data is encrypted in transit, at rest, and in use.</p></div>
-                            <div class="feature-item"><strong>Queryable Encryption</strong><p class="text-sm text-gray-400">An industry-first technology to query fully encrypted data.</p></div>
-                            <div class="feature-item"><strong>Advanced Auditing</strong><p class="text-sm text-gray-400">Track all activity with granular audit logs.</p></div>
-                        </div>
-                    </div>
-                </div>
+    <!-- Footer -->
+    <footer class="bg-black border-t border-gray-800">
+        <div class="container mx-auto px-6 py-8 text-center text-gray-500">
+            <p>&copy; 2025 MongoDB, Inc. All rights reserved.</p>
+            <div class="mt-4 flex justify-center space-x-6">
+                <a href="#" class="hover:text-white">Privacy Policy</a>
+                <a href="#" class="hover:text-white">Terms of Service</a>
             </div>
         </div>
-    </section>
+    </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const storySections = document.querySelectorAll('.story-section');
-            const diagramComponents = document.querySelectorAll('.diagram-component');
-            let activeSectionId = null;
+        // Simple scroll reveal animation
+        const revealElements = document.querySelectorAll('.scroll-reveal');
 
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        const sectionId = entry.target.id;
-                        if (sectionId !== activeSectionId) {
-                            activeSectionId = sectionId;
-                            
-                            entry.target.classList.add('active');
-
-                            diagramComponents.forEach(comp => {
-                                if (comp.dataset.section === sectionId) {
-                                    comp.classList.add('active');
-                                } else {
-                                    comp.classList.remove('active');
-                                }
-                            });
-                            
-                            storySections.forEach(sec => {
-                                if (sec.id !== sectionId) {
-                                    sec.classList.remove('active');
-                                }
-                            });
-                        }
-                    }
-                });
-            }, {
-                root: null,
-                threshold: 0.6, 
+        const revealOnScroll = () => {
+            const windowHeight = window.innerHeight;
+            revealElements.forEach(el => {
+                const elementTop = el.getBoundingClientRect().top;
+                if (elementTop < windowHeight - 100) {
+                    el.classList.add('visible');
+                }
             });
+        };
 
-            storySections.forEach(section => {
-                observer.observe(section);
-            });
-
-            diagramComponents.forEach(comp => {
-                comp.addEventListener('click', () => {
-                    const sectionId = comp.dataset.section;
-                    const targetSection = document.getElementById(sectionId);
-                    if (targetSection) {
-                        targetSection.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'center'
-                        });
-                    }
-                });
-            });
-        });
+        window.addEventListener('scroll', revealOnScroll);
+        // Initial check in case elements are already in view on load
+        document.addEventListener('DOMContentLoaded', revealOnScroll);
     </script>
+
 </body>
 </html>
