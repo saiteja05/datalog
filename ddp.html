@@ -61,7 +61,7 @@
     <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-gray-800">
         <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
             <div class="flex items-center">
-                <img src="http://googleusercontent.com/file_content/0" alt="MongoDB Logo" class="h-8 w-auto mr-4">
+                <img src="https://webimages.mongodb.com/_com_assets/cms/kusbhnrd813qmv46m-MongoDBLeaf1.png" alt="MongoDB Logo" class="h-8 w-auto mr-4">
                 <span class="text-2xl font-bold text-white">Atlas</span>
             </div>
             <div class="hidden md:flex items-center space-x-6 lg:space-x-8">
@@ -184,9 +184,40 @@
                 </div>
             </div>
         </section>
+        
+        <!-- Transactions Section -->
+        <section id="transactions" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6">
+                <div class="grid md:grid-cols-2 gap-16 items-center">
+                    <div class="scroll-reveal">
+                        <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Transactional Integrity. Guaranteed.</h2>
+                        <p class="text-lg text-gray-300 mb-4">Atlas provides multi-document ACID transactions, even across sharded clusters. With snapshot isolation and all-or-nothing execution, you can build mission-critical applications with the same data integrity guarantees as legacy relational databases, but with the flexibility and scale of the document model.</p>
+                        <p class="text-lg text-gray-300">The syntax is simple, natural, and familiar to developers, making it easy to add to any application.</p>
+                    </div>
+                    <div class="relative h-96 scroll-reveal">
+                        <div class="absolute inset-0 bg-gray-900/50 p-6 rounded-2xl border border-gray-700 font-mono text-sm text-gray-400 overflow-auto">
+                            <h4 class="text-white font-bold mb-2">MongoDB</h4>
+                            <pre><code>session.startTransaction();
+db.orders.insert({...});
+db.stock.update(
+  {...},
+  { $set: { quantity: ...} }
+);
+session.commitTransaction();</code></pre>
+                            <hr class="border-gray-600 my-4">
+                            <h4 class="text-white font-bold mb-2">MySQL</h4>
+                            <pre><code>START TRANSACTION;
+INSERT INTO orders (...) VALUES (...);
+UPDATE stock SET quantity = ... WHERE ...;
+COMMIT;</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
         <!-- Scalability & Global Section -->
-        <section id="scalability" class="py-24 bg-dark-gradient overflow-hidden">
+        <section id="scalability" class="py-24 bg-black overflow-hidden">
             <div class="container mx-auto px-6 text-center">
                 <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 scroll-reveal">Run Anywhere. Scale Everywhere.</h2>
                 <p class="text-lg text-gray-300 mb-12 max-w-3xl mx-auto scroll-reveal">Atlas is the only database that lets you run on AWS, Google Cloud, and Azure simultaneously. Deploy Global Clusters to pin data to specific regions for data sovereignty and deliver single-digit millisecond latency to a global user base.</p>
@@ -201,16 +232,12 @@
         </section>
         
         <!-- Security Section -->
-        <section id="security" class="py-24 bg-black">
+        <section id="security" class="py-24 bg-dark-gradient">
             <div class="container mx-auto px-6">
                 <div class="grid md:grid-cols-2 gap-16 items-center">
-                    <div class="relative h-96 order-last md:order-first scroll-reveal">
-                        <div class="absolute inset-0 border-2 border-mongodb-green/30 rounded-2xl flex items-center justify-center">
-                            <svg class="w-48 h-48 text-mongodb-green opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                            </svg>
-                             <div class="absolute text-white font-bold text-xl">Queryable Encryption</div>
-                        </div>
+                    <div class="relative h-96 order-last md:order-first scroll-reveal flex items-center justify-center">
+                        <img src="https://webimages.mongodb.com/_com_assets/cms/kusbhnrd813qmv46m-MongoDBLeaf1.png" alt="Security Shield" class="h-48 w-48 opacity-20"/>
+                         <div class="absolute text-white font-bold text-xl">Queryable Encryption</div>
                     </div>
                      <div class="scroll-reveal">
                         <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Built for Developers. <br>Trusted by Enterprises.</h2>
@@ -222,7 +249,7 @@
         </section>
 
         <!-- DevOps & Tooling Section -->
-        <section id="devops" class="py-24 bg-dark-gradient">
+        <section id="devops" class="py-24 bg-black">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">Integrates with Your Workflow</h2>
@@ -244,6 +271,77 @@
                      <div class="text-center p-6 bg-gray-900 rounded-xl scroll-reveal">
                         <h3 class="text-xl font-bold text-white">VS Code Extension</h3>
                         <p class="text-gray-400 mt-2">Explore data and build pipelines directly in your IDE.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Migration Section -->
+        <section id="migration" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 scroll-reveal">Modernize Without the Migraine.</h2>
+                <p class="text-lg text-gray-300 mb-12 max-w-3xl mx-auto scroll-reveal">Leaving legacy systems behind has never been easier. Atlas provides a suite of tools to streamline your migration to the document model with minimal downtime.</p>
+                <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Relational Migrator</h3>
+                        <p class="text-gray-400">Intelligently map your relational schema from Oracle, SQL Server, MySQL, and PostgreSQL to the MongoDB document model, and migrate your data with continuous sync.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Live Migration</h3>
+                        <p class="text-gray-400">Migrate existing MongoDB deployments into Atlas from any source—on-prem or another cloud—with minimal impact to your application during the cutover.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Observability Section -->
+        <section id="observability" class="py-24 bg-black">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16">
+                    <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">Optimize with Confidence</h2>
+                    <p class="text-lg text-gray-400 mt-4 max-w-3xl mx-auto scroll-reveal">Our suite of observability tools gives you deep insights into your database's performance, helping you optimize queries, manage schemas, and prevent issues before they happen.</p>
+                </div>
+                <div class="grid md:grid-cols-3 gap-8">
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Performance Advisor</h3>
+                        <p class="text-gray-400">Automatically identifies slow queries and suggests new indexes to improve performance, tailored to your specific workload.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Schema Advisor</h3>
+                        <p class="text-gray-400">Analyzes your document structures and recommends schema design improvements for better performance and scalability.</p>
+                    </div>
+                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-800 feature-card scroll-reveal">
+                        <h3 class="text-2xl font-bold text-white mb-3">Real-Time Performance Panel</h3>
+                        <p class="text-gray-400">Monitor live network traffic, database operations, and hardware stats to get an immediate pulse on your cluster's health.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Release Cycle Section -->
+        <section id="release-cycle" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6 text-center">
+                <h2 class="text-4xl md:text-5xl font-bold text-white mb-6 scroll-reveal">Always on the Cutting Edge</h2>
+                <p class="text-lg text-gray-300 mb-12 max-w-3xl mx-auto scroll-reveal">With our rapid release cycle, you get access to the latest features and performance improvements faster than ever. Future-proof your applications with a platform that never stops innovating.</p>
+                <div class="relative max-w-4xl mx-auto scroll-reveal">
+                    <div class="absolute w-full top-1/2 -translate-y-1/2 h-0.5 bg-gray-700"></div>
+                    <div class="relative flex justify-between items-center">
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto rounded-full bg-mongodb-green flex items-center justify-center text-white font-bold text-2xl border-4 border-black">v7.0</div>
+                            <p class="mt-2 font-semibold">Major Release</p>
+                        </div>
+                        <div class="text-center opacity-70">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-gray-800 flex items-center justify-center text-white font-bold border-2 border-gray-600">v7.1</div>
+                            <p class="mt-2 text-sm">Rapid Release</p>
+                        </div>
+                        <div class="text-center opacity-70">
+                            <div class="w-16 h-16 mx-auto rounded-full bg-gray-800 flex items-center justify-center text-white font-bold border-2 border-gray-600">v7.2</div>
+                            <p class="mt-2 text-sm">Rapid Release</p>
+                        </div>
+                        <div class="text-center">
+                            <div class="w-24 h-24 mx-auto rounded-full bg-mongodb-green flex items-center justify-center text-white font-bold text-2xl border-4 border-black">v8.0</div>
+                            <p class="mt-2 font-semibold">Major Release</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -275,9 +373,21 @@
                 </div>
             </div>
         </section>
+        
+        <!-- University Section -->
+        <section id="university" class="py-24 bg-dark-gradient">
+            <div class="container mx-auto px-6 text-center">
+                 <div class="max-w-3xl mx-auto scroll-reveal">
+                    <img src="https://webimages.mongodb.com/_com_assets/cms/kusbhnrd813qmv46m-MongoDBLeaf1.png" alt="Learn" class="h-16 w-16 mx-auto mb-6 opacity-50"/>
+                    <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Become a MongoDB Expert.</h2>
+                    <p class="text-lg text-gray-300 mb-8">Accelerate your learning with MongoDB University. Access free online courses, tutorials, and certification paths to master the developer data platform.</p>
+                    <a href="#" class="text-mongodb-green font-bold text-lg hover:underline">Start Learning Now &rarr;</a>
+                </div>
+            </div>
+        </section>
 
         <!-- Customers/Partners Section -->
-        <section id="customers" class="py-20 bg-gray-900/50">
+        <section id="customers" class="py-20 bg-black">
             <div class="container mx-auto px-6">
                 <h2 class="text-center text-3xl font-bold text-white mb-10 scroll-reveal">Trusted by the world's most innovative companies</h2>
                 <div class="flex flex-wrap justify-center items-center gap-x-12 gap-y-8">
