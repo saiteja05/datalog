@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en" class="scroll-smooth">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,10 +15,37 @@
             background-color: #030712;
             color: #d1d5db;
         }
+
+        .component {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background-color:rgb(32, 37, 50);
+            border: 1px solid #444;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px rgba(19, 170, 82, 0.5);
+            border-color:  #22c55e;
+        }
+
+        .flow-line {
+            stroke-dasharray: 6 6;
+        }
+
+        .flow-line-solid {
+            stroke-dasharray: none;
+        }
+
+        .icon-green {
+            color:  #22c55e;
+        }
+
         .nav-link.active {
             color: #22c55e;
             font-weight: 600;
         }
+
         .section-heading {
             border-bottom: 1px solid #374151;
             padding-bottom: 0.5rem;
@@ -26,36 +54,59 @@
             font-weight: 600;
             color: #e5e7eb;
         }
+
         .diagram-component {
             transition: all 0.3s ease;
             cursor: pointer;
         }
+
         .diagram-component:hover {
             transform: scale(1.05);
             box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
         }
-        .db-color-mongo { color: #22c55e; border-color: #22c55e; }
-        .cloud-aws { color: #ff9900; border-color: #ff9900; }
-        .cloud-gcp { color: #4285f4; border-color: #4285f4; }
-        .cloud-azure { color: #0078d4; border-color: #0078d4; }
+
+        .db-color-mongo {
+            color: #22c55e;
+            border-color: #22c55e;
+        }
+
+        .cloud-aws {
+            color: #ff9900;
+            border-color: #ff9900;
+        }
+
+        .cloud-gcp {
+            color: #4285f4;
+            border-color: #4285f4;
+        }
+
+        .cloud-azure {
+            color: #0078d4;
+            border-color: #0078d4;
+        }
 
         .failover-node {
             transition: all 0.5s ease-in-out;
         }
+
         .failover-node.failed {
             opacity: 0.3;
             border-color: #ef4444;
             transform: scale(0.95);
         }
+
         .failover-node.failed .status-dot {
-             background-color: #ef4444;
+            background-color: #ef4444;
         }
+
         .failover-node.primary .status-dot {
             background-color: #22c55e;
         }
-         .failover-node.secondary .status-dot {
+
+        .failover-node.secondary .status-dot {
             background-color: #60a5fa;
         }
+
         .status-dot {
             width: 10px;
             height: 10px;
@@ -63,38 +114,55 @@
             display: inline-block;
             margin-right: 8px;
         }
+
         .connection-line {
             stroke-dasharray: 5;
             animation: dash 1s linear infinite;
         }
+
         @keyframes dash {
             to {
                 stroke-dashoffset: -10;
             }
         }
+
         body {
             font-family: 'Inter', sans-serif;
         }
+
         .diagram-component {
             cursor: pointer;
             transition: all 0.2s ease-in-out;
         }
-        .diagram-component:hover > rect, .diagram-component:hover > path, .diagram-component:hover > circle {
+
+        .diagram-component:hover>rect,
+        .diagram-component:hover>path,
+        .diagram-component:hover>circle {
             filter: brightness(1.2);
         }
-        .shard-path, .schema-path {
+
+        .shard-path,
+        .schema-path {
             transition: opacity 0.3s ease-in-out;
         }
+
         .highlight-path {
             stroke-dasharray: 5;
             animation: dash 1s linear forwards;
         }
+
         @keyframes dash {
-            from { stroke-dashoffset: 100; }
-            to { stroke-dashoffset: 0; }
+            from {
+                stroke-dashoffset: 100;
+            }
+
+            to {
+                stroke-dashoffset: 0;
+            }
         }
     </style>
 </head>
+
 <body>
 
     <nav class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-700">
@@ -102,15 +170,17 @@
             <div class="flex justify-between items-center py-4">
                 <div class="text-xl font-bold text-white">MongoDB Atlas Guide</div>
                 <div class="hidden md:flex space-x-8">
-                    <a href="#home" class="nav-link text-slate-300 hover:text-green-400">Platform</a>
-                    <a href="#disaster-recovery" class="nav-link text-slate-300 hover:text-green-400">Disaster Recovery</a>
+                    <a href="#Platform" class="nav-link text-slate-300 hover:text-green-400">Platform</a>
+                    <a href="#disaster-recovery" class="nav-link text-slate-300 hover:text-green-400">Disaster
+                        Recovery</a>
                     <a href="#sharding" class="nav-link text-slate-300 hover:text-green-400">Sharding</a>
                     <a href="#multi-region" class="nav-link text-slate-300 hover:text-green-400">Global clusters</a>
                     <a href="#documentmodel" class="nav-link text-slate-300 hover:text-green-400">Document Model</a>
-                    <a href="#private-networking" class="nav-link text-slate-300 hover:text-green-400">Private Networking</a>
-                   
-                    
-                    
+                    <a href="#private-networking" class="nav-link text-slate-300 hover:text-green-400">Private
+                        Networking</a>
+
+
+
                     <a href="#trial-env" class="nav-link text-slate-300 hover:text-green-400">Trial Environment</a>
                 </div>
             </div>
@@ -121,311 +191,570 @@
 
         <header class="text-center mb-16">
             <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">MongoDB Atlas Advanced Deployment Guide</h1>
-            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">An interactive exploration of multi-cloud networking, global deployments, and resilience.</p>
+            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">An interactive exploration of multi-cloud
+                networking, global deployments, and resilience.</p>
         </header>
 
         <main class="space-y-20">
 
 
+            <div id="diagram-container" class="relative w-full max-w-7xl mx-auto">
 
-    <main class="p-4 sm:p-6 lg:p-8">
-        <div>
-            <section id="home">
-                <h2 class="section-heading">Crux of the MongoDB Atlas Platform</h2>
-                <p class="max-w-3xl mx-auto mt-4 text-lg text-gray-400">
-                Click on any component of the componet below to learn more about its function. The details will appear in the panel on the right (or at the bottom on smaller screens).
-            </p>
-        </div>
+                        <div>
+                            <section id="Platform">
+                                <h2 class="section-heading">Overview</h2>
+                                <p class="max-w-3xl mx-auto mt-4 text-lg text-gray-400">
+                                Encompassing the features of MongoDB Atlas Platform and it's newest addition VoyageAI.
+                                </p>
+                                <br>
+                        </div>
+                        <div class="grid grid-cols-12 gap-y-28 lg:gap-x-8">
 
-        <div class="flex flex-col lg:flex-row gap-8">
-            <!-- Main Diagram Area -->
-            <div class="flex-grow">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
-                    <!-- Application Drivers -->
-                    <div class="flex flex-col items-center gap-4">
-                        <h3 class="font-bold text-lg text-center mb-2">MongoDB Application Drivers</h3>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div data-info="csharp" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">C#</div>
-                            <div data-info="go" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Go</div>
-                            <div data-info="java" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Java</div>
-                            <div data-info="nodejs" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">JS</div>
-                            <div data-info="python" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Python</div>
-                            <div data-info="php" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">PHP</div>
+                    <!-- Left Column: Embedding Model -->
+                    <div class="col-span-12 lg:col-span-3 flex justify-center items-center">
+                        <div id="embedding-model"
+                            class="relative component border-2 border-green-500 rounded-2xl p-6 text-center w-full max-w-xs">
+                            <svg class="w-10 h-10 mx-auto mb-3 icon-green" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <h3 class="text-lg font-bold text-white">VoyageAI Embedding models</h3>
+                            <p class="text-sm text-gray-400">generates vectors</p>
                         </div>
                     </div>
 
-                    <!-- Core Atlas Cluster -->
-                    <div data-info="atlas" class="diagram-component bg-gray-800 p-6 rounded-xl border-2 border-green-500 relative">
-                        <h3 class="text-center font-bold text-green-400 mb-2">MongoDB Atlas</h3>
-                        <div data-info="api" class="diagram-component bg-gray-700 p-2 rounded-md text-center text-sm mb-4">
-                            MongoDB Universal Query API
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <!-- Electable Nodes -->
-                            <div class="col-span-1 space-y-4">
-                                <div data-info="primary" class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">P</div>
-                                <div data-info="secondary" class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">S</div>
-                                <div data-info="secondary" class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">S</div>
-                            </div>
-                            <!-- Workload Isolation Nodes -->
-                            <div class="col-span-1 space-y-4">
-                                <div data-info="analytics" class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">A</div>
-                                <div data-info="readonly" class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">R</div>
-                                <div data-info="search" class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">🔍</div>
-                            </div>
-                        </div>
-                        <div class="text-xs text-gray-400 mt-4 text-center">
-                            Multi-region, Multi-cloud on AWS, Azure, and GCP
-                        </div>
-                    </div>
-
-                    <!-- Data Ecosystem -->
-                    <div class="flex flex-col items-center gap-4">
-                         <h3 class="font-bold text-lg text-center mb-2">Data Ecosystem</h3>
-                        <div class="space-y-4 w-full max-w-xs">
-                            <div data-info="datascience" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Data Science Platforms</div>
-                            <div data-info="charts" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">MongoDB Charts</div>
-                            <div data-info="cdc" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Change Data Capture</div>
-                            <div data-info="bi" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Third-party BI & Reporting</div>
-                        </div>
-                    </div>
-                </div>
-                 <!-- Tools -->
-                <div class="mt-12">
-                    <h3 class="font-bold text-lg text-center mb-4">Developer Tools</h3>
-                    <div class="flex justify-center gap-4 flex-wrap">
-                        <div data-info="compass" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">MongoDB Compass</div>
-                        <div data-info="shell" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">MongoDB Shell</div>
-                        <div data-info="vscode" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">VS Code Extension</div>
-                        <div data-info="explorer" class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">Data Explorer</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Details Panel -->
-            <div class="lg:w-1/3 lg:max-w-sm flex-shrink-0">
-                <div id="details-panel" class="sticky top-24 bg-gray-800 p-6 rounded-xl border border-gray-700 min-h-[300px]">
-                    <h3 id="details-title" class="text-xl font-bold text-green-400 mb-4">Select a Component</h3>
-                    <div id="details-content" class="text-gray-300 space-y-2">
-                        <p>Click on any part of the diagram to see more information here.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-            
-            <section id="disaster-recovery">
-                <h2 class="section-heading">Disaster Recovery & Automated Failover</h2>
-                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">High availability is built into the core of MongoDB's replica set architecture. In the event of a primary node failure, Atlas automatically triggers an election to promote a healthy secondary to become the new primary, typically within seconds.</p>
-                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                    <div id="failover-diagram" class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
-                        <div id="node-1" class="failover-node diagram-component p-4 rounded-lg border db-color-mongo primary">
-                            <h4 class="font-bold"><span class="status-dot"></span>Node 1 (Primary)</h4>
-                            <p class="text-sm">Region: us-east-1</p>
-                        </div>
-                        <div id="node-2" class="failover-node diagram-component p-4 rounded-lg border secondary">
-                            <h4 class="font-bold"><span class="status-dot"></span>Node 2 (Secondary)</h4>
-                            <p class="text-sm">Region: us-east-2</p>
-                        </div>
-                        <div id="node-3" class="failover-node diagram-component p-4 rounded-lg border secondary">
-                            <h4 class="font-bold"><span class="status-dot"></span>Node 3 (Secondary)</h4>
-                            <p class="text-sm">Region: us-west-1</p>
-                        </div>
-                    </div>
-                    <div class="text-center mt-6">
-                        <button id="failover-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Simulate Primary Failure</button>
-                        <p id="failover-status" class="mt-4 text-lg text-green-400 h-6"></p>
-                    </div>
-                     <p class="text-center mt-4 text-slate-400">This automated failover ensures your application remains available with minimal disruption. For disaster recovery, placing a secondary node in a separate geographic region (like Node 2 and 3) ensures data durability and avalibility for reads and writes even in the event of a full regional outage. <a href="https://www.mongodb.com/docs/manual/replication/" target="_blank" class="text-indigo-400 hover:underline">[Ref: Replication Docs]</a></p>
-                </div>
-            </section>
-
-
-          
-            <section id="sharding">
-                <h2 class="section-heading">Sharding for Horizontal Scaling</h2>
-                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">When a dataset outgrows the capacity of a single server (vertical scaling), MongoDB uses sharding to distribute data across multiple servers (horizontal scaling). This allows for near-limitless scalability.</p>
-                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                    <div class="relative min-h-[400px]">
-                        <!-- Application -->
-                        <div class="absolute top-0 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">Application</div>
-
-                        <!-- Mongos -->
-                        <div class="absolute top-24 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">mongos (Router)</div>
-                        
-                        <!-- Connecting Lines -->
-                        <svg class="absolute top-0 left-0 w-full h-full" style="pointer-events: none;">
-                            <!-- App to Mongos -->
-                            <line x1="50%" y1="68px" x2="50%" y2="100px" stroke="#6366f1" stroke-width="2" marker-end="url(#arrowhead)"/>
-                            <!-- Mongos to Shards -->
-                            <line x1="50%" y1="164px" x2="25%" y2="220px" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowhead)"/>
-                            <line x1="50%" y1="164px" x2="75%" y2="220px" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowhead)"/>
-                            <!-- Mongos to Config Servers -->
-                             <line x1="50%" y1="164px" x2="50%" y2="340px" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4" marker-end="url(#arrowhead)"/>
-                            <defs>
-                                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                                    <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
-                                </marker>
-                            </defs>
-                        </svg>
-
-                        <!-- Shards -->
-                        <div class="absolute top-56 w-full flex justify-around">
-                            <div class="w-1/3 text-center">
-                                <h4 class="font-bold mb-2">Shard A</h4>
-                                <div class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
-                                    <div>P</div>
-                                    <div>S</div>
-                                    <div>S</div>
+                    <!-- Center Column: MongoDB Atlas -->
+                    <div class="col-span-12 lg:col-span-6">
+                        <div id="atlas-main" class="relative component rounded-2xl p-6 w-full">
+                            <h2
+                                class="text-2xl font-bold text-center text-white bg-green-600 rounded-full py-2 px-6 w-max mx-auto -mt-12 mb-6">
+                                MongoDB Atlas</h2>
+                            <div class="grid grid-cols-3 gap-4">
+                                <!-- Atlas Services -->
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Atlas Database</p>
+                                    <p class="text-xs text-gray-400">for data storage</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Queryable Encryption</p>
+                                    <p class="text-xs text-gray-400">for PII protection</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Auto-scaling</p>
+                                    <p class="text-xs text-gray-400">to respond to traffic bursts</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+                                        class="w-10 h-10 mx-auto mb-2 icon-green">
+                                        <path
+                                            d="M12.0006 18.26L4.94715 22.2082L6.52248 14.2799L0.587891 8.7918L8.61493 7.84006L12.0006 0.5L15.3862 7.84006L23.4132 8.7918L17.4787 14.2799L19.054 22.2082L12.0006 18.26Z" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Atlas Vector Search</p>
+                                    <p class="text-xs text-gray-400">for similarity (K-NN) search</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Atlas Search</p>
+                                    <p class="text-xs text-gray-400">for keyword search</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.737 11a4 4 0 016.526 0M6 15a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Global clusters</p>
+                                    <p class="text-xs text-gray-400">for data sovereignty</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Atlas Triggers and StreamProcessing</p>
+                                    <p class="text-xs text-gray-400">for real time streaming and actions</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">ACID transactions</p>
+                                    <p class="text-xs text-gray-400">for data integrity guarantees</p>
+                                </div>
+                                <div class="relative text-center component p-2 rounded-lg">
+                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
+                                        stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                    </svg>
+                                    <p class="font-semibold text-sm text-white">Atlas Online Archive</p>
+                                    <p class="text-xs text-gray-400">for tiering aged data</p>
                                 </div>
                             </div>
-                            <div class="w-1/3 text-center">
-                                <h4 class="font-bold mb-2">Shard B</h4>
-                                <div class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
-                                    <div>P</div>
-                                    <div>S</div>
-                                    <div>S</div>
+                            <div
+                                class="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] font-semibold px-4 py-2 rounded-full">
+                                Flexible data model and unified query API
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                  
+                        <main class="p-4 sm:p-6 lg:p-8">
+                            <div>
+                                <section id="home">
+                                    <h2 class="section-heading">Grantual Details</h2>
+                                    <p class="max-w-3xl mx-auto mt-4 text-lg text-gray-400">
+                                        Click on any component of the componet below to learn more about its function.
+                                        The details will appear in the panel on the right (or at the bottom on smaller
+                                        screens).
+                                    </p>
+                            </div>
+                            <div class="flex flex-col lg:flex-row gap-8">
+                                <!-- Main Diagram Area -->
+                                <div class="flex-grow">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                                        <!-- Application Drivers -->
+                                        <div class="flex flex-col items-center gap-4">
+                                            <h3 class="font-bold text-lg text-center mb-2">MongoDB Application Drivers
+                                            </h3>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div data-info="csharp"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    C#</div>
+                                                <div data-info="go"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Go</div>
+                                                <div data-info="java"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Java</div>
+                                                <div data-info="nodejs"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    JS</div>
+                                                <div data-info="python"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Python</div>
+                                                <div data-info="php"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    PHP</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Core Atlas Cluster -->
+                                        <div data-info="atlas"
+                                            class="diagram-component bg-gray-800 p-6 rounded-xl border-2 border-green-500 relative">
+                                            <h3 class="text-center font-bold text-green-400 mb-2">MongoDB Atlas</h3>
+                                            <div data-info="api"
+                                                class="diagram-component bg-gray-700 p-2 rounded-md text-center text-sm mb-4">
+                                                MongoDB Universal Query API
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <!-- Electable Nodes -->
+                                                <div class="col-span-1 space-y-4">
+                                                    <div data-info="primary"
+                                                        class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        P</div>
+                                                    <div data-info="secondary"
+                                                        class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        S</div>
+                                                    <div data-info="secondary"
+                                                        class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        S</div>
+                                                </div>
+                                                <!-- Workload Isolation Nodes -->
+                                                <div class="col-span-1 space-y-4">
+                                                    <div data-info="analytics"
+                                                        class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        A</div>
+                                                    <div data-info="readonly"
+                                                        class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        R</div>
+                                                    <div data-info="search"
+                                                        class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        🔍</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-xs text-gray-400 mt-4 text-center">
+                                                Multi-region, Multi-cloud on AWS, Azure, and GCP
+                                            </div>
+                                        </div>
+
+                                        <!-- Data Ecosystem -->
+                                        <div class="flex flex-col items-center gap-4">
+                                            <h3 class="font-bold text-lg text-center mb-2">Data Ecosystem</h3>
+                                            <div class="space-y-4 w-full max-w-xs">
+                                                <div data-info="datascience"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Data Science Platforms</div>
+                                                <div data-info="charts"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    MongoDB Charts</div>
+                                                <div data-info="cdc"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Change Data Capture</div>
+                                                <div data-info="bi"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Third-party BI & Reporting</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Tools -->
+                                    <div class="mt-12">
+                                        <h3 class="font-bold text-lg text-center mb-4">Developer Tools</h3>
+                                        <div class="flex justify-center gap-4 flex-wrap">
+                                            <div data-info="compass"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                MongoDB Compass</div>
+                                            <div data-info="shell"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                MongoDB Shell</div>
+                                            <div data-info="vscode"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                VS Code Extension</div>
+                                            <div data-info="explorer"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                Data Explorer</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Details Panel -->
+                                <div class="lg:w-1/3 lg:max-w-sm flex-shrink-0">
+                                    <div id="details-panel"
+                                        class="sticky top-24 bg-gray-800 p-6 rounded-xl border border-gray-700 min-h-[300px]">
+                                        <h3 id="details-title" class="text-xl font-bold text-green-400 mb-4">Select a
+                                            Component</h3>
+                                        <div id="details-content" class="text-gray-300 space-y-2">
+                                            <p>Click on any part of the diagram to see more information here.</p>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </main>
 
-                        <!-- Config Servers -->
-                        <div class="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                             <h4 class="font-bold mb-2">Config Server Replica Set</h4>
-                             <div class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 flex space-x-2">
-                                <div>P</div>
-                                <div>S</div>
-                                <div>S</div>
+
+                        <section id="disaster-recovery">
+                            <h2 class="section-heading">Disaster Recovery & Automated Failover</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">High availability is built into
+                                the core of MongoDB's replica set architecture. In the event of a primary node failure,
+                                Atlas automatically triggers an election to promote a healthy secondary to become the
+                                new primary, typically within seconds.</p>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <div id="failover-diagram"
+                                    class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
+                                    <div id="node-1"
+                                        class="failover-node diagram-component p-4 rounded-lg border db-color-mongo primary">
+                                        <h4 class="font-bold"><span class="status-dot"></span>Node 1 (Primary)</h4>
+                                        <p class="text-sm">Region: us-east-1</p>
+                                    </div>
+                                    <div id="node-2"
+                                        class="failover-node diagram-component p-4 rounded-lg border secondary">
+                                        <h4 class="font-bold"><span class="status-dot"></span>Node 2 (Secondary)</h4>
+                                        <p class="text-sm">Region: us-east-2</p>
+                                    </div>
+                                    <div id="node-3"
+                                        class="failover-node diagram-component p-4 rounded-lg border secondary">
+                                        <h4 class="font-bold"><span class="status-dot"></span>Node 3 (Secondary)</h4>
+                                        <p class="text-sm">Region: us-west-1</p>
+                                    </div>
+                                </div>
+                                <div class="text-center mt-6">
+                                    <button id="failover-btn"
+                                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Simulate
+                                        Primary Failure</button>
+                                    <p id="failover-status" class="mt-4 text-lg text-green-400 h-6"></p>
+                                </div>
+                                <p class="text-center mt-4 text-slate-400">This automated failover ensures your
+                                    application remains available with minimal disruption. For disaster recovery,
+                                    placing a secondary node in a separate geographic region (like Node 2 and 3) ensures
+                                    data durability and avalibility for reads and writes even in the event of a full
+                                    regional outage. <a href="https://www.mongodb.com/docs/manual/replication/"
+                                        target="_blank" class="text-indigo-400 hover:underline">[Ref: Replication
+                                        Docs]</a></p>
                             </div>
-                        </div>
-                    </div>
-                    <div class="mt-6 text-slate-300 pt-4 border-t border-gray-700">
-                        <h4 class="font-bold text-lg text-white mb-2">Key Components:</h4>
-                        <ul class="list-disc list-inside space-y-2">
-                            <li><strong>Shards:</strong> Each shard is an independent replica set that stores a subset of the data.</li>
-                            <li><strong>mongos (Query Router):</strong> The application connects to `mongos`, not individual shards. This router acts as an intelligent proxy, directing queries to the correct shard(s) based on the shard key.</li>
-                            <li><strong>Config Servers:</strong> A dedicated replica set that stores the cluster's metadata, including the mapping of data ranges to shards. The `mongos` instances cache this data to route queries efficiently.</li>
-                        </ul>
-                        <h4 class="font-bold text-lg text-white mt-6 mb-2">The Shard Key is Critical</h4>
-                        <p>The choice of a <span class="font-semibold text-green-400">shard key</span> (a field or fields in your documents) is the most important decision in a sharded cluster. It determines how data is distributed. A poor key can lead to "hot shards" that become bottlenecks, while a good key ensures an even spread of data and workload. <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" class="text-indigo-400 hover:underline">[Ref: Sharding Docs]</a></p>
-                    </div>
-                </div>
-            </section>
-
-            <div class="space-y-8">
-
-                <!-- Section 1: Interactive Sharding Example -->
-                <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
-                    <div class="p-8">
-                        <h2 class="text-2xl font-bold text-green-400 mb-3">Interactive Sharding Example</h2>
-                        <p class="text-gray-400 mb-6">Sharding distributes data across multiple servers (shards) to support high throughput operations and large data sets. Click a user document below to see how the `mongos` router directs it to the correct shard based on the "country" shard key.</p>
-                        <div class="mt-4 p-4 rounded-lg bg-black">
-                            <svg id="sharding-svg" viewBox="0 0 600 400" class="w-full">
-                                <!-- SVG content for sharding diagram will be inserted here by JS -->
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-    
-           
-            </div>
+                        </section>
 
 
-            <section id="multi-region">
-                <h2 class="section-heading">Global Deployments</h2>
-                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters allow you to deploy a single database across multiple cloud regions and providers, enabling low-latency reads and writes for a global user base in an active-active configuration.</p>
-                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
-                        <!-- Region 1 -->
-                        <div class="diagram-component p-4 rounded-lg border cloud-aws">
-                            <h4 class="font-bold cloud-aws">AWS (us-east-1)</h4>
-                            <p class="text-sm">App Server</p>
-                            <svg class="w-full h-16"><line x1="50%" y1="100%" x2="50%" y2="0" stroke="#ff9900" stroke-width="2" stroke-dasharray="4"/></svg>
-                            <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 1)</div>
-                        </div>
-                        <!-- Region 2 -->
-                        <div class="diagram-component p-4 rounded-lg border cloud-gcp">
-                            <h4 class="font-bold cloud-gcp">GCP (europe-west1)</h4>
-                            <p class="text-sm">App Server</p>
-                            <svg class="w-full h-16"><line x1="50%" y1="100%" x2="50%" y2="0" stroke="#4285f4" stroke-width="2" stroke-dasharray="4"/></svg>
-                            <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 2)</div>
-                        </div>
-                        <!-- Region 3 -->
-                        <div class="diagram-component p-4 rounded-lg border cloud-azure">
-                            <h4 class="font-bold cloud-azure">Azure (japaneast)</h4>
-                            <p class="text-sm">App Server</p>
-                            <svg class="w-full h-16"><line x1="50%" y1="100%" x2="50%" y2="0" stroke="#0078d4" stroke-width="2" stroke-dasharray="4"/></svg>
-                            <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 3)</div>
-                        </div>
-                    </div>
-                    <p class="text-center mt-6 text-slate-400">In this active-active scenario, an application server in any region can handle write operations. Atlas intelligently routes writes to the primary node in each shard while allowing local secondary nodes to serve low-latency reads. This setup provides global data locality and resilience. <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank" class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a></p>
-                </div>
-            </section>
 
-                 <!-- Section 2: From 4NF to Document Model -->
-                  <section id="documentmodel">
-                 <h2 class="section-heading">Simplicity of Document Model</h2>
-                 <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
-                    <div class="p-8">
-                        <h2 class="text-2xl font-bold text-green-400 mb-3">From 4NF to Document Model</h2>
-                        <p class="text-gray-400 mb-6">Relational databases often require complex schemas (like 4th Normal Form) with many tables and joins to avoid data redundancy. The document model simplifies this by embedding related data in a single document. Click a relational table to see how it maps to the intuitive document structure.</p>
-                        <div class="mt-4 p-4 rounded-lg bg-black">
-                            <svg id="schema-svg" viewBox="0 0 600 450" class="w-full">
-                               <!-- SVG content for schema diagram will be inserted here by JS -->
-                            </svg>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                        <section id="sharding">
+                            <h2 class="section-heading">Sharding for Horizontal Scaling</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">When a dataset outgrows the
+                                capacity of a single server (vertical scaling), MongoDB uses sharding to distribute data
+                                across multiple servers (horizontal scaling). This allows for near-limitless
+                                scalability.</p>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <div class="relative min-h-[400px]">
+                                    <!-- Application -->
+                                    <div
+                                        class="absolute top-0 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">
+                                        Application</div>
 
-            <section id="private-networking">
-                <h2 class="section-heading">Private Network Routing Across Clouds</h2>
-                <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas enables secure, private connections between your application's virtual network and your Atlas cluster, even across different cloud providers. This is achieved primarily through VPC/VNet Peering and AWS PrivateLink.</p>
-                <div class="grid md:grid-cols-2 gap-12">
-                    <!-- VPC Peering Diagram -->
-                    <div>
-                        <h3 class="text-xl font-bold text-center mb-4 text-white">VPC/VNet Peering</h3>
-                        <div class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
-                            <div class="flex justify-around items-center">
-                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)</div>
-                                <div class="text-2xl font-bold text-white">↔</div>
-                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-gcp">Atlas VPC (AWS)</div>
+                                    <!-- Mongos -->
+                                    <div
+                                        class="absolute top-24 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">
+                                        mongos (Router)</div>
+
+                                    <!-- Connecting Lines -->
+                                    <svg class="absolute top-0 left-0 w-full h-full" style="pointer-events: none;">
+                                        <!-- App to Mongos -->
+                                        <line x1="50%" y1="68px" x2="50%" y2="100px" stroke="#6366f1" stroke-width="2"
+                                            marker-end="url(#arrowhead)" />
+                                        <!-- Mongos to Shards -->
+                                        <line x1="50%" y1="164px" x2="25%" y2="220px" stroke="#4f46e5" stroke-width="2"
+                                            stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+                                        <line x1="50%" y1="164px" x2="75%" y2="220px" stroke="#4f46e5" stroke-width="2"
+                                            stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+                                        <!-- Mongos to Config Servers -->
+                                        <line x1="50%" y1="164px" x2="50%" y2="340px" stroke="#4f46e5" stroke-width="2"
+                                            stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+                                        <defs>
+                                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5"
+                                                orient="auto">
+                                                <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
+                                            </marker>
+                                        </defs>
+                                    </svg>
+
+                                    <!-- Shards -->
+                                    <div class="absolute top-56 w-full flex justify-around">
+                                        <div class="w-1/3 text-center">
+                                            <h4 class="font-bold mb-2">Shard A</h4>
+                                            <div
+                                                class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
+                                                <div>P</div>
+                                                <div>S</div>
+                                                <div>S</div>
+                                            </div>
+                                        </div>
+                                        <div class="w-1/3 text-center">
+                                            <h4 class="font-bold mb-2">Shard B</h4>
+                                            <div
+                                                class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
+                                                <div>P</div>
+                                                <div>S</div>
+                                                <div>S</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Config Servers -->
+                                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
+                                        <h4 class="font-bold mb-2">Config Server Replica Set</h4>
+                                        <div
+                                            class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 flex space-x-2">
+                                            <div>P</div>
+                                            <div>S</div>
+                                            <div>S</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-6 text-slate-300 pt-4 border-t border-gray-700">
+                                    <h4 class="font-bold text-lg text-white mb-2">Key Components:</h4>
+                                    <ul class="list-disc list-inside space-y-2">
+                                        <li><strong>Shards:</strong> Each shard is an independent replica set that
+                                            stores a subset of the data.</li>
+                                        <li><strong>mongos (Query Router):</strong> The application connects to
+                                            `mongos`, not individual shards. This router acts as an intelligent proxy,
+                                            directing queries to the correct shard(s) based on the shard key.</li>
+                                        <li><strong>Config Servers:</strong> A dedicated replica set that stores the
+                                            cluster's metadata, including the mapping of data ranges to shards. The
+                                            `mongos` instances cache this data to route queries efficiently.</li>
+                                    </ul>
+                                    <h4 class="font-bold text-lg text-white mt-6 mb-2">The Shard Key is Critical</h4>
+                                    <p>The choice of a <span class="font-semibold text-green-400">shard key</span> (a
+                                        field or fields in your documents) is the most important decision in a sharded
+                                        cluster. It determines how data is distributed. A poor key can lead to "hot
+                                        shards" that become bottlenecks, while a good key ensures an even spread of data
+                                        and workload. <a href="https://www.mongodb.com/docs/manual/sharding/"
+                                            target="_blank" class="text-indigo-400 hover:underline">[Ref: Sharding
+                                            Docs]</a></p>
+                                </div>
                             </div>
-                            <p class="text-sm mt-4 text-slate-400">Creates a direct, private network connection between your application's VPC and the Atlas VPC. Traffic does not traverse the public internet. This is supported for peering between the same or different cloud providers.</p>
-                             <a href="https://www.mongodb.com/docs/atlas/security-network-peering/" target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas Peering Docs]</a>
-                        </div>
-                    </div>
-                    <!-- PrivateLink Diagram -->
-                    <div>
-                        <h3 class="text-xl font-bold text-center mb-4 text-white">AWS PrivateLink</h3>
-                        <div class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
-                            <div class="flex justify-around items-center">
-                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)</div>
-                                <div class="text-2xl font-bold text-white">→</div>
-                                <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">Atlas VPC (AWS)</div>
-                            </div>
-                            <p class="text-sm mt-4 text-slate-400">Creates a secure, one-way endpoint from your VPC to the Atlas cluster. This simplifies network security as it doesn't require opening firewall ports or managing CIDR blocks, but it is specific to AWS.</p>
-                            <a href="https://www.mongodb.com/docs/atlas/security-private-endpoint/" target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas Private Endpoint Docs]</a>
-                        </div>
-                    </div>
-                </div>
-            </section>
+                        </section>
 
-                <section id="trial-env">
-                <h2 class="section-heading">Getting Started: Trial Environment</h2>
-                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 max-w-2xl mx-auto">
-                    <h3 class="text-2xl font-bold mb-4 text-white">M0 Free Tier</h3>
-                    <p class="text-slate-400 mb-4">Atlas offers a perpetual free tier called "M0 Sandbox." It's ideal for learning, prototyping, and early development.</p>
-                    <ul class="list-disc list-inside space-y-2 text-slate-300">
-                        <li>512 MB of storage</li>
-                        <li>Shared RAM and vCPU</li>
-                        <li>Basic monitoring and security features</li>
-                        <li>Available on AWS, GCP, and Azure</li>
-                    </ul>
-                     <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank" class="mt-6 inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Start Free</a>
-                </div>
-            </section>
+                        <div class="space-y-8">
+
+                            <!-- Section 1: Interactive Sharding Example -->
+                            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                                <div class="p-8">
+                                    <h2 class="text-2xl font-bold text-green-400 mb-3">Interactive Sharding Example</h2>
+                                    <p class="text-gray-400 mb-6">Sharding distributes data across multiple servers
+                                        (shards) to support high throughput operations and large data sets. Click a user
+                                        document below to see how the `mongos` router directs it to the correct shard
+                                        based on the "country" shard key.</p>
+                                    <div class="mt-4 p-4 rounded-lg bg-black">
+                                        <svg id="sharding-svg" viewBox="0 0 600 400" class="w-full">
+                                            <!-- SVG content for sharding diagram will be inserted here by JS -->
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                        </div>
+
+
+                        <section id="multi-region">
+                            <h2 class="section-heading">Global Deployments</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters allow you
+                                to deploy a single database across multiple cloud regions and providers, enabling
+                                low-latency reads and writes for a global user base in an active-active configuration.
+                            </p>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
+                                    <!-- Region 1 -->
+                                    <div class="diagram-component p-4 rounded-lg border cloud-aws">
+                                        <h4 class="font-bold cloud-aws">AWS (us-east-1)</h4>
+                                        <p class="text-sm">App Server</p>
+                                        <svg class="w-full h-16">
+                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#ff9900" stroke-width="2"
+                                                stroke-dasharray="4" />
+                                        </svg>
+                                        <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 1)</div>
+                                    </div>
+                                    <!-- Region 2 -->
+                                    <div class="diagram-component p-4 rounded-lg border cloud-gcp">
+                                        <h4 class="font-bold cloud-gcp">GCP (europe-west1)</h4>
+                                        <p class="text-sm">App Server</p>
+                                        <svg class="w-full h-16">
+                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#4285f4" stroke-width="2"
+                                                stroke-dasharray="4" />
+                                        </svg>
+                                        <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 2)</div>
+                                    </div>
+                                    <!-- Region 3 -->
+                                    <div class="diagram-component p-4 rounded-lg border cloud-azure">
+                                        <h4 class="font-bold cloud-azure">Azure (japaneast)</h4>
+                                        <p class="text-sm">App Server</p>
+                                        <svg class="w-full h-16">
+                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#0078d4" stroke-width="2"
+                                                stroke-dasharray="4" />
+                                        </svg>
+                                        <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 3)</div>
+                                    </div>
+                                </div>
+                                <p class="text-center mt-6 text-slate-400">In this active-active scenario, an
+                                    application server in any region can handle write operations. Atlas intelligently
+                                    routes writes to the primary node in each shard while allowing local secondary nodes
+                                    to serve low-latency reads. This setup provides global data locality and resilience.
+                                    <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank"
+                                        class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a>
+                                </p>
+                            </div>
+                        </section>
+
+                        <!-- Section 2: From 4NF to Document Model -->
+                        <section id="documentmodel">
+                            <h2 class="section-heading">Simplicity of Document Model</h2>
+                            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                                <div class="p-8">
+                                    <h2 class="text-2xl font-bold text-green-400 mb-3">From 4NF to Document Model</h2>
+                                    <p class="text-gray-400 mb-6">Relational databases often require complex schemas
+                                        (like 4th Normal Form) with many tables and joins to avoid data redundancy. The
+                                        document model simplifies this by embedding related data in a single document.
+                                        Click a relational table to see how it maps to the intuitive document structure.
+                                    </p>
+                                    <div class="mt-4 p-4 rounded-lg bg-black">
+                                        <svg id="schema-svg" viewBox="0 0 600 450" class="w-full">
+                                            <!-- SVG content for schema diagram will be inserted here by JS -->
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="private-networking">
+                            <h2 class="section-heading">Private Network Routing Across Clouds</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas enables secure, private
+                                connections between your application's virtual network and your Atlas cluster, even
+                                across different cloud providers. This is achieved primarily through VPC/VNet Peering
+                                and AWS PrivateLink.</p>
+                            <div class="grid md:grid-cols-2 gap-12">
+                                <!-- VPC Peering Diagram -->
+                                <div>
+                                    <h3 class="text-xl font-bold text-center mb-4 text-white">VPC/VNet Peering</h3>
+                                    <div
+                                        class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="flex justify-around items-center">
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)
+                                            </div>
+                                            <div class="text-2xl font-bold text-white">↔</div>
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-gcp">Atlas VPC
+                                                (AWS)</div>
+                                        </div>
+                                        <p class="text-sm mt-4 text-slate-400">Creates a direct, private network
+                                            connection between your application's VPC and the Atlas VPC. Traffic does
+                                            not traverse the public internet. This is supported for peering between the
+                                            same or different cloud providers.</p>
+                                        <a href="https://www.mongodb.com/docs/atlas/security-network-peering/"
+                                            target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
+                                            Peering Docs]</a>
+                                    </div>
+                                </div>
+                                <!-- PrivateLink Diagram -->
+                                <div>
+                                    <h3 class="text-xl font-bold text-center mb-4 text-white">AWS PrivateLink</h3>
+                                    <div
+                                        class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="flex justify-around items-center">
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)
+                                            </div>
+                                            <div class="text-2xl font-bold text-white">→</div>
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">Atlas VPC
+                                                (AWS)</div>
+                                        </div>
+                                        <p class="text-sm mt-4 text-slate-400">Creates a secure, one-way endpoint from
+                                            your VPC to the Atlas cluster. This simplifies network security as it
+                                            doesn't require opening firewall ports or managing CIDR blocks, but it is
+                                            specific to AWS.</p>
+                                        <a href="https://www.mongodb.com/docs/atlas/security-private-endpoint/"
+                                            target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
+                                            Private Endpoint Docs]</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section id="trial-env">
+                            <h2 class="section-heading">Getting Started: Trial Environment</h2>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 max-w-2xl mx-auto">
+                                <h3 class="text-2xl font-bold mb-4 text-white">M0 Free Tier</h3>
+                                <p class="text-slate-400 mb-4">Atlas offers a perpetual free tier called "M0 Sandbox."
+                                    It's ideal for learning, prototyping, and early development.</p>
+                                <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                    <li>512 MB of storage</li>
+                                    <li>Shared RAM and vCPU</li>
+                                    <li>Basic monitoring and security features</li>
+                                    <li>Available on AWS, GCP, and Azure</li>
+                                </ul>
+                                <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank"
+                                    class="mt-6 inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Start
+                                    Free</a>
+                            </div>
+                        </section>
 
         </main>
 
@@ -436,8 +765,63 @@
 
     <script>
 
-        
-        document.addEventListener('DOMContentLoaded', function() {
+        function drawLine(options) {
+            const { fromId, toId, text, isDotted = true, textOffset = { x: 0, y: -15 }, anchor = 'middle' } = options;
+            const from = document.getElementById(fromId);
+            const to = document.getElementById(toId);
+            const svg = document.querySelector('#svg-container svg');
+            const container = document.getElementById('diagram-container');
+
+            if (!from || !to || !svg || !container) return;
+
+            const containerRect = container.getBoundingClientRect();
+            const fromRect = from.getBoundingClientRect();
+            const toRect = to.getBoundingClientRect();
+
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttribute('d', options.path(fromRect, toRect, containerRect));
+            path.setAttribute('stroke', '#E5E7EB');
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('fill', 'none');
+            path.setAttribute('marker-end', 'url(#arrowhead)');
+            path.classList.add(isDotted ? 'flow-line' : 'flow-line-solid');
+            svg.appendChild(path);
+
+            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+            const textPos = options.textPosition(fromRect, toRect, containerRect);
+            textEl.setAttribute('x', textPos.x + textOffset.x);
+            textEl.setAttribute('y', textPos.y + textOffset.y);
+            textEl.setAttribute('fill', '#F7FAFC');
+            textEl.setAttribute('font-size', '14');
+            textEl.setAttribute('font-weight', '500');
+            textEl.setAttribute('text-anchor', anchor);
+
+            if (Array.isArray(text)) {
+                text.forEach((line, index) => {
+                    const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+                    tspan.setAttribute('x', textPos.x + textOffset.x);
+                    tspan.setAttribute('dy', index === 0 ? 0 : '1.2em');
+                    tspan.textContent = line;
+                    textEl.appendChild(tspan);
+                });
+            } else {
+                textEl.textContent = text;
+            }
+            svg.appendChild(textEl);
+        }
+
+        window.addEventListener('resize', () => {
+            const svg = document.querySelector('#svg-container svg');
+            svg.innerHTML = `<defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#E5E7EB" />
+                    </marker>
+                </defs>`;
+            drawAllLines();
+        });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
 
             const components = document.querySelectorAll('.diagram-component');
             const detailsTitle = document.getElementById('details-title');
@@ -463,8 +847,8 @@
                 primary: { title: 'Electable Node: Primary (P)', content: '<h4>Transactional/Operational Workload</h4><p>The Primary node in a replica set receives all write operations. It provides strong data consistency and is the main point of interaction for transactional workloads. Part of a high-availability setup with a 99.995% uptime SLA.</p>' },
                 secondary: { title: 'Electable Node: Secondary (S)', content: '<h4>Transactional/Operational Workload</h4><p>Secondary nodes replicate data from the Primary node. They ensure data redundancy and high availability. If the Primary node fails, a Secondary is automatically elected to become the new Primary.</p>' },
                 analytics: { title: 'Workload Isolation: Analytics Node (A)', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A dedicated node optimized for reporting, business intelligence, and complex analytical queries. It isolates analytical workloads from transactional traffic, ensuring that long-running queries do not impact application performance.</p>' },
-                readonly: { title: 'Workload Isolation: Read-only Node (R)', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A read-only node used for scaling read operations for local reads. It helps distribute the read load from the main electable nodes.</p>' },
-                search: { title: 'Workload Isolation: Search Node', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A specialized node that powers Atlas Search for full-text search and Atlas Vector Search for semantic search. It offloads complex search operations, providing high-performance search without impacting the core database.</p>' },
+                readonly: { title: 'Workload Isolation: Read-only Node (R)', content: '<h4>Read Only Node</h4><p>A read-only node used for scaling read operations for local reads. It helps distribute the read load from the main electable nodes.</p>' },
+                search: { title: 'Workload Isolation: Search Node', content: '<h4>Search and Vector Search</h4><p>A specialized node that powers Atlas Search for full-text search and Atlas Vector Search for semantic search. It offloads complex search operations, providing high-performance search without impacting the core database.</p>' },
                 // Data Ecosystem
                 datascience: { title: 'Data Science Platforms', content: '<p>Integrates with popular data science tools and platforms like Iguazio, TensorFlow, and cloud services from AWS and Google Cloud. Enables building and deploying machine learning models using data stored in Atlas.</p>' },
                 charts: { title: 'MongoDB Charts', content: '<p>A native data visualization tool for MongoDB. It allows users to create, share, and embed real-time dashboards and charts based on their Atlas data without complex data movement.</p>' },
@@ -498,9 +882,9 @@
                 });
             });
 
-             // Reset when clicking outside
+            // Reset when clicking outside
             document.body.addEventListener('click', () => {
-                if(activeComponent) {
+                if (activeComponent) {
                     activeComponent.classList.remove('active');
                     activeComponent = null;
                 }
@@ -513,7 +897,7 @@
             const node2 = document.getElementById('node-2');
             const node3 = document.getElementById('node-3');
 
-            let isFailedOver = false;            
+            let isFailedOver = false;
 
             failoverBtn.addEventListener('click', () => {
                 if (isFailedOver) {
@@ -522,11 +906,11 @@
                     node1.classList.remove('failed');
                     node1.classList.add('primary');
                     node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Primary)';
-                    
+
                     node2.classList.remove('primary');
                     node2.classList.add('secondary');
                     node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Secondary)';
-                    
+
                     failoverBtn.textContent = 'Simulate Primary Failure';
                     failoverBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
                     failoverBtn.classList.add('bg-red-600', 'hover:bg-red-700');
@@ -543,7 +927,7 @@
                         node2.classList.remove('secondary');
                         node2.classList.add('primary');
                         node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Primary)';
-                        
+
                         failoverBtn.textContent = 'Restore System';
                         failoverBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
                         failoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
@@ -551,7 +935,7 @@
                     }, 2000);
                 }
 
-                
+
             });
 
             // Active nav link scrolling
@@ -577,7 +961,7 @@
         });
 
         document.addEventListener('DOMContentLoaded', function () {
-        
+
             // --- Sharding Diagram Logic ---
             const shardingSVG = document.getElementById('sharding-svg');
             if (shardingSVG) {
@@ -587,20 +971,20 @@
                     { id: 'user3', country: 'Germany', color: '#4299e1' },
                     { id: 'user4', country: 'Hungary', color: '#f56545' },
                 ];
-    
+
                 const shardRanges = {
                     'Shard A (A-G)': { x: 100, y: 300, color: '#4a5568' },
                     'Shard B (H-P)': { x: 300, y: 300, color: '#4a5568' },
                     'Shard C (Q-Z)': { x: 500, y: 300, color: '#4a5568' },
                 };
-    
+
                 const getShardForCountry = (country) => {
                     const firstLetter = country.toUpperCase().charAt(0);
                     if (firstLetter >= 'A' && firstLetter <= 'G') return shardRanges['Shard A (A-G)'];
                     if (firstLetter >= 'H' && firstLetter <= 'P') return shardRanges['Shard B (H-P)'];
                     return shardRanges['Shard C (Q-Z)'];
                 };
-    
+
                 const renderShardingDiagram = (highlightedPath = null) => {
                     let svgContent = `
                         <defs>
@@ -614,7 +998,7 @@
                         <!-- Shards -->
                         ${Object.entries(shardRanges).map(([key, val]) => `<g><rect x="${val.x - 50}" y="${val.y - 25}" width="100" height="50" rx="5" fill="${val.color}" stroke="#63b3ed" /><text x="${val.x}" y="${val.y}" text-anchor="middle" fill="#e2e8f0"  font-size="13">${key}</text></g>`).join('')}
                     `;
-    
+
                     if (highlightedPath) {
                         const data = dataPoints.find(d => d.id === highlightedPath);
                         const startX = 125 + dataPoints.indexOf(data) * 120;
@@ -627,7 +1011,7 @@
                 // Attach render function to window to be accessible from inline onclick
                 window.renderShardingDiagram = renderShardingDiagram;
             }
-    
+
             // --- Schema Diagram Logic ---
             const schemaSVG = document.getElementById('schema-svg');
             if (schemaSVG) {
@@ -636,22 +1020,22 @@
                     user_skills: { x: 50, y: 180, width: 120, height: 60, label: 'User_Skills', docPart: 'skillsArray' },
                     skills: { x: 50, y: 290, width: 120, height: 60, label: 'Skills', docPart: 'skillsArray' },
                 };
-                 const docElements = {
-                    userDoc: { x: 350, y: 50, width: 220, height: 350, color: '#2d3748'},
-                    skillsArray: { x: 370, y: 150, width: 180, height: 100, color: '#4a5568'},
+                const docElements = {
+                    userDoc: { x: 350, y: 50, width: 220, height: 350, color: '#2d3748' },
+                    skillsArray: { x: 370, y: 150, width: 180, height: 100, color: '#4a5568' },
                 }
-    
+
                 const renderSchemaDiagram = (highlightedPart = null) => {
                     let svgContent = `
                         <text x="110" y="20" font-size="16" fill="#a0aec0" text-anchor="middle">Relational Schema (4NF)</text>
                         <text x="460" y="20" font-size="16" fill="#a0aec0" text-anchor="middle">Document Model</text>
                     `;
-    
+
                     // Render Tables
                     Object.values(tables).forEach(t => {
-                        svgContent += `<g class="diagram-component" onclick="renderSchemaDiagram('${t.docPart}')"><rect x="${t.x}" y="${t.y}" width="${t.width}" height="${t.height}" rx="5" fill="#4a5568" stroke="${highlightedPart === t.docPart ? '#4ade80' : '#a0aec0'}" stroke-width="2" /><text x="${t.x + t.width/2}" y="${t.y + t.height/2 + 5}" text-anchor="middle" fill="#e2e8f0">${t.label}</text></g>`;
+                        svgContent += `<g class="diagram-component" onclick="renderSchemaDiagram('${t.docPart}')"><rect x="${t.x}" y="${t.y}" width="${t.width}" height="${t.height}" rx="5" fill="#4a5568" stroke="${highlightedPart === t.docPart ? '#4ade80' : '#a0aec0'}" stroke-width="2" /><text x="${t.x + t.width / 2}" y="${t.y + t.height / 2 + 5}" text-anchor="middle" fill="#e2e8f0">${t.label}</text></g>`;
                     });
-    
+
                     // Render Relationships
                     svgContent += `
                         <line x1="${tables.users.x + 60}" y1="${tables.users.y + 80}" x2="${tables.user_skills.x + 60}" y2="${tables.user_skills.y}" stroke="#a0aec0" stroke-width="1.5" />
@@ -659,7 +1043,7 @@
                         <text x="120" y="160" font-size="12" fill="#a0aec0">user_id (FK)</text>
                         <text x="120" y="270" font-size="12" fill="#a0aec0">skill_id (FK)</text>
                     `;
-                    
+
                     // Render Document
                     svgContent += `<rect x="${docElements.userDoc.x}" y="${docElements.userDoc.y}" width="${docElements.userDoc.width}" height="${docElements.userDoc.height}" rx="8" fill="${highlightedPart === 'userDoc' ? '#38a169' : docElements.userDoc.color}" stroke="#a0aec0" />`;
                     svgContent += `<text x="360" y="80" fill="#e2e8f0" font-family="monospace">{ _id: "...",</text>`;
@@ -672,24 +1056,25 @@
                     svgContent += `<text x="370" y="210" fill="#e2e8f0" font-family="monospace">...</text>`;
                     svgContent += `<text x="360" y="270" fill="#e2e8f0" font-family="monospace">  ]</text>`;
                     svgContent += `<text x="350" y="390" fill="#e2e8f0" font-family="monospace">}</text>`;
-    
+
                     // Render Paths
                     if (highlightedPart) {
                         const tableArray = Object.values(tables).filter(t => t.docPart === highlightedPart);
                         const docPart = docElements[highlightedPart];
                         tableArray.forEach(table => {
-                            svgContent += `<path class="schema-path highlight-path" d="M ${table.x + table.width} ${table.y + table.height/2} C 250 ${table.y + table.height/2}, 250 ${docPart.y + docPart.height/2}, ${docPart.x} ${docPart.y + docPart.height/2}" stroke="#4ade80" stroke-width="2" fill="none" />`;
+                            svgContent += `<path class="schema-path highlight-path" d="M ${table.x + table.width} ${table.y + table.height / 2} C 250 ${table.y + table.height / 2}, 250 ${docPart.y + docPart.height / 2}, ${docPart.x} ${docPart.y + docPart.height / 2}" stroke="#4ade80" stroke-width="2" fill="none" />`;
                         });
                     }
-    
+
                     schemaSVG.innerHTML = svgContent;
                 };
-    
+
                 renderSchemaDiagram();
                 window.renderSchemaDiagram = renderSchemaDiagram;
             }
-    
+
         });
     </script>
 </body>
+
 </html>
