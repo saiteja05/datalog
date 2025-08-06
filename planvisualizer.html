@@ -84,7 +84,10 @@
             <div class="bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-xl font-semibold text-white">Explain Output</h2>
-                    <button id="load-sample-btn" class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 py-1 px-3 rounded-md transition-colors">Load Sample</button>
+                    <div class="flex gap-2">
+                        <button id="load-sample-btn" class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 py-1 px-3 rounded-md transition-colors">Load Agg Sample</button>
+                        <button id="load-sharded-sample-btn" class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 py-1 px-3 rounded-md transition-colors">Load Sharded Sample</button>
+                    </div>
                 </div>
                 <textarea id="json-input" class="font-fira text-sm bg-gray-900 border border-gray-700 rounded-lg w-full flex-grow p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Paste the full output from the explain command here..."></textarea>
                 <div class="flex items-center gap-4 mt-4">
@@ -111,6 +114,14 @@
                     </div>
                 </div>
 
+                <!-- Analysis Panel -->
+                <div id="analysis-panel" class="bg-gray-800 p-6 rounded-xl shadow-lg hidden">
+                    <h2 class="text-xl font-semibold text-white mb-4">Analysis & Insights</h2>
+                    <div id="analysis-content" class="space-y-4 text-gray-300">
+                        <!-- Analysis content will be injected here -->
+                    </div>
+                </div>
+
                 <!-- Visual Plan Panel -->
                 <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
                     <h2 class="text-xl font-semibold text-white mb-4">Visual Execution Plan</h2>
@@ -132,11 +143,14 @@
         const visualizeBtnLoader = document.getElementById('visualize-btn-loader');
         const clearBtn = document.getElementById('clear-btn');
         const loadSampleBtn = document.getElementById('load-sample-btn');
+        const loadShardedSampleBtn = document.getElementById('load-sharded-sample-btn');
         const jsonInput = document.getElementById('json-input');
         const graphContainer = document.getElementById('graph-container');
         const messageBox = document.getElementById('message-box');
         const queryInfoPanel = document.getElementById('query-info-panel');
         const queryInfoContent = document.getElementById('query-info-content');
+        const analysisPanel = document.getElementById('analysis-panel');
+        const analysisContent = document.getElementById('analysis-content');
 
         // --- Mermaid.js Configuration ---
         mermaid.initialize({
@@ -164,7 +178,9 @@
         const resetUI = () => {
             hideMessage();
             queryInfoPanel.classList.add('hidden');
+            analysisPanel.classList.add('hidden');
             queryInfoContent.innerHTML = '';
+            analysisContent.innerHTML = '';
             graphContainer.innerHTML = '<p class="text-gray-500">Your visual plan will appear here.</p>';
         };
         
@@ -212,8 +228,8 @@
             }
             
             if (content) {
-                queryInfoContent.innerHTML = content;
                 queryInfoPanel.classList.remove('hidden');
+                queryInfoContent.innerHTML = content;
             }
         };
 
@@ -334,23 +350,191 @@
 
         function parseShardedPlan(explainData) {
             const mergeStage = explainData.executionStats.executionStages;
-            const mergeNodeId = `node${nodeId++}`;
             parseStage(mergeStage, null); // Parse the merge stage first
 
             const shardSubgraphs = [];
             explainData.executionStats.shards.forEach(shard => {
-                const shardName = shard.shardName.replace(/-/g, '_'); // Sanitize shard name for ID
-                const shardEntryId = `node${nodeId++}`;
+                const shardNameForId = shard.shardName.replace(/[-:]/g, '_');
+                const shardEntryId = `shard_entry_${shardNameForId}`;
                 shardSubgraphs.push(shardEntryId);
 
                 mermaidGraph += `\n    subgraph "Shard: ${shard.shardName}"\n`;
+                // Create a dummy entry node for linking
+                mermaidGraph += `        ${shardEntryId}[" "]; style ${shardEntryId} fill:transparent,stroke:transparent\n`;
                 parseStage(shard.executionStages, shardEntryId);
                 mermaidGraph += `    end\n`;
             });
-            // Find the SHARD_MERGE node ID to link from shards
+            
             const mergeNodeMatch = mermaidGraph.match(/(node\d+)\["<strong>SHARD_MERGE/);
             if (mergeNodeMatch && mergeNodeMatch[1]) {
                  mermaidGraph += `\n    ${shardSubgraphs.join(' & ')} --> ${mergeNodeMatch[1]};\n`;
+            }
+        }
+
+        function analyzePlan(explainData) {
+            const insights = {
+                totalExecutionTime: explainData.executionStats?.executionTimeMillis ?? null,
+                totalDocsExamined: 0,
+                totalReturned: 0,
+                collScans: [],
+                sorts: [],
+                timedStages: [],
+                isCoveredQuery: false,
+                rejectedPlans: explainData.queryPlanner?.rejectedPlans || [],
+                shards: [],
+                isScatterGather: false,
+            };
+
+            const seenIxScans = [];
+            const seenFetches = [];
+
+            function traverse(stage) {
+                if (!stage) return;
+                
+                if (stage.stage === 'COLLSCAN') insights.collScans.push(stage);
+                if (stage.stage === 'IXSCAN') seenIxScans.push(stage);
+                if (stage.stage === 'FETCH') seenFetches.push(stage);
+                if (stage.stage === 'SORT') insights.sorts.push(stage);
+
+                const time = stage.executionTimeMillis ?? stage.executionTimeMillisEstimate;
+                if (typeof time === 'number') {
+                    insights.timedStages.push({ name: stage.stage, time });
+                }
+
+                insights.totalDocsExamined += stage.docsExamined ?? 0;
+                insights.totalReturned += stage.nReturned ?? 0;
+
+                if (stage.inputStage) traverse(stage.inputStage);
+                if (stage.inputStages) stage.inputStages.forEach(traverse);
+            }
+            
+            if (explainData.executionStats) {
+                if (explainData.executionStats.shards) {
+                    insights.isScatterGather = explainData.executionStats.shards.length > 1;
+                    explainData.executionStats.shards.forEach(shard => {
+                        let shardDocsExamined = 0;
+                        let shardNReturned = 0;
+                        function traverseShard(s) {
+                            if (!s) return;
+                            shardDocsExamined += s.docsExamined ?? 0;
+                            shardNReturned += s.nReturned ?? 0;
+                            if (s.inputStage) traverseShard(s.inputStage);
+                            if (s.inputStages) s.inputStages.forEach(traverseShard);
+                        }
+                        traverseShard(shard.executionStages);
+                        insights.shards.push({ name: shard.shardName, docsExamined: shardDocsExamined, nReturned: shardNReturned });
+                        traverse(shard.executionStages);
+                    });
+                    traverse(explainData.executionStats.executionStages); // Also traverse the merge stage
+                } else {
+                    traverse(explainData.executionStats.executionStages);
+                }
+            } else if (explainData.stages) {
+                 explainData.stages.forEach(stage => traverse(findExecutionStages(stage)));
+            }
+
+            if (seenIxScans.length > 0 && seenFetches.length === 0) {
+                insights.isCoveredQuery = true;
+            }
+            
+            insights.timedStages = insights.timedStages.filter(t => t.time > 0).sort((a, b) => b.time - a.time);
+
+            return insights;
+        }
+
+        function displayAnalysis(insights) {
+            let content = '';
+
+            // --- Execution Summary ---
+            content += `<div><h3 class="text-lg font-semibold text-white mb-2">Execution Summary</h3>`;
+            if (insights.totalExecutionTime !== null) {
+                content += `<p><span class="font-semibold">Total Time:</span> <span class="font-fira font-bold text-xl text-cyan-300">${insights.totalExecutionTime}ms</span></p>`;
+                if (insights.totalDocsExamined > 0 && insights.totalReturned > 0) {
+                    const ratio = insights.totalDocsExamined / insights.totalReturned;
+                    const ratioColor = ratio > 10 ? 'text-yellow-300' : 'text-green-300';
+                    content += `<p class="text-sm mt-1"><span class="font-semibold">Work Ratio:</span> <strong class="${ratioColor}">${ratio.toFixed(1)}:1</strong> (Examined ${insights.totalDocsExamined} to return ${insights.totalReturned})</p>`;
+                }
+            } else {
+                 content += `<p class="text-sm text-gray-400">No execution time statistics available.</p>`;
+            }
+            content += `</div>`;
+            
+            // --- Indexing Insights ---
+            content += `<div><h3 class="text-lg font-semibold text-white mb-2">Indexing Insights</h3>`;
+            if (insights.collScans.length > 0) {
+                content += `<p class="text-sm text-red-400">🔴 Found ${insights.collScans.length} Collection Scan(s). Consider adding an index.</p>`;
+            } else {
+                content += `<p class="text-sm text-green-400">🟢 No Collection Scans found. Excellent!</p>`;
+            }
+            if (insights.isCoveredQuery) {
+                content += `<p class="text-sm text-green-400 mt-1">🟢 Covered Query detected. The index efficiently answered the query.</p>`;
+            }
+            content += `</div>`;
+
+            // --- Resource Warnings ---
+            content += `<div><h3 class="text-lg font-semibold text-white mb-2">Resource Warnings</h3>`;
+            if (insights.sorts.length > 0) {
+                let hasSortWarning = false;
+                insights.sorts.forEach(sort => {
+                    if (sort.usedDisk) {
+                         content += `<p class="text-sm text-red-400">🔴 A SORT stage spilled to disk, a major performance issue.</p>`;
+                         hasSortWarning = true;
+                    } else if ((sort.docsExamined ?? sort.nReturned ?? 0) > 10000) {
+                         content += `<p class="text-sm text-yellow-400">🟡 A large in-memory SORT was performed. An index could be more efficient.</p>`;
+                         hasSortWarning = true;
+                    }
+                });
+                if (!hasSortWarning) {
+                    content += `<p class="text-sm text-green-400">🟢 In-memory SORT stages appear efficient.</p>`;
+                }
+            } else {
+                content += `<p class="text-sm text-gray-400">No SORT stages found.</p>`;
+            }
+            content += `</div>`;
+            
+            // --- Sharding Insights ---
+            if (insights.shards.length > 0) {
+                content += `<div><h3 class="text-lg font-semibold text-white mb-2">Sharding Insights</h3>`;
+                if (insights.isScatterGather) {
+                    content += `<p class="text-sm text-blue-400">ℹ️ This was a **scatter-gather** query, sent to ${insights.shards.length} shards.</p>`;
+                } else {
+                     content += `<p class="text-sm text-green-400">🟢 Query was efficiently targeted to a single shard.</p>`;
+                }
+                const totalReturned = insights.shards.reduce((sum, s) => sum + s.nReturned, 0);
+                if (totalReturned > 0) {
+                    const maxReturned = Math.max(...insights.shards.map(s => s.nReturned));
+                    if (insights.shards.length > 1 && (maxReturned / totalReturned) > 0.8) {
+                        const hotShard = insights.shards.find(s => s.nReturned === maxReturned);
+                        content += `<p class="text-sm text-yellow-400 mt-2">🟡 **Shard Imbalance:** Shard <strong class="font-fira">${hotShard.name}</strong> returned ${Math.round((maxReturned/totalReturned)*100)}% of the documents.</p>`;
+                    }
+                }
+                content += `</div>`;
+            }
+
+            // --- Top Time-Consuming Stages ---
+            if (insights.timedStages.length > 0) {
+                content += `<div><h3 class="text-lg font-semibold text-white mb-2">Top Time-Consuming Stages</h3>`;
+                content += `<ul class="list-disc list-inside space-y-1">`;
+                insights.timedStages.slice(0, 3).forEach(stage => {
+                    content += `<li><span class="font-semibold">${stage.name}:</span> <span class="font-fira">${stage.time}ms</span></li>`;
+                });
+                content += `</ul></div>`;
+            }
+            
+            // --- Rejected Plans ---
+            if (insights.rejectedPlans.length > 0) {
+                content += `<div><h3 class="text-lg font-semibold text-white mb-2">Rejected Plans</h3>`;
+                content += `<p class="text-sm text-gray-400">MongoDB considered but rejected the following plans:</p>`;
+                content += `<ul class="list-disc list-inside space-y-1 mt-2">`;
+                insights.rejectedPlans.forEach(plan => {
+                     content += `<li class="font-fira text-sm">${plan.stage} (Reason: ${plan.rejectReason || 'N/A'})</li>`;
+                });
+                content += `</ul></div>`;
+            }
+
+            if (content) {
+                analysisPanel.classList.remove('hidden');
+                analysisContent.innerHTML = content;
             }
         }
 
@@ -358,7 +542,6 @@
             resetUI();
             setLoadingState(true);
             
-            // Allow UI to update before heavy processing
             await new Promise(resolve => setTimeout(resolve, 10));
 
             const rawInput = jsonInput.value.trim();
@@ -383,13 +566,14 @@
             mermaidGraph = getInitialGraphDef();
             nodeId = 0;
 
-            // *** FIX: More robust check for execution stats ***
             const hasStats = sanitizedInput.includes('"executionStats"');
             if (!hasStats) {
                 showMessage('Execution stats not found. Displaying planner output only.', 'info');
+            } else {
+                const analysis = analyzePlan(explainData);
+                displayAnalysis(analysis);
             }
 
-            // Determine plan type and parse
             if (explainData.stages) {
                 parseAggregationPlan(explainData);
             } else if (explainData.executionStats?.shards) {
@@ -422,41 +606,36 @@
             }
         };
 
-        const loadSampleData = () => {
-            const sample = {
+        const loadSampleData = (type) => {
+            const aggSample = {
               "explainVersion": "1",
               "stages": [
-                {
-                  "$cursor": {
-                    "queryPlanner": {
-                      "namespace": "test.users", "indexFilterSet": false, "parsedQuery": { "age": { "$gt": 25 } },
-                      "winningPlan": { "stage": "COLLSCAN", "filter": { "age": { "$gt": 25 } } }
-                    },
-                    "executionStats": {
-                      "nReturned": 50, "executionTimeMillis": 120, "totalKeysExamined": 0, "totalDocsExamined": 1000,
-                      "executionStages": {
-                        "stage": "COLLSCAN", "filter": { "age": { "$gt": 25 } }, "nReturned": 50,
-                        "executionTimeMillisEstimate": 115, "docsExamined": 1000
-                      }
-                    }
-                  }
-                },
-                {
-                  "$group": { "_id": "$department", "averageAge": { "$avg": "$age" } }
-                },
-                {
-                  "$sort": { "averageAge": -1 }
-                }
-              ],
-              "serverInfo": { "host": "localhost", "port": 27017, "version": "5.0.3" }
+                { "$cursor": { "queryPlanner": { "namespace": "test.users", "winningPlan": { "stage": "COLLSCAN" } }, "executionStats": { "nReturned": 50, "executionTimeMillis": 120, "totalDocsExamined": 1000, "executionStages": { "stage": "COLLSCAN", "nReturned": 50, "executionTimeMillisEstimate": 115, "docsExamined": 1000 } } } },
+                { "$sort": { "usedDisk": true, "nReturned": 50, "executionTimeMillisEstimate": 150 } },
+                { "$group": { "_id": "$department", "averageAge": { "$avg": "$age" } } }
+              ], "serverInfo": { "host": "localhost", "port": 27017, "version": "5.0.3" }
             };
-            jsonInput.value = JSON.stringify(sample, null, 2);
+            const shardedSample = {
+              "explainVersion": "1",
+              "queryPlanner": { "namespace": "test.users" },
+              "executionStats": {
+                "executionSuccess": true, "nReturned": 200, "executionTimeMillis": 250,
+                "totalKeysExamined": 200, "totalDocsExamined": 200,
+                "executionStages": { "stage": "SHARD_MERGE", "nReturned": 200, "executionTimeMillis": 240 },
+                "shards": [
+                  { "shardName": "shard-01", "nReturned": 190, "executionTimeMillis": 100, "executionStages": { "stage": "IXSCAN", "nReturned": 190, "docsExamined": 190 } },
+                  { "shardName": "shard-02", "nReturned": 10, "executionTimeMillis": 235, "executionStages": { "stage": "IXSCAN", "nReturned": 10, "docsExamined": 10 } }
+                ]
+              }
+            };
+            jsonInput.value = JSON.stringify(type === 'sharded' ? shardedSample : aggSample, null, 2);
         };
 
         // --- Event Listeners ---
         visualizeBtn.addEventListener('click', handleVisualize);
         clearBtn.addEventListener('click', handleClear);
-        loadSampleBtn.addEventListener('click', loadSampleData);
+        loadSampleBtn.addEventListener('click', () => loadSampleData('agg'));
+        loadShardedSampleBtn.addEventListener('click', () => loadSampleData('sharded'));
 
     </script>
 </body>
