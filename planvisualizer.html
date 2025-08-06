@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Plan Visualizer</title>
+    
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts for a professional look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles to enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Tailwind gray-900 */
+        }
+        .font-fira {
+            font-family: 'Fira Code', monospace;
+        }
+        /* General Mermaid styling */
+        .mermaid .label {
+            color: #e5e7eb; /* gray-200 */
+        }
+        /* Styling for subgraph titles */
+        .mermaid .subgraph-title {
+            fill: #374151; /* gray-700 */
+            color: #d1d5db; /* gray-300 */
+            font-weight: 600;
+        }
+
+        /* --- Time Highlighting --- */
+        .time-high {
+            background-color: #7f1d1d; /* red-900 */
+            color: #fca5a5; /* red-300 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .time-medium {
+            background-color: #854d0e; /* amber-800 */
+            color: #fde68a; /* amber-200 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        /* Loading spinner */
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <div id="app" class="min-h-screen p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">MongoDB Plan Visualizer</h1>
+            <p class="text-gray-400 mt-2">Paste your `explain()` output from `mongosh` or a JSON export.</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+
+            <!-- Left Column: Input -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-white">Explain Output</h2>
+                    <button id="load-sample-btn" class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 py-1 px-3 rounded-md transition-colors">Load Sample</button>
+                </div>
+                <textarea id="json-input" class="font-fira text-sm bg-gray-900 border border-gray-700 rounded-lg w-full flex-grow p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Paste the full output from the explain command here..."></textarea>
+                <div class="flex items-center gap-4 mt-4">
+                    <button id="visualize-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md flex items-center justify-center gap-2 disabled:bg-blue-800 disabled:cursor-not-allowed">
+                        <span id="visualize-btn-text">Visualize Plan</span>
+                        <div id="visualize-btn-loader" class="loader hidden"></div>
+                    </button>
+                    <button id="clear-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Output -->
+            <div class="space-y-6">
+                <!-- Error/Info Message Box -->
+                <div id="message-box" class="hidden p-4 rounded-lg"></div>
+
+                <!-- Query Info Panel -->
+                <div id="query-info-panel" class="bg-gray-800 p-6 rounded-xl shadow-lg hidden">
+                    <h2 class="text-xl font-semibold text-white mb-4">Query Information</h2>
+                    <div id="query-info-content" class="space-y-3 text-gray-300">
+                        <!-- Query info will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Visual Plan Panel -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-white mb-4">Visual Execution Plan</h2>
+                    <div id="graph-container" class="min-h-[300px] flex items-center justify-center bg-gray-900/50 rounded-lg p-4">
+                        <p class="text-gray-500">Your visual plan will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mermaid.js library for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    
+    <script>
+        // --- DOM Element Selection ---
+        const visualizeBtn = document.getElementById('visualize-btn');
+        const visualizeBtnText = document.getElementById('visualize-btn-text');
+        const visualizeBtnLoader = document.getElementById('visualize-btn-loader');
+        const clearBtn = document.getElementById('clear-btn');
+        const loadSampleBtn = document.getElementById('load-sample-btn');
+        const jsonInput = document.getElementById('json-input');
+        const graphContainer = document.getElementById('graph-container');
+        const messageBox = document.getElementById('message-box');
+        const queryInfoPanel = document.getElementById('query-info-panel');
+        const queryInfoContent = document.getElementById('query-info-content');
+
+        // --- Mermaid.js Configuration ---
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'loose',
+            fontFamily: 'Inter, sans-serif',
+        });
+
+        // --- Utility Functions ---
+        const showMessage = (text, type = 'info') => {
+            messageBox.textContent = text;
+            messageBox.className = 'p-4 rounded-lg';
+            const styles = {
+                error: 'bg-red-900/50 text-red-300 border border-red-700',
+                success: 'bg-green-900/50 text-green-300 border border-green-700',
+                info: 'bg-blue-900/50 text-blue-300 border border-blue-700'
+            };
+            messageBox.classList.add(...(styles[type] || styles.info).split(' '));
+            messageBox.classList.remove('hidden');
+        };
+
+        const hideMessage = () => messageBox.classList.add('hidden');
+
+        const resetUI = () => {
+            hideMessage();
+            queryInfoPanel.classList.add('hidden');
+            queryInfoContent.innerHTML = '';
+            graphContainer.innerHTML = '<p class="text-gray-500">Your visual plan will appear here.</p>';
+        };
+        
+        const handleClear = () => {
+            jsonInput.value = '';
+            resetUI();
+        };
+
+        const setLoadingState = (isLoading) => {
+            visualizeBtn.disabled = isLoading;
+            if (isLoading) {
+                visualizeBtnText.classList.add('hidden');
+                visualizeBtnLoader.classList.remove('hidden');
+            } else {
+                visualizeBtnText.classList.remove('hidden');
+                visualizeBtnLoader.classList.add('hidden');
+            }
+        };
+
+        // --- Core Logic ---
+        const sanitizeMongoShellOutput = (text) => {
+            let sanitized = text.trim();
+            sanitized = sanitized.replace(/Timestamp\s*\([^)]*\)/g, '"BSON_Timestamp"');
+            sanitized = sanitized.replace(/Binary\.createFromBase64\s*\([^)]*\)/g, '"BSON_Binary"');
+            sanitized = sanitized.replace(/([{,])\s*([a-zA-Z0-9_$]+)\s*:/g, '$1"$2":');
+            sanitized = sanitized.replace(/'/g, '"');
+            return sanitized;
+        };
+
+        const displayQueryInfo = (data) => {
+            const planner = data.queryPlanner;
+            const command = data.command;
+            let content = '';
+
+            if (planner?.namespace) {
+                content += `<p><strong>Namespace:</strong> <span class="font-fira text-cyan-400">${planner.namespace}</span></p>`;
+            } else if (command?.aggregate) {
+                 content += `<p><strong>Namespace:</strong> <span class="font-fira text-cyan-400">${command['$db']}.${command.aggregate}</span></p>`;
+            }
+            
+            const query = planner?.parsedQuery || command?.pipeline || command;
+            if (query) {
+                content += `<p><strong>Query/Pipeline:</strong></p>
+                            <pre class="bg-gray-900 p-3 rounded-md font-fira text-sm text-yellow-300 overflow-x-auto">${JSON.stringify(query, null, 2)}</pre>`;
+            }
+            
+            if (content) {
+                queryInfoContent.innerHTML = content;
+                queryInfoPanel.classList.remove('hidden');
+            }
+        };
+
+        let nodeId = 0;
+        let mermaidGraph = '';
+
+        function findExecutionStages(obj) {
+            if (!obj || typeof obj !== 'object') return null;
+            if (obj.executionStages) return obj.executionStages;
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const result = findExecutionStages(obj[key]);
+                    if (result) return result;
+                }
+            }
+            return null;
+        }
+        
+        function getInitialGraphDef() {
+            return `graph TD;
+    %% Style Definitions
+    classDef default fill:#4B5563,stroke:#6B7280,color:#fff;
+    classDef stage-IXSCAN fill:#059669,stroke:#10B981,color:#fff;
+    classDef stage-COLLSCAN fill:#DC2626,stroke:#EF4444,color:#fff;
+    classDef stage-FETCH fill:#2563EB,stroke:#3B82F6,color:#fff;
+    classDef stage-SORT fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-PROJECTION fill:#581C87,stroke:#7E22CE,color:#fff;
+    classDef stage-PROJECTIONSIMPLE fill:#581C87,stroke:#7E22CE,color:#fff;
+    classDef stage-UNWIND fill:#BE123C,stroke:#F43F5E,color:#fff;
+    classDef stage-SET fill:#EA580C,stroke:#F97316,color:#fff;
+    classDef stage-ADDFIELDS fill:#EA580C,stroke:#F97316,color:#fff;
+    classDef stage-REPLACEROOT fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-REPLACEWITH fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-UNSET fill:#4B5563,stroke:#6B7280,color:#fff;
+    classDef stage-GROUP fill:#65A30D,stroke:#84CC16,color:#fff;
+    classDef stage-BUCKET fill:#d02670,stroke:#f062a4,color:#fff;
+    classDef stage-BUCKETAUTOSUM fill:#d02670,stroke:#f062a4,color:#fff;
+    classDef stage-FACET fill:#334155,stroke:#475569,color:#fff;
+    classDef stage-SORTBYCOUNT fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-COUNT fill:#7C3AED,stroke:#8B5CF6,color:#fff;
+    classDef stage-LOOKUP fill:#0369A1,stroke:#0EA5E9,color:#fff;
+    classDef stage-GRAPLOOKUP fill:#27272A,stroke:#3f3f46,color:#fff;
+    classDef stage-UNIONWITH fill:#be185d,stroke:#f472b6,color:#fff;
+    classDef stage-MATCH fill:#be185d,stroke:#f472b6,color:#fff;
+    classDef stage-LIMIT fill:#0D9488,stroke:#14B8A6,color:#fff;
+    classDef stage-SKIP fill:#4338CA,stroke:#6366F1,color:#fff;
+    classDef stage-SAMPLE fill:#65A30D,stroke:#84CC16,color:#fff;
+    classDef stage-REDACT fill:#171717,stroke:#262626,color:#fff;
+    classDef stage-CURSOR fill:#be185d,stroke:#f472b6,color:#fff;
+    classDef stage-SHARDMERGE fill:#0891B2,stroke:#06B6D4,color:#fff;
+    classDef stage-AGGPIPELINE fill:#166534,stroke:#22c55e,color:#fff;
+    classDef stage-GEONEAR fill:#78716C,stroke:#a8a29e,color:#fff;
+`;
+        }
+
+        function parseStage(stage, parentId) {
+            if (!stage) return;
+            const currentId = `node${nodeId++}`;
+            
+            const stageName = stage.stage || 'N/A';
+            const time = stage.executionTimeMillis ?? stage.executionTimeMillisEstimate ?? 0;
+            const returned = stage.nReturned ?? 'N/A';
+            const docsExamined = stage.docsExamined ?? 'N/A';
+            const keysExamined = stage.totalKeysExamined ?? stage.keysExamined ?? 'N/A';
+            
+            let timeHtml = `${time}ms`;
+            if (time > 100) {
+                timeHtml = `<span class='time-high'>${time}ms</span>`;
+            } else if (time > 10) {
+                timeHtml = `<span class='time-medium'>${time}ms</span>`;
+            }
+
+            let stageDetails = `<strong>${stageName}</strong><br/>` +
+                               (stage.hasOwnProperty('executionTimeMillis') || stage.hasOwnProperty('executionTimeMillisEstimate') ? `Time: ${timeHtml} | ` : '') +
+                               `Returned: ${returned}<br/>` +
+                               (stage.hasOwnProperty('docsExamined') ? `Docs Examined: ${docsExamined}<br/>` : '') +
+                               (stage.hasOwnProperty('keysExamined') || stage.hasOwnProperty('totalKeysExamined') ? `Keys Examined: ${keysExamined}`: '');
+            
+            if (stage.indexName) stageDetails += `<br/>Index: ${stage.indexName}`;
+
+            const stageClass = `stage-${stageName.replace(/_/g, '')}`;
+            mermaidGraph += `    ${currentId}["${stageDetails}"]:::${stageClass};\n`;
+
+            if (parentId) mermaidGraph += `    ${parentId} --> ${currentId};\n`;
+
+            if (stage.inputStage) parseStage(stage.inputStage, currentId);
+            if (stage.inputStages) stage.inputStages.forEach(child => parseStage(child, currentId));
+        }
+
+        // --- Main Parsing Functions ---
+        function parseAggregationPlan(explainData) {
+            const pipelineRootId = `node${nodeId++}`;
+            mermaidGraph += `    ${pipelineRootId}["<strong>AGG_PIPELINE</strong>"]:::stage-AGGPIPELINE;\n`;
+            let backboneLinkIds = [pipelineRootId];
+
+            explainData.stages.forEach(aggStage => {
+                const stageKey = Object.keys(aggStage)[0];
+                const stageContent = aggStage[stageKey];
+                const stageName = stageKey.substring(1).toUpperCase();
+                const entryNodeId = `node${nodeId++}`;
+                backboneLinkIds.push(entryNodeId);
+
+                mermaidGraph += `\n    subgraph "Stage: ${stageName}"\n`;
+                let details = `<strong>${stageName}</strong>`;
+                if (stageKey === '$unionWith') details += `<br/>Collection: ${stageContent.coll}`;
+                const stageClass = `stage-${stageName}`;
+                mermaidGraph += `        ${entryNodeId}["${details}"]:::${stageClass};\n`;
+                
+                const execStages = findExecutionStages(aggStage);
+                if (execStages) {
+                    parseStage(execStages, entryNodeId);
+                }
+                mermaidGraph += `    end\n`;
+            });
+            
+            mermaidGraph += `\n    ${backboneLinkIds.join(' --> ')};\n`;
+        }
+
+        function parseShardedPlan(explainData) {
+            const mergeStage = explainData.executionStats.executionStages;
+            const mergeNodeId = `node${nodeId++}`;
+            parseStage(mergeStage, null); // Parse the merge stage first
+
+            const shardSubgraphs = [];
+            explainData.executionStats.shards.forEach(shard => {
+                const shardName = shard.shardName.replace(/-/g, '_'); // Sanitize shard name for ID
+                const shardEntryId = `node${nodeId++}`;
+                shardSubgraphs.push(shardEntryId);
+
+                mermaidGraph += `\n    subgraph "Shard: ${shard.shardName}"\n`;
+                parseStage(shard.executionStages, shardEntryId);
+                mermaidGraph += `    end\n`;
+            });
+            // Find the SHARD_MERGE node ID to link from shards
+            const mergeNodeMatch = mermaidGraph.match(/(node\d+)\["<strong>SHARD_MERGE/);
+            if (mergeNodeMatch && mergeNodeMatch[1]) {
+                 mermaidGraph += `\n    ${shardSubgraphs.join(' & ')} --> ${mergeNodeMatch[1]};\n`;
+            }
+        }
+
+        const handleVisualize = async () => {
+            resetUI();
+            setLoadingState(true);
+            
+            // Allow UI to update before heavy processing
+            await new Promise(resolve => setTimeout(resolve, 10));
+
+            const rawInput = jsonInput.value.trim();
+            if (!rawInput) {
+                showMessage('Input is empty. Please paste your explain output.', 'error');
+                setLoadingState(false);
+                return;
+            }
+
+            let explainData;
+            let sanitizedInput = '';
+            try {
+                sanitizedInput = sanitizeMongoShellOutput(rawInput);
+                explainData = JSON.parse(sanitizedInput);
+            } catch (error) {
+                showMessage(`Failed to parse input: ${error.message}. Please check if it's a valid explain output.`, 'error');
+                setLoadingState(false);
+                return;
+            }
+
+            displayQueryInfo(explainData);
+            mermaidGraph = getInitialGraphDef();
+            nodeId = 0;
+
+            // *** FIX: More robust check for execution stats ***
+            const hasStats = sanitizedInput.includes('"executionStats"');
+            if (!hasStats) {
+                showMessage('Execution stats not found. Displaying planner output only.', 'info');
+            }
+
+            // Determine plan type and parse
+            if (explainData.stages) {
+                parseAggregationPlan(explainData);
+            } else if (explainData.executionStats?.shards) {
+                parseShardedPlan(explainData);
+            } else if (explainData.executionStats?.executionStages) {
+                parseStage(explainData.executionStats.executionStages, null);
+            } else if (explainData.queryPlanner?.winningPlan) {
+                parseStage(explainData.queryPlanner.winningPlan, null);
+            } else {
+                showMessage('Could not find a valid plan. Please provide output from explain("executionStats") or a basic explain().', 'error');
+                setLoadingState(false);
+                return;
+            }
+            
+            graphContainer.innerHTML = '<div class="text-gray-400">Rendering diagram...</div>';
+            try {
+                const renderId = 'graphDiv-' + new Date().getTime();
+                const { svg } = await mermaid.render(renderId, mermaidGraph);
+                graphContainer.innerHTML = svg;
+                if (hasStats) {
+                    showMessage('Successfully generated the visual plan!', 'success');
+                }
+            } catch (e) {
+                showMessage(`Mermaid Render Error: ${e.message}`, 'error');
+                graphContainer.innerHTML = '<p class="text-red-400">Could not render the diagram.</p>';
+                console.error("Mermaid Render Error:", e);
+                console.error("Generated Graph Definition:", mermaidGraph);
+            } finally {
+                setLoadingState(false);
+            }
+        };
+
+        const loadSampleData = () => {
+            const sample = {
+              "explainVersion": "1",
+              "stages": [
+                {
+                  "$cursor": {
+                    "queryPlanner": {
+                      "namespace": "test.users", "indexFilterSet": false, "parsedQuery": { "age": { "$gt": 25 } },
+                      "winningPlan": { "stage": "COLLSCAN", "filter": { "age": { "$gt": 25 } } }
+                    },
+                    "executionStats": {
+                      "nReturned": 50, "executionTimeMillis": 120, "totalKeysExamined": 0, "totalDocsExamined": 1000,
+                      "executionStages": {
+                        "stage": "COLLSCAN", "filter": { "age": { "$gt": 25 } }, "nReturned": 50,
+                        "executionTimeMillisEstimate": 115, "docsExamined": 1000
+                      }
+                    }
+                  }
+                },
+                {
+                  "$group": { "_id": "$department", "averageAge": { "$avg": "$age" } }
+                },
+                {
+                  "$sort": { "averageAge": -1 }
+                }
+              ],
+              "serverInfo": { "host": "localhost", "port": 27017, "version": "5.0.3" }
+            };
+            jsonInput.value = JSON.stringify(sample, null, 2);
+        };
+
+        // --- Event Listeners ---
+        visualizeBtn.addEventListener('click', handleVisualize);
+        clearBtn.addEventListener('click', handleClear);
+        loadSampleBtn.addEventListener('click', loadSampleData);
+
+    </script>
+</body>
+</html>
