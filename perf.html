@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Benchmark Performance Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #030712; /* A darker gray for the body */
+        }
+        .chart-card {
+            background-color: #111827; /* Darker card background */
+            border: 1px solid #374151; /* Subtle border */
+            transition: all 0.3s ease-in-out;
+        }
+        .chart-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -2px rgba(0, 0, 0, 0.1);
+        }
+        select {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5em 1.5em;
+            padding-right: 2.5rem;
+        }
+    </style>
+</head>
+<body class="text-gray-300 p-4 sm:p-6 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Benchmark Performance Analysis</h1>
+            <p class="text-gray-400 mt-3 max-w-2xl mx-auto">Use the global filter to select a specific test scenario, then explore how different parameters impact latency in the charts below.</p>
+        </header>
+
+        <!-- Main Filters -->
+        <div class="bg-gray-800/50 border border-gray-700 p-6 rounded-xl shadow-lg mb-10 backdrop-blur-sm">
+            <h2 class="text-xl font-semibold mb-4 text-white">Global Scenario Filter</h2>
+            <div class="grid grid-cols-1">
+                <div>
+                    <label for="rpm-filter" class="block text-sm font-medium text-gray-400 mb-2">RPM (Requests Per Minute)</label>
+                    <select id="rpm-filter" class="w-full bg-gray-900 border-gray-600 text-white rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"></select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Grid -->
+        <div class="space-y-8">
+            <!-- Card 1: Impact of topK -->
+            <div class="chart-card p-6 rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold mb-2 text-white">Latency vs. topK</h3>
+                <p class="text-gray-400 mb-4 text-sm">Shows how latency changes when you request more results (topK), holding threads and candidates constant.</p>
+                <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                    <div>
+                        <label for="topk-chart-threads-filter" class="block text-xs font-medium text-gray-400 mb-1">Threads</label>
+                        <select id="topk-chart-threads-filter" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2 text-sm"></select>
+                    </div>
+                    <div>
+                        <label for="topk-chart-numcand-filter" class="block text-xs font-medium text-gray-400 mb-1">NumCandidates</label>
+                        <select id="topk-chart-numcand-filter" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2 text-sm"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-md font-semibold text-center mb-2 text-gray-400">functionalHybdrid</h4>
+                        <canvas id="topkChart_hybrid"></canvas>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-center mb-2 text-gray-400">VectorSearchOnly</h4>
+                        <canvas id="topkChart_vector"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 2: Impact of NumCandidates -->
+            <div class="chart-card p-6 rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold mb-2 text-white">Latency vs. NumCandidates</h3>
+                <p class="text-gray-400 mb-4 text-sm">Shows how latency is affected by the number of candidates scanned, holding threads and topK constant.</p>
+                 <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                    <div>
+                        <label for="numcand-chart-threads-filter" class="block text-xs font-medium text-gray-400 mb-1">Threads</label>
+                        <select id="numcand-chart-threads-filter" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2 text-sm"></select>
+                    </div>
+                    <div>
+                        <label for="numcand-chart-topk-filter" class="block text-xs font-medium text-gray-400 mb-1">topK</label>
+                        <select id="numcand-chart-topk-filter" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2 text-sm"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-md font-semibold text-center mb-2 text-gray-400">functionalHybdrid</h4>
+                        <canvas id="numCandChart_hybrid"></canvas>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-center mb-2 text-gray-400">VectorSearchOnly</h4>
+                        <canvas id="numCandChart_vector"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card 3: Impact of Threads -->
+            <div class="chart-card p-6 rounded-xl shadow-lg">
+                <h3 class="text-xl font-semibold mb-2 text-white">Latency vs. Threads</h3>
+                <p class="text-gray-400 mb-4 text-sm">Shows how latency changes with more concurrent threads, holding topK and candidates constant.</p>
+                <div class="grid grid-cols-2 gap-4 mb-6 bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                    <div>
+                        <label for="threads-chart-topk-filter" class="block text-xs font-medium text-gray-400 mb-1">topK</label>
+                        <select id="threads-chart-topk-filter" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2 text-sm"></select>
+                    </div>
+                    <div>
+                        <label for="threads-chart-numcand-filter" class="block text-xs font-medium text-gray-400 mb-1">NumCandidates</label>
+                        <select id="threads-chart-numcand-filter" class="w-full bg-gray-700 border-gray-600 text-white rounded-md p-2 text-sm"></select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h4 class="text-md font-semibold text-center mb-2 text-gray-400">functionalHybdrid</h4>
+                        <canvas id="threadsChart_hybrid"></canvas>
+                    </div>
+                    <div>
+                        <h4 class="text-md font-semibold text-center mb-2 text-gray-400">VectorSearchOnly</h4>
+                        <canvas id="threadsChart_vector"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Raw CSV data provided by the user
+const csvData = `Pipeline,RPM,Threads,Sample,Reqs,NumCand,topK,P50(ms),P70(ms),P95(ms),P99(ms)
+functionalHybdrid,1000,64,100,1000,100,100,34.74,46.01,187.36,239.44
+functionalHybdrid,1000,64,100,1000,300,100,32.95,46.06,104.94,148.41
+functionalHybdrid,1000,64,100,1000,500,100,43.30,62.23,154.38,208.31
+functionalHybdrid,1000,64,100,1000,500,250,85.46,97.60,130.05,159.71
+functionalHybdrid,1000,64,100,1000,500,500,123.49,141.60,186.48,214.90
+functionalHybdrid,1000,128,100,1000,100,100,32.20,39.45,62.26,80.17
+functionalHybdrid,1000,128,100,1000,300,100,46.48,64.28,117.68,146.38
+functionalHybdrid,1000,128,100,1000,500,100,66.37,144.17,272.24,352.27
+functionalHybdrid,1000,128,100,1000,500,250,162.61,203.48,307.01,371.32
+functionalHybdrid,1000,128,100,1000,500,500,240.05,287.66,425.35,489.62
+functionalHybdrid,1000,256,100,1000,100,100,24.00,27.63,41.76,54.84
+functionalHybdrid,1000,256,100,1000,300,100,42.99,54.81,88.31,112.17
+functionalHybdrid,1000,256,100,1000,500,100,132.16,203.93,395.73,547.67
+functionalHybdrid,1000,256,100,1000,500,250,183.48,248.16,428.19,591.81
+functionalHybdrid,1000,256,100,1000,500,500,485.03,599.42,935.94,1223.84
+VectorSearchOnly,1000,64,100,1000,100,100,30.33,39.13,69.20,91.46
+VectorSearchOnly,1000,64,100,1000,300,100,38.99,48.74,73.08,98.30
+VectorSearchOnly,1000,64,100,1000,500,100,35.79,71.74,137.13,168.00
+VectorSearchOnly,1000,64,100,1000,500,250,88.28,104.95,142.29,185.93
+VectorSearchOnly,1000,64,100,1000,500,500,128.46,146.98,194.82,232.26
+VectorSearchOnly,1000,128,100,1000,100,100,26.57,32.49,48.07,64.72
+VectorSearchOnly,1000,128,100,1000,300,100,35.79,45.09,78.08,94.21
+VectorSearchOnly,1000,128,100,1000,500,100,62.97,125.08,271.28,341.79
+VectorSearchOnly,1000,128,100,1000,500,250,151.65,198.50,286.94,349.01
+VectorSearchOnly,1000,128,100,1000,500,500,234.86,284.72,421.34,526.80
+VectorSearchOnly,1000,256,100,1000,100,100,19.64,23.07,34.62,45.33
+VectorSearchOnly,1000,256,100,1000,300,100,30.87,38.28,60.87,83.22
+VectorSearchOnly,1000,256,100,1000,500,100,105.28,187.66,406.64,489.16
+VectorSearchOnly,1000,256,100,1000,500,250,72.44,102.27,211.08,285.86
+VectorSearchOnly,1000,256,100,1000,500,500,126.11,191.03,338.69,427.03
+functionalHybdrid,10000,64,100,10000,100,100,40.68,48.96,71.35,88.33
+functionalHybdrid,10000,64,100,10000,300,100,37.64,50.60,96.64,130.86
+functionalHybdrid,10000,64,100,10000,500,100,42.50,70.45,164.29,218.67
+functionalHybdrid,10000,64,100,10000,500,250,86.98,102.07,214.20,247.34
+functionalHybdrid,10000,64,100,10000,500,500,118.22,149.33,268.99,302.18
+functionalHybdrid,10000,128,100,10000,100,100,70.24,94.32,158.65,205.13
+functionalHybdrid,10000,128,100,10000,300,100,65.91,88.85,233.03,333.24
+functionalHybdrid,10000,128,100,10000,500,100,43.96,74.63,540.39,719.07
+functionalHybdrid,10000,128,100,10000,500,250,188.28,245.86,373.75,455.85
+functionalHybdrid,10000,128,100,10000,500,500,503.06,625.42,847.88,1006.41
+functionalHybdrid,10000,256,100,10000,100,100,159.87,188.04,253.91,6434.25
+functionalHybdrid,10000,256,100,10000,300,100,159.90,186.36,251.04,4495.12
+functionalHybdrid,10000,256,100,10000,500,100,118.69,208.82,898.01,2123.81
+functionalHybdrid,10000,256,100,10000,500,250,390.09,493.48,730.83,878.84
+functionalHybdrid,10000,256,100,10000,500,500,568.56,701.83,980.70,10394.53
+functionalHybdrid,10000,512,100,10000,100,100,51.43,64.43,104.40,137.21
+functionalHybdrid,10000,512,100,10000,300,100,73.94,94.13,153.45,204.54
+functionalHybdrid,10000,512,100,10000,500,100,189.62,540.38,1433.30,1866.77
+functionalHybdrid,10000,512,100,10000,500,250,317.96,439.72,654.48,7932.25
+functionalHybdrid,10000,512,100,10000,500,500,725.34,878.09,1786.64,13050.47
+VectorSearchOnly,10000,64,100,10000,100,100,41.05,50.47,76.59,96.90
+VectorSearchOnly,10000,64,100,10000,300,100,37.59,50.32,89.51,117.98
+VectorSearchOnly,10000,64,100,10000,500,100,33.91,55.51,199.52,265.46
+VectorSearchOnly,10000,64,100,10000,500,250,94.36,110.59,158.18,190.77
+VectorSearchOnly,10000,64,100,10000,500,500,150.35,177.47,230.32,263.74
+VectorSearchOnly,10000,128,100,10000,100,100,87.27,106.78,154.66,196.87
+VectorSearchOnly,10000,128,100,10000,300,100,96.15,114.13,161.59,205.41
+VectorSearchOnly,10000,128,100,10000,500,100,56.66,99.24,391.87,536.92
+VectorSearchOnly,10000,128,100,10000,500,250,207.32,253.22,357.29,449.66
+VectorSearchOnly,10000,128,100,10000,500,500,298.15,354.10,515.72,609.60
+VectorSearchOnly,10000,256,100,10000,100,100,76.77,110.93,202.75,285.57
+VectorSearchOnly,10000,256,100,10000,300,100,87.00,116.20,208.36,292.50
+VectorSearchOnly,10000,256,100,10000,500,100,47.64,114.35,542.69,3764.93
+VectorSearchOnly,10000,256,100,10000,500,250,263.33,356.10,607.89,792.53
+VectorSearchOnly,10000,256,100,10000,500,500,489.89,593.90,870.10,6274.22
+VectorSearchOnly,10000,512,100,10000,100,100,98.99,120.31,177.14,265.07
+VectorSearchOnly,10000,512,100,10000,300,100,69.96,91.76,177.57,259.58
+VectorSearchOnly,10000,512,100,10000,500,100,70.68,314.27,1557.87,2631.66
+VectorSearchOnly,10000,512,100,10000,500,250,816.14,909.88,1023.44,1180.65
+VectorSearchOnly,10000,512,100,10000,500,500,641.23,909.67,3342.69,10410.08
+functionalHybdrid,50000,64,100,50000,100,100,74.08,85.42,115.54,137.21
+functionalHybdrid,50000,64,100,50000,300,100,49.98,64.38,99.10,123.33
+functionalHybdrid,50000,64,100,50000,500,100,43.14,65.37,175.61,240.41
+functionalHybdrid,50000,64,100,50000,500,250,85.93,96.88,130.75,564.46
+functionalHybdrid,50000,64,100,50000,500,500,123.03,144.04,536.27,634.37
+functionalHybdrid,50000,128,100,50000,100,100,79.36,102.09,166.02,216.92
+functionalHybdrid,50000,128,100,50000,300,100,62.70,91.79,258.56,366.86
+functionalHybdrid,50000,128,100,50000,500,100,49.09,85.17,464.86,631.69
+functionalHybdrid,50000,128,100,50000,500,250,185.59,223.79,655.87,768.28
+functionalHybdrid,50000,128,100,50000,500,500,265.85,326.57,766.67,896.85
+functionalHybdrid,50000,256,100,50000,100,100,166.78,198.00,293.84,512.18
+functionalHybdrid,50000,256,100,50000,300,100,138.60,192.76,411.30,661.13
+functionalHybdrid,50000,256,100,50000,500,100,69.54,177.17,1120.73,1592.73
+functionalHybdrid,50000,256,100,50000,500,250,345.76,427.31,888.11,1162.07
+functionalHybdrid,50000,256,100,50000,500,500,647.02,767.55,1234.69,1561.69
+functionalHybdrid,50000,512,100,50000,100,100,158.22,185.51,278.50,766.91
+functionalHybdrid,50000,512,100,50000,300,100,156.32,185.75,278.34,600.63
+functionalHybdrid,50000,512,100,50000,500,100,176.06,484.60,1910.22,2907.53
+functionalHybdrid,50000,512,100,50000,500,250,392.63,470.91,969.49,2810.75
+functionalHybdrid,50000,512,100,50000,500,500,743.77,889.18,1592.05,34463.40
+VectorSearchOnly,50000,64,100,50000,100,100,42.00,51.44,77.90,97.77
+VectorSearchOnly,50000,64,100,50000,300,100,42.70,51.32,75.21,93.26
+VectorSearchOnly,50000,64,100,50000,500,100,34.49,54.22,216.68,280.39
+VectorSearchOnly,50000,64,100,50000,500,250,94.26,112.47,248.20,288.28
+VectorSearchOnly,50000,64,100,50000,500,500,130.69,157.86,299.95,340.05
+VectorSearchOnly,50000,128,100,50000,100,100,80.30,106.04,183.89,243.62
+VectorSearchOnly,50000,128,100,50000,300,100,88.76,107.41,158.89,202.63
+VectorSearchOnly,50000,128,100,50000,500,100,33.55,55.10,575.28,758.80
+VectorSearchOnly,50000,128,100,50000,500,250,211.86,281.78,438.46,525.45
+VectorSearchOnly,50000,128,100,50000,500,500,393.51,474.99,667.59,793.45
+VectorSearchOnly,50000,256,100,50000,100,100,109.94,143.12,291.36,496.22
+VectorSearchOnly,50000,256,100,50000,300,100,147.61,203.64,375.84,517.14
+VectorSearchOnly,50000,256,100,50000,500,100,41.00,110.07,1178.59,1613.66
+VectorSearchOnly,50000,256,100,50000,500,250,274.26,370.98,660.30,918.19
+VectorSearchOnly,50000,256,100,50000,500,500,502.28,622.89,922.83,1366.40
+VectorSearchOnly,50000,512,100,50000,100,100,487.56,633.40,677.46,686.16
+VectorSearchOnly,50000,512,100,50000,300,100,124.78,164.91,421.58,917.79
+VectorSearchOnly,50000,512,100,50000,500,100,54.14,242.00,1728.30,3384.57
+VectorSearchOnly,50000,512,100,50000,500,250,319.39,451.55,1124.26,10658.37
+VectorSearchOnly,50000,512,100,50000,500,500,564.14,710.18,1578.92,20705.21
+functionalHybdrid,100000,64,100,100000,100,100,41.52,49.02,69.71,85.68
+functionalHybdrid,100000,64,100,100000,300,100,41.96,51.57,83.68,112.49
+functionalHybdrid,100000,64,100,100000,500,100,43.09,67.28,175.81,235.90
+functionalHybdrid,100000,64,100,100000,500,250,86.62,98.22,130.80,977.56
+functionalHybdrid,100000,64,100,100000,500,500,118.77,134.21,207.22,1045.24
+functionalHybdrid,100000,128,100,100000,100,100,84.43,108.55,176.22,220.44
+functionalHybdrid,100000,128,100,100000,300,100,80.77,100.60,165.05,221.47
+functionalHybdrid,100000,128,100,100000,500,100,48.62,87.79,502.64,665.46
+functionalHybdrid,100000,128,100,100000,500,250,190.24,235.95,480.80,1174.83
+functionalHybdrid,100000,128,100,100000,500,500,288.03,353.95,1115.40,1340.66
+functionalHybdrid,100000,256,100,100000,100,100,160.89,191.97,289.56,426.31
+functionalHybdrid,100000,256,100,100000,300,100,162.04,194.09,293.87,428.78
+functionalHybdrid,100000,256,100,100000,500,100,55.58,115.43,1238.83,1641.30
+functionalHybdrid,100000,256,100,100000,500,250,379.11,455.78,1313.56,1632.76
+functionalHybdrid,100000,256,100,100000,500,500,640.07,769.88,1482.19,1945.81
+functionalHybdrid,100000,512,100,100000,100,100,469.26,478.70,1416.73,1439.19
+functionalHybdrid,100000,512,100,100000,300,100,180.75,225.83,620.87,1859.26
+functionalHybdrid,100000,512,100,100000,500,100,123.89,231.33,1634.92,3130.18
+functionalHybdrid,100000,512,100,100000,500,250,357.59,427.58,1239.66,2296.09
+functionalHybdrid,100000,512,100,100000,500,500,728.57,878.07,2199.76,30964.10
+VectorSearchOnly,100000,64,100,100000,100,100,41.66,51.65,80.05,102.49
+VectorSearchOnly,100000,64,100,100000,300,100,41.39,51.57,79.75,100.71
+VectorSearchOnly,100000,64,100,100000,500,100,34.34,56.45,205.26,263.66
+VectorSearchOnly,100000,64,100,100000,500,250,93.23,108.92,341.85,400.49
+VectorSearchOnly,100000,64,100,100000,500,500,138.92,184.33,400.24,483.89
+VectorSearchOnly,100000,128,100,100000,100,100,90.51,112.83,176.60,230.91
+VectorSearchOnly,100000,128,100,100000,300,100,89.21,111.18,172.77,222.30
+VectorSearchOnly,100000,128,100,100000,500,100,35.76,60.44,558.49,751.88
+VectorSearchOnly,100000,128,100,100000,500,250,223.01,285.13,529.13,627.29
+VectorSearchOnly,100000,128,100,100000,500,500,398.26,496.16,715.47,871.34
+VectorSearchOnly,100000,256,100,100000,100,100,117.34,146.37,248.82,401.57
+VectorSearchOnly,100000,256,100,100000,300,100,122.16,166.50,330.27,487.29
+VectorSearchOnly,100000,256,100,100000,500,100,41.41,70.97,821.92,1481.95
+VectorSearchOnly,100000,256,100,100000,500,250,286.00,391.52,730.05,1091.28
+VectorSearchOnly,100000,256,100,100000,500,500,552.49,669.43,1035.50,10011.87
+VectorSearchOnly,100000,512,100,100000,100,100,140.51,208.59,761.05,2788.71
+VectorSearchOnly,100000,512,100,100000,300,100,496.33,611.81,1098.31,1788.93
+VectorSearchOnly,100000,512,100,100000,500,100,99.47,271.41,2351.37,3368.72
+VectorSearchOnly,100000,512,100,100000,500,250,247.32,322.72,683.81,2919.90
+VectorSearchOnly,100000,512,100,100000,500,500,557.73,695.00,1491.81,39940.92
+`;
+
+// --- Data Parsing and Processing ---
+function parseCSV(csv) {
+    const lines = csv.trim().split('\n');
+    const headers = lines[0].split(',').map(h => h.trim());
+    return lines.slice(1).map(line => {
+        const values = line.split(',');
+        const obj = {};
+        headers.forEach((header, i) => {
+            const value = values[i].trim();
+            obj[header] = isNaN(Number(value)) ? value : Number(value);
+        });
+        return obj;
+    });
+}
+
+const data = parseCSV(csvData);
+const metrics = ['P50(ms)', 'P70(ms)', 'P95(ms)', 'P99(ms)'];
+const metricColors = {
+    'P50(ms)': '#3b82f6', // blue
+    'P70(ms)': '#22c55e', // green
+    'P95(ms)': '#f97316', // orange
+    'P99(ms)': '#ef4444'  // red
+};
+
+
+// --- State and DOM Elements ---
+const state = {
+    charts: {}
+};
+
+const rpmFilter = document.getElementById('rpm-filter');
+
+// --- Chart Initialization ---
+function createChart(ctx, type, data, options) {
+    if (Chart.getChart(ctx)) {
+        Chart.getChart(ctx).destroy();
+    }
+    return new Chart(ctx, { type, data, options });
+}
+
+function initializeCharts() {
+    const defaultOptions = {
+        responsive: true,
+        maintainAspectRatio: true,
+        aspectRatio: 1.2,
+        scales: {
+            x: { 
+                title: { display: true, text: 'X-Axis', color: '#9ca3af' },
+                ticks: { color: '#9ca3af' }
+            },
+            y: { 
+                title: { display: true, text: 'Latency (ms)', color: '#9ca3af' },
+                beginAtZero: true,
+                ticks: { color: '#9ca3af' }
+            }
+        },
+        plugins: {
+            legend: { 
+                position: 'top',
+                labels: { color: '#e5e7eb' } 
+            }
+        }
+    };
+
+    state.charts.topkChart_hybrid = createChart(document.getElementById('topkChart_hybrid'), 'bar', {}, JSON.parse(JSON.stringify(defaultOptions)));
+    state.charts.topkChart_vector = createChart(document.getElementById('topkChart_vector'), 'bar', {}, JSON.parse(JSON.stringify(defaultOptions)));
+    state.charts.numCandChart_hybrid = createChart(document.getElementById('numCandChart_hybrid'), 'bar', {}, JSON.parse(JSON.stringify(defaultOptions)));
+    state.charts.numCandChart_vector = createChart(document.getElementById('numCandChart_vector'), 'bar', {}, JSON.parse(JSON.stringify(defaultOptions)));
+    state.charts.threadsChart_hybrid = createChart(document.getElementById('threadsChart_hybrid'), 'bar', {}, JSON.parse(JSON.stringify(defaultOptions)));
+    state.charts.threadsChart_vector = createChart(document.getElementById('threadsChart_vector'), 'bar', {}, JSON.parse(JSON.stringify(defaultOptions)));
+    
+    state.charts.topkChart_hybrid.options.scales.x.title.text = 'topK';
+    state.charts.topkChart_vector.options.scales.x.title.text = 'topK';
+    state.charts.numCandChart_hybrid.options.scales.x.title.text = 'NumCandidates';
+    state.charts.numCandChart_vector.options.scales.x.title.text = 'NumCandidates';
+    state.charts.threadsChart_hybrid.options.scales.x.title.text = 'Threads';
+    state.charts.threadsChart_vector.options.scales.x.title.text = 'Threads';
+}
+
+// --- Filter Population ---
+function populateSelect(element, values, defaultSelection) {
+    const currentValue = element.value;
+    element.innerHTML = '';
+    values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        element.appendChild(option);
+    });
+
+    if (values.map(String).includes(currentValue)) {
+        element.value = currentValue;
+    } else if (defaultSelection !== undefined) {
+        element.value = defaultSelection;
+    } else if (element.options.length > 0) {
+        element.selectedIndex = 0;
+    }
+}
+
+
+function getUniqueValues(key, filter = {}) {
+    let filteredData = data;
+    for (const k in filter) {
+        if (filter[k] === undefined || filter[k] === null || filter[k] === '') continue;
+        filteredData = filteredData.filter(item => String(item[k]) === String(filter[k]));
+    }
+    return [...new Set(filteredData.map(item => item[key]))].sort((a, b) => a - b);
+}
+
+function initializeFilters() {
+    populateSelect(rpmFilter, getUniqueValues('RPM'), 10000);
+    
+    document.querySelectorAll('select').forEach(filter => {
+        filter.addEventListener('change', updateVisualizations);
+    });
+}
+
+// --- Chart Update Logic ---
+function updateVisualizations() {
+    const selectedRPM = Number(rpmFilter.value);
+
+    const baseFilter = { RPM: selectedRPM };
+    const filteredData = data.filter(d => d.RPM === selectedRPM);
+
+    updateTopKChart(filteredData, baseFilter);
+    updateNumCandChart(filteredData, baseFilter);
+    updateThreadsChart(filteredData, baseFilter);
+}
+
+function updateChart(chart, newLabels, newDatasets) {
+    chart.data.labels = newLabels;
+    chart.data.datasets = newDatasets;
+    chart.update();
+}
+
+function createDatasets(chartData, metrics) {
+    return metrics.map(metric => ({
+        label: metric.replace('(ms)', ''),
+        data: chartData.map(d => d[metric]),
+        backgroundColor: metricColors[metric],
+        borderColor: metricColors[metric],
+    }));
+}
+
+// Update "Impact of topK" Chart
+function updateTopKChart(filteredData, baseFilter) {
+    const threadsFilter = document.getElementById('topk-chart-threads-filter');
+    const numCandFilter = document.getElementById('topk-chart-numcand-filter');
+
+    populateSelect(threadsFilter, getUniqueValues('Threads', baseFilter), threadsFilter.value || 64);
+    const threadsValue = threadsFilter.value;
+    populateSelect(numCandFilter, getUniqueValues('NumCand', {...baseFilter, Threads: threadsValue}), numCandFilter.value || 500);
+    const numCandValue = numCandFilter.value;
+
+    const commonFilter = d => d.Threads == threadsValue && d.NumCand == numCandValue;
+
+    const hybridData = filteredData.filter(d => d.Pipeline === 'functionalHybdrid' && commonFilter(d)).sort((a, b) => a.topK - b.topK);
+    const vectorData = filteredData.filter(d => d.Pipeline === 'VectorSearchOnly' && commonFilter(d)).sort((a, b) => a.topK - b.topK);
+    
+    const labels = [...new Set(filteredData.filter(commonFilter).map(d => d.topK))].sort((a,b)=>a-b);
+
+    updateChart(state.charts.topkChart_hybrid, labels, createDatasets(hybridData.filter(d => labels.includes(d.topK)), metrics));
+    updateChart(state.charts.topkChart_vector, labels, createDatasets(vectorData.filter(d => labels.includes(d.topK)), metrics));
+}
+
+// Update "Impact of NumCandidates" Chart
+function updateNumCandChart(filteredData, baseFilter) {
+    const threadsFilter = document.getElementById('numcand-chart-threads-filter');
+    const topKFilter = document.getElementById('numcand-chart-topk-filter');
+
+    populateSelect(threadsFilter, getUniqueValues('Threads', baseFilter), threadsFilter.value || 128);
+    const threadsValue = threadsFilter.value;
+    populateSelect(topKFilter, getUniqueValues('topK', {...baseFilter, Threads: threadsValue}), topKFilter.value || 100);
+    const topKValue = topKFilter.value;
+
+    const commonFilter = d => d.Threads == threadsValue && d.topK == topKValue;
+
+    const hybridData = filteredData.filter(d => d.Pipeline === 'functionalHybdrid' && commonFilter(d)).sort((a, b) => a.NumCand - b.NumCand);
+    const vectorData = filteredData.filter(d => d.Pipeline === 'VectorSearchOnly' && commonFilter(d)).sort((a, b) => a.NumCand - b.NumCand);
+    
+    const labels = [...new Set(filteredData.filter(commonFilter).map(d => d.NumCand))].sort((a,b)=>a-b);
+    
+    updateChart(state.charts.numCandChart_hybrid, labels, createDatasets(hybridData.filter(d => labels.includes(d.NumCand)), metrics));
+    updateChart(state.charts.numCandChart_vector, labels, createDatasets(vectorData.filter(d => labels.includes(d.NumCand)), metrics));
+}
+
+// Update "Impact of Threads" Chart
+function updateThreadsChart(filteredData, baseFilter) {
+    const topKFilter = document.getElementById('threads-chart-topk-filter');
+    const numCandFilter = document.getElementById('threads-chart-numcand-filter');
+
+    populateSelect(topKFilter, getUniqueValues('topK', baseFilter), topKFilter.value || 100);
+    const topKValue = topKFilter.value;
+    populateSelect(numCandFilter, getUniqueValues('NumCand', {...baseFilter, topK: topKValue}), numCandFilter.value || 100);
+    const numCandValue = numCandFilter.value;
+
+    const commonFilter = d => d.topK == topKValue && d.NumCand == numCandValue;
+
+    const hybridData = filteredData.filter(d => d.Pipeline === 'functionalHybdrid' && commonFilter(d)).sort((a, b) => a.Threads - b.Threads);
+    const vectorData = filteredData.filter(d => d.Pipeline === 'VectorSearchOnly' && commonFilter(d)).sort((a, b) => a.Threads - b.Threads);
+
+    const labels = [...new Set(filteredData.filter(commonFilter).map(d => d.Threads))].sort((a,b)=>a-b);
+
+    updateChart(state.charts.threadsChart_hybrid, labels, createDatasets(hybridData.filter(d => labels.includes(d.Threads)), metrics));
+    updateChart(state.charts.threadsChart_vector, labels, createDatasets(vectorData.filter(d => labels.includes(d.Threads)), metrics));
+}
+
+// --- Initial Load ---
+document.addEventListener('DOMContentLoaded', () => {
+    initializeCharts();
+    initializeFilters();
+    updateVisualizations(); // Initial render
+});
+
+</script>
+</body>
+</html>
