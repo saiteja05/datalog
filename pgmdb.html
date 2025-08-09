@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: PostgreSQL vs. MongoDB Transactions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .stat-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 24rem;
+            max-width: 42rem;
+            margin-left: auto;
+            margin-right: auto;
+            flex-grow: 1;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 20rem;
+            }
+        }
+        .anomaly-grid-item {
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+            font-weight: 600;
+        }
+        .anomaly-header {
+            font-weight: 700;
+            font-size: 1.125rem;
+        }
+        .flow-diagram-box {
+            border: 2px solid;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0.5rem 0;
+        }
+        .feature-table-row > div {
+            padding: 0.75rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .feature-table-row:last-child > div {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div class="container mx-auto p-4 md:p-8">
+
+        <header class="text-center mb-12 md:mb-16">
+            <h1 class="text-4xl md:text-6xl font-black text-[#073B4C] mb-2">PostgreSQL vs. MongoDB</h1>
+            <p class="text-xl md:text-2xl font-semibold text-[#118AB2]">A Transactional Deep Dive for Architects</p>
+        </header>
+
+        <main class="space-y-12 md:space-y-20">
+
+            <section id="philosophy">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#073B4C]">Core Philosophies & Default Guarantees</h2>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="stat-card">
+                        <h3 class="text-2xl font-bold mb-4 text-[#073B4C]">PostgreSQL: ACID by Design</h3>
+                        <p class="text-gray-600 mb-6">Built from the ground up as a relational, standards-compliant database, transactions are a core, foundational feature. Its sophisticated MVCC architecture prioritizes correctness and offers a clear hierarchy of isolation levels, giving developers fine-grained control.</p>
+                        <div class="chart-container h-72">
+                            <canvas id="pgDefaultsChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">Defaults to `READ COMMITTED` isolation, preventing dirty reads but allowing other anomalies. Durability is ensured by flushing the Write-Ahead Log (WAL) to disk.</p>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="text-2xl font-bold mb-4 text-[#073B4C]">MongoDB: Atomicity via Documents</h3>
+                        <p class="text-gray-600 mb-6">Originally focused on single-document atomicity, which avoids the need for complex transactions in many cases. Multi-document ACID transactions were added later, layered on top of its distributed architecture and the WiredTiger storage engine's MVCC.</p>
+                        <div class="chart-container h-72">
+                            <canvas id="mongoDefaultsChart"></canvas>
+                        </div>
+                        <p class="text-center text-sm text-gray-500 mt-4">Defaults to `w: "majority"` write concern for high durability. Within a transaction, it provides strong `snapshot` isolation for a consistent view of data.</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section id="features">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#073B4C]">Feature Deep Dive</h2>
+                <p class="max-w-3xl mx-auto text-center text-gray-600 mb-10">Beyond high-level isolation, the specific implementation of features like distributed commits and error handling reveals critical design differences.</p>
+                <div class="stat-card">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                        <div class="font-bold text-lg text-[#073B4C] p-3">Feature</div>
+                        <div class="font-bold text-lg text-[#073B4C] p-3">PostgreSQL</div>
+                        <div class="font-bold text-lg text-[#073B4C] p-3">MongoDB</div>
+                        
+                        <div class="col-span-3 feature-table-row grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                            <div class="font-semibold">Two-Phase Commit (2PC)</div>
+                            <div>Explicit via `PREPARE TRANSACTION`. For external coordinators (XA).</div>
+                            <div>Internal protocol for sharded transactions. Not a user-facing API.</div>
+                        </div>
+                        <div class="col-span-3 feature-table-row grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                            <div class="font-semibold">Automatic Retry</div>
+                            <div>No. Client must catch serialization/deadlock errors and retry.</div>
+                            <div>Yes, for transient errors via driver callback API (`withTransaction`).</div>
+                        </div>
+                        <div class="col-span-3 feature-table-row grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                            <div class="font-semibold">Time Limit</div>
+                            <div>No hard limit. Can be set via `idle_in_transaction_session_timeout`.</div>
+                            <div>Yes. Default 60s (`transactionLifetimeLimitSeconds`), configurable.</div>
+                        </div>
+                         <div class="col-span-3 feature-table-row grid grid-cols-1 md:grid-cols-3 gap-x-4">
+                            <div class="font-semibold">Size Limit</div>
+                            <div>No hard limit. Constrained by system memory and performance.</div>
+                            <div>No hard limit, but constrained by 16MB BSON and Oplog entry size.</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="anomalies">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#073B4C]">Concurrency Anomaly Prevention Matrix</h2>
+                <p class="max-w-3xl mx-auto text-center text-gray-600 mb-10">A key differentiator is how each database handles concurrency phenomena. PostgreSQL offers a spectrum of choices, while MongoDB's transactions provide strong snapshot isolation out of the box.</p>
+                <div class="stat-card overflow-x-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 min-w-[600px]">
+                        <div class="anomaly-header">Anomaly</div>
+                        <div class="anomaly-header text-[#073B4C]">PostgreSQL</div>
+                        <div class="anomaly-header text-[#073B4C]">MongoDB (In Transaction)</div>
+
+                        <div class="anomaly-grid-item bg-gray-100">Non-Repeatable Read</div>
+                        <div class="anomaly-grid-item bg-red-100 text-red-800 border-red-400">Allowed at `READ COMMITTED`</div>
+                        <div class="anomaly-grid-item bg-green-100 text-green-800 border-green-400">Prevented</div>
+
+                        <div class="anomaly-grid-item bg-gray-100">Phantom Read</div>
+                        <div class="anomaly-grid-item bg-red-100 text-red-800 border-red-400">Allowed at `READ COMMITTED`</div>
+                        <div class="anomaly-grid-item bg-green-100 text-green-800 border-green-400">Prevented</div>
+
+                        <div class="anomaly-grid-item bg-gray-100">Write Skew</div>
+                        <div class="anomaly-grid-item bg-yellow-100 text-yellow-800 border-yellow-400">Allowed at `REPEATABLE READ`</div>
+                        <div class="anomaly-grid-item bg-green-100 text-green-800 border-green-400">Prevented (WriteConflict)</div>
+
+                        <div class="anomaly-grid-item bg-gray-100 font-bold">Strongest Level</div>
+                        <div class="anomaly-grid-item bg-blue-100 text-blue-800 border-blue-400">`SERIALIZABLE` (Prevents All)</div>
+                        <div class="anomaly-grid-item bg-green-100 text-green-800 border-green-400">`snapshot` (Prevents All)</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="performance">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#073B4C]">Performance Profile</h2>
+                 <p class="max-w-3xl mx-auto text-center text-gray-600 mb-10">Performance is a function of throughput, latency, and workload complexity. PostgreSQL is optimized for complex relational logic, while MongoDB excels at atomic document operations.</p>
+                <div class="stat-card">
+                    <h3 class="text-2xl font-bold mb-4 text-center text-[#073B4C]">Throughput vs. Latency (Hypothetical)</h3>
+                    <div class="chart-container">
+                        <canvas id="performanceBubbleChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section id="failure-modes">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#073B4C]">Failure Modes: A Tale of Two Systems</h2>
+                <p class="max-w-3xl mx-auto text-center text-gray-600 mb-10">Long-running transactions stress each system differently, revealing their underlying designs. PostgreSQL faces gradual performance degradation, while MongoDB enforces hard limits to protect cluster stability.</p>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div class="stat-card">
+                        <h3 class="text-2xl font-bold mb-2 text-[#073B4C]">PostgreSQL: The Slow Creep of Bloat</h3>
+                        <p class="text-sm text-gray-500 mb-6">A long-running transaction prevents the `VACUUM` process from cleaning up old row versions, causing table and index bloat over time.</p>
+                        <div class="space-y-4">
+                            <div class="flow-diagram-box border-[#118AB2]">
+                                <span class="font-bold">Long Transaction Begins</span><br>
+                                <span class="text-sm">(Establishes old `xmin` horizon)</span>
+                            </div>
+                            <div class="flow-arrow text-[#118AB2]">↓</div>
+                            <div class="flow-diagram-box border-yellow-500 bg-yellow-50">
+                                <span class="font-bold">`VACUUM` Runs</span><br>
+                                <span class="text-sm">Cannot clean up rows newer than `xmin`</span>
+                            </div>
+                            <div class="flow-arrow text-red-500">↓</div>
+                            <div class="flow-diagram-box border-red-500 bg-red-50">
+                                <span class="font-bold text-red-700">Table & Index Bloat</span><br>
+                                <span class="text-sm text-red-600">Consequence: Performance degrades, query times increase.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <h3 class="text-2xl font-bold mb-2 text-[#073B4C]">MongoDB: The Cache Pressure Cooker</h3>
+                        <p class="text-sm text-gray-500 mb-6">Active transactions require the WiredTiger cache to hold old data versions, leading to high cache pressure that can force an abort.</p>
+                        <div class="space-y-4">
+                             <div class="flow-diagram-box border-[#06D6A0]">
+                                <span class="font-bold">Large Transaction Begins</span><br>
+                                <span class="text-sm">(Holds a snapshot in cache)</span>
+                            </div>
+                            <div class="flow-arrow text-yellow-500">↓</div>
+                            <div class="flow-diagram-box border-yellow-500 bg-yellow-50">
+                                <span class="font-bold">Cache Pressure Increases</span><br>
+                                <span class="text-sm">Eviction struggles to keep up</span>
+                            </div>
+                            <div class="flow-arrow text-red-500">↓</div>
+                            <div class="flow-diagram-box border-red-500 bg-red-50">
+                                <span class="font-bold text-red-700">Transaction Aborted</span><br>
+                                <span class="text-sm text-red-600">Consequence: Operation fails and must be retried by the client.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="decision">
+                <h2 class="text-3xl font-bold text-center mb-8 text-[#073B4C]">The Architect's Choice: When to Use Each</h2>
+                <div class="stat-card">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4 text-[#118AB2]">Choose PostgreSQL When...</h3>
+                            <p class="font-semibold text-gray-700 mb-2">Key Question: Is my data's value in its relationships?</p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                <li>The data model is inherently **relational** with complex joins and integrity constraints.</li>
+                                <li>Workloads require intricate, multi-statement SQL logic and aggregations across many tables.</li>
+                                <li>**True serializability** is a non-negotiable requirement to prevent subtle anomalies like write skew.</li>
+                                <li>The scaling strategy is primarily **vertical** (scaling up a single server) for the foreseeable future.</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4 text-[#06D6A0]">Choose MongoDB When...</h3>
+                            <p class="font-semibold text-gray-700 mb-2">Key Question: Is my data's value in its speed and scale?</p>
+                            <ul class="list-disc list-inside space-y-2 text-gray-600">
+                                <li>The data model maps naturally to **JSON documents**, allowing for single-document atomicity.</li>
+                                <li>Transactions are needed for specific, bounded use cases (e.g., an e-commerce order).</li>
+                                <li>**Horizontal write scalability** across a distributed cluster is a primary, day-one requirement.</li>
+                                <li>Developer velocity and schema flexibility are prioritized over strict relational integrity.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+
+        <footer class="text-center mt-16 pt-8 border-t border-gray-200">
+            <p class="text-gray-500">Data synthesized from the technical report "A Rigorous Analysis of Transaction and Isolation Semantics in PostgreSQL and MongoDB".</p>
+            <p class="text-sm text-gray-400 mt-2">Infographic generated on August 9, 2025.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        const palette = {
+            red: '#EF476F',
+            yellow: '#FFD166',
+            green: '#06D6A0',
+            blue: '#118AB2',
+            navy: '#073B4C',
+            lightBlue: 'rgba(17, 138, 178, 0.2)',
+            lightGreen: 'rgba(6, 214, 160, 0.2)',
+        };
+
+        function wrapLabel(str, maxWidth) {
+            if (str.length <= maxWidth) {
+                return str;
+            }
+            const words = str.split(' ');
+            const lines = [];
+            let currentLine = '';
+            for (const word of words) {
+                if ((currentLine + word).length > maxWidth) {
+                    lines.push(currentLine.trim());
+                    currentLine = '';
+                }
+                currentLine += word + ' ';
+            }
+            lines.push(currentLine.trim());
+            return lines.filter(line => line.length > 0);
+        }
+
+        const commonChartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: {
+                            family: 'Inter',
+                            weight: '600'
+                        },
+                        color: palette.navy
+                    }
+                },
+                tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false,
+                    titleFont: { family: 'Inter', weight: 'bold', size: 14 },
+                    bodyFont: { family: 'Inter', size: 12 },
+                    backgroundColor: 'rgba(7, 59, 76, 0.9)',
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                              return label.join(' ');
+                            }
+                            return label;
+                        },
+                        label: function(context) {
+                            const datasetLabel = context.dataset.label || '';
+                            let label = datasetLabel;
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += `Latency: ${context.parsed.y}ms`;
+                            }
+                            return label;
+                        },
+                        afterLabel: function(context) {
+                            if (context.dataset.data[context.dataIndex]) {
+                                const tps = context.dataset.data[context.dataIndex].x;
+                                return `Throughput: ${tps} TPS`;
+                            }
+                            return '';
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        color: palette.navy,
+                        font: { family: 'Inter', weight: '600' }
+                    },
+                    grid: { display: false }
+                },
+                y: {
+                    ticks: {
+                        color: palette.navy,
+                        font: { family: 'Inter', weight: '600' }
+                    },
+                    grid: { color: '#e2e8f0' }
+                }
+            }
+        };
+
+        function createDefaultsCharts() {
+            const pgCtx = document.getElementById('pgDefaultsChart').getContext('2d');
+            new Chart(pgCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Isolation: READ COMMITTED', 'Durability: WAL Flush'],
+                    datasets: [{
+                        data: [50, 50],
+                        backgroundColor: [palette.blue, palette.lightBlue],
+                        borderColor: '#ffffff',
+                        borderWidth: 4
+                    }]
+                },
+                options: { ...commonChartOptions, scales: { x: { display: false }, y: { display: false } }, plugins: { ...commonChartOptions.plugins, tooltip: { enabled: false } } }
+            });
+
+            const mongoCtx = document.getElementById('mongoDefaultsChart').getContext('2d');
+            new Chart(mongoCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Isolation: Snapshot', 'Durability: Majority Ack'],
+                    datasets: [{
+                        data: [50, 50],
+                        backgroundColor: [palette.green, palette.lightGreen],
+                        borderColor: '#ffffff',
+                        borderWidth: 4
+                    }]
+                },
+                options: { ...commonChartOptions, scales: { x: { display: false }, y: { display: false } }, plugins: { ...commonChartOptions.plugins, tooltip: { enabled: false } } }
+            });
+        }
+        
+        function createPerformanceBubbleChart() {
+            const ctx = document.getElementById('performanceBubbleChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bubble',
+                data: {
+                    datasets: [
+                        {
+                            label: 'PostgreSQL',
+                            data: [
+                                { x: 9000, y: 5, r: 15, label: 'Simple OLTP' },
+                                { x: 3500, y: 25, r: 25, label: 'Complex Serializable' }
+                            ],
+                            backgroundColor: 'rgba(17, 138, 178, 0.7)',
+                            borderColor: palette.blue
+                        },
+                        {
+                            label: 'MongoDB',
+                            data: [
+                                { x: 15000, y: 2, r: 10, label: 'Single-Doc Atomic' },
+                                { x: 4000, y: 40, r: 20, label: 'Multi-Doc Transaction' }
+                            ],
+                            backgroundColor: 'rgba(6, 214, 160, 0.7)',
+                            borderColor: palette.green
+                        }
+                    ]
+                },
+                options: {
+                    ...commonChartOptions,
+                    plugins: {
+                        ...commonChartOptions.plugins,
+                        tooltip: {
+                            ...commonChartOptions.plugins.tooltip,
+                             callbacks: {
+                                label: function(context) {
+                                    const data = context.dataset.data[context.dataIndex];
+                                    return `${context.dataset.label}: ${data.label}`;
+                                },
+                                afterLabel: function(context) {
+                                    const data = context.dataset.data[context.dataIndex];
+                                    return [`Throughput: ${data.x} TPS`, `Latency: ${data.y}ms`];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ...commonChartOptions.scales.x,
+                            title: { display: true, text: 'Throughput (Transactions Per Second)', color: palette.navy, font: { weight: 'bold' } }
+                        },
+                        y: {
+                           ...commonChartOptions.scales.y,
+                            title: { display: true, text: 'Latency (ms)', color: palette.navy, font: { weight: 'bold' } }
+                        }
+                    }
+                }
+            });
+        }
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            createDefaultsCharts();
+            createPerformanceBubbleChart();
+        });
+    </script>
+</body>
+</html>
