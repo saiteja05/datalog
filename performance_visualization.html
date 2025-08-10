@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Performance Graph Builder</title>
+    <title>Performance Graph Builder</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chart.js for graphing -->
@@ -25,6 +25,11 @@
             height: 60vh;
             margin-bottom: 2rem;
         }
+        [contenteditable]:focus {
+            outline: 2px solid #6366f1;
+            border-radius: 4px;
+            background-color: rgba(99, 102, 241, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
@@ -35,15 +40,16 @@
             <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">Paste your performance data to generate separate interactive charts for each pipeline.</p>
         </header>
 
-         <!-- Index Information Box -->
+        <!-- Index Information Box -->
         <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3">Index Information</h3>
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3">Index Information <em class="text-sm font-normal text-gray-500">(click text to edit)</em></h3>
             <ul class="space-y-2 text-gray-600 dark:text-gray-400 list-disc list-inside">
-                <li><strong>Vector Index size:</strong> 24GB (12.2M * 512 Dimensions)</li>
-                <li><strong>Lucene Text Index size:</strong> 400 MB (12.2M documents)</li>
-                <li><strong>Scalar Quantization Index size (memory requirements):</strong> 7.92 GB (12.2M * 512 Dimensions)</li>
+                <li contenteditable="true"><strong>Vector Index size:</strong> 24GB (12.2M * 512 Dimensions)</li>
+                <li contenteditable="true"><strong>Lucene Text Index size:</strong> 400 MB (12.2M documents)</li>
+                <li contenteditable="true"><strong>Scalar Index (memory requirements):</strong> 7.92 GB (12.2M * 512 Dimensions)</li>
             </ul>
         </div>
+        <!-- End of Index Information Box -->
 
         <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <!-- Left Panel: Data Input and Controls -->
@@ -179,11 +185,14 @@ VectorSearchOnly       10000   64       100      10000   100       100      19.3
             const categoricalHeaders = headers.filter(h => !h.includes('(ms)'));
             const rpmKey = headers.includes('RPM-Target') ? 'RPM-Target' : 'RPM';
             const filterKeys = ['Pipeline', 'Threads', rpmKey];
-
+            
+            const xAxisOptions = [];
             categoricalHeaders.forEach(header => {
                 if (!filterKeys.includes(header)) {
-                    xAxisSelect.add(new Option(header.replace(/-/g, ' '), header));
-                    groupSelect.add(new Option(header.replace(/-/g, ' '), header));
+                    const option = new Option(header.replace(/-/g, ' '), header);
+                    xAxisSelect.add(option);
+                    groupSelect.add(option.cloneNode(true));
+                    xAxisOptions.push(header);
                 }
             });
             groupSelect.add(new Option('None', 'none'), 0);
@@ -196,8 +205,23 @@ VectorSearchOnly       10000   64       100      10000   100       100      19.3
             rpmFilterSelect.add(new Option('All RPMs', 'all'));
             uniqueRPMs.forEach(rpm => rpmFilterSelect.add(new Option(rpm, rpm)));
 
-            xAxisSelect.value = [...xAxisSelect.options].some(o => o.value === oldX) ? oldX : (xAxisSelect.options[0]?.value || '');
-            groupSelect.value = [...groupSelect.options].some(o => o.value === oldGroup) ? oldGroup : 'none';
+            // Restore old selections if they still exist, otherwise set smart defaults
+            // This prevents the axis from always defaulting to the first available option ("Sample" in many cases)
+            if ([...xAxisSelect.options].some(o => o.value === oldX)) {
+                 xAxisSelect.value = oldX;
+            } else if (xAxisOptions.includes('NumCand')) {
+                xAxisSelect.value = 'NumCand'; // Smart default
+            } else {
+                xAxisSelect.value = xAxisOptions[0] || ''; // Fallback to first
+            }
+
+            if ([...groupSelect.options].some(o => o.value === oldGroup)) {
+                groupSelect.value = oldGroup;
+            } else {
+                const groupDefault = xAxisOptions.find(o => ['topK', 'TopK', 'Limit'].includes(o));
+                groupSelect.value = groupDefault || 'none'; // Smart default for grouping
+            }
+
             threadsFilterSelect.value = [...threadsFilterSelect.options].some(o => o.value === oldThreads) ? oldThreads : 'all';
             rpmFilterSelect.value = [...rpmFilterSelect.options].some(o => o.value === oldRpm) ? oldRpm : 'all';
         }
@@ -254,6 +278,12 @@ VectorSearchOnly       10000   64       100      10000   100       100      19.3
             const groupKey = groupSelect.value;
             const percentileKeys = ['P50(ms)', 'P70(ms)', 'P95(ms)', 'P99(ms)'];
 
+            // Create a heading for the pipeline
+            const heading = document.createElement('h2');
+            heading.textContent = pipelineName;
+            heading.className = 'text-2xl font-bold text-center text-gray-800 dark:text-gray-200';
+            chartsContainer.appendChild(heading);
+
             const chartWrapper = document.createElement('div');
             chartWrapper.className = 'bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg relative chart-wrapper';
             const canvas = document.createElement('canvas');
@@ -297,7 +327,6 @@ VectorSearchOnly       10000   64       100      10000   100       100      19.3
                 };
             });
             
-            const mainTitle = pipelineName;
             let subTitle = `Latency Percentiles by ${xKey.replace(/-/g, ' ')}`;
             if (groupKey !== 'none' && groupKey) {
                 subTitle += ` (Sub-Grouped by ${groupKey.replace(/-/g, ' ')})`;
@@ -312,15 +341,9 @@ VectorSearchOnly       10000   64       100      10000   100       100      19.3
                     plugins: {
                         title: {
                             display: true,
-                            text: mainTitle,
-                            font: { size: 20, weight: 'bold' },
-                            color: document.body.classList.contains('dark') ? '#e5e7eb' : '#1f2937'
-                        },
-                        subtitle: {
-                            display: true,
-                            text: subTitle,
-                            font: { size: 14 },
-                            color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563',
+                            text: subTitle, // The main title is now an external H2 element
+                            font: { size: 16 },
+                             color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563',
                             padding: { bottom: 15 }
                         },
                         legend: {
