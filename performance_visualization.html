@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Performance Graph Builder</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js for graphing -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom styles for better dark mode experience */
+        .dark .bg-gray-800 { background-color: #1f2937; }
+        .dark .text-gray-300 { color: #d1d5db; }
+        .dark .border-gray-600 { border-color: #4b5563; }
+        .dark .hover\:bg-gray-700:hover { background-color: #374151; }
+        .dark .focus\:ring-indigo-500:focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); }
+        .chart-wrapper {
+            height: 60vh;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-600 dark:text-indigo-400">Dynamic Performance Graph Builder</h1>
+            <p class="mt-2 text-lg text-gray-600 dark:text-gray-400">Paste your performance data to generate separate interactive charts for each pipeline.</p>
+        </header>
+
+         <!-- Index Information Box -->
+        <div class="mb-8 p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+            <h3 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3">Index Information</h3>
+            <ul class="space-y-2 text-gray-600 dark:text-gray-400 list-disc list-inside">
+                <li><strong>Vector Index size:</strong> 24GB (12.2M * 512 Dimensions)</li>
+                <li><strong>Lucene Text Index size:</strong> 400 MB (12.2M documents)</li>
+                <li><strong>Scalar Index (memory requirements):</strong> 7.92 GB (12.2M * 512 Dimensions)</li>
+            </ul>
+        </div>
+
+        <main class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left Panel: Data Input and Controls -->
+            <div class="lg:col-span-1 bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg self-start sticky top-8">
+                <h2 class="text-2xl font-semibold mb-4 border-b border-gray-300 dark:border-gray-600 pb-2">1. Input Data</h2>
+                <textarea id="dataInput" class="w-full h-64 p-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition" placeholder="Paste your performance data here..."></textarea>
+                
+                <div id="message" class="mt-4 text-sm text-red-500 dark:text-red-400"></div>
+
+                <h2 class="text-2xl font-semibold mb-4 mt-6 border-b border-gray-300 dark:border-gray-600 pb-2">2. Configure Graphs</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label for="threadsFilterSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Filter by Threads</label>
+                        <select id="threadsFilterSelect" class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition"></select>
+                    </div>
+                     <div>
+                        <label for="rpmFilterSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Filter by RPM</label>
+                        <select id="rpmFilterSelect" class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition"></select>
+                    </div>
+                    <div>
+                        <label for="xAxisSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300">X-Axis (Category)</label>
+                        <select id="xAxisSelect" class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition"></select>
+                    </div>
+                    <div>
+                        <label for="groupSelect" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Group By (Sub-Category)</label>
+                        <select id="groupSelect" class="mt-1 block w-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition"></select>
+                    </div>
+                </div>
+                 <button id="generateBtn" class="mt-6 w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800 transition-transform transform hover:scale-105">
+                    Generate / Update Graphs
+                </button>
+            </div>
+
+            <!-- Right Panel: Charts Display -->
+            <div id="chartsContainer" class="lg:col-span-2 space-y-8">
+                <!-- Charts will be dynamically inserted here -->
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Pre-fill textarea with the original data format to show it's fixed
+        const initialData = `Host CPU count 64
+======================================================================================================================================================
+Pipeline               RPM     Threads  Sample   Reqs    NumCand   topK     P50(ms)   P70(ms)   P95(ms)   P99(ms)   
+======================================================================================================================================================
+functionalHybdrid      1000    64       100      1000    100       100      23.38     34.59     155.64    218.32    
+functionalHybdrid      1000    64       100      1000    300       100      23.37     28.51     56.98     94.35     
+VectorSearchOnly       1000    64       100      1000    100       100      15.41     19.14     45.91     78.20     
+VectorSearchOnly       1000    64       100      1000    300       100      19.09     23.84     58.30     96.45     
+functionalHybdrid      10000   64       100      10000   100       100      21.33     28.05     68.03     108.45    
+VectorSearchOnly       10000   64       100      10000   100       100      19.31     27.59     76.31     136.77
+`;
+        document.getElementById('dataInput').value = initialData.trim();
+
+        const dataInputEl = document.getElementById('dataInput');
+        const generateBtn = document.getElementById('generateBtn');
+        const xAxisSelect = document.getElementById('xAxisSelect');
+        const groupSelect = document.getElementById('groupSelect');
+        const threadsFilterSelect = document.getElementById('threadsFilterSelect');
+        const rpmFilterSelect = document.getElementById('rpmFilterSelect');
+        const messageEl = document.getElementById('message');
+        const chartsContainer = document.getElementById('chartsContainer');
+        let performanceCharts = [];
+
+        // --- Data Parsing Logic ---
+        function parseData(text) {
+            const lines = text.split('\n').filter(line => line.trim() !== '' && !line.startsWith('===') && !line.toLowerCase().includes('host cpu count'));
+            const headerIndex = lines.findIndex(line => line.includes('Pipeline'));
+            if (headerIndex === -1) throw new Error("Could not find header row. Make sure 'Pipeline' column exists.");
+
+            const headerLine = lines[headerIndex];
+            const dataLines = lines.slice(headerIndex + 1);
+
+            let headers;
+            let data;
+            
+            // Sanitize all lines by replacing non-breaking spaces with regular spaces
+            const sanitizedHeaderLine = headerLine.trim().replace(/\u00A0/g, ' ');
+            const sanitizedDataLines = dataLines.map(line => line.trim().replace(/\u00A0/g, ' '));
+
+            // Check for Format 2 (with multi-word headers like "RPM Target")
+            if (sanitizedHeaderLine.includes('RPM Target')) {
+                const processedHeader = sanitizedHeaderLine
+                    .replace(/RPM Target/g, 'RPM-Target')
+                    .replace(/RPM Actual/g, 'RPM-Actual');
+                headers = processedHeader.split(/\s+/);
+
+                data = sanitizedDataLines.map(line => {
+                    const processedLine = line.replace(/(\d+)\s+\(/, '$1(');
+                    const values = processedLine.split(/\s+/);
+                    if (values.length !== headers.length) return null;
+
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        const rawValue = values[index];
+                        const cleanValue = rawValue.includes('(') ? rawValue.split('(')[0] : rawValue;
+                        row[header] = isNaN(parseFloat(cleanValue)) ? cleanValue : parseFloat(cleanValue);
+                    });
+                    return row;
+                }).filter(Boolean);
+
+            } else { // Assume Format 1 (single-word headers)
+                headers = sanitizedHeaderLine.split(/\s+/);
+                data = sanitizedDataLines.map(line => {
+                    const values = line.split(/\s+/);
+                    if (values.length !== headers.length) return null;
+
+                    const row = {};
+                    headers.forEach((header, index) => {
+                        const value = values[index];
+                        row[header] = isNaN(parseFloat(value)) ? value : parseFloat(value);
+                    });
+                    return row;
+                }).filter(Boolean);
+            }
+
+            return { headers, data };
+        }
+
+        // --- UI Population Logic ---
+        function populateSelectors(headers, data) {
+            const oldX = xAxisSelect.value;
+            const oldGroup = groupSelect.value;
+            const oldThreads = threadsFilterSelect.value;
+            const oldRpm = rpmFilterSelect.value;
+
+            xAxisSelect.innerHTML = '';
+            groupSelect.innerHTML = '';
+            threadsFilterSelect.innerHTML = '';
+            rpmFilterSelect.innerHTML = '';
+
+            const categoricalHeaders = headers.filter(h => !h.includes('(ms)'));
+            const rpmKey = headers.includes('RPM-Target') ? 'RPM-Target' : 'RPM';
+            const filterKeys = ['Pipeline', 'Threads', rpmKey];
+
+            categoricalHeaders.forEach(header => {
+                if (!filterKeys.includes(header)) {
+                    xAxisSelect.add(new Option(header.replace(/-/g, ' '), header));
+                    groupSelect.add(new Option(header.replace(/-/g, ' '), header));
+                }
+            });
+            groupSelect.add(new Option('None', 'none'), 0);
+
+            const uniqueThreads = [...new Set(data.map(item => item.Threads))].sort((a, b) => a - b);
+            threadsFilterSelect.add(new Option('All Threads', 'all'));
+            uniqueThreads.forEach(thread => threadsFilterSelect.add(new Option(thread, thread)));
+            
+            const uniqueRPMs = [...new Set(data.map(item => item[rpmKey]))].sort((a, b) => a - b);
+            rpmFilterSelect.add(new Option('All RPMs', 'all'));
+            uniqueRPMs.forEach(rpm => rpmFilterSelect.add(new Option(rpm, rpm)));
+
+            xAxisSelect.value = [...xAxisSelect.options].some(o => o.value === oldX) ? oldX : (xAxisSelect.options[0]?.value || '');
+            groupSelect.value = [...groupSelect.options].some(o => o.value === oldGroup) ? oldGroup : 'none';
+            threadsFilterSelect.value = [...threadsFilterSelect.options].some(o => o.value === oldThreads) ? oldThreads : 'all';
+            rpmFilterSelect.value = [...rpmFilterSelect.options].some(o => o.value === oldRpm) ? oldRpm : 'all';
+        }
+
+        // --- Chart Generation Logic ---
+        function generateCharts() {
+            messageEl.textContent = '';
+            performanceCharts.forEach(chart => chart.destroy());
+            performanceCharts = [];
+            chartsContainer.innerHTML = '';
+
+            try {
+                const rawData = dataInputEl.value;
+                if (!rawData.trim()) {
+                    messageEl.textContent = 'Data input is empty.';
+                    return;
+                }
+                const { headers, data } = parseData(rawData);
+
+                populateSelectors(headers, data);
+
+                const selectedThread = threadsFilterSelect.value;
+                const selectedRpm = rpmFilterSelect.value;
+                const rpmKey = headers.includes('RPM-Target') ? 'RPM-Target' : 'RPM';
+                
+                let filteredData = data;
+                if (selectedThread !== 'all') {
+                    filteredData = filteredData.filter(item => item.Threads == selectedThread);
+                }
+                if (selectedRpm !== 'all') {
+                    filteredData = filteredData.filter(item => item[rpmKey] == selectedRpm);
+                }
+
+                const uniquePipelines = [...new Set(filteredData.map(item => item.Pipeline))];
+
+                if (uniquePipelines.length === 0) {
+                     chartsContainer.innerHTML = '<p class="text-center text-gray-500 dark:text-gray-400">No data available for the selected filters.</p>';
+                     return;
+                }
+
+                uniquePipelines.forEach(pipelineName => {
+                    const pipelineData = filteredData.filter(item => item.Pipeline === pipelineName);
+                    createSingleChart(pipelineName, pipelineData);
+                });
+
+            } catch (error) {
+                console.error("Chart generation failed:", error);
+                messageEl.textContent = `Error: ${error.message}`;
+            }
+        }
+        
+        function createSingleChart(pipelineName, data) {
+            const xKey = xAxisSelect.value;
+            const groupKey = groupSelect.value;
+            const percentileKeys = ['P50(ms)', 'P70(ms)', 'P95(ms)', 'P99(ms)'];
+
+            const chartWrapper = document.createElement('div');
+            chartWrapper.className = 'bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg relative chart-wrapper';
+            const canvas = document.createElement('canvas');
+            chartWrapper.appendChild(canvas);
+            chartsContainer.appendChild(chartWrapper);
+            
+            const ctx = canvas.getContext('2d');
+
+            let labels;
+            if (groupKey === 'none' || !groupKey) {
+                labels = [...new Set(data.map(item => item[xKey]))].sort((a, b) => a - b);
+            } else {
+                data.forEach(item => {
+                    item.compositeLabel = `${xKey.replace(/-/g, ' ')}: ${item[xKey]} | ${groupKey.replace(/-/g, ' ')}: ${item[groupKey]}`;
+                });
+                labels = [...new Set(data.map(item => item.compositeLabel))].sort();
+            }
+
+            const colorPalette = [
+                'rgba(54, 162, 235, 0.8)', 'rgba(75, 192, 192, 0.8)',
+                'rgba(255, 206, 86, 0.8)', 'rgba(255, 99, 132, 0.8)'
+            ];
+
+            const datasets = percentileKeys.map((pKey, index) => {
+                const chartData = labels.map(label => {
+                    let point;
+                    if (groupKey === 'none' || !groupKey) {
+                        point = data.find(item => item[xKey] == label);
+                    } else {
+                        point = data.find(item => item.compositeLabel === label);
+                    }
+                    return point ? point[pKey] : null;
+                });
+
+                return {
+                    label: pKey,
+                    data: chartData,
+                    backgroundColor: colorPalette[index % colorPalette.length],
+                    borderColor: colorPalette[index % colorPalette.length].replace('0.8', '1'),
+                    borderWidth: 1
+                };
+            });
+            
+            const mainTitle = pipelineName;
+            let subTitle = `Latency Percentiles by ${xKey.replace(/-/g, ' ')}`;
+            if (groupKey !== 'none' && groupKey) {
+                subTitle += ` (Sub-Grouped by ${groupKey.replace(/-/g, ' ')})`;
+            }
+
+            const newChart = new Chart(ctx, {
+                type: 'bar',
+                data: { labels, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: mainTitle,
+                            font: { size: 20, weight: 'bold' },
+                            color: document.body.classList.contains('dark') ? '#e5e7eb' : '#1f2937'
+                        },
+                        subtitle: {
+                            display: true,
+                            text: subTitle,
+                            font: { size: 14 },
+                            color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563',
+                            padding: { bottom: 15 }
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: { color: document.body.classList.contains('dark') ? '#e5e7eb' : '#374151' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: (groupKey === 'none' || !groupKey) ? xKey.replace(/-/g, ' ') : 'Configuration',
+                                font: { size: 14, weight: 'bold' },
+                                color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563'
+                            },
+                            ticks: { color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563' }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Latency (ms)',
+                                font: { size: 14, weight: 'bold' },
+                                color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563'
+                            },
+                            ticks: { color: document.body.classList.contains('dark') ? '#d1d5db' : '#4b5563' },
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+            performanceCharts.push(newChart);
+        }
+
+        // --- Event Listeners ---
+        generateBtn.addEventListener('click', generateCharts);
+        [threadsFilterSelect, rpmFilterSelect, xAxisSelect, groupSelect].forEach(el => el.addEventListener('change', generateCharts));
+
+        // Initial chart generation on page load
+        window.addEventListener('load', generateCharts);
+    </script>
+</body>
+</html>
