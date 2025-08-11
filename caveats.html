@@ -113,6 +113,14 @@
                     <p class="text-gray-400 mb-6">THe fact that we have to rely on MongoD for fectching data for vector search instead of directly covering it using MongoT is a big problem.Even if I fetch only _id it still does a lookup on mongoD, this is not good for use cases with high recall even when using BinData vectors, this coupled with hybrid search being reliant on underlying limitations of UnionWith is going to lead to bottlenecks as concurrency requirements grow. </p>
                 </div>
             </div>
+           
+                     <!-- Section 4: Problem of Stored source -->
+            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-green-400 mb-3">Serial Hybrid Search</h2>
+                    <p class="text-gray-400 mb-6">Our implementation of hybrid search relies on UnionWith and hence all the stages are paralle.<b><a href=" https://docs.google.com/document/d/15zcKeG3geJ1f2EkCB7YNE8r7FNswJX-FqHv-vx4IdE4/edit?tab=t.0" >Make Union parallel!</a></b> </p>
+                </div>
+            </div>
 
         </div>
     </div>
