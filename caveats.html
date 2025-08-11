@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide: Qdrant Performance Features</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .diagram-component, .simd-block {
+            transition: all 0.3s ease-in-out;
+        }
+        .query-path {
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: dash 1.5s ease-out forwards;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+    </style>
+</head>
+<body class="bg-black text-gray-300 antialiased">
+
+    <div class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
+        <!-- Header -->
+        <header class="text-center mb-12">
+            <h1 class="text-4xl sm:text-5xl font-bold text-green-400 mb-4">What makes a difference at Scale?</h1>
+            <p class="text-lg text-gray-400">Key implementational factos</p>
+        </header>
+
+        <!-- Main Content Sections -->
+        <div class="space-y-12">
+
+            <!-- Section 1: Partitioned HNSW -->
+            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-green-400 mb-3">Partitioned HNSW for Segmentation and high Performance</h2>
+                    <p class="text-gray-400 mb-6">Partitioned HNSW is a key performance feature for multi-tenant/high performance requirement applications with little tradeoff in accuracy. Instead of building one massive, complex HNSW graph for all users, ex : Qdrant creates a small, independent graph for each tenant inside a single collection. When a query for a specific tenant arrives, Qdrant only searches within that tenant's compact, isolated graph. This dramatically reduces the search space, leading to lower latency and higher throughput. It also prevents the "noisy neighbor" problem, where data from one large tenant could degrade the search performance for others.</p>
+                    
+                    <div class="mt-4 p-4 rounded-lg bg-black">
+                        <svg id="partition-svg" viewBox="0 0 600 350" class="w-full"></svg>
+                    </div>
+                    
+                    <div class="mt-6 text-center space-x-4">
+                        <button onclick="renderPartitionDiagram('Shirts')" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Query for Shirts</button>
+                        <button onclick="renderPartitionDiagram('Trousers')" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Query for Trousers</button>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold text-green-400 mt-8 mb-4">Key Advantages</h3>
+                    <div class="grid md:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">⚡️ Faster Performance</h4>
+                            <p class="text-gray-400">By searching a much smaller graph, queries complete with lower latency. This also improves CPU cache efficiency, as the data being searched is more localized and relevant, further boosting speed.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">🛡️ Data Isolation</h4>
+                            <p class="text-gray-400">It's impossible for one tenant's query to accidentally see another tenant's data, ensuring strict security.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">💰 Resource Efficiency</h4>
+                            <p class="text-gray-400">Manages thousands of tenants in one collection, avoiding the massive overhead of creating a separate collection for each user.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Scalar Quantization & SIMD -->
+            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-green-400 mb-3">Scalar Quantization & SIMD</h2>
+                    <p class="text-gray-400 mb-6">Scalar quantization compresses vectors by reducing the precision of each number (e.g., from a 32-bit float to an 8-bit integer). This makes queries up to **2x faster** because of how modern CPUs work with SIMD ("Single Instruction, Multiple Data") registers.</p>
+
+                    <div class="mt-4 p-4 rounded-lg bg-black">
+                        <svg id="simd-svg" viewBox="0 0 600 250" class="w-full"></svg>
+                    </div>
+
+                    <div class="mt-6 text-center space-x-4">
+                        <button onclick="renderSimdDiagram('float')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg">Process Floats (32-bit)</button>
+                        <button onclick="renderSimdDiagram('int')" class="bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded-lg">Process Integers (8-bit)</button>
+                    </div>
+
+                    <h3 class="text-2xl font-semibold text-green-400 mt-8 mb-4">Key Advantages</h3>
+                    <div class="grid md:grid-cols-2 gap-6 text-center">
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">🚀 Faster Queries</h4>
+                            <p class="text-gray-400">A CPU's SIMD register has a fixed size (e.g., 256 bits). You can fit **4x more** 8-bit integers than 32-bit floats into it. This means the CPU processes 4x more data in a single operation, leading to a massive speedup.</p>
+                        </div>
+                        <div>
+                            <h4 class="text-xl font-bold mb-2">💾 Less Memory</h4>
+                            <p class="text-gray-400">Compressing vectors reduces their memory footprint by **75%**. This allows you to fit far more vectors into RAM, reducing the need for slower disk access and lowering hardware costs.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section 3: Tokenized Pre-filtering -->
+            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-green-400 mb-3">Tokenized Pre-filtering</h2>
+                    <p class="text-gray-400 mb-6">A standout performance feature, most powerfully implemented in Qdrant, is the ability to use token-based full-text filters *before* executing the vector search. This allows for partial matching (e.g., a filter for "search" can match documents containing "searching" or "searched"). By drastically narrowing down the candidate pool before the computationally expensive vector similarity calculation begins, this pre-filtering step provides a significant boost to query speed and efficiency. While Azure and Atlas also support pre-filtering, Qdrant's architecture is specifically optimized to integrate these payload-based filters directly into the HNSW graph traversal, offering a distinct performance advantage.</p>
+                </div>
+            </div>
+
+                  
+            <!-- Section 4: Problem of Stored source -->
+            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                <div class="p-8">
+                    <h2 class="text-3xl font-bold text-green-400 mb-3">Two Hop Problem</h2>
+                    <p class="text-gray-400 mb-6">THe fact that we have to rely on MongoD for fectching data for vector search instead of directly covering it using MongoT is a big problem.Even if I fetch only _id it still does a lookup on mongoD, this is not good for use cases with high recall even when using BinData vectors, this coupled with hybrid search being reliant on underlying limitations of UnionWith is going to lead to bottlenecks as concurrency requirements grow. </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // --- Partitioned HNSW Diagram Logic ---
+        const partitionSVG = document.getElementById('partition-svg');
+        if (partitionSVG) {
+            const tenants = {
+                Trousers: { color: '#3b82f6', x: 125 },
+                Shirts: { color: '#ef4444', x: 300 },
+                Dresses: { color: '#a855f7', x: 475 }
+            };
+
+            window.renderPartitionDiagram = (highlightedTenant = null) => {
+                let svgContent = `
+                    <defs><marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#9ca3af" /></marker></defs>
+                    <rect x="1" y="1" width="598" height="348" rx="10" fill="none" stroke="#374151" />
+                    <text x="300" y="30" font-size="16" fill="#a0aec0" text-anchor="middle">Single Qdrant Collection</text>
+                    <!-- Tenant Partitions -->
+                    <g id="tenant-a-group"><rect x="50" y="150" width="150" height="150" rx="8" fill="#1f2937" stroke="${tenants.Trousers.color}" /><text x="125" y="280" fill="${tenants.Trousers.color}" text-anchor="middle">HNSW (Trousers)</text></g>
+                    <g id="tenant-b-group"><rect x="225" y="150" width="150" height="150" rx="8" fill="#1f2937" stroke="${tenants.Shirts.color}" /><text x="300" y="280" fill="${tenants.Shirts.color}" text-anchor="middle">HNSW (Shirts)</text></g>
+                    <g id="tenant-c-group"><rect x="400" y="150" width="150" height="150" rx="8" fill="#1f2937" stroke="${tenants.Dresses.color}" /><text x="475" y="280" fill="${tenants.Dresses.color}" text-anchor="middle">HNSW (Dresses))</text></g>
+                `;
+
+                if (highlightedTenant && tenants[highlightedTenant]) {
+                    const targetX = tenants[highlightedTenant].x;
+                    svgContent += `
+                        <circle cx="300" cy="80" r="15" fill="${tenants[highlightedTenant].color}" />
+                        <text x="300" y="85" fill="white" text-anchor="middle" font-size="12">Query</text>
+                        <path class="query-path" d="M 300 95 C 300 120, ${targetX} 120, ${targetX} 150" stroke="${tenants[highlightedTenant].color}" stroke-width="3" fill="none" marker-end="url(#arrow)" />
+                    `;
+                }
+                partitionSVG.innerHTML = svgContent;
+            };
+            renderPartitionDiagram();
+        }
+
+        // --- SIMD Diagram Logic ---
+        const simdSVG = document.getElementById('simd-svg');
+        if (simdSVG) {
+            window.renderSimdDiagram = (type) => {
+                let svgContent = `
+                    <text x="300" y="20" font-size="16" fill="#a0aec0" text-anchor="middle">256-bit SIMD Register (The "Cargo Truck")</text>
+                    <rect x="50" y="150" width="500" height="50" rx="5" fill="#2d3748" stroke="#4a5568" />
+                    <text x="300" y="180" text-anchor="middle" fill="#a0aec0" font-size="14">CPU Processes All Lanes in One Go</text>
+                `;
+
+                if (type === 'float') {
+                    for (let i = 0; i < 8; i++) {
+                        svgContent += `<rect class="simd-block" x="${55 + i * 62}" y="50" width="52" height="50" rx="3" fill="#a78bfa" /><text x="${81 + i * 62}" y="80" fill="black" font-size="10" text-anchor="middle">float32</text>`;
+                    }
+                } else if (type === 'int') {
+                    for (let i = 0; i < 32; i++) {
+                        svgContent += `<rect class="simd-block" x="${52 + i * 15.5}" y="50" width="10.5" height="50" rx="2" fill="#facc15" />`;
+                    }
+                }
+                simdSVG.innerHTML = svgContent;
+            };
+            renderSimdDiagram('float');
+        }
+    });
+    </script>
+</body>
+</html>
