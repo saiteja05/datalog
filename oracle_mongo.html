@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Oracle to MongoDB Developer Deep Dive</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind to use the Inter font -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'mongo-dark': '#0f172a', // slate-900
+                        'mongo-blue': '#475569', // slate-600
+                        'mongo-accent': '#10b981', // emerald-500
+                        'mongo-light': '#f1f5f9', // slate-100
+                        'mongo-strategy': '#fcd34d', // amber-300
+                        'mongo-dev': '#38bdf8', // sky-400
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for better visual integration in dark mode */
+        body::-webkit-scrollbar {
+            width: 8px;
+        }
+        body::-webkit-scrollbar-track {
+            background: #1e293b; /* dark background */
+        }
+        body::-webkit-scrollbar-thumb {
+            background-color: #475569; /* slate-600 */
+            border-radius: 20px;
+            border: 2px solid #0f172a;
+        }
+        .code-container {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 0.5rem;
+        }
+        .code-tab.active {
+            border-bottom: 2px solid #10b981;
+            color: #10b981;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="bg-mongo-dark text-mongo-light font-sans min-h-screen">
+
+    <!-- Fixed Header -->
+    <header class="sticky top-0 z-50 bg-mongo-dark/95 backdrop-blur-sm shadow-xl p-4 md:p-6 border-b border-mongo-blue">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-mongo-light tracking-tight">
+                Oracle <span class="text-mongo-accent">→</span> MongoDB
+            </h1>
+            <span class="hidden sm:block text-sm md:text-base text-mongo-blue font-medium">Developer Deep Dive Guide</span>
+        </div>
+    </header>
+
+    <div id="content" class="max-w-7xl mx-auto p-4 md:p-8">
+
+        <!-- Introduction Section -->
+        <section class="mb-12 p-6 bg-slate-800 rounded-xl shadow-2xl border-l-4 border-mongo-accent">
+            <h2 class="text-3xl font-bold mb-4 text-mongo-accent">The Developer Experience Shift</h2>
+            <p class="text-lg text-slate-300">
+                Migrating from Oracle's strict relational model to MongoDB's flexible document model fundamentally changes how developers approach data. This guide provides a detailed breakdown of how traditional Oracle features are implemented, replaced, or modernized in the MongoDB ecosystem, focusing on the architectural and code-level details.
+            </p>
+            <p class="mt-4 text-sm text-slate-400">
+                **Core Benefit:** Moving towards flexible schemas and rich documents often allows for **atomic, single-document operations**, reducing the need for complex, explicit multi-statement transactions prevalent in Oracle PL/SQL.
+            </p>
+        </section>
+
+        <!-- Architectural & Strategic Shift Section (Added for Architect's Perspective) -->
+        <section class="mb-12">
+            <h2 class="text-3xl font-bold mb-6 text-mongo-light">Architectural & Strategic Rationale</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Card 1: Data Model Shift -->
+                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
+                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Data Model: Relational to Document</h3>
+                    <p class="text-slate-400 text-sm">
+                        The core architectural shift is from normalizing data across many tables (Oracle) to designing rich documents around application access patterns (MongoDB). This strategy enables **faster reads** and **atomic updates** by co-locating related data, drastically reducing the need for costly joins and multi-document transactions in the application code.
+                    </p>
+                </div>
+                <!-- Card 2: Licensing & TCO -->
+                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
+                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Total Cost of Ownership (TCO) & Licensing</h3>
+                    <p class="text-slate-400 text-sm">
+                        Oracle’s complex license models (EULA & PULA) and reliance on proprietary features drive up TCO. MongoDB offers a flexible, open-source based licensing model, often leading to significant **cost reductions** and increased deployment flexibility on commodity hardware and cloud infrastructure, directly impacting the bottom line.
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Main Interactive Content (Accordion) -->
+        <section id="features-mapping">
+            <h2 class="text-3xl font-bold mb-6 text-mongo-light">Feature Mapping & Deep Dive</h2>
+            
+            <div id="accordion-container" class="space-y-4">
+                <!-- Data will be dynamically populated here -->
+            </div>
+        </section>
+        
+        <!-- Migration Deep Dive Section -->
+        <section class="mt-12 pt-8 border-t border-mongo-blue">
+            <h2 class="text-3xl font-bold mb-6 text-mongo-light">Migration & Automation Deep Dive</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Card 1: JSON Schema Validation & Data Types -->
+                <div class="p-6 bg-slate-800 rounded-xl shadow-lg hover:shadow-mongo-accent/30 transition duration-300">
+                    <h3 class="text-xl font-semibold mb-3 text-mongo-accent">Schema Validation & Data Quality</h3>
+                    <p class="text-slate-400 text-sm">
+                        While Relational Migrator (RM) doesn't enforce destination data types, **JSON Schema Validation** must be used post-design to enforce structure and data types before migration. RM ensures row counts match, but a custom tool is needed to calculate and compare data hashes (correctness/precision) between source and target for true data quality assurance.
+                    </p>
+                </div>
+                <!-- Card 2: Access Pattern Analysis -->
+                <div class="p-6 bg-slate-800 rounded-xl shadow-lg hover:shadow-mongo-accent/30 transition duration-300">
+                    <h3 class="text-xl font-semibold mb-3 text-mongo-accent">Designing for Access Patterns</h3>
+                    <p class="text-slate-400 text-sm">
+                        Schema design relies heavily on application access patterns. Oracle tools can extract query frequency and plans pre-migration. Post-migration, **repurposing End-to-End tests for performance testing** is the key strategy to validate the efficiency of the new document model design.
+                    </p>
+                </div>
+                <!-- Card 3: Modernization Automation -->
+                <div class="p-6 bg-slate-800 rounded-xl shadow-lg hover:shadow-mongo-accent/30 transition duration-300">
+                    <h3 class="text-xl font-semibold mb-3 text-mongo-accent">LLM-Powered Automation</h3>
+                    <p class="text-slate-400 text-sm">
+                        MongoDB offers several tools: **Relational Migrator** (for schema and stored procedure rewrite), **Code Analyzer** (for documentation), and **Code Modernizing Tool** (converts legacy code, often requiring breaking down large blocks for LLM context windows).
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <footer class="mt-12 p-4 text-center text-sm text-mongo-blue border-t border-mongo-blue">
+        &copy; 2025 MongoDB Migration Deep Dive. Content based on Architects FAQS.
+    </footer>
+
+    <script>
+        // Data structure containing the deep dive content
+        const deepDiveData = [
+            // --- NEW DBA CONTENT: OPERATIONAL BACKBONE ---
+            {
+                id: 'operational_backbone',
+                title: 'Operational Backbone: Backup, Recovery, & Storage (RMAN/Tablespaces)',
+                behaviour: 'Oracle DBAs rely on RMAN for consistent backups, easy Point-in-Time Recovery (PITR), and manage physical storage via Tablespaces and Partitions.',
+                solution: 'The **oplog** (operation log) is central to recovery, enabling PITR. **MongoDB Atlas** provides managed backups, and **Sharding** replaces Oracle partitioning for horizontal scaling and storage distribution.',
+                details: [
+                    {
+                        type: 'Backup, PITR, and the Oplog',
+                        code: `// The oplog is an unbounded, idempotent log of all write operations.
+// RMAN replacement: Atlas Managed Backups or custom tools leveraging the oplog.
+
+// Point-in-Time Recovery (PITR):
+// To achieve PITR, an initial snapshot is taken, and then all subsequent oplog entries 
+// are replayed up to the desired timestamp. This guarantees a consistent state 
+// across the entire cluster, replacing RMAN-based recovery procedures.`,
+                        language: 'text'
+                    },
+                    {
+                        type: 'Storage Management (Sharding vs. Partitioning)',
+                        code: `// Oracle Partitioning: Logical division of a single table, improving query efficiency.
+// MongoDB Sharding: Horizontal scaling across multiple servers (shards), dividing the entire dataset.
+
+// DBA Concern: Data growth and I/O capacity.
+// Solution: Sharding automates data distribution, ensuring that disk and I/O load 
+// are spread across the shard cluster. The DBA focuses on selecting the correct 
+// 'shard key' (the equivalent of a partition key).`,
+                        language: 'text'
+                    }
+                ],
+                note: 'In Atlas, these functions are automated, reducing the daily manual RMAN/storage management tasks common to Oracle DBAs.'
+            },
+            // --- NEW DBA CONTENT: SECURITY & DATATYPES ---
+            {
+                id: 'dba_security_datatypes',
+                title: 'Advanced Security & Data Integrity (VPD/RLS & Strict Data Types)',
+                behaviour: 'DBAs need fine-grained control over who sees which rows/columns (VPD/RLS) and must strictly enforce data types to maintain application stability.',
+                solution: 'The **JSON Schema Validation** feature allows DBAs to define mandatory fields and specific data types (`bsonType`) to enforce strictness. **Dynamic Views** with the `$cond` operator effectively replace Oracle\'s VPD (Virtual Private Database) or Row-Level Security (RLS) policies.',
+                details: [
+                    {
+                        type: 'Enforcing Strict Data Types',
+                        code: `// JSON Schema enforces strict data types for Oracle NUMBER/DATE equivalents:
+db.createCollection("policies", {
+    validator: {
+        $jsonSchema: {
+            properties: {
+                "issue_date": { "bsonType": "date", "description": "Strictly a BSON date type" },
+                "premium_amount": { 
+                    "bsonType": "double", 
+                    "description": "Used for decimal precision, replacing NUMBER(10,2)" 
+                }
+            },
+            required: ["issue_date", "premium_amount"]
+        }
+    }
+})`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Row-Level Security (RLS) via Views',
+                        code: `// This view filters documents based on the current user's department, mimicking RLS:
+db.createView(
+    "department_data_view", 
+    "sensitive_data_collection",
+    [{
+        $match: {
+            // $$USER is the authenticated user principal in MongoDB
+            "department": "$$USER.department_id" 
+        }
+    }]
+)`,
+                        language: 'javascript'
+                    }
+                ],
+                note: 'The combination of Roles-Based Access Control (RBAC) and Dynamic Views provides a modern, flexible, and powerful replacement for traditional Oracle security policies.'
+            },
+            // --- EXISTING DEVELOPER CONTENT (RETAINED) ---
+            {
+                id: 'querylanguage',
+                title: 'Query Language Shift (SQL to Query API/Aggregation)',
+                behaviour: 'Developers rely on declarative SQL (SELECT, WHERE, GROUP BY) and complex DML, which are fundamentally text-based and relational.',
+                solution: 'The **MongoDB Query API** uses a JSON-like syntax for basic CRUD operations. Complex data manipulation (joins, grouping, transformations) is handled by the multi-stage **Aggregation Pipeline**, which acts as a powerful, server-side data processor.',
+                details: [
+                    {
+                        type: 'SQL vs. Query API (Basic)',
+                        code: `// SQL: Select * from users where status = 'active' AND age > 30;
+
+// MongoDB Query API (JavaScript Shell):
+db.users.find({
+    "status": "active",
+    "age": { "$gt": 30 }
+})`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'SQL Group By vs. Aggregation Pipeline',
+                        code: `// SQL: SELECT dept, COUNT(*) FROM employees GROUP BY dept;
+
+// MongoDB Aggregation Pipeline:
+db.employees.aggregate([
+    {
+        "$group": {
+            "_id": "$dept", 
+            "employeeCount": { "$count": {} }
+        }
+    }
+])`,
+                        language: 'javascript'
+                    }
+                ],
+                note: 'Mastering the Aggregation Pipeline is the single largest developer shift, replacing most complex Oracle views and report-generating stored procedures.'
+            },
+            {
+                id: 'joins',
+                title: 'Handling Relational Joins (JOINs)',
+                behaviour: 'Oracle enforces relationships via foreign keys and uses JOINs for nearly all multi-table data reads.',
+                solution: 'The primary technique is **Schema Denormalization (Embedding)**, co-locating related data to eliminate joins for *most* reads. Where decoupling is necessary (e.g., large arrays, high-cardinality), use **Manual References**. The **$lookup** aggregation stage acts as a performant left outer join when relationships are needed.',
+                details: [
+                    {
+                        type: 'Embedding vs. Referencing',
+                        code: `// EMBEDDING: Policy and all its Riders in one document (eliminates join)
+{
+    "policyId": 12345,
+    "customer": { "name": "Jane Doe", "id": "C1" },
+    "riders": [
+        { "name": "Accident", "premium": 50 },
+        { "name": "Disability", "premium": 100 }
+    ]
+}
+
+// MANUAL REFERENCE (For very large/rarely accessed data):
+// Policy document stores the ID of the customer document.
+{
+    "policyId": 12345,
+    "customerId": "C1" // Reference
+}`,
+                        language: 'json'
+                    }
+                ],
+                app_layer: 'Embedding dramatically increases read performance and ensures atomicity, but requires application logic for cascading updates if non-embedded fields change.'
+            },
+            {
+                id: 'indexing',
+                title: 'Indexing Strategy & Performance Tuning',
+                behaviour: 'Oracle indexing relies on primary keys, individual column indexes, and composite indexes to tune relational queries.',
+                solution: 'MongoDB uses **Compound Indexes** (similar to composite indexes) which must adhere to the **ESR Rule (Equality, Sort, Range)** for optimal performance. Developers must learn to use the **`explain()`** method (like Oracle\'s explain plan) to validate if an index is being used effectively, especially on embedded fields.',
+                details: [
+                    {
+                        type: 'Compound Index Creation',
+                        code: `// Goal: Efficiently find policies by customer and sort by issue date.
+
+// SQL: CREATE INDEX policy_cust_date ON policy (customer_id, issue_date DESC);
+
+// MongoDB Shell:
+db.policies.createIndex(
+    { "customerId": 1, "issueDate": -1 }, 
+    { name: "idx_cust_date" }
+)`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Index Validation (Explain)',
+                        code: `// Always validate index usage:
+db.policies.find({ 
+    "customerId": "C100" 
+}).sort({ 
+    "issueDate": -1 
+}).explain("executionStats") 
+
+// The 'winningPlan' and 'totalDocsExamined' fields must be scrutinized.`,
+                        language: 'javascript'
+                    }
+                ],
+                optimization: 'Indexes on embedded fields (e.g., `riders.premium`) are also crucial for performance, a concept not directly mirrored in the relational world.'
+            },
+            // --- EXISTING ARCHITECT & FEATURE MAPPING CONTENT (RETAINED) ---
+            {
+                id: 'storedprocedures',
+                title: 'Stored Procedures (PL/SQL Rewrites)',
+                behaviour: 'Oracle PL/SQL Stored Procedures tightly couple complex business logic and data manipulation to the database layer, creating significant migration complexity.',
+                solution: 'The logic is "lifted" from the database and shifted to the **application layer** (e.g., microservices). **Relational Migrator (RM)** automates the rewriting of this logic into application-compatible code or complex **MongoDB Aggregation Pipelines** for data-intensive transformations.',
+                details: [
+                    {
+                        type: 'Application Logic Shift',
+                        code: `// PL/SQL logic is refactored into a service layer function (e.g., Java, Node.js, Python)
+// Benefits: Easier unit testing, better scalability, decoupled from the database engine.
+
+public void processPolicyRenewal(String policyId) {
+    // 1. Fetch data (was SELECT in Oracle)
+    Policy p = policyRepository.findById(policyId); 
+    // 2. Perform business logic (was PL/SQL procedural code)
+    if (p.isEligibleForRenewal()) {
+        p.setRenewalDate(LocalDate.now().plusYears(1));
+    }
+    // 3. Save data (was UPDATE/INSERT)
+    policyRepository.save(p);
+}`,
+                        language: 'java'
+                    }
+                ],
+                note: 'For highly complex, set-based logic, the Aggregation Pipeline in MongoDB often serves as a powerful replacement for complex stored procedures, executing logic efficiently on the server.'
+            },
+            {
+                id: 'availability_dr',
+                title: 'Availability & DR (Replication/GoldenGate)',
+                behaviour: 'Oracle relies on solutions like GoldenGate for robust replication, high availability, and disaster recovery (DR).',
+                solution: 'MongoDB natively handles HA/DR through **Replica Sets** (3+ members for automatic failover) and **Sharding** (for horizontal scalability). **MongoDB Atlas** provides managed, zone-aware deployment for seamless global distribution and DR.',
+                details: [
+                    {
+                        type: 'Replica Set HA Concept',
+                        code: `// A replica set ensures high availability:
+// Primary: Accepts all writes.
+// Secondaries: Replicate data and support read operations.
+// Arbiters (Optional): Participate in elections, but do not store data.
+
+// Automatic Failover: If the primary fails, the remaining members automatically elect a new primary, 
+// ensuring rapid recovery without manual intervention (a core feature of MongoDB).`,
+                        language: 'text'
+                    }
+                ],
+                atlas: 'For multi-region DR, Atlas can deploy a **Global Cluster** with nodes spread across different continents, providing low-latency access and maximum fault tolerance.'
+            },
+            {
+                id: 'transactions',
+                title: 'Transactional Guarantees (PL/SQL COMMIT/ROLLBACK)',
+                behaviour: 'Oracle operations are implicitly transactional. How does MongoDB ensure atomicity and manage multi-statement changes?',
+                solution: 'MongoDB guarantees **ACID compliance** for changes to a **single document** atomically by design, making explicit transactions unnecessary for most operations. For scenarios requiring updates across multiple documents/collections, MongoDB supports **Multi-Document Transactional APIs** with Snapshot Read Concern.',
+                details: [
+                    {
+                        type: 'Java/Spring Boot',
+                        code: `// 1. Explicit Session-based Transaction (Java)
+try (ClientSession session = client.startSession()) {
+    session.startTransaction(TransactionOptions.builder()
+        .readConcern(ReadConcern.SNAPSHOT).build());
+    
+    // Soft delete all children
+    action.update(Child.class).matching(query_ext).apply(update).all();
+    // Soft delete the parent
+    action.update(Parent.class).matching(query_ext).apply(update).all();
+    
+    session.commitTransaction();
+} catch (RuntimeException e) {
+    session.abortTransaction();
+}`,
+                        language: 'java'
+                    },
+                    {
+                        type: 'Spring Boot @Transactional',
+                        code: `@Transactional(label = { "mongo: readConcern=snapshot" })
+void deletePolicy(int policyNumber) {
+    // Both updates occur within a single transaction
+    template.update(Parent.class).matching(query_ext).apply(update).all();
+    template.update(Child.class).matching(query).apply(update).all();
+};`,
+                        language: 'java'
+                    }
+                ],
+                security: 'To prevent support staff from bypassing transactions via Compass, disable database writes for their users and mandate that all changes go through a dedicated API that enforces Snapshot-level transactional guarantees.'
+            },
+            {
+                id: 'commitbehavior',
+                title: 'Default Commit Behavior & Production Support Safety',
+                behaviour: 'In Oracle, changes occur within a transaction by default, providing a safety net for "trial" changes (commit/rollback). MongoDB writes outside a transaction are immediately persistent.',
+                solution: 'Production support staff must be trained to **explicitly execute all modifications within a transactional session**. This replicates the try-out-and-commit/rollback capability essential for safety during manual changes.',
+                details: [
+                    {
+                        type: 'Mandatory Transactional Session (JavaScript Shell)',
+                        code: `var session = db.getMongo().startSession();
+var policyCollection = session.getDatabase("quotes").policies;
+
+session.startTransaction( { 
+    readConcern: { level: "snapshot" }, 
+    writeConcern: { w: "majority" } 
+});
+
+// Perform data modifications here (test changes)
+policyCollection.insert(something);
+policyCollection.update(something_else);
+
+// If changes are correct:
+session.commitTransaction();
+
+// If changes are incorrect or risky:
+// session.rollbackTransaction();`,
+                        language: 'javascript'
+                    }
+                ],
+                note: 'This explicit session use is mandatory for any non-trivial manual data modification to maintain the same safety guarantees that Oracle\'s default behavior provided.'
+            },
+            {
+                id: 'sequences',
+                title: 'Sequence Generation (Oracle SEQUENCE)',
+                behaviour: 'Oracle provides built-in sequences for generating unique, auto-incrementing primary keys. How is this replicated in a document database?',
+                solution: 'MongoDB does not have native sequences. This functionality is implemented at the **application layer** using a dedicated `sequence` collection and the atomic `findAndModify` command to ensure serialization of the increment operation.',
+                details: [
+                    {
+                        type: 'Sequence Collection Structure (JavaScript)',
+                        code: `{
+    "name": "policy_id_seq",
+    "sequence": 1000
+}`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Atomic Increment and Retrieve (Java)',
+                        code: `Query query = new Query(Criteria.where("name").is("policy_id_seq"));
+Update update = new Update().inc("sequence", 1);
+
+// findAndModify ensures atomic increment and returns the new value
+Sequence newestValue = template.update(Sequence.class)
+    .matching(query)
+    .apply(update)
+    .withOptions(FindAndModifyOptions.options().returnNew(true))
+    .findAndModifyValue();
+
+policy_to_insert.setSequenceId(newestValue.getSequence());
+template.insert(policy_to_insert);`,
+                        language: 'java'
+                    }
+                ],
+                optimization: 'To optimize, increment the sequence by a larger block (e.g., 1000) and cache the range in the application memory, reducing database calls.'
+            },
+            {
+                id: 'triggers',
+                title: 'Triggers (Oracle BEFORE/AFTER INSERT/UPDATE)',
+                behaviour: 'Oracle PL/SQL uses data triggers to execute server-side logic in response to DML operations.',
+                solution: 'MongoDB uses the **Change Streams API** or managed **Atlas Database Triggers**. Change Streams allow applications to subscribe to the oplog for real-time change events. Atlas Triggers run serverless business logic (JavaScript) in response to these events.',
+                details: [
+                    {
+                        type: 'Change Stream Implementation (Java)',
+                        code: `Flux changeStream = reactiveTemplate
+    .changeStream(newAggregation(match(
+        // Filter for specific events, e.g., 'update' where status is 'deleted'
+        Criteria.where("operationType").is("update")
+        .andOperator(Criteria.where("body.status").is("deleted"))
+    ), Parent.class, ChangeStreamOptions.empty(), "parent");
+
+changeStream.doOnNext(event -> {
+    Document document = event.getBody();
+    // 1. Invoke audit method (Equivalent to BEFORE/AFTER)
+    Policies.auditSoftDeleteEvent(document); 
+    // 2. Make downstream changes
+    Extension.removeAssociatedDocumentsByParentEvent(document);
+}).subscribe();`,
+                        language: 'java'
+                    }
+                ],
+                atlas: 'Atlas Database Triggers are a fully managed, serverless implementation that scales independently of the database. Logic is written in JavaScript.'
+            },
+            {
+                id: 'schedulers',
+                title: 'Job Schedulers (Oracle DBMS_JOB / Scheduler)',
+                behaviour: 'Oracle uses dedicated database features (like DBMS_JOB) for time-based, recurring tasks, tightly coupling scheduling with the database.',
+                solution: 'Job scheduling should be decoupled and handled by the **application layer**. MongoDB Atlas provides **Scheduled Triggers** based on CRON schedules. For broader enterprise use, **Kubernetes CronJobs** offer a unified, platform-level solution, requiring no new hardware.',
+                details: [
+                    {
+                        type: 'Atlas Scheduled Trigger (Concept)',
+                        code: `// The logic for a scheduled task (e.g., 'generateDailyReport') is written in a 
+// serverless JavaScript function. 
+// The trigger is configured in the Atlas UI with a CRON expression (e.g., '0 7 * * *' for 7:00 AM daily).
+// This runs outside the database in a scalable serverless environment.`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'External Scheduler (Kubernetes CronJob)',
+                        code: `// For applications modernized onto Kubernetes, a CronJob provides a unified solution:
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-report-job
+spec:
+  schedule: "0 7 * * *" # Daily at 7:00 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: report-container
+            image: my-app/report-processor:latest
+            command: ["python", "/app/generate_report.py"]
+          restartPolicy: OnFailure`,
+                        language: 'yaml'
+                    }
+                ],
+                note: 'This decoupling eliminates database license costs associated with dedicated scheduling features.'
+            },
+            {
+                id: 'integrity',
+                title: 'Referential Integrity (Oracle Foreign Keys)',
+                behaviour: 'Relational databases enforce parent-child relationships using foreign key constraints, including cascade delete functionality.',
+                solution: 'The recommended solution is **Data Embedding**, where child documents are physically stored inside the parent document. This provides referential integrity out-of-the-box. If embedding is not feasible, integrity checks (find parent before insert/update child) and cascading deletes must be implemented explicitly at the **application layer** (e.g., in Spring Boot repository).',
+                details: [
+                    {
+                        type: 'Embedded Document Example (JavaScript)',
+                        code: `// Referential Integrity is inherent in this structure
+{
+    "parent_field1": "value",
+    "children":[
+        {
+            "child_field1": "value",
+            "child_field2": "value"
+        },
+        // ... more children
+    ]
+}`,
+                        language: 'javascript'
+                    }
+                ],
+                app_layer: 'Application-level checks executed within a **multi-document transaction** are required when embedding is not used.'
+            },
+            {
+                id: 'constraints',
+                title: 'Table/Field Constraints (NOT NULL, CHECK, UNIQUE)',
+                behaviour: 'Oracle imposes structure (data type, uniqueness, non-null) at the table level.',
+                solution: 'MongoDB uses **JSON Schema Validation** to define required fields, data types, and value ranges at the collection level. **Unique Indexes** can enforce uniqueness constraints, often combined with `partialFilterExpression` for conditional uniqueness.',
+                details: [
+                    {
+                        type: 'JSON Schema Validation (JavaScript Shell)',
+                        code: `db.createCollection("students", {
+    validator: {
+        $jsonSchema: {
+            bsonType: "object",
+            required: [ "name", "year" ],
+            properties: {
+                name: { bsonType: "string", description: "'name' must be a string" },
+                year: { bsonType: "int", minimum: 2017 },
+                gpa: { bsonType: [ "double" ], description: "'gpa' must be a double if it exists" }
+            }
+        }
+    }
+})`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Conditional Unique Index (JavaScript Shell)',
+                        code: `// Ensures uniqueness only for 'active' policies
+db.users.createIndex(
+    { policyholderName: 1, policyType: 1},
+    { unique: true, partialFilterExpression: { status: { $ne: "closed"} } }
+)`,
+                        language: 'javascript'
+                    }
+                ]
+            },
+            {
+                id: 'locking',
+                title: 'Application-Level Locking (SELECT FOR UPDATE)',
+                behaviour: 'Legacy Oracle apps use `SELECT FOR UPDATE` or flag fields to implement a lock mechanism so only one user can modify a business entity.',
+                solution: 'MongoDB uses the **atomic `findAndModify()`** command to check the lock status and update the lock fields (`locked: true`, `lockedBy: userId`) in a single, atomic operation, preventing race conditions.',
+                details: [
+                    {
+                        type: 'Locking Logic (Java)',
+                        code: `boolean checkAndLockPolicy(int policyId, ObjectId userId) {
+    Criteria criteria = new Criteria().and("policyId").is(policyId)
+        .andOperator(new Criteria().orOperator(
+            // Policy must be unlocked OR locked by the current user
+            Criteria.and("locked").is(false),
+            Criteria.and("locked").is(true).and("lockedBy").is(userId)
+        ));
+
+    Query query = new Query(criteria);
+    Update update = new Update().set("locked", true).set("lockedBy", userId);
+    
+    // Atomically find and modify the document based on the criteria
+    Policy updatedPolicy = mongoTemplate.findAndModify(query, update, options, Policy.class);
+
+    if (updatedPolicy != null) {
+        return updatedPolicy.getLockedBy().equals(userId);
+    }
+    return false;
+}`,
+                        language: 'java'
+                    }
+                ],
+                note: 'The `findAndModify` command guarantees that no other session can update or modify the record during this critical check-and-set operation.'
+            },
+            {
+                id: 'oracledblinks',
+                title: 'Database Links (Oracle DB Links)',
+                behaviour: 'Oracle Database Links allow one database instance to access data and code in a separate, remote database instance directly via the database layer.',
+                solution: 'This feature is replaced by modern, application-centric communication. Use **REST APIs or gRPC** for inter-service communication. For read-only/reporting needs across multiple MongoDB instances, use the **MongoDB Atlas Data Federation Service**.',
+                details: [
+                    {
+                        type: 'Modern Application Layer (REST/gRPC)',
+                        code: `// Instead of a database link, Microservice A uses an HTTP client 
+// to call a dedicated API (Microservice B) that owns the remote data.
+
+// Service A (Conceptual Java Call)
+// private RestTemplate restTemplate;
+// public RemoteData fetchRemoteResource(String id) {
+//     return restTemplate.getForObject("http://microservice-b/api/resource/" + id, RemoteData.class);
+// }`,
+                        language: 'java'
+                    },
+                    {
+                        type: 'Atlas Data Federation (Reporting)',
+                        code: `// Use a single query endpoint to federate data from:
+// 1. Cluster A (MongoDB Atlas)
+// 2. Cluster B (MongoDB Atlas)
+// 3. External sources like S3/Azure Blob Storage
+
+// This centralizes reporting without database-to-database connections.`,
+                        language: 'text'
+                    }
+                ],
+                app_layer: 'This shift enforces service ownership, better security, and clearer separation of concerns, which is a key principle of application modernization.'
+            },
+            {
+                id: 'messaging',
+                title: 'Messaging & Queuing (DBMS_PIPE / Advanced Queuing)',
+                behaviour: 'Oracle PL/SQL uses packages like `DBMS_PIPE` and `Advanced Queuing` for inter-session communication and asynchronous processing.',
+                solution: 'In a modernized application, synchronous and asynchronous communication is moved entirely to the **application layer**. This is handled by **REST APIs, gRPC, Apache Kafka, or RabbitMQ**. Database-level piping becomes obsolete.',
+                details: [
+                    {
+                        type: 'Core Technology Replacement',
+                        code: 'Asynchronous communication uses modern queuing and streaming technologies like Apache Kafka or RabbitMQ. Synchronous communication uses REST APIs or gRPC.',
+                        language: 'text'
+                    }
+                ]
+            },
+            {
+                id: 'masking',
+                title: 'Data Obfuscation and Masking',
+                behaviour: 'Need to hide sensitive data (e.g., PII) based on user roles or permissions.',
+                solution: 'Use **Views** that dynamically obfuscate data via the Aggregation Framework’s `$set` and `$cond` operators. The view logic checks the current user\'s roles (`$$USER_ROLES.role`) to determine whether to display the full field or a masked version.',
+                details: [
+                    {
+                        type: 'View Creation Logic (JavaScript Shell)',
+                        code: `db.createView(
+    "userView", "users",
+    [{
+        $set: {
+            "phone": {
+                $cond: {
+                    // Check if the current user has the 'FullViewUser' role
+                    if: { $in: ["FullViewUser", "$$USER_ROLES.role"] },
+                    then: "$phone", // Show unmasked
+                    else: {
+                        // Mask first 6 digits
+                        $concat: ["XXXXXX", { $substrCP: ["$phone", 6, { $strLenCP: "$phone" }] }]
+                    }
+                }
+            }
+        }
+    }]
+)`,
+                        language: 'javascript'
+                    }
+                ],
+                restriction: 'Read permissions must be restricted on the original collection to enforce all access through the new view.'
+            },
+            {
+                id: 'storedprocedures',
+                title: 'Stored Procedures (PL/SQL Rewrites)',
+                behaviour: 'Oracle PL/SQL Stored Procedures tightly couple complex business logic and data manipulation to the database layer, creating significant migration complexity.',
+                solution: 'The logic is "lifted" from the database and shifted to the **application layer** (e.g., microservices). **Relational Migrator (RM)** automates the rewriting of this logic into application-compatible code or complex **MongoDB Aggregation Pipelines** for data-intensive transformations.',
+                details: [
+                    {
+                        type: 'Application Logic Shift',
+                        code: `// PL/SQL logic is refactored into a service layer function (e.g., Java, Node.js, Python)
+// Benefits: Easier unit testing, better scalability, decoupled from the database engine.
+
+public void processPolicyRenewal(String policyId) {
+    // 1. Fetch data (was SELECT in Oracle)
+    Policy p = policyRepository.findById(policyId); 
+    // 2. Perform business logic (was PL/SQL procedural code)
+    if (p.isEligibleForRenewal()) {
+        p.setRenewalDate(LocalDate.now().plusYears(1));
+    }
+    // 3. Save data (was UPDATE/INSERT)
+    policyRepository.save(p);
+}`,
+                        language: 'java'
+                    }
+                ],
+                note: 'For highly complex, set-based logic, the Aggregation Pipeline in MongoDB often serves as a powerful replacement for complex stored procedures, executing logic efficiently on the server.'
+            },
+            {
+                id: 'availability_dr',
+                title: 'Availability & DR (Replication/GoldenGate)',
+                behaviour: 'Oracle relies on solutions like GoldenGate for robust replication, high availability, and disaster recovery (DR).',
+                solution: 'MongoDB natively handles HA/DR through **Replica Sets** (3+ members for automatic failover) and **Sharding** (for horizontal scalability). **MongoDB Atlas** provides managed, zone-aware deployment for seamless global distribution and DR.',
+                details: [
+                    {
+                        type: 'Replica Set HA Concept',
+                        code: `// A replica set ensures high availability:
+// Primary: Accepts all writes.
+// Secondaries: Replicate data and support read operations.
+// Arbiters (Optional): Participate in elections, but do not store data.
+
+// Automatic Failover: If the primary fails, the remaining members automatically elect a new primary, 
+// ensuring rapid recovery without manual intervention (a core feature of MongoDB).`,
+                        language: 'text'
+                    }
+                ],
+                atlas: 'For multi-region DR, Atlas can deploy a **Global Cluster** with nodes spread across different continents, providing low-latency access and maximum fault tolerance.'
+            },
+            {
+                id: 'transactions',
+                title: 'Transactional Guarantees (PL/SQL COMMIT/ROLLBACK)',
+                behaviour: 'Oracle operations are implicitly transactional. How does MongoDB ensure atomicity and manage multi-statement changes?',
+                solution: 'MongoDB guarantees **ACID compliance** for changes to a **single document** atomically by design, making explicit transactions unnecessary for most operations. For scenarios requiring updates across multiple documents/collections, MongoDB supports **Multi-Document Transactional APIs** with Snapshot Read Concern.',
+                details: [
+                    {
+                        type: 'Java/Spring Boot',
+                        code: `// 1. Explicit Session-based Transaction (Java)
+try (ClientSession session = client.startSession()) {
+    session.startTransaction(TransactionOptions.builder()
+        .readConcern(ReadConcern.SNAPSHOT).build());
+    
+    // Soft delete all children
+    action.update(Child.class).matching(query_ext).apply(update).all();
+    // Soft delete the parent
+    action.update(Parent.class).matching(query_ext).apply(update).all();
+    
+    session.commitTransaction();
+} catch (RuntimeException e) {
+    session.abortTransaction();
+}`,
+                        language: 'java'
+                    },
+                    {
+                        type: 'Spring Boot @Transactional',
+                        code: `@Transactional(label = { "mongo: readConcern=snapshot" })
+void deletePolicy(int policyNumber) {
+    // Both updates occur within a single transaction
+    template.update(Parent.class).matching(query_ext).apply(update).all();
+    template.update(Child.class).matching(query).apply(update).all();
+};`,
+                        language: 'java'
+                    }
+                ],
+                security: 'To prevent support staff from bypassing transactions via Compass, disable database writes for their users and mandate that all changes go through a dedicated API that enforces Snapshot-level transactional guarantees.'
+            },
+            {
+                id: 'commitbehavior',
+                title: 'Default Commit Behavior & Production Support Safety',
+                behaviour: 'In Oracle, changes occur within a transaction by default, providing a safety net for "trial" changes (commit/rollback). MongoDB writes outside a transaction are immediately persistent.',
+                solution: 'Production support staff must be trained to **explicitly execute all modifications within a transactional session**. This replicates the try-out-and-commit/rollback capability essential for safety during manual changes.',
+                details: [
+                    {
+                        type: 'Mandatory Transactional Session (JavaScript Shell)',
+                        code: `var session = db.getMongo().startSession();
+var policyCollection = session.getDatabase("quotes").policies;
+
+session.startTransaction( { 
+    readConcern: { level: "snapshot" }, 
+    writeConcern: { w: "majority" } 
+});
+
+// Perform data modifications here (test changes)
+policyCollection.insert(something);
+policyCollection.update(something_else);
+
+// If changes are correct:
+session.commitTransaction();
+
+// If changes are incorrect or risky:
+// session.rollbackTransaction();`,
+                        language: 'javascript'
+                    }
+                ],
+                note: 'This explicit session use is mandatory for any non-trivial manual data modification to maintain the same safety guarantees that Oracle\'s default behavior provided.'
+            },
+            {
+                id: 'sequences',
+                title: 'Sequence Generation (Oracle SEQUENCE)',
+                behaviour: 'Oracle provides built-in sequences for generating unique, auto-incrementing primary keys. How is this replicated in a document database?',
+                solution: 'MongoDB does not have native sequences. This functionality is implemented at the **application layer** using a dedicated `sequence` collection and the atomic `findAndModify` command to ensure serialization of the increment operation.',
+                details: [
+                    {
+                        type: 'Sequence Collection Structure (JavaScript)',
+                        code: `{
+    "name": "policy_id_seq",
+    "sequence": 1000
+}`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Atomic Increment and Retrieve (Java)',
+                        code: `Query query = new Query(Criteria.where("name").is("policy_id_seq"));
+Update update = new Update().inc("sequence", 1);
+
+// findAndModify ensures atomic increment and returns the new value
+Sequence newestValue = template.update(Sequence.class)
+    .matching(query)
+    .apply(update)
+    .withOptions(FindAndModifyOptions.options().returnNew(true))
+    .findAndModifyValue();
+
+policy_to_insert.setSequenceId(newestValue.getSequence());
+template.insert(policy_to_insert);`,
+                        language: 'java'
+                    }
+                ],
+                optimization: 'To optimize, increment the sequence by a larger block (e.g., 1000) and cache the range in the application memory, reducing database calls.'
+            },
+            {
+                id: 'triggers',
+                title: 'Triggers (Oracle BEFORE/AFTER INSERT/UPDATE)',
+                behaviour: 'Oracle PL/SQL uses data triggers to execute server-side logic in response to DML operations.',
+                solution: 'MongoDB uses the **Change Streams API** or managed **Atlas Database Triggers**. Change Streams allow applications to subscribe to the oplog for real-time change events. Atlas Triggers run serverless business logic (JavaScript) in response to these events.',
+                details: [
+                    {
+                        type: 'Change Stream Implementation (Java)',
+                        code: `Flux changeStream = reactiveTemplate
+    .changeStream(newAggregation(match(
+        // Filter for specific events, e.g., 'update' where status is 'deleted'
+        Criteria.where("operationType").is("update")
+        .andOperator(Criteria.where("body.status").is("deleted"))
+    ), Parent.class, ChangeStreamOptions.empty(), "parent");
+
+changeStream.doOnNext(event -> {
+    Document document = event.getBody();
+    // 1. Invoke audit method (Equivalent to BEFORE/AFTER)
+    Policies.auditSoftDeleteEvent(document); 
+    // 2. Make downstream changes
+    Extension.removeAssociatedDocumentsByParentEvent(document);
+}).subscribe();`,
+                        language: 'java'
+                    }
+                ],
+                atlas: 'Atlas Database Triggers are a fully managed, serverless implementation that scales independently of the database. Logic is written in JavaScript.'
+            },
+            {
+                id: 'schedulers',
+                title: 'Job Schedulers (Oracle DBMS_JOB / Scheduler)',
+                behaviour: 'Oracle uses dedicated database features (like DBMS_JOB) for time-based, recurring tasks, tightly coupling scheduling with the database.',
+                solution: 'Job scheduling should be decoupled and handled by the **application layer**. MongoDB Atlas provides **Scheduled Triggers** based on CRON schedules. For broader enterprise use, **Kubernetes CronJobs** offer a unified, platform-level solution, requiring no new hardware.',
+                details: [
+                    {
+                        type: 'Atlas Scheduled Trigger (Concept)',
+                        code: `// The logic for a scheduled task (e.g., 'generateDailyReport') is written in a 
+// serverless JavaScript function. 
+// The trigger is configured in the Atlas UI with a CRON expression (e.g., '0 7 * * *' for 7:00 AM daily).
+// This runs outside the database in a scalable serverless environment.`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'External Scheduler (Kubernetes CronJob)',
+                        code: `// For applications modernized onto Kubernetes, a CronJob provides a unified solution:
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-report-job
+spec:
+  schedule: "0 7 * * *" # Daily at 7:00 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: report-container
+            image: my-app/report-processor:latest
+            command: ["python", "/app/generate_report.py"]
+          restartPolicy: OnFailure`,
+                        language: 'yaml'
+                    }
+                ],
+                note: 'This decoupling eliminates database license costs associated with dedicated scheduling features.'
+            },
+            {
+                id: 'integrity',
+                title: 'Referential Integrity (Oracle Foreign Keys)',
+                behaviour: 'Relational databases enforce parent-child relationships using foreign key constraints, including cascade delete functionality.',
+                solution: 'The recommended solution is **Data Embedding**, where child documents are physically stored inside the parent document. This provides referential integrity out-of-the-box. If embedding is not feasible, integrity checks (find parent before insert/update child) and cascading deletes must be implemented explicitly at the **application layer** (e.g., in Spring Boot repository).',
+                details: [
+                    {
+                        type: 'Embedded Document Example (JavaScript)',
+                        code: `// Referential Integrity is inherent in this structure
+{
+    "parent_field1": "value",
+    "children":[
+        {
+            "child_field1": "value",
+            "child_field2": "value"
+        },
+        // ... more children
+    ]
+}`,
+                        language: 'javascript'
+                    }
+                ],
+                app_layer: 'Application-level checks executed within a **multi-document transaction** are required when embedding is not used.'
+            },
+            {
+                id: 'constraints',
+                title: 'Table/Field Constraints (NOT NULL, CHECK, UNIQUE)',
+                behaviour: 'Oracle imposes structure (data type, uniqueness, non-null) at the table level.',
+                solution: 'MongoDB uses **JSON Schema Validation** to define required fields, data types, and value ranges at the collection level. **Unique Indexes** can enforce uniqueness constraints, often combined with `partialFilterExpression` for conditional uniqueness.',
+                details: [
+                    {
+                        type: 'JSON Schema Validation (JavaScript Shell)',
+                        code: `db.createCollection("students", {
+    validator: {
+        $jsonSchema: {
+            bsonType: "object",
+            required: [ "name", "year" ],
+            properties: {
+                name: { bsonType: "string", description: "'name' must be a string" },
+                year: { bsonType: "int", minimum: 2017 },
+                gpa: { bsonType: [ "double" ], description: "'gpa' must be a double if it exists" }
+            }
+        }
+    }
+})`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Conditional Unique Index (JavaScript Shell)',
+                        code: `// Ensures uniqueness only for 'active' policies
+db.users.createIndex(
+    { policyholderName: 1, policyType: 1},
+    { unique: true, partialFilterExpression: { status: { $ne: "closed"} } }
+)`,
+                        language: 'javascript'
+                    }
+                ]
+            },
+            {
+                id: 'locking',
+                title: 'Application-Level Locking (SELECT FOR UPDATE)',
+                behaviour: 'Legacy Oracle apps use `SELECT FOR UPDATE` or flag fields to implement a lock mechanism so only one user can modify a business entity.',
+                solution: 'MongoDB uses the **atomic `findAndModify()`** command to check the lock status and update the lock fields (`locked: true`, `lockedBy: userId`) in a single, atomic operation, preventing race conditions.',
+                details: [
+                    {
+                        type: 'Locking Logic (Java)',
+                        code: `boolean checkAndLockPolicy(int policyId, ObjectId userId) {
+    Criteria criteria = new Criteria().and("policyId").is(policyId)
+        .andOperator(new Criteria().orOperator(
+            // Policy must be unlocked OR locked by the current user
+            Criteria.and("locked").is(false),
+            Criteria.and("locked").is(true).and("lockedBy").is(userId)
+        ));
+
+    Query query = new Query(criteria);
+    Update update = new Update().set("locked", true).set("lockedBy", userId);
+    
+    // Atomically find and modify the document based on the criteria
+    Policy updatedPolicy = mongoTemplate.findAndModify(query, update, options, Policy.class);
+
+    if (updatedPolicy != null) {
+        return updatedPolicy.getLockedBy().equals(userId);
+    }
+    return false;
+}`,
+                        language: 'java'
+                    }
+                ],
+                note: 'The `findAndModify` command guarantees that no other session can update or modify the record during this critical check-and-set operation.'
+            },
+            {
+                id: 'oracledblinks',
+                title: 'Database Links (Oracle DB Links)',
+                behaviour: 'Oracle Database Links allow one database instance to access data and code in a separate, remote database instance directly via the database layer.',
+                solution: 'This feature is replaced by modern, application-centric communication. Use **REST APIs or gRPC** for inter-service communication. For read-only/reporting needs across multiple MongoDB instances, use the **MongoDB Atlas Data Federation Service**.',
+                details: [
+                    {
+                        type: 'Modern Application Layer (REST/gRPC)',
+                        code: `// Instead of a database link, Microservice A uses an HTTP client 
+// to call a dedicated API (Microservice B) that owns the remote data.
+
+// Service A (Conceptual Java Call)
+// private RestTemplate restTemplate;
+// public RemoteData fetchRemoteResource(String id) {
+//     return restTemplate.getForObject("http://microservice-b/api/resource/" + id, RemoteData.class);
+// }`,
+                        language: 'java'
+                    },
+                    {
+                        type: 'Atlas Data Federation (Reporting)',
+                        code: `// Use a single query endpoint to federate data from:
+// 1. Cluster A (MongoDB Atlas)
+// 2. Cluster B (MongoDB Atlas)
+// 3. External sources like S3/Azure Blob Storage
+
+// This centralizes reporting without database-to-database connections.`,
+                        language: 'text'
+                    }
+                ],
+                app_layer: 'This shift enforces service ownership, better security, and clearer separation of concerns, which is a key principle of application modernization.'
+            },
+            {
+                id: 'messaging',
+                title: 'Messaging & Queuing (DBMS_PIPE / Advanced Queuing)',
+                behaviour: 'Oracle PL/SQL uses packages like `DBMS_PIPE` and `Advanced Queuing` for inter-session communication and asynchronous processing.',
+                solution: 'In a modernized application, synchronous and asynchronous communication is moved entirely to the **application layer**. This is handled by **REST APIs, gRPC, Apache Kafka, or RabbitMQ**. Database-level piping becomes obsolete.',
+                details: [
+                    {
+                        type: 'Core Technology Replacement',
+                        code: 'Asynchronous communication uses modern queuing and streaming technologies like Apache Kafka or RabbitMQ. Synchronous communication uses REST APIs or gRPC.',
+                        language: 'text'
+                    }
+                ]
+            },
+            {
+                id: 'masking',
+                title: 'Data Obfuscation and Masking',
+                behaviour: 'Need to hide sensitive data (e.g., PII) based on user roles or permissions.',
+                solution: 'Use **Views** that dynamically obfuscate data via the Aggregation Framework’s `$set` and `$cond` operators. The view logic checks the current user\'s roles (`$$USER_ROLES.role`) to determine whether to display the full field or a masked version.',
+                details: [
+                    {
+                        type: 'View Creation Logic (JavaScript Shell)',
+                        code: `db.createView(
+    "userView", "users",
+    [{
+        $set: {
+            "phone": {
+                $cond: {
+                    // Check if the current user has the 'FullViewUser' role
+                    if: { $in: ["FullViewUser", "$$USER_ROLES.role"] },
+                    then: "$phone", // Show unmasked
+                    else: {
+                        // Mask first 6 digits
+                        $concat: ["XXXXXX", { $substrCP: ["$phone", 6, { $strLenCP: "$phone" }] }]
+                    }
+                }
+            }
+        }
+    }]
+)`,
+                        language: 'javascript'
+                    }
+                ],
+                restriction: 'Read permissions must be restricted on the original collection to enforce all access through the new view.'
+            },
+            {
+                id: 'storedprocedures',
+                title: 'Stored Procedures (PL/SQL Rewrites)',
+                behaviour: 'Oracle PL/SQL Stored Procedures tightly couple complex business logic and data manipulation to the database layer, creating significant migration complexity.',
+                solution: 'The logic is "lifted" from the database and shifted to the **application layer** (e.g., microservices). **Relational Migrator (RM)** automates the rewriting of this logic into application-compatible code or complex **MongoDB Aggregation Pipelines** for data-intensive transformations.',
+                details: [
+                    {
+                        type: 'Application Logic Shift',
+                        code: `// PL/SQL logic is refactored into a service layer function (e.g., Java, Node.js, Python)
+// Benefits: Easier unit testing, better scalability, decoupled from the database engine.
+
+public void processPolicyRenewal(String policyId) {
+    // 1. Fetch data (was SELECT in Oracle)
+    Policy p = policyRepository.findById(policyId); 
+    // 2. Perform business logic (was PL/SQL procedural code)
+    if (p.isEligibleForRenewal()) {
+        p.setRenewalDate(LocalDate.now().plusYears(1));
+    }
+    // 3. Save data (was UPDATE/INSERT)
+    policyRepository.save(p);
+}`,
+                        language: 'java'
+                    }
+                ],
+                note: 'For highly complex, set-based logic, the Aggregation Pipeline in MongoDB often serves as a powerful replacement for complex stored procedures, executing logic efficiently on the server.'
+            },
+            {
+                id: 'availability_dr',
+                title: 'Availability & DR (Replication/GoldenGate)',
+                behaviour: 'Oracle relies on solutions like GoldenGate for robust replication, high availability, and disaster recovery (DR).',
+                solution: 'MongoDB natively handles HA/DR through **Replica Sets** (3+ members for automatic failover) and **Sharding** (for horizontal scalability). **MongoDB Atlas** provides managed, zone-aware deployment for seamless global distribution and DR.',
+                details: [
+                    {
+                        type: 'Replica Set HA Concept',
+                        code: `// A replica set ensures high availability:
+// Primary: Accepts all writes.
+// Secondaries: Replicate data and support read operations.
+// Arbiters (Optional): Participate in elections, but do not store data.
+
+// Automatic Failover: If the primary fails, the remaining members automatically elect a new primary, 
+// ensuring rapid recovery without manual intervention (a core feature of MongoDB).`,
+                        language: 'text'
+                    }
+                ],
+                atlas: 'For multi-region DR, Atlas can deploy a **Global Cluster** with nodes spread across different continents, providing low-latency access and maximum fault tolerance.'
+            },
+            {
+                id: 'transactions',
+                title: 'Transactional Guarantees (PL/SQL COMMIT/ROLLBACK)',
+                behaviour: 'Oracle operations are implicitly transactional. How does MongoDB ensure atomicity and manage multi-statement changes?',
+                solution: 'MongoDB guarantees **ACID compliance** for changes to a **single document** atomically by design, making explicit transactions unnecessary for most operations. For scenarios requiring updates across multiple documents/collections, MongoDB supports **Multi-Document Transactional APIs** with Snapshot Read Concern.',
+                details: [
+                    {
+                        type: 'Java/Spring Boot',
+                        code: `// 1. Explicit Session-based Transaction (Java)
+try (ClientSession session = client.startSession()) {
+    session.startTransaction(TransactionOptions.builder()
+        .readConcern(ReadConcern.SNAPSHOT).build());
+    
+    // Soft delete all children
+    action.update(Child.class).matching(query_ext).apply(update).all();
+    // Soft delete the parent
+    action.update(Parent.class).matching(query_ext).apply(update).all();
+    
+    session.commitTransaction();
+} catch (RuntimeException e) {
+    session.abortTransaction();
+}`,
+                        language: 'java'
+                    },
+                    {
+                        type: 'Spring Boot @Transactional',
+                        code: `@Transactional(label = { "mongo: readConcern=snapshot" })
+void deletePolicy(int policyNumber) {
+    // Both updates occur within a single transaction
+    template.update(Parent.class).matching(query_ext).apply(update).all();
+    template.update(Child.class).matching(query).apply(update).all();
+};`,
+                        language: 'java'
+                    }
+                ],
+                security: 'To prevent support staff from bypassing transactions via Compass, disable database writes for their users and mandate that all changes go through a dedicated API that enforces Snapshot-level transactional guarantees.'
+            },
+            {
+                id: 'commitbehavior',
+                title: 'Default Commit Behavior & Production Support Safety',
+                behaviour: 'In Oracle, changes occur within a transaction by default, providing a safety net for "trial" changes (commit/rollback). MongoDB writes outside a transaction are immediately persistent.',
+                solution: 'Production support staff must be trained to **explicitly execute all modifications within a transactional session**. This replicates the try-out-and-commit/rollback capability essential for safety during manual changes.',
+                details: [
+                    {
+                        type: 'Mandatory Transactional Session (JavaScript Shell)',
+                        code: `var session = db.getMongo().startSession();
+var policyCollection = session.getDatabase("quotes").policies;
+
+session.startTransaction( { 
+    readConcern: { level: "snapshot" }, 
+    writeConcern: { w: "majority" } 
+});
+
+// Perform data modifications here (test changes)
+policyCollection.insert(something);
+policyCollection.update(something_else);
+
+// If changes are correct:
+session.commitTransaction();
+
+// If changes are incorrect or risky:
+// session.rollbackTransaction();`,
+                        language: 'javascript'
+                    }
+                ],
+                note: 'This explicit session use is mandatory for any non-trivial manual data modification to maintain the same safety guarantees that Oracle\'s default behavior provided.'
+            },
+            {
+                id: 'sequences',
+                title: 'Sequence Generation (Oracle SEQUENCE)',
+                behaviour: 'Oracle provides built-in sequences for generating unique, auto-incrementing primary keys. How is this replicated in a document database?',
+                solution: 'MongoDB does not have native sequences. This functionality is implemented at the **application layer** using a dedicated `sequence` collection and the atomic `findAndModify` command to ensure serialization of the increment operation.',
+                details: [
+                    {
+                        type: 'Sequence Collection Structure (JavaScript)',
+                        code: `{
+    "name": "policy_id_seq",
+    "sequence": 1000
+}`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Atomic Increment and Retrieve (Java)',
+                        code: `Query query = new Query(Criteria.where("name").is("policy_id_seq"));
+Update update = new Update().inc("sequence", 1);
+
+// findAndModify ensures atomic increment and returns the new value
+Sequence newestValue = template.update(Sequence.class)
+    .matching(query)
+    .apply(update)
+    .withOptions(FindAndModifyOptions.options().returnNew(true))
+    .findAndModifyValue();
+
+policy_to_insert.setSequenceId(newestValue.getSequence());
+template.insert(policy_to_insert);`,
+                        language: 'java'
+                    }
+                ],
+                optimization: 'To optimize, increment the sequence by a larger block (e.g., 1000) and cache the range in the application memory, reducing database calls.'
+            },
+            {
+                id: 'triggers',
+                title: 'Triggers (Oracle BEFORE/AFTER INSERT/UPDATE)',
+                behaviour: 'Oracle PL/SQL uses data triggers to execute server-side logic in response to DML operations.',
+                solution: 'MongoDB uses the **Change Streams API** or managed **Atlas Database Triggers**. Change Streams allow applications to subscribe to the oplog for real-time change events. Atlas Triggers run serverless business logic (JavaScript) in response to these events.',
+                details: [
+                    {
+                        type: 'Change Stream Implementation (Java)',
+                        code: `Flux changeStream = reactiveTemplate
+    .changeStream(newAggregation(match(
+        // Filter for specific events, e.g., 'update' where status is 'deleted'
+        Criteria.where("operationType").is("update")
+        .andOperator(Criteria.where("body.status").is("deleted"))
+    ), Parent.class, ChangeStreamOptions.empty(), "parent");
+
+changeStream.doOnNext(event -> {
+    Document document = event.getBody();
+    // 1. Invoke audit method (Equivalent to BEFORE/AFTER)
+    Policies.auditSoftDeleteEvent(document); 
+    // 2. Make downstream changes
+    Extension.removeAssociatedDocumentsByParentEvent(document);
+}).subscribe();`,
+                        language: 'java'
+                    }
+                ],
+                atlas: 'Atlas Database Triggers are a fully managed, serverless implementation that scales independently of the database. Logic is written in JavaScript.'
+            },
+            {
+                id: 'schedulers',
+                title: 'Job Schedulers (Oracle DBMS_JOB / Scheduler)',
+                behaviour: 'Oracle uses dedicated database features (like DBMS_JOB) for time-based, recurring tasks, tightly coupling scheduling with the database.',
+                solution: 'Job scheduling should be decoupled and handled by the **application layer**. MongoDB Atlas provides **Scheduled Triggers** based on CRON schedules. For broader enterprise use, **Kubernetes CronJobs** offer a unified, platform-level solution, requiring no new hardware.',
+                details: [
+                    {
+                        type: 'Atlas Scheduled Trigger (Concept)',
+                        code: `// The logic for a scheduled task (e.g., 'generateDailyReport') is written in a 
+// serverless JavaScript function. 
+// The trigger is configured in the Atlas UI with a CRON expression (e.g., '0 7 * * *' for 7:00 AM daily).
+// This runs outside the database in a scalable serverless environment.`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'External Scheduler (Kubernetes CronJob)',
+                        code: `// For applications modernized onto Kubernetes, a CronJob provides a unified solution:
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: daily-report-job
+spec:
+  schedule: "0 7 * * *" # Daily at 7:00 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: report-container
+            image: my-app/report-processor:latest
+            command: ["python", "/app/generate_report.py"]
+          restartPolicy: OnFailure`,
+                        language: 'yaml'
+                    }
+                ],
+                note: 'This decoupling eliminates database license costs associated with dedicated scheduling features.'
+            },
+            {
+                id: 'integrity',
+                title: 'Referential Integrity (Oracle Foreign Keys)',
+                behaviour: 'Relational databases enforce parent-child relationships using foreign key constraints, including cascade delete functionality.',
+                solution: 'The recommended solution is **Data Embedding**, where child documents are physically stored inside the parent document. This provides referential integrity out-of-the-box. If embedding is not feasible, integrity checks (find parent before insert/update child) and cascading deletes must be implemented explicitly at the **application layer** (e.g., in Spring Boot repository).',
+                details: [
+                    {
+                        type: 'Embedded Document Example (JavaScript)',
+                        code: `// Referential Integrity is inherent in this structure
+{
+    "parent_field1": "value",
+    "children":[
+        {
+            "child_field1": "value",
+            "child_field2": "value"
+        },
+        // ... more children
+    ]
+}`,
+                        language: 'javascript'
+                    }
+                ],
+                app_layer: 'Application-level checks executed within a **multi-document transaction** are required when embedding is not used.'
+            },
+            {
+                id: 'constraints',
+                title: 'Table/Field Constraints (NOT NULL, CHECK, UNIQUE)',
+                behaviour: 'Oracle imposes structure (data type, uniqueness, non-null) at the table level.',
+                solution: 'MongoDB uses **JSON Schema Validation** to define required fields, data types, and value ranges at the collection level. **Unique Indexes** can enforce uniqueness constraints, often combined with `partialFilterExpression` for conditional uniqueness.',
+                details: [
+                    {
+                        type: 'JSON Schema Validation (JavaScript Shell)',
+                        code: `db.createCollection("students", {
+    validator: {
+        $jsonSchema: {
+            bsonType: "object",
+            required: [ "name", "year" ],
+            properties: {
+                name: { bsonType: "string", description: "'name' must be a string" },
+                year: { bsonType: "int", minimum: 2017 },
+                gpa: { bsonType: [ "double" ], description: "'gpa' must be a double if it exists" }
+            }
+        }
+    }
+})`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Conditional Unique Index (JavaScript Shell)',
+                        code: `// Ensures uniqueness only for 'active' policies
+db.users.createIndex(
+    { policyholderName: 1, policyType: 1},
+    { unique: true, partialFilterExpression: { status: { $ne: "closed"} } }
+)`,
+                        language: 'javascript'
+                    }
+                ]
+            },
+            {
+                id: 'locking',
+                title: 'Application-Level Locking (SELECT FOR UPDATE)',
+                behaviour: 'Legacy Oracle apps use `SELECT FOR UPDATE` or flag fields to implement a lock mechanism so only one user can modify a business entity.',
+                solution: 'MongoDB uses the **atomic `findAndModify()`** command to check the lock status and update the lock fields (`locked: true`, `lockedBy: userId`) in a single, atomic operation, preventing race conditions.',
+                details: [
+                    {
+                        type: 'Locking Logic (Java)',
+                        code: `boolean checkAndLockPolicy(int policyId, ObjectId userId) {
+    Criteria criteria = new Criteria().and("policyId").is(policyId)
+        .andOperator(new Criteria().orOperator(
+            // Policy must be unlocked OR locked by the current user
+            Criteria.and("locked").is(false),
+            Criteria.and("locked").is(true).and("lockedBy").is(userId)
+        ));
+
+    Query query = new Query(criteria);
+    Update update = new Update().set("locked", true).set("lockedBy", userId);
+    
+    // Atomically find and modify the document based on the criteria
+    Policy updatedPolicy = mongoTemplate.findAndModify(query, update, options, Policy.class);
+
+    if (updatedPolicy != null) {
+        return updatedPolicy.getLockedBy().equals(userId);
+    }
+    return false;
+}`,
+                        language: 'java'
+                    }
+                ],
+                note: 'The `findAndModify` command guarantees that no other session can update or modify the record during this critical check-and-set operation.'
+            },
+            {
+                id: 'oracledblinks',
+                title: 'Database Links (Oracle DB Links)',
+                behaviour: 'Oracle Database Links allow one database instance to access data and code in a separate, remote database instance directly via the database layer.',
+                solution: 'This feature is replaced by modern, application-centric communication. Use **REST APIs or gRPC** for inter-service communication. For read-only/reporting needs across multiple MongoDB instances, use the **MongoDB Atlas Data Federation Service**.',
+                details: [
+                    {
+                        type: 'Modern Application Layer (REST/gRPC)',
+                        code: `// Instead of a database link, Microservice A uses an HTTP client 
+// to call a dedicated API (Microservice B) that owns the remote data.
+
+// Service A (Conceptual Java Call)
+// private RestTemplate restTemplate;
+// public RemoteData fetchRemoteResource(String id) {
+//     return restTemplate.getForObject("http://microservice-b/api/resource/" + id, RemoteData.class);
+// }`,
+                        language: 'java'
+                    },
+                    {
+                        type: 'Atlas Data Federation (Reporting)',
+                        code: `// Use a single query endpoint to federate data from:
+// 1. Cluster A (MongoDB Atlas)
+// 2. Cluster B (MongoDB Atlas)
+// 3. External sources like S3/Azure Blob Storage
+
+// This centralizes reporting without database-to-database connections.`,
+                        language: 'text'
+                    }
+                ],
+                app_layer: 'This shift enforces service ownership, better security, and clearer separation of concerns, which is a key principle of application modernization.'
+            },
+            {
+                id: 'messaging',
+                title: 'Messaging & Queuing (DBMS_PIPE / Advanced Queuing)',
+                behaviour: 'Oracle PL/SQL uses packages like `DBMS_PIPE` and `Advanced Queuing` for inter-session communication and asynchronous processing.',
+                solution: 'In a modernized application, synchronous and asynchronous communication is moved entirely to the **application layer**. This is handled by **REST APIs, gRPC, Apache Kafka, or RabbitMQ**. Database-level piping becomes obsolete.',
+                details: [
+                    {
+                        type: 'Core Technology Replacement',
+                        code: 'Asynchronous communication uses modern queuing and streaming technologies like Apache Kafka or RabbitMQ. Synchronous communication uses REST APIs or gRPC.',
+                        language: 'text'
+                    }
+                ]
+            },
+            {
+                id: 'masking',
+                title: 'Data Obfuscation and Masking',
+                behaviour: 'Need to hide sensitive data (e.g., PII) based on user roles or permissions.',
+                solution: 'Use **Views** that dynamically obfuscate data via the Aggregation Framework’s `$set` and `$cond` operators. The view logic checks the current user\'s roles (`$$USER_ROLES.role`) to determine whether to display the full field or a masked version.',
+                details: [
+                    {
+                        type: 'View Creation Logic (JavaScript Shell)',
+                        code: `db.createView(
+    "userView", "users",
+    [{
+        $set: {
+            "phone": {
+                $cond: {
+                    // Check if the current user has the 'FullViewUser' role
+                    if: { $in: ["FullViewUser", "$$USER_ROLES.role"] },
+                    then: "$phone", // Show unmasked
+                    else: {
+                        // Mask first 6 digits
+                        $concat: ["XXXXXX", { $substrCP: ["$phone", 6, { $strLenCP: "$phone" }] }]
+                    }
+                }
+            }
+        }
+    }]
+)`,
+                        language: 'javascript'
+                    }
+                ],
+                restriction: 'Read permissions must be restricted on the original collection to enforce all access through the new view.'
+            },
+            {
+                id: 'querylanguage',
+                title: 'Query Language Shift (SQL to Query API/Aggregation)',
+                behaviour: 'Developers rely on declarative SQL (SELECT, WHERE, GROUP BY) and complex DML, which are fundamentally text-based and relational.',
+                solution: 'The **MongoDB Query API** uses a JSON-like syntax for basic CRUD operations. Complex data manipulation (joins, grouping, transformations) is handled by the multi-stage **Aggregation Pipeline**, which acts as a powerful, server-side data processor.',
+                details: [
+                    {
+                        type: 'SQL vs. Query API (Basic)',
+                        code: `// SQL: Select * from users where status = 'active' AND age > 30;
+
+// MongoDB Query API (JavaScript Shell):
+db.users.find({
+    "status": "active",
+    "age": { "$gt": 30 }
+})`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'SQL Group By vs. Aggregation Pipeline',
+                        code: `// SQL: SELECT dept, COUNT(*) FROM employees GROUP BY dept;
+
+// MongoDB Aggregation Pipeline:
+db.employees.aggregate([
+    {
+        "$group": {
+            "_id": "$dept", 
+            "employeeCount": { "$count": {} }
+        }
+    }
+])`,
+                        language: 'javascript'
+                    }
+                ],
+                note: 'Mastering the Aggregation Pipeline is the single largest developer shift, replacing most complex Oracle views and report-generating stored procedures.'
+            },
+            {
+                id: 'joins',
+                title: 'Handling Relational Joins (JOINs)',
+                behaviour: 'Oracle enforces relationships via foreign keys and uses JOINs for nearly all multi-table data reads.',
+                solution: 'The primary technique is **Schema Denormalization (Embedding)**, co-locating related data to eliminate joins for *most* reads. Where decoupling is necessary (e.g., large arrays, high-cardinality), use **Manual References**. The **$lookup** aggregation stage acts as a performant left outer join when relationships are needed.',
+                details: [
+                    {
+                        type: 'Embedding vs. Referencing',
+                        code: `// EMBEDDING: Policy and all its Riders in one document (eliminates join)
+{
+    "policyId": 12345,
+    "customer": { "name": "Jane Doe", "id": "C1" },
+    "riders": [
+                        { "name": "Accident", "premium": 50 },
+                        { "name": "Disability", "premium": 100 }
+                    ]
+                }
+
+// MANUAL REFERENCE (For very large/rarely accessed data):
+// Policy document stores the ID of the customer document.
+{
+    "policyId": 12345,
+    "customerId": "C1" // Reference
+}`,
+                        language: 'json'
+                    }
+                ],
+                app_layer: 'Embedding dramatically increases read performance and ensures atomicity, but requires application logic for cascading updates if non-embedded fields change.'
+            },
+            {
+                id: 'indexing',
+                title: 'Indexing Strategy & Performance Tuning',
+                behaviour: 'Oracle indexing relies on primary keys, individual column indexes, and composite indexes to tune relational queries.',
+                solution: 'MongoDB uses **Compound Indexes** (similar to composite indexes) which must adhere to the **ESR Rule (Equality, Sort, Range)** for optimal performance. Developers must learn to use the **`explain()`** method (like Oracle\'s explain plan) to validate if an index is being used effectively, especially on embedded fields.',
+                details: [
+                    {
+                        type: 'Compound Index Creation',
+                        code: `// Goal: Efficiently find policies by customer and sort by issue date.
+
+// SQL: CREATE INDEX policy_cust_date ON policy (customer_id, issue_date DESC);
+
+// MongoDB Shell:
+db.policies.createIndex(
+    { "customerId": 1, "issueDate": -1 }, 
+    { name: "idx_cust_date" }
+)`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Index Validation (Explain)',
+                        code: `// Always validate index usage:
+db.policies.find({ 
+    "customerId": "C100" 
+}).sort({ 
+    "issueDate": -1 
+}).explain("executionStats") 
+
+// The 'winningPlan' and 'totalDocsExamined' fields must be scrutinized.`,
+                        language: 'javascript'
+                    }
+                ],
+                optimization: 'Indexes on embedded fields (e.g., `riders.premium`) are also crucial for performance, a concept not directly mirrored in the relational world.'
+            }
+        ];
+
+        // JavaScript to manage the accordion and code tabs
+        function initializeAccordion() {
+            const container = document.getElementById('accordion-container');
+            
+            deepDiveData.forEach(item => {
+                // Dynamically create the full item HTML structure
+                const accordionItem = document.createElement('div');
+                accordionItem.className = 'bg-slate-700 rounded-xl shadow-lg';
+                
+                // Use a temporary container to parse the HTML string and find the header
+                // NOTE: We MUST ensure item.id is used to create unique IDs for elements
+                const itemHtml = `
+                    <div class="p-5 cursor-pointer flex justify-between items-center" id="header-${item.id}" data-target="#body-${item.id}">
+                        <h3 class="text-xl font-semibold text-mongo-light">${item.title}</h3>
+                        <svg class="w-6 h-6 transform transition duration-300" data-arrow="#body-${item.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </div>
+                    <div id="body-${item.id}" class="hidden p-5 pt-0">
+                        <!-- behaviour & Solution -->
+                        <div class="mb-4 text-slate-300">
+                            <p class="mb-2"><span class="font-bold text-red-300">Oracle behaviour:</span> ${item.behaviour}</p>
+                            <p class="mb-4"><span class="font-bold text-mongo-accent">MongoDB Solution:</span> ${item.solution}</p>
+                            ${item.optimization ? `<p class="text-sm italic text-yellow-300">Optimization Note: ${item.optimization}</p>` : ''}
+                            ${item.security ? `<p class="text-sm italic text-yellow-300">Security Note: ${item.security}</p>` : ''}
+                            ${item.app_layer ? `<p class="text-sm italic text-yellow-300">Integration Note: ${item.app_layer}</p>` : ''}
+                            ${item.note ? `<p class="text-sm italic text-yellow-300">Note: ${item.note}</p>` : ''}
+                            ${item.restriction ? `<p class="text-sm italic text-yellow-300">Restriction Note: ${item.restriction}</p>` : ''}
+                            ${item.atlas ? `<p class="text-sm italic text-yellow-300">Atlas Note: ${item.atlas}</p>` : ''}
+                        </div>
+
+                        <!-- Code Tabs -->
+                        <div class="mt-4">
+                            <div class="flex border-b border-mongo-blue mb-4" id="tabs-${item.id}">
+                                ${item.details.map((detail, index) => `
+                                    <button class="code-tab px-4 py-2 text-sm text-slate-400 transition duration-150 ${index === 0 ? 'active' : ''}" 
+                                            data-tab-for="#code-content-${item.id}-${index}">${detail.type}</button>
+                                `).join('')}
+                            </div>
+                            <div id="code-contents-${item.id}">
+                                ${item.details.map((detail, index) => `
+                                    <div id="code-content-${item.id}-${index}" class="code-container bg-slate-900 p-4 ${index !== 0 ? 'hidden' : ''}">
+                                        <pre class="whitespace-pre-wrap text-sm text-mongo-light"><code class="language-${detail.language}">${detail.code.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                accordionItem.innerHTML = itemHtml;
+                container.appendChild(accordionItem);
+
+                // --- FIX: Attach event listener directly to the dynamically created element ---
+                const headerElement = accordionItem.querySelector(`#header-${item.id}`);
+
+                headerElement.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-target');
+                    const targetBody = document.querySelector(targetId);
+                    const arrow = this.querySelector('[data-arrow]'); // Query relative to 'this' (the header)
+                    
+                    // Toggle visibility of the content body
+                    targetBody.classList.toggle('hidden');
+                    // Rotate arrow
+                    arrow.classList.toggle('rotate-180');
+                });
+                // --- END FIX ---
+
+
+                // Add event listeners for code tabs
+                const tabsContainer = accordionItem.querySelector(`#tabs-${item.id}`);
+                const codeContentsContainer = accordionItem.querySelector(`#code-contents-${item.id}`);
+                
+                if (tabsContainer && codeContentsContainer) {
+                    tabsContainer.querySelectorAll('.code-tab').forEach(tab => {
+                        tab.addEventListener('click', function() {
+                            const targetContentId = this.getAttribute('data-tab-for');
+                            
+                            // Deactivate all tabs and hide all content
+                            tabsContainer.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+                            codeContentsContainer.querySelectorAll('.code-container').forEach(c => c.classList.add('hidden'));
+
+                            // Activate the clicked tab
+                            this.classList.add('active');
+                            // Show the corresponding content
+                            document.querySelector(targetContentId).classList.remove('hidden');
+                        });
+                    });
+                }
+            });
+        }
+
+        // Initialize the website functionality on load
+        window.onload = initializeAccordion;
+    </script>
+</body>
+</html>
