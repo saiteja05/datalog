@@ -211,7 +211,7 @@
                         <li><strong class="text-[--mongo-text]">Capacity Planning (4TB Shard Limit):</strong> A 20TB dataset requires a minimum of 5-6 shards.<span class="ref-link">[4][5]</span></li>
                     </ul>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content">
                             <p>This is a critical risk mitigation and future-proofing strategy. Knowing the 4TB "soft-cap" per shard now prevents you from building an architecture that is guaranteed to fail at 5TB, avoiding a costly, high-risk emergency re-architecture later.</p>
                         </div>
@@ -273,7 +273,7 @@
                     </div>
                     
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content">
                             <p>This architecture provides the optimal balance of cost and scalability. It gives you the scalability of a sharded architecture (even data distribution) with the cost-efficiency and operational simplicity of vertical scaling (just clicking a button in the Atlas UI).</p>
                         </div>
@@ -324,7 +324,7 @@
                     </div>
                     
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content">
                            <p>This strategy is optimized for minimal initial cost and complexity. It's the right choice for new projects, internal tools, or businesses with uncertain or slow-growth projections. It avoids the (slightly) higher cost and configuration overhead of a sharded cluster until it's absolutely necessary.</p>
                         </div>
@@ -337,13 +337,13 @@
                     </details>
                     <p class="text-[--mongo-text-muted] mt-4 font-semibold">Note: this will still need rebalancing on production.</p>
                     <details class="expandable-box">
-                        <summary>Why (Business Value of Note)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content">
                            <p>This warning highlights the primary business risk of the "Start Small" strategy. That "time-consuming task" (rebalancing) introduces significant performance risk to your live application. It can cause latency spikes, resource contention, and unpredictable behavior for hours or even days while the data is redistributed.</p>
                         </div>
                     </details>
                     <details class="expandable-box">
-                        <summary>Analysis of Note</summary>
+                        <summary>Analysis</summary>
                         <div class="expandable-box-content">
                             <p>The "Fast-Growth" (1A) strategy avoids this specific pain point entirely by starting sharded. This "Start Small" (1B) strategy defers the complexity, but you pay for it later with this high-risk rebalancing event. This is a critical trade-off to discuss with stakeholders: minimal cost now vs. operational risk later.</p>
                         </div>
@@ -364,7 +364,7 @@
                         <div>
                             <strong class="text-white">Document Model (Schema-less)</strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Delivers faster time-to-market. Developers can map application objects directly to the database, eliminating the complex "object-relational mapping" (ORM) tax. This flexibility allows for rapid iteration and shipping new features without complex, high-risk schema migrations.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -376,7 +376,7 @@
                         <div>
                             <strong class="text-white">Sharding<span class="ref-link">[8][9]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Provides cost-effective horizontal scalability. Instead of buying a single, massive, and expensive "scale-up" server, you can scale out by adding cheaper, commodity hardware. This creates a predictable, linear cost model for growth and ensures high performance as user load increases, preventing crashes that lose revenue.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -388,7 +388,7 @@
                         <div>
                             <strong class="text-white">Replica Sets</strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Guarantees high availability (HA) and automated disaster recovery. For any critical application, uptime is paramount. Automatic failover (in seconds) means a single server crash is a non-event for users, protecting revenue, meeting SLAs, and preserving brand reputation.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -400,7 +400,7 @@
                         <div>
                             <strong class="text-white">ACID Transactions<span class="ref-link">[10][11]</span></strong>
                              <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Enables the development of mission-critical, reliable applications (e.g., financial ledgers, booking systems) on MongoDB by ensuring "all-or-nothing" data integrity across multiple documents.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -412,7 +412,7 @@
                         <div>
                             <strong class="text-white">Aggregation Pipeline</strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Enables real-time business intelligence (BI) and analytics directly on live operational data. This avoids the cost and delay of slow, nightly ETL (Extract, Transform, Load) jobs to a separate data warehouse, empowering faster, data-driven decisions.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -424,7 +424,7 @@
                         <div>
                             <strong class="text-white">Full-Text Search (Atlas Search)<span class="ref-link">[12]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Dramatically reduces architectural complexity and TCO. It replaces the need to build, manage, and synchronize a separate, complex Elasticsearch/Solr cluster. This allows teams to ship rich, modern search experiences (autocomplete, fuzzy search) faster and at a lower cost.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -436,7 +436,7 @@
                         <div>
                             <strong class="text-white">Time Series Collections<span class="ref-link">[13][14]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Provides massive storage cost savings (up to 90%) and extreme query performance for high-volume, timestamped data (IoT, metrics, finance). This makes handling massive data streams economically viable.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -448,7 +448,7 @@
                         <div>
                             <strong class="text-white">GridFS<span class="ref-link">[15][16]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Simplifies application architecture for systems that need to store moderate amounts of large files (e.g., user-uploaded PDFs, profile pictures) by keeping the files and their metadata in one database.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -471,7 +471,7 @@
                         <div>
                             <strong class="text-white">Atlas Vector Search<span class="ref-link">[12][17][18]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>This is the on-ramp to building modern AI-powered applications. It enables semantic (meaning-based) search, recommendations ("find more items like this"), and RAG (Retrieval-Augmented Generation) for chatbots that can "reason" over your private data.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -483,7 +483,7 @@
                         <div>
                             <strong class="text-white">Data Federation<span class="ref-link">[19][20]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Delivers massive cost optimization via intelligent data tiering. It allows you to archive "cold" (old, rarely accessed) data to low-cost S3 storage (as Parquet) while still retaining the ability to query it on demand.</p></div>
                             </details>
                             <details class="expandable-box">
@@ -495,7 +495,7 @@
                         <div>
                             <strong class="text-white">Atlas Triggers<span class="ref-link">[21][22][23]</span></strong>
                             <details class="expandable-box">
-                                <summary>Why (Business Value)</summary>
+                                <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Enables highly responsive, event-driven applications. Instead of a slow batch job (e.g., "check inventory every hour"), a Trigger can instantly react to a change (e.g., inventory < 10) and execute code (like sending an alert or placing a reorder).</p></div>
                             </details>
                             <details class="expandable-box">
@@ -518,7 +518,7 @@
                     <p class="text-[--mongo-text] mb-4">This decision framework directly aligns your infrastructure cost and isolation model with your business model. The wrong choice can kill profitability or block enterprise sales.<span class="ref-link">[24][25]</span></p>
                     
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This decision framework directly aligns your infrastructure cost and isolation model with your business model. The wrong choice can kill profitability or block enterprise sales.</p></div>
                     </details>
                     
@@ -551,7 +551,7 @@
                     
                     <h4 class="text-xl font-semibold text-white mt-4">Shard Key Selection<span class="ref-link">[29][9]</span></h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This decision ensures the long-term health and scalability of your entire application. A good key ensures performance and stability as you grow. A bad key (like a timestamp) guarantees performance bottlenecks, downtime, and an expensive, high-risk re-architecture project.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -569,7 +569,7 @@
 
                     <h4 class="text-xl font-semibold text-white mt-6">Balancer Management</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This is a simple risk mitigation strategy to protect revenue. The balancer's job (moving data to keep shards even) consumes I/O and network resources.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -616,7 +616,7 @@ db.settings.updateOne(
                     
                     <h4 class="text-xl font-semibold text-white mt-4">Network Security (The "Mote")</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This is a non-negotiable security control that drastically reduces the attack surface. It ensures that only your trusted application servers can even attempt to connect to the database. This is a foundational requirement for achieving compliance (like SOC2, HIPAA, PCI) and preventing unauthorized access.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -626,7 +626,7 @@ db.settings.updateOne(
                     
                     <h4 class="text-xl font-semibold text-white mt-6">Authentication & Authorization (The "Guards")</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This eliminates the risk of leaked or shared credentials. When an employee leaves, their access is revoked centrally at the IdP, and their database access disappears instantly. This provides a clear, auditable trail of access and is a critical control for internal security.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -636,7 +636,7 @@ db.settings.updateOne(
                     
                     <h4 class="text-xl font-semibold text-white mt-6">Encryption (The "Safe")</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This provides "zero trust" data protection. It's the ultimate safeguard against a full database breach or a malicious insider. For businesses in healthcare (HIPAA) or finance, this feature is often the key differentiator that makes it possible to use a DBaaS platform while remaining compliant.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -655,7 +655,7 @@ db.settings.updateOne(
                     
                     <h4 class="text-xl font-semibold text-white mt-4">Key Metrics to Monitor (The "Dashboard")</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This provides proactive problem detection. Instead of waiting for a customer to call and say "the app is slow" (reactive), this dashboard alerts you to a degrading query or resource bottleneck (proactive). This minimizes performance-related downtime and improves user satisfaction.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -673,7 +673,7 @@ db.settings.updateOne(
                     
                     <h4 class="text-xl font-semibold text-white mt-6">Alerting Strategy (The "Pager")</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This ensures the right person is notified of the right problem, immediately. It automates the detection part of your incident response, slashing your Time-to-Resolution (TTR) and protecting revenue.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -700,7 +700,7 @@ db.settings.updateOne(
 
                     <h4 class="text-xl font-semibold text-white mt-4">Cluster Sizing & Scaling Model</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This is the #1 strategy for reducing TCO. Indexing is free. Hardware is not. A culture of performance tuning directly translates to lower infrastructure costs, maximizing your profitability.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -710,7 +710,7 @@ db.settings.updateOne(
 
                     <h4 class="text-xl font-semibold text-white mt-6">Serverless vs. Provisioned Clusters</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This is right-sizing your environment to your workload. Using Serverless for dev/test alone can cut non-production infrastructure costs by 50-70% as you only pay for the operations you run, not for idle servers overnight and on weekends.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -734,7 +734,7 @@ db.settings.updateOne(
                      
                     <h4 class="text-xl font-semibold text-white mt-4">Backup vs. Restore Strategy (RPO/RTO)</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>PITR is your "undo button" for catastrophic human error (e.g., a bad script deletes all user data). This capability can save the entire business from an extinction-level event. The cost is negligible compared to the risk of irreversible data loss.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -750,7 +750,7 @@ db.settings.updateOne(
                      
                     <h4 class="text-xl font-semibold text-white mt-6">Disaster Recovery (DR) Plan</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This provides regional fault tolerance. For applications with a global user base or an extremely high uptime requirement (e.g., 99.99%), this is the only way to survive a cloud provider's regional outage and continue operating. This is a high-cost, high-value feature for mission-critical systems.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -769,7 +769,7 @@ db.settings.updateOne(
                      
                     <h4 class="text-xl font-semibold text-white mt-4">Schema Governance</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This prevents data corruption and application-level bugs before they happen. It enforces data quality at the database level, dramatically reducing developer time spent debugging "bad data" and simplifying application logic.</p></div>
                     </details>
                     <details class="expandable-box">
@@ -779,7 +779,7 @@ db.settings.updateOne(
                      
                     <h4 class="text-xl font-semibold text-white mt-6">CI/CD & Index Management</h4>
                     <details class="expandable-box">
-                        <summary>Why (Business Value)</summary>
+                        <summary>Why</summary>
                         <div class="expandable-box-content"><p>This de-risks database migrations. It makes schema and index changes a routine, automated, and safe operation instead of a high-stress, "all-hands-on-deck" manual event. This supports a true DevOps culture and increases deployment frequency.</p></div>
                     </details>
                     <details class="expandable-box">
