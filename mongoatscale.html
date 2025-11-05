@@ -158,6 +158,11 @@
             margin-left: 0.25rem;
             vertical-align: super;
             text-decoration: none;
+            transition: opacity 0.2s ease; /* Added transition */
+        }
+        .ref-link:hover { /* Added hover effect */
+            opacity: 1;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -167,7 +172,7 @@
     <header class="hero-gradient text-white shadow-lg">
         <div class="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
             <h1 class="text-4xl md:text-5xl font-bold tracking-tight">MongoDB Atlas At Scale</h1>
-            <p class="mt-4 text-xl md:text-2xl text-gray-300">A Comprehensive Runbook </p>
+            <p class="mt-4 text-xl md:text-2xl text-gray-300">A Comprehensive Runbook (<a href="https://docs.google.com/document/d/1hEjghek2Rxk_Iv912dYIdUvbAitL61bHE7J5vwU52Tc/edit?tab=t.0">Source</a>) </p>
         </div>
     </header>
 
@@ -204,11 +209,11 @@
                     </div>
 
                     <h4 class="text-xl font-semibold text-white mt-4">Managing 20TB+ Growth</h4>
-                    <p class="text-[--mongo-text] mb-4">Avoid performance degradation during massive data loads without live rebalancing.<span class="ref-link">[1][2][3]</span></p>
+                    <p class="text-[--mongo-text] mb-4">Avoid performance degradation during massive data loads without live rebalancing.<a href="https://www.tencentcloud.com/techpedia/114181" target="_blank" rel="noopener noreferrer" class="ref-link">[1]</a><a href="http://learnmongodbthehardway.com/schema/sharding/" target="_blank" rel="noopener noreferrer" class="ref-link">[2]</a><a href="https://stackoverflow.com/questions/31751008/is-mongodb-always-write-to-primary-shard-and-then-rebalance" target="_blank" rel="noopener noreferrer" class="ref-link">[3]</a></p>
                     <ul class="list-disc list-outside space-y-2 pl-5 text-[--mongo-text-muted] mb-4">
                         <li><strong class="text-[--mongo-text]">Pre-sharding is essential:</strong> Manually split chunks *before* bulk loads.</li>
                         <li>Disable the balancer during initial data load to prevent contention.</li>
-                        <li><strong class="text-[--mongo-text]">Capacity Planning (4TB Shard Limit):</strong> A 20TB dataset requires a minimum of 5-6 shards.<span class="ref-link">[4][5]</span></li>
+                        <li><strong class="text-[--mongo-text]">Capacity Planning (4TB Shard Limit):</strong> A 20TB dataset requires a minimum of 5-6 shards.<a href="https://www.mongodb.com/community/forums/t/limits-on-data-size-2/173571" target="_blank" rel="noopener noreferrer" class="ref-link">[4]</a><a href="https://www.mongodb.com/community/forums/t/mongodb-atlas-storage-pricing-for-chunks-and-shard/309514" target="_blank" rel="noopener noreferrer" class="ref-link">[5]</a></li>
                     </ul>
                     <details class="expandable-box">
                         <summary>Why</summary>
@@ -374,7 +379,7 @@
                         </div>
 
                         <div>
-                            <strong class="text-white">Sharding<span class="ref-link">[8][9]</span></strong>
+                            <strong class="text-white">Sharding<a href="https://www.percona.com/blog/when-should-i-enable-mongodb-sharding/" target="_blank" rel="noopener noreferrer" class="ref-link">[8]</a><a href="https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/" target="_blank" rel="noopener noreferrer" class="ref-link">[9]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Provides cost-effective horizontal scalability. Instead of buying a single, massive, and expensive "scale-up" server, you can scale out by adding cheaper, commodity hardware. This creates a predictable, linear cost model for growth and ensures high performance as user load increases, preventing crashes.</p></div>
@@ -398,7 +403,7 @@
                         </div>
 
                         <div>
-                            <strong class="text-white">ACID Transactions<span class="ref-link">[10][11]</span></strong>
+                            <strong class="text-white">ACID Transactions<a href="https://severalnines.com/blog/overview-multi-document-acid-transactions-mongodb-and-how-use-them/" target="_blank" rel="noopener noreferrer" class="ref-link">[10]</a><a href="https://www.mongodb.com/resources/products/capabilities/performance-best-practices-transactions-and-read-write-concerns" target="_blank" rel="noopener noreferrer" class="ref-link">[11]</a></strong>
                              <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Enables the development of mission-critical, reliable applications (e.g., financial ledgers, booking systems) on MongoDB by ensuring "all-or-nothing" data integrity across multiple documents.</p></div>
@@ -422,7 +427,7 @@
                         </div>
 
                         <div>
-                            <strong class="text-white">Full-Text Search (Atlas Search)<span class="ref-link">[12]</span></strong>
+                            <strong class="text-white">Full-Text Search (Atlas Search)<a href="https://adasci.org/mongodb-atlas-vector-search-for-rag-powered-Ilm-applications/" target="_blank" rel="noopener noreferrer" class="ref-link">[12]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Dramatically reduces architectural complexity and TCO. It replaces the need to build, manage, and synchronize a separate, complex Elasticsearch/Solr cluster. This allows teams to ship rich, modern search experiences (autocomplete, fuzzy search) faster and at a lower cost.</p></div>
@@ -434,7 +439,7 @@
                         </div>
 
                         <div>
-                            <strong class="text-white">Time Series Collections<span class="ref-link">[13][14]</span></strong>
+                            <strong class="text-white">Time Series Collections<a href="https://www.geopits.com/blog/guide-to-mongodb-time-series-collection" target="_blank" rel="noopener noreferrer" class="ref-link">[13]</a><a href="https://www.mongodb.com/docs/manual/core/timeseries/timeseries-considerations/" target="_blank" rel="noopener noreferrer" class="ref-link">[14]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Provides massive storage cost savings (up to 90%) and extreme query performance for high-volume, timestamped data (IoT, metrics, finance). This makes handling massive data streams economically viable.</p></div>
@@ -446,7 +451,7 @@
                         </div>
                         
                         <div>
-                            <strong class="text-white">GridFS<span class="ref-link">[15][16]</span></strong>
+                            <strong class="text-white">GridFS<a href="https://www.topcoder.com/thrive/articles/storing-large-files-in-mongodb-using-gridfs" target="_blank" rel="noopener noreferrer" class="ref-link">[15]</a><a href="https://www.mongodb.com/community/forums/t/storing-data-images-audio-video-16-mb-in-mongodb-or-gridfs/215074" target="_blank" rel="noopener noreferrer" class="ref-link">[16]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Simplifies application architecture for systems that need to store moderate amounts of large files (e.g., user-uploaded PDFs, profile pictures) by keeping the files and their metadata in one database.</p></div>
@@ -469,7 +474,7 @@
                     <div class="space-y-6">
                         
                         <div>
-                            <strong class="text-white">Atlas Vector Search<span class="ref-link">[12][17][18]</span></strong>
+                            <strong class="text-white">Atlas Vector Search<a href="https://adasci.org/mongodb-atlas-vector-search-for-rag-powered-Ilm-applications/" target="_blank" rel="noopener noreferrer" class="ref-link">[12]</a><a href="https://www.mongodb.com/products/platform/atlas-vector-search" target="_blank" rel="noopener noreferrer" class="ref-link">[17]</a><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank" rel="noopener noreferrer" class="ref-link">[18]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>This is the on-ramp to building modern AI-powered applications. It enables semantic (meaning-based) search, recommendations ("find more items like this"), and RAG (Retrieval-Augmented Generation) for chatbots that can "reason" over your private data.</p></div>
@@ -481,7 +486,7 @@
                         </div>
 
                         <div>
-                            <strong class="text-white">Data Federation<span class="ref-link">[19][20]</span></strong>
+                            <strong class="text-white">Data Federation<a href="https://www.mongodb.com/docs/atlas/data-federation/" target="_blank" rel="noopener noreferrer" class="ref-link">[19]</a><a href="https://www.mongodb.com/docs/atlas/data-federation/tutorial/deploy/" target="_blank" rel="noopener noreferrer" class="ref-link">[20]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Delivers massive cost optimization via intelligent data tiering. It allows you to archive "cold" (old, rarely accessed) data to low-cost S3 storage (as Parquet) while still retaining the ability to query it on demand.</p></div>
@@ -493,7 +498,7 @@
                         </div>
 
                         <div>
-                            <strong class="text-white">Atlas Triggers<span class="ref-link">[21][22][23]</span></strong>
+                            <strong class="text-white">Atlas Triggers<a href="https://www.mongodb.com/docs/atlas/atlas-ui/triggers/" target="_blank" rel="noopener noreferrer" class="ref-link">[21]</a><a href="https://www.youtube.com/watch?v=2FoNtDqQODO" target="_blank" rel="noopener noreferrer" class="ref-link">[22]</a><a href="https://www.mongodb.com/resources/products/capabilities/database-triggers" target="_blank" rel="noopener noreferrer" class="ref-link">[23]</a></strong>
                             <details class="expandable-box">
                                 <summary>Why</summary>
                                 <div class="expandable-box-content"><p>Enables highly responsive, event-driven applications. Instead of a slow batch job (e.g., "check inventory every hour"), a Trigger can instantly react to a change (e.g., inventory < 10) and execute code (like sending an alert or placing a reorder).</p></div>
@@ -515,7 +520,7 @@
                         <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0v-2a2 2 0 012-2h5a2 2 0 012 2v2m-6 0v-2a2 2 0 012-2h1a2 2 0 012 2v2" /></svg>
                         <h3 class="text-2xl font-bold">4. Multi-Tenancy Models: The Business of SaaS</h3>
                     </div>
-                    <p class="text-[--mongo-text] mb-4">This decision framework directly aligns your infrastructure cost and isolation model with your business model. The wrong choice can kill profitability or block enterprise sales.<span class="ref-link">[24][25]</span></p>
+                    <p class="text-[--mongo-text] mb-4">This decision framework directly aligns your infrastructure cost and isolation model with your business model. The wrong choice can kill profitability or block enterprise sales.<a href="https://www.mongodb.com/docs/atlas/build-multi-tenant-arch/" target="_blank" rel="noopener noreferrer" class="ref-link">[24]</a><a href="https://www.geeksforgeeks.org/dbms/build-a-multi-tenant-architecture-in-mongodb/" target="_blank" rel="noopener noreferrer" class="ref-link">[25]</a></p>
                     
                     <details class="expandable-box">
                         <summary>Why</summary>
@@ -530,8 +535,8 @@
                     
                     <p class="text-[--mongo-text] mt-4 font-semibold">Key Recommendations:</p>
                     <ul class="list-disc list-outside space-y-2 pl-5 text-[--mongo-text-muted] mt-2">
-                        <li>For shared collections, always use compound indexes with `tenantId` as the first field and shard on `{ tenantId: 1, userId: 1 }` for optimal distribution.<span class="ref-link">[26]</span></li>
-                        <li>For Atlas Vector Search Multi-tenancy, use a single collection with `tenantID` as the index to filter out tenants.<span class="ref-link">[27][28]</span></li>
+                        <li>For shared collections, always use compound indexes with `tenantId` as the first field and shard on `{ tenantId: 1, userId: 1 }` for optimal distribution.<a href="https://www.mongodb.com/community/forums/t/best-shard-key-strategy-for-multi-tenant-e-commerce-platform/289972" target="_blank" rel="noopener noreferrer" class="ref-link">[26]</a></li>
+                        <li>For Atlas Vector Search Multi-tenancy, use a single collection with `tenantID` as the index to filter out tenants.<a href="https://www.mongodb.com/community/forums/t/multi-tenancy-and-vector-search/252916" target="_blank" rel="noopener noreferrer" class="ref-link">[27]</a><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/multi-tenant-architecture/" target="_blank" rel="noopener noreferrer" class="ref-link">[28]</a></li>
                     </ul>
 
                     <details class="expandable-box">
@@ -549,7 +554,7 @@
                         <h3 class="text-2xl font-bold">5. Critical Best Practices: Protecting Production</h3>
                     </div>
                     
-                    <h4 class="text-xl font-semibold text-white mt-4">Shard Key Selection<span class="ref-link">[29][9]</span></h4>
+                    <h4 class="text-xl font-semibold text-white mt-4">Shard Key Selection<a href="https://www.geeksforgeeks.org/mongodb/shard-keys-in-mongodb/" target="_blank" rel="noopener noreferrer" class="ref-link">[29]</a><a href="https://www.mongodb.com/docs/manual/core/sharding-choose-a-shard-key/" target="_blank" rel="noopener noreferrer" class="ref-link">[9]</a></h4>
                     <details class="expandable-box">
                         <summary>Why</summary>
                         <div class="expandable-box-content"><p>This decision ensures the long-term health and scalability of your entire application. A good key ensures performance and stability as you grow. A bad key (like a timestamp) guarantees performance bottlenecks, downtime, and an expensive, high-risk re-architecture project.</p></div>
@@ -597,8 +602,8 @@ db.settings.updateOne(
                     <p class="text-[--mongo-text] mb-4">The <strong>5+1 Solution</strong>: A 3-region setup (5 electable nodes + 1 read-only) that provides <strong class="text-[--mongo-green]">< 5 second</strong> automatic failover with zero downtime if a primary region fails.</p>
                     <p class="text-[--mongo-text] font-semibold">Zero-downtime techniques include:</p>
                     <ul class="list-disc list-outside space-y-2 pl-5 text-[--mongo-text-muted] mt-2">
-                        <li>Storage auto-scaling (first increase is in-place)<span class="ref-link">[6]</span></li>
-                        <li>Live resharding in MongoDB 5.0+ to change shard keys without downtime<span class="ref-link">[7]</span></li>
+                        <li>Storage auto-scaling (first increase is in-place)<a href="https://www.mongodb.com/docs/atlas/customize-storage/" target="_blank" rel="noopener noreferrer" class="ref-link">[6]</a></li>
+                        <li>Live resharding in MongoDB 5.0+ to change shard keys without downtime<a href="https://www.mongodb.com/resources/products/capabilities/scale-out-without-fear-friction-live-resharding-mongodb" target="_blank" rel="noopener noreferrer" class="ref-link">[7]</a></li>
                         <li>Rolling cluster tier upgrades (brief 2-5 second failover)</li>
                     </ul>
                 </section>
@@ -707,7 +712,14 @@ db.settings.updateOne(
                         <summary>Analysis</summary>
                         <div class="expandable-box-content"><p>Don't guess your tier (e.g., M40, M50). Use the Performance Advisor to find and add missing indexes first. A single missing index can make an M40 perform worse than a properly indexed M10. Only scale up (vertical scaling) when your working set (data + indexes) exceeds available RAM. Enable cluster auto-scaling as a safety net, but set a max tier to prevent a bad query from bankrupting you.</p></div>
                     </details>
+                <!-- This section was missing from the user's uploaded HTML, so I will leave it out as requested -->
+                <!--
+                <h4 class="text-xl font-semibold text-white mt-6">Serverless vs. Provisioned Clusters</h4>
+...
+                -->
+                </section> <!-- This closes section 9 -->
 
+                <!-- Section 10: Backup & Disaster Recovery -->
                 <section>
                     <div class="flex items-center text-[--mongo-green] mb-3">
                         <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10.5v3.75m7.5-3.75h.008v.008H19.5v-.008Zm0 3.75h.008v.008H19.5v-.008Zm-3.75 0h.008v.008H15.75v-.008Zm0-3.75h.008v.008H15.75v-.008Zm-3.75 0h.008v.008H12v-.008Zm0 3.75h.008v.008H12v-.008Zm-3.75 0h.008v.008H8.25v-.008Zm0-3.75h.008v.008H8.25v-.008ZM3 10.5a8.25 8.25 0 0113.5-6.521 8.25 8.25 0 019.646 6.521M3 10.5v6.225A2.25 2.25 0 005.25 19.5h13.5A2.25 2.25 0 0021 16.725V10.5" /></svg>
