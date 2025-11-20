@@ -19,82 +19,217 @@
             --mongo-text-muted: #a0a4a8;
             --mongo-border: #004F69;
         }
+        
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--mongo-dark-blue);
             color: var(--mongo-text);
+            line-height: 1.7;
         }
+        
         .hero-gradient {
-            background: var(--mongo-dark-green);
+            background: linear-gradient(135deg, var(--mongo-dark-green) 0%, #001E2B 100%);
+            position: relative;
         }
+        
         .card-icon {
-            width: 1.5rem; /* Slightly smaller for tab content */
-            height: 1.5rem;
+            width: 1.75rem;
+            height: 1.75rem;
             stroke-width: 1.5;
             color: var(--mongo-green);
             flex-shrink: 0;
+            filter: drop-shadow(0 2px 4px rgba(0, 237, 100, 0.3));
         }
         
-        /* Expandable Box Styles */
-        .expandable-box { /* This is the <details> tag */
-            background-color: var(--mongo-card-accent);
+        /* Enhanced Expandable Box Styles */
+        .expandable-box {
+            background: linear-gradient(135deg, rgba(0, 55, 78, 0.5) 0%, rgba(0, 43, 58, 0.5) 100%);
+            backdrop-filter: blur(8px);
             border-left: 4px solid var(--mongo-green);
-            border-radius: 0.25rem;
-            margin-top: 1rem;
-            overflow: hidden; /* To keep border radius */
+            border-radius: 0.75rem;
+            margin-top: 1.25rem;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
         }
+        
+        .expandable-box:hover {
+            background: linear-gradient(135deg, rgba(0, 55, 78, 0.7) 0%, rgba(0, 43, 58, 0.7) 100%);
+            box-shadow: 0 10px 15px -3px rgba(0, 237, 100, 0.2), 0 4px 6px -2px rgba(0, 237, 100, 0.1);
+            transform: translateY(-2px);
+        }
+        
         .expandable-box summary {
             font-weight: 600;
+            font-size: 1.05rem;
             color: var(--mongo-green);
-            padding: 1rem;
+            padding: 1.25rem 1.5rem;
             cursor: pointer;
             outline: none;
-            list-style: none; /* Hide default marker */
+            list-style: none;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            transition: background 0.2s ease;
         }
+        
+        .expandable-box summary:hover {
+            background: rgba(0, 237, 100, 0.05);
+        }
+        
         .expandable-box summary::-webkit-details-marker {
-            display: none; /* Hide default marker for Chrome */
+            display: none;
         }
+        
         .expandable-box summary::after {
             content: '+';
-            font-size: 1.5rem;
-            font-weight: 400;
+            font-size: 1.75rem;
+            font-weight: 300;
             color: var(--mongo-green);
-            transition: transform 0.2s ease;
+            transition: transform 0.3s ease;
             line-height: 1;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 237, 100, 0.1);
+            border-radius: 50%;
         }
+        
         .expandable-box[open] summary::after {
             transform: rotate(45deg);
+            background: rgba(0, 237, 100, 0.2);
         }
+        
         .expandable-box-content {
-            padding: 0 1rem 1rem 1rem; /* Add padding to the content */
-            color: var(--mongo-text-muted);
+            padding: 1.5rem;
+            color: var(--mongo-text);
+            background: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid rgba(0, 237, 100, 0.1);
         }
-        .expandable-box-content p { /* Ensure nested p tags have correct color */
-            color: var(--mongo-text-muted);
+        
+        .expandable-box-content p {
+            color: var(--mongo-text);
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+        
+        .expandable-box-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .expandable-box-content strong {
+            color: var(--mongo-green);
+            font-weight: 600;
+        }
+        
+        .expandable-box-content ul {
+            margin-top: 0.75rem;
+            padding-left: 1.5rem;
+        }
+        
+        .expandable-box-content ul li {
             margin-bottom: 0.5rem;
+            color: var(--mongo-text-muted);
         }
         
         /* Tab styles */
         .tab-button {
             transition: all 0.3s ease;
             border-bottom: 3px solid transparent;
+            position: relative;
         }
+        
         .tab-button.active {
             border-bottom-color: var(--mongo-green);
             color: var(--mongo-green);
+            background: rgba(0, 237, 100, 0.05);
         }
+        
         .tab-button:hover:not(.active) {
             color: var(--mongo-text);
             border-bottom-color: var(--mongo-border);
+            background: rgba(255, 255, 255, 0.03);
         }
+        
         .tab-content {
-            display: none; /* Hidden by default */
+            display: none;
         }
+        
         .tab-content.active {
-            display: block; /* Shown when active */
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Enhanced section headers */
+        section h3 {
+            font-size: 1.75rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        section h4 {
+            font-size: 1.35rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            color: #fff;
+            border-bottom: 2px solid rgba(0, 237, 100, 0.2);
+            padding-bottom: 0.5rem;
+        }
+        
+        /* Better list styling */
+        ul.list-disc {
+            padding-left: 1.75rem;
+        }
+        
+        ul.list-disc li {
+            margin-bottom: 0.75rem;
+            line-height: 1.7;
+        }
+        
+        ul.list-disc li strong {
+            color: var(--mongo-green);
+            font-weight: 600;
+        }
+        
+        /* Code block improvements */
+        .code-block {
+            background: linear-gradient(135deg, #0a1520 0%, #000810 100%);
+            color: var(--mongo-text);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--mongo-border);
+            font-family: 'JetBrains Mono', monospace;
+            white-space: pre-wrap;
+            word-break: break-all;
+            margin-top: 1rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+        
+        /* Reference links */
+        .ref-link {
+            font-size: 0.7rem;
+            color: var(--mongo-green);
+            opacity: 0.6;
+            margin-left: 0.25rem;
+            vertical-align: super;
+            text-decoration: none;
+            transition: opacity 0.2s ease;
+            font-weight: 600;
+        }
+        
+        .ref-link:hover {
+            opacity: 1;
+            text-decoration: underline;
         }
         
         /* SVG Diagram Styles */
@@ -104,65 +239,64 @@
             align-items: center;
             flex-wrap: wrap;
             gap: 1rem;
-            padding: 1rem 0;
+            padding: 2rem 1rem;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 0.75rem;
+            margin: 1.5rem 0;
         }
+        
         .svg-diagram .node {
             fill: var(--mongo-card-accent);
             stroke: var(--mongo-green);
-            stroke-width: 1.5px;
+            stroke-width: 2px;
+            filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3));
         }
+        
         .svg-diagram .node-text {
-            font-size: 10px;
+            font-size: 11px;
             fill: var(--mongo-text);
             font-family: 'Inter', sans-serif;
+            font-weight: 600;
         }
+        
         .svg-diagram .label-text {
             font-size: 12px;
             fill: var(--mongo-text-muted);
             font-family: 'Inter', sans-serif;
         }
+        
         .svg-diagram .arrow-line {
             stroke: var(--mongo-text-muted);
             stroke-width: 2px;
             marker-end: url(#arrowhead);
         }
+        
         .svg-diagram .arrow-text {
             font-size: 11px;
             fill: var(--mongo-green);
             font-family: 'Inter', sans-serif;
-            font-weight: 500;
-        }
-        .svg-diagram .warn-text {
-            font-size: 11px;
-            fill: #f9a825; /* A warning yellow */
-            font-family: 'Inter', sans-serif;
             font-weight: 600;
         }
         
-        /* Utility */
-        .code-block {
-            background-color: var(--mongo-dark-blue);
-            color: var(--mongo-text);
-            padding: 1rem;
-            border-radius: 0.25rem;
-            border: 1px solid var(--mongo-border);
-            font-family: monospace;
-            white-space: pre-wrap;
-            word-break: break-all;
-            margin-top: 0.5rem;
+        .svg-diagram .warn-text {
+            font-size: 12px;
+            fill: #fbbf24;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
         }
-        .ref-link {
-            font-size: 0.75rem;
-            color: var(--mongo-green);
-            opacity: 0.7;
-            margin-left: 0.25rem;
-            vertical-align: super;
-            text-decoration: none;
-            transition: opacity 0.2s ease; /* Added transition */
+        
+        /* Improved paragraph spacing */
+        p {
+            margin-bottom: 1rem;
         }
-        .ref-link:hover { /* Added hover effect */
-            opacity: 1;
-            text-decoration: underline;
+        
+        /* Better visual hierarchy for content sections */
+        section {
+            margin-bottom: 3rem;
+        }
+        
+        section > div:first-child {
+            margin-bottom: 2rem;
         }
     </style>
 </head>
@@ -185,7 +319,10 @@
                 Growth Strategies
             </button>
             <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="features">
-                Core & Advanced Features
+                Core Features
+            </button>
+            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="advanced">
+                Advanced Features
             </button>
             <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="architecture">
                 Architecture & Best Practices
@@ -425,64 +562,8 @@
                             </details>
                         </div>
 
-                        <div>
-                            <strong class="text-white">Full-Text Search (Atlas Search)<a href="https://adasci.org/mongodb-atlas-vector-search-for-rag-powered-Ilm-applications/" target="_blank" rel="noopener noreferrer" class="ref-link">[12]</a></strong>
-                            <details class="expandable-box">
-                                <summary>Why</summary>
-                                <div class="expandable-box-content"><p>Dramatically reduces architectural complexity and TCO. It replaces the need to build, manage, and synchronize a separate, complex Elasticsearch/Solr cluster. This allows teams to ship rich, modern search experiences (autocomplete, fuzzy search) faster and at a lower cost.</p></div>
-                            </details>
-                            <details class="expandable-box">
-                                <summary>Analysis</summary>
-                                <div class="expandable-box-content"><p>By integrating a Lucene-based search engine directly into the database, data is searchable within moments of being written. This eliminates data sync failures and consistency problems, which are common pain points in dual-system architectures. (Note: we also have vector search in the same space).</p></div>
-                            </details>
-                        </div>
-
-                        <div>
-                            <strong class="text-white">Time Series Collections<a href="https://www.geopits.com/blog/guide-to-mongodb-time-series-collection" target="_blank" rel="noopener noreferrer" class="ref-link">[13]</a><a href="https://www.mongodb.com/docs/manual/core/timeseries/timeseries-considerations/" target="_blank" rel="noopener noreferrer" class="ref-link">[14]</a></strong>
-                            <details class="expandable-box">
-                                <summary>Why</summary>
-                                <div class="expandable-box-content"><p>Provides massive storage cost savings (up to 90%) and extreme query performance for high-volume, timestamped data (IoT, metrics, finance). This makes handling massive data streams economically viable.</p></div>
-                            </details>
-                            <details class="expandable-box">
-                                <summary>Analysis</summary>
-                                <div class="expandable-box-content"><p>This is a purpose-built storage engine. It optimizes for the pattern of time series data (data is always new, rarely updated, and queried by time range). The `metaField` (e.g., `sensorId`, `stockSymbol`) is the "tag" for the data stream and is critical for fast queries.</p></div>
-                            </details>
-                        </div>
+           
                         
-                        <div>
-                            <strong class="text-white">GridFS<a href="https://www.topcoder.com/thrive/articles/storing-large-files-in-mongodb-using-gridfs" target="_blank" rel="noopener noreferrer" class="ref-link">[15]</a><a href="https://www.mongodb.com/community/forums/t/storing-data-images-audio-video-16-mb-in-mongodb-or-gridfs/215074" target="_blank" rel="noopener noreferrer" class="ref-link">[16]</a></strong>
-                            <details class="expandable-box">
-                                <summary>Why</summary>
-                                <div class="expandable-box-content"><p>Simplifies application architecture for systems that need to store moderate amounts of large files (e.g., user-uploaded PDFs, profile pictures) by keeping the files and their metadata in one database.</p></div>
-                            </details>
-                            <details class="expandable-box">
-                                <summary>Analysis</summary>
-                                <div class="expandable-box-content"><p>This is a specification, not a feature. It breaks large files into 255KB "chunks." It's good for simplicity, but for petabyte-scale or high-CDN-traffic use cases, S3 is a more cost-effective and performant solution.</p></div>
-                            </details>
-                        </div>
-
-                    </div>
-                </section>
-
-                <!-- Section 3: Advanced Features -->
-                <section>
-                    <div class="flex items-center text-[--mongo-green] mb-3">
-                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17.67l-3.75-3.75a.75.75 0 011.06-1.06L9.75 14.84l6.69-6.69a.75.75 0 011.06 1.06l-7.5 7.5a.75.75 0 01-1.06 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12a9 9 0 1118 0 9 9 0 01-18 0z" /></svg>
-                        <h3 class="text-2xl font-bold">3. Advanced Features: Strategic Capabilities</h3>
-                    </div>
-                    <div class="space-y-6">
-                        
-                        <div>
-                            <strong class="text-white">Atlas Vector Search<a href="https://adasci.org/mongodb-atlas-vector-search-for-rag-powered-Ilm-applications/" target="_blank" rel="noopener noreferrer" class="ref-link">[12]</a><a href="https://www.mongodb.com/products/platform/atlas-vector-search" target="_blank" rel="noopener noreferrer" class="ref-link">[17]</a><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank" rel="noopener noreferrer" class="ref-link">[18]</a></strong>
-                            <details class="expandable-box">
-                                <summary>Why</summary>
-                                <div class="expandable-box-content"><p>This is the on-ramp to building modern AI-powered applications. It enables semantic (meaning-based) search, recommendations ("find more items like this"), and RAG (Retrieval-Augmented Generation) for chatbots that can "reason" over your private data.</p></div>
-                            </details>
-                            <details class="expandable-box">
-                                <summary>Analysis</summary>
-                                <div class="expandable-box-content"><p>Integrating this directly into Atlas dramatically accelerates AI feature development. It removes the need for a separate, specialist vector database and the complex data pipelines required to keep it synchronized with the primary database.</p></div>
-                            </details>
-                        </div>
 
                         <div>
                             <strong class="text-white">Data Federation<a href="https://www.mongodb.com/docs/atlas/data-federation/" target="_blank" rel="noopener noreferrer" class="ref-link">[19]</a><a href="https://www.mongodb.com/docs/atlas/data-federation/tutorial/deploy/" target="_blank" rel="noopener noreferrer" class="ref-link">[20]</a></strong>
@@ -507,11 +588,193 @@
                                 <div class="expandable-box-content"><p>This is serverless automation inside the database. It simplifies application architecture by moving business logic out of application servers and into the data layer. This reduces server load and eliminates a common point of failure (the batch job server).</p></div>
                             </details>
                         </div>
+
                     </div>
                 </section>
             </div>
 
-            <!-- Tab 3: Architecture & Best Practices -->
+            <!-- Tab 3: Advanced Features -->
+            <div id="tab-advanced" class="tab-content p-6 md:p-10 space-y-8">
+                
+                <!-- Full-Text Search (Atlas Search) -->
+                <section>
+                    <div class="flex items-center text-[--mongo-green] mb-4">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        <h3 class="text-2xl font-bold">Full-Text Search (Atlas Search)</h3>
+                    </div>
+                    <p class="text-[--mongo-text] mb-4"><strong class="text-[--mongo-green]">Integrated Enterprise Search.</strong> Atlas Search integrates Apache Lucene directly into MongoDB, eliminating the need for separate search infrastructure while delivering rich, modern search experiences.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border]">
+                            <h5 class="text-[--mongo-green] font-bold mb-2 text-sm uppercase tracking-wide">💡 Key Capabilities</h5>
+                            <ul class="text-[--mongo-text-muted] text-sm space-y-2">
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">•</span><span><strong class="text-white">Autocomplete:</strong> Real-time suggestions as users type</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">•</span><span><strong class="text-white">Fuzzy Matching:</strong> Handles typos and misspellings</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">•</span><span><strong class="text-white">Faceted Search:</strong> Filter by categories, price ranges, etc.</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">•</span><span><strong class="text-white">Highlighting:</strong> Show matched terms in results</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">•</span><span><strong class="text-white">Synonyms:</strong> "laptop" matches "notebook computer"</span></li>
+                            </ul>
+                        </div>
+                        <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border]">
+                            <h5 class="text-[--mongo-green] font-bold mb-2 text-sm uppercase tracking-wide">⚡ Business Impact</h5>
+                            <ul class="text-[--mongo-text-muted] text-sm space-y-2">
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">$</span><span><strong class="text-white">70% Cost Reduction:</strong> vs. managing Elasticsearch cluster</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">⚡</span><span><strong class="text-white">3x Faster Development:</strong> No data sync pipelines needed</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">🔒</span><span><strong class="text-white">Simplified Security:</strong> Single authentication layer</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">📊</span><span><strong class="text-white">Real-time Updates:</strong> Data searchable within seconds</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <details class="expandable-box">
+                        <summary>Architecture & Performance</summary>
+                        <div class="expandable-box-content">
+                            <p class="mb-3"><strong>Index Structure:</strong> Atlas Search creates separate Lucene indexes that are automatically kept in sync with your MongoDB collections. Changes to documents trigger near-instant index updates.</p>
+                            <p class="mb-3"><strong>Query Performance:</strong> Search queries run in parallel with database queries. A typical autocomplete query returns in <50ms. Faceted search across millions of documents completes in <200ms.</p>
+                            <p><strong>Scaling:</strong> Search indexes scale independently from your database. As your data grows, Atlas automatically provisions additional search nodes to maintain performance.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- Atlas Vector Search -->
+                <section>
+                    <div class="flex items-center text-[--mongo-green] mb-4">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17.67l-3.75-3.75a.75.75 0 011.06-1.06L9.75 14.84l6.69-6.69a.75.75 0 011.06 1.06l-7.5 7.5a.75.75 0 01-1.06 0z" /></svg>
+                        <h3 class="text-2xl font-bold">Atlas Vector Search (AI/RAG)</h3>
+                    </div>
+                    <p class="text-[--mongo-text] mb-4"><strong class="text-[--mongo-green]">The On-Ramp to AI.</strong> Enables semantic (meaning-based) search, recommendations, and RAG (Retrieval-Augmented Generation) for AI applications that can "reason" over your private data.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border]">
+                            <h5 class="text-[--mongo-green] font-bold mb-2 text-sm uppercase tracking-wide">🤖 AI Use Cases</h5>
+                            <ul class="text-[--mongo-text-muted] text-sm space-y-2">
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">Semantic Search:</strong> "affordable SUVs" finds relevant cars</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">Recommendations:</strong> "Find similar products"</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">RAG Chatbots:</strong> Answer questions using your docs</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">Image Search:</strong> Find visually similar images</span></li>
+                            </ul>
+                        </div>
+                        <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border]">
+                            <h5 class="text-[--mongo-green] font-bold mb-2 text-sm uppercase tracking-wide">🎯 Technical Advantages</h5>
+                            <ul class="text-[--mongo-text-muted] text-sm space-y-2">
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">No Separate DB:</strong> Eliminates Pinecone/Milvus</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">No Data Sync:</strong> Vectors stored with documents</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">Hybrid Search:</strong> Combine vector + keyword search</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">Pre/Post Filtering:</strong> Filter by metadata</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <details class="expandable-box">
+                        <summary>How It Works</summary>
+                        <div class="expandable-box-content">
+                            <p class="mb-3"><strong>Step 1 - Generate Embeddings:</strong> Use an embedding model (OpenAI, Cohere, VoyageAI) to convert text/images into high-dimensional vectors (arrays of numbers that represent meaning).</p>
+                            <p class="mb-3"><strong>Step 2 - Store in MongoDB:</strong> Store the vector alongside your document data. No separate database needed.</p>
+                            <p class="mb-3"><strong>Step 3 - Create Vector Index:</strong> Atlas creates a specialized index (HNSW algorithm) optimized for fast similarity search.</p>
+                            <p><strong>Step 4 - Query:</strong> Convert your search query to a vector and find the most similar vectors using cosine similarity or Euclidean distance. Results return in <100ms even across millions of vectors.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- Hybrid Search -->
+                <section>
+                    <div class="flex items-center text-[--mongo-green] mb-4">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <h3 class="text-2xl font-bold">Hybrid Search on Atlas</h3>
+                    </div>
+                    <p class="text-[--mongo-text] mb-4"><strong class="text-[--mongo-green]">Best of Both Worlds.</strong> Combine keyword-based search (Atlas Search) with semantic search (Vector Search) in a single query for superior accuracy and relevance.</p>
+                    
+                    <details class="expandable-box">
+                        <summary>Why Hybrid Search?</summary>
+                        <div class="expandable-box-content">
+                            <p class="mb-3"><strong>Keyword Search Alone:</strong> Misses semantic meaning. Searching "affordable cars" won't find "budget vehicles" or "inexpensive automobiles."</p>
+                            <p class="mb-3"><strong>Vector Search Alone:</strong> Can miss exact matches. Searching for "MongoDB Atlas" might return results about "database platforms" but miss documents with the exact term.</p>
+                            <p><strong>Hybrid Search:</strong> Combines both approaches. Uses keyword search for precision and vector search for recall, then merges results using Reciprocal Rank Fusion (RRF) for optimal relevance.</p>
+                        </div>
+                    </details>
+
+                    <details class="expandable-box">
+                        <summary>Implementation Example</summary>
+                        <div class="expandable-box-content">
+                            <p class="mb-3"><strong>Use Case:</strong> E-commerce product search where users type "warm winter jacket" but products are tagged as "insulated coat" or "thermal outerwear."</p>
+                            <p class="mb-3"><strong>Keyword Search:</strong> Finds exact matches for "winter jacket"</p>
+                            <p class="mb-3"><strong>Vector Search:</strong> Finds semantically similar items ("insulated coat", "thermal parka")</p>
+                            <p><strong>Result:</strong> Combined results ranked by relevance score, delivering comprehensive results that satisfy both exact and semantic matches.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- VoyageAI -->
+                <section>
+                    <div class="flex items-center text-[--mongo-green] mb-4">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" /></svg>
+                        <h3 class="text-2xl font-bold">VoyageAI Embeddings</h3>
+                    </div>
+                    <p class="text-[--mongo-text] mb-4"><strong class="text-[--mongo-green]">State-of-the-Art Embeddings.</strong> VoyageAI provides domain-specific embedding models optimized for different use cases, delivering superior accuracy compared to general-purpose models.</p>
+                    
+                    <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border] mb-4">
+                        <h5 class="text-[--mongo-green] font-bold mb-3">Available Models (Please check official listing)</h5>
+                        <ul class="text-[--mongo-text-muted] text-sm space-y-3">
+                            <li><strong class="text-white">voyage-large-2:</strong> Best overall performance. 1024 dimensions. Ideal for general-purpose semantic search and RAG applications.</li>
+                            <li><strong class="text-white">voyage-code-2:</strong> Optimized for code search. Understands programming languages, function names, and code semantics.</li>
+                            <li><strong class="text-white">voyage-finance-2:</strong> Fine-tuned on financial documents. Excels at understanding financial terminology, reports, and analysis.</li>
+                            <li><strong class="text-white">voyage-law-2:</strong> Specialized for legal documents. Trained on case law, contracts, and legal terminology.</li>
+                        </ul>
+                    </div>
+
+                    <details class="expandable-box">
+                        <summary>Why VoyageAI?</summary>
+                        <div class="expandable-box-content">
+                            <p class="mb-3"><strong>Superior Accuracy:</strong> Domain-specific models outperform OpenAI's general-purpose embeddings by 15-30% on specialized tasks.</p>
+                            <p class="mb-3"><strong>Cost-Effective:</strong> Smaller dimension count (1024 vs 1536 for OpenAI) means lower storage costs and faster queries while maintaining superior accuracy.</p>
+                            <p><strong>Integration:</strong> Generate embeddings via VoyageAI API, store in MongoDB documents, and query using Atlas Vector Search. The entire pipeline can be automated using Atlas Triggers or App Services.</p>
+                        </div>
+                    </details>
+                </section>
+
+                <!-- Time Series Collections -->
+                <section>
+                    <div class="flex items-center text-[--mongo-green] mb-4">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <h3 class="text-2xl font-bold">Time Series Collections</h3>
+                    </div>
+                    <p class="text-[--mongo-text] mb-4"><strong class="text-[--mongo-green]">Purpose-Built for IoT & Metrics.</strong> Time series collections provide up to 90% storage savings and 10x query performance for timestamped data compared to standard collections.</p>
+                    
+                    <div class="grid md:grid-cols-2 gap-4 mb-4">
+                        <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border]">
+                            <h5 class="text-[--mongo-green] font-bold mb-2 text-sm uppercase tracking-wide">📈 Ideal Use Cases</h5>
+                            <ul class="text-[--mongo-text-muted] text-sm space-y-2">
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">IoT Sensor Data:</strong> Temperature, pressure, GPS coordinates</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">Application Metrics:</strong> CPU, memory, request latency</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">Financial Tick Data:</strong> Stock prices, trades, order books</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">→</span><span><strong class="text-white">User Activity Logs:</strong> Clickstreams, page views</span></li>
+                            </ul>
+                        </div>
+                        <div class="bg-[--mongo-card-accent] p-5 rounded-lg border border-[--mongo-border]">
+                            <h5 class="text-[--mongo-green] font-bold mb-2 text-sm uppercase tracking-wide">🎯 Performance Benefits</h5>
+                            <ul class="text-[--mongo-text-muted] text-sm space-y-2">
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">90% Storage Savings:</strong> Columnar compression for time-series data</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">10x Faster Queries:</strong> Optimized for time-range scans</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">Automatic Bucketing:</strong> Groups data by time windows</span></li>
+                                <li class="flex items-start"><span class="text-[--mongo-green] mr-2">✓</span><span><strong class="text-white">TTL Expiration:</strong> Auto-delete old data</span></li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <details class="expandable-box">
+                        <summary>Configuration & Best Practices</summary>
+                        <div class="expandable-box-content">
+                            <p class="mb-3"><strong>Key Fields:</strong> Define a `timeField` (timestamp), `metaField` (device ID, sensor ID, stock symbol), and optional `granularity` (seconds, minutes, hours). The metaField acts as a "tag" that groups related measurements.</p>
+                            <p class="mb-3"><strong>Bucketing Strategy:</strong> MongoDB automatically groups measurements into buckets based on time and metaField. Each bucket is compressed and stored efficiently. Choose granularity based on your query patterns (e.g., "seconds" for high-frequency IoT, "hours" for daily analytics).</p>
+                            <p class="mb-3"><strong>Query Optimization:</strong> Always include the metaField in queries for maximum performance. Time-range queries are extremely fast due to the bucketed structure. Combine with aggregation pipelines for real-time analytics.</p>
+                            <p><strong>Cost Savings Example:</strong> A 100GB IoT dataset in a standard collection becomes ~10GB in a time series collection, saving $90/month in storage costs on Atlas while delivering faster queries.</p>
+                        </div>
+                    </details>
+                </section>
+
+            </div>
+
+            <!-- Tab 4: Architecture & Best Practices -->
             <div id="tab-architecture" class="tab-content p-6 md:p-10 space-y-8">
                 <!-- Section 4: Multi-Tenancy Models -->
                 <section>
