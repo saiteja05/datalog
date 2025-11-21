@@ -366,8 +366,20 @@
 
         <!-- Tab Navigation -->
         <nav class="bg-[--mongo-card] rounded-t-lg shadow-lg border-b border-[--mongo-border] flex flex-wrap justify-center sm:justify-start -mb-px">
-            <button class="tab-button active text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="growth">
-                Growth Strategies
+            <button class="tab-button active text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="faq">
+                🚨 Emergency FAQs
+            </button>
+            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="growth">
+                Capacity Planning
+            </button>
+            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="performance">
+                Performance Troubleshooting
+            </button>
+            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="enterprise">
+                Enterprise Advanced
+            </button>
+            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="architecture">
+                Architecture & Best Practices
             </button>
             <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="features">
                 Core Features
@@ -375,20 +387,11 @@
             <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="advanced">
                 Advanced Features
             </button>
-            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="architecture">
-                Architecture & Best Practices
-            </button>
-            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="enterprise">
-                Enterprise Advanced
-            </button>
             <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="governance">
                 Governance & Operations
             </button>
-            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="performance">
-                Performance Troubleshooting
-            </button>
-            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="faq">
-                🚨 Emergency FAQs
+            <button class="tab-button text-sm sm:text-base font-semibold text-[--mongo-text-muted] py-4 px-6" data-tab="api">
+                💻 API Examples
             </button>
         </nav>
 
@@ -396,7 +399,7 @@
         <div class="bg-[--mongo-card] rounded-b-lg shadow-lg border-x border-b border-[--mongo-border]">
 
             <!-- Tab 1: Growth Strategies -->
-            <div id="tab-growth" class="tab-content active p-6 md:p-10 space-y-8">
+            <div id="tab-growth" class="tab-content p-6 md:p-10 space-y-8">
                 
                 <!-- Quick Links Index -->
                 <div class="quick-links">
@@ -2544,7 +2547,7 @@ db.users.find({ status: "active", city: "NY" })
             </div>
 
             <!-- Tab 8: Frequent FAQs -->
-            <div id="tab-faq" class="tab-content p-6 md:p-10 space-y-8">
+            <div id="tab-faq" class="tab-content active p-6 md:p-10 space-y-8">
                 
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
@@ -2923,6 +2926,592 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
                             <div class="flex flex-wrap gap-2 mt-2">
                                 <a href="https://www.mongodb.com/docs/database-tools/mongoexport/" target="_blank" rel="noopener noreferrer" class="text-[--mongo-green] text-xs hover:underline border border-[--mongo-green] px-2 py-1 rounded">🔗 mongoexport Documentation →</a>
                             </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Tab 9: API Examples -->
+            <div id="tab-api" class="tab-content p-6 md:p-10 space-y-8">
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">💻 API Examples: Python + Pandas + PyMongoArrow</h2>
+                <p class="text-[--mongo-text-muted] text-lg mb-8">Production-ready code examples for MongoDB Python development, including PyMongo, pandas integration, PyMongoArrow for high-performance data transfer, and advanced aggregation with window functions.</p>
+
+                <!-- Quick Links -->
+                <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-5 mb-8">
+                    <h4 class="text-[--mongo-green] text-sm font-bold uppercase tracking-wide mb-3">Quick Links</h4>
+                    <ul class="flex flex-wrap gap-2">
+                        <li><a href="#api-setup" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-card-accent] text-[--mongo-text] border border-[--mongo-border] rounded-full transition-all inline-block">Setup & Connection</a></li>
+                        <li><a href="#api-pymongo" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-card-accent] text-[--mongo-text] border border-[--mongo-border] rounded-full transition-all inline-block">PyMongo Basics</a></li>
+                        <li><a href="#api-pandas" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-card-accent] text-[--mongo-text] border border-[--mongo-border] rounded-full transition-all inline-block">Pandas Integration</a></li>
+                        <li><a href="#api-pymongoarrow" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-card-accent] text-[--mongo-text] border border-[--mongo-border] rounded-full transition-all inline-block">PyMongoArrow</a></li>
+                        <li><a href="#api-window" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-card-accent] text-[--mongo-text] border border-[--mongo-border] rounded-full transition-all inline-block">Window Functions</a></li>
+                        <li><a href="#api-advanced" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-card-accent] text-[--mongo-text] border border-[--mongo-border] rounded-full transition-all inline-block">Advanced Patterns</a></li>
+                    </ul>
+                </div>
+
+                <!-- Section 1: Setup & Connection -->
+                <section id="api-setup">
+                    <div class="flex items-center text-[--mongo-green] mb-3">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                        <h3 class="text-2xl font-bold">Setup & Connection</h3>
+                    </div>
+                    
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border] mb-6">
+                        <h4 class="text-white font-semibold mb-3">Installation</h4>
+                        <div class="code-block text-sm mb-4"># Install required packages
+pip install pymongo pandas pymongoarrow dnspython
+
+# For Atlas connection with srv
+pip install "pymongo[srv]"
+
+# Optional: For better performance
+pip install pyarrow</div>
+                        
+                        <h4 class="text-white font-semibold mb-3 mt-6">Connection Setup</h4>
+                        <div class="code-block text-sm">from pymongo import MongoClient
+from pymongo.server_api import ServerApi
+import pandas as pd
+from pymongoarrow.api import Schema, find_pandas_all
+import pyarrow as pa
+
+# Atlas Connection (Recommended)
+MONGO_URI = "mongodb+srv://username:password@cluster.mongodb.net/?retryWrites=true&w=majority"
+
+client = MongoClient(
+    MONGO_URI,
+    server_api=ServerApi('1'),
+    maxPoolSize=50,
+    minPoolSize=10,
+    maxIdleTimeMS=45000,
+    serverSelectionTimeoutMS=5000
+)
+
+# Test connection
+try:
+    client.admin.command('ping')
+    print("✅ Connected to MongoDB Atlas!")
+except Exception as e:
+    print(f"❌ Connection failed: {e}")
+
+# Access database and collection
+db = client['analytics']
+collection = db['events']</div>
+                    </div>
+                </section>
+
+                <!-- Section 2: PyMongo Basics -->
+                <section id="api-pymongo">
+                    <div class="flex items-center text-[--mongo-green] mb-3">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                        <h3 class="text-2xl font-bold">PyMongo: CRUD Operations</h3>
+                    </div>
+                    
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border] mb-6">
+                        <h4 class="text-white font-semibold mb-3">Insert Operations</h4>
+                        <div class="code-block text-sm">from datetime import datetime
+from bson import ObjectId
+
+# Insert single document
+event = {
+    "user_id": "user_12345",
+    "event_type": "page_view",
+    "page": "/products/laptop",
+    "timestamp": datetime.utcnow(),
+    "metadata": {
+        "device": "mobile",
+        "browser": "Chrome",
+        "country": "US"
+    }
+}
+result = collection.insert_one(event)
+print(f"Inserted ID: {result.inserted_id}")
+
+# Bulk insert with ordered=False for better performance
+events = [
+    {"user_id": f"user_{i}", "event_type": "click", "timestamp": datetime.utcnow()}
+    for i in range(10000)
+]
+result = collection.insert_many(events, ordered=False)
+print(f"Inserted {len(result.inserted_ids)} documents")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Query Operations</h4>
+                        <div class="code-block text-sm"># Find with projection (only return specific fields)
+cursor = collection.find(
+    {"event_type": "purchase", "metadata.country": "US"},
+    {"user_id": 1, "timestamp": 1, "metadata.device": 1, "_id": 0}
+).limit(100)
+
+# Convert to list
+results = list(cursor)
+
+# Find one with sorting
+latest_purchase = collection.find_one(
+    {"event_type": "purchase"},
+    sort=[("timestamp", -1)]
+)
+
+# Count documents (use count_documents, not deprecated count)
+total_purchases = collection.count_documents({"event_type": "purchase"})
+print(f"Total purchases: {total_purchases}")
+
+# Distinct values
+unique_countries = collection.distinct("metadata.country")
+print(f"Countries: {unique_countries}")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Update Operations</h4>
+                        <div class="code-block text-sm"># Update single document
+collection.update_one(
+    {"user_id": "user_12345"},
+    {
+        "$set": {"metadata.last_seen": datetime.utcnow()},
+        "$inc": {"visit_count": 1}
+    }
+)
+
+# Bulk update with upsert
+from pymongo import UpdateOne
+
+bulk_ops = [
+    UpdateOne(
+        {"user_id": f"user_{i}"},
+        {"$set": {"active": True}, "$setOnInsert": {"created_at": datetime.utcnow()}},
+        upsert=True
+    )
+    for i in range(1000)
+]
+result = collection.bulk_write(bulk_ops, ordered=False)
+print(f"Modified: {result.modified_count}, Upserted: {result.upserted_count}")</div>
+                    </div>
+                </section>
+
+                <!-- Section 3: Pandas Integration -->
+                <section id="api-pandas">
+                    <div class="flex items-center text-[--mongo-green] mb-3">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                        <h3 class="text-2xl font-bold">Pandas Integration</h3>
+                    </div>
+                    
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border] mb-6">
+                        <h4 class="text-white font-semibold mb-3">MongoDB → Pandas DataFrame</h4>
+                        <div class="code-block text-sm">import pandas as pd
+from datetime import datetime, timedelta
+
+# Method 1: Simple conversion (small datasets < 100K docs)
+cursor = collection.find({"event_type": "purchase"})
+df = pd.DataFrame(list(cursor))
+
+# Method 2: Aggregation pipeline → DataFrame
+pipeline = [
+    {"$match": {"timestamp": {"$gte": datetime.utcnow() - timedelta(days=7)}}},
+    {"$group": {
+        "_id": {"date": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "country": "$metadata.country"},
+        "total_revenue": {"$sum": "$amount"},
+        "transaction_count": {"$sum": 1},
+        "avg_amount": {"$avg": "$amount"}
+    }},
+    {"$sort": {"_id.date": -1}}
+]
+
+results = list(collection.aggregate(pipeline))
+df = pd.DataFrame(results)
+
+# Flatten nested _id field
+df['date'] = df['_id'].apply(lambda x: x['date'])
+df['country'] = df['_id'].apply(lambda x: x['country'])
+df = df.drop('_id', axis=1)
+
+print(df.head())
+print(f"\\nDataFrame shape: {df.shape}")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Pandas DataFrame → MongoDB</h4>
+                        <div class="code-block text-sm"># Create sample DataFrame
+data = {
+    'product_id': ['P001', 'P002', 'P003'],
+    'name': ['Laptop', 'Mouse', 'Keyboard'],
+    'price': [999.99, 29.99, 79.99],
+    'stock': [50, 200, 150]
+}
+df = pd.DataFrame(data)
+
+# Convert DataFrame to dict and insert
+records = df.to_dict('records')
+collection.insert_many(records)
+
+# For large DataFrames: chunk insertion
+chunk_size = 10000
+for i in range(0, len(df), chunk_size):
+    chunk = df.iloc[i:i+chunk_size]
+    collection.insert_many(chunk.to_dict('records'), ordered=False)
+    print(f"Inserted chunk {i//chunk_size + 1}")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Data Analysis Example</h4>
+                        <div class="code-block text-sm"># Fetch data and analyze
+pipeline = [
+    {"$match": {"event_type": "purchase"}},
+    {"$project": {
+        "user_id": 1,
+        "amount": 1,
+        "timestamp": 1,
+        "device": "$metadata.device"
+    }}
+]
+
+df = pd.DataFrame(list(collection.aggregate(pipeline)))
+
+# Pandas analysis
+print("Revenue by Device:")
+print(df.groupby('device')['amount'].agg(['sum', 'mean', 'count']))
+
+# Time-based analysis
+df['date'] = pd.to_datetime(df['timestamp']).dt.date
+daily_revenue = df.groupby('date')['amount'].sum()
+print(f"\\nDaily Revenue:\\n{daily_revenue}")</div>
+                    </div>
+                </section>
+
+                <!-- Section 4: PyMongoArrow -->
+                <section id="api-pymongoarrow">
+                    <div class="flex items-center text-[--mongo-green] mb-3">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        <h3 class="text-2xl font-bold">PyMongoArrow: High-Performance Data Transfer</h3>
+                    </div>
+                    
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border] mb-6">
+                        <p class="text-[--mongo-text-muted] text-sm mb-4"><strong>Why PyMongoArrow?</strong> 10-50x faster than standard PyMongo for large datasets (>100K documents). Uses Apache Arrow for zero-copy data transfer.</p>
+                        
+                        <h4 class="text-white font-semibold mb-3">Define Schema</h4>
+                        <div class="code-block text-sm">from pymongoarrow.api import Schema, find_pandas_all, aggregate_pandas_all
+import pyarrow as pa
+
+# Define schema for your collection
+schema = Schema({
+    'user_id': pa.string(),
+    'event_type': pa.string(),
+    'amount': pa.float64(),
+    'timestamp': pa.timestamp('ms'),
+    'metadata': pa.struct([
+        ('device', pa.string()),
+        ('country', pa.string())
+    ])
+})</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Fast Query → Pandas</h4>
+                        <div class="code-block text-sm"># Method 1: find_pandas_all (10-50x faster than list(cursor))
+df = find_pandas_all(
+    collection,
+    {"event_type": "purchase"},
+    schema=schema
+)
+
+print(f"Loaded {len(df)} rows in milliseconds!")
+print(df.head())
+
+# Method 2: Aggregation with PyMongoArrow
+pipeline = [
+    {"$match": {"timestamp": {"$gte": datetime.utcnow() - timedelta(days=30)}}},
+    {"$project": {
+        "user_id": 1,
+        "event_type": 1,
+        "amount": 1,
+        "timestamp": 1,
+        "metadata.device": 1,
+        "metadata.country": 1
+    }}
+]
+
+df = aggregate_pandas_all(collection, pipeline, schema=schema)
+print(f"Aggregated {len(df)} rows")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Performance Comparison</h4>
+                        <div class="code-block text-sm">import time
+
+# Standard PyMongo (slow for large datasets)
+start = time.time()
+cursor = collection.find({"event_type": "purchase"}).limit(100000)
+df_slow = pd.DataFrame(list(cursor))
+slow_time = time.time() - start
+
+# PyMongoArrow (fast)
+start = time.time()
+df_fast = find_pandas_all(
+    collection,
+    {"event_type": "purchase"},
+    schema=schema,
+    limit=100000
+)
+fast_time = time.time() - start
+
+print(f"PyMongo: {slow_time:.2f}s")
+print(f"PyMongoArrow: {fast_time:.2f}s")
+print(f"Speedup: {slow_time/fast_time:.1f}x faster!")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Write DataFrame to MongoDB (Fast)</h4>
+                        <div class="code-block text-sm">from pymongoarrow.api import write
+
+# Create large DataFrame
+df = pd.DataFrame({
+    'user_id': [f'user_{i}' for i in range(100000)],
+    'amount': np.random.uniform(10, 1000, 100000),
+    'timestamp': pd.date_range('2024-01-01', periods=100000, freq='1min')
+})
+
+# Fast write using PyMongoArrow
+write(collection, df)
+print(f"Wrote {len(df)} documents in seconds!")</div>
+                    </div>
+                </section>
+
+                <!-- Section 5: Window Functions -->
+                <section id="api-window">
+                    <div class="flex items-center text-[--mongo-green] mb-3">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" /></svg>
+                        <h3 class="text-2xl font-bold">Window Functions (MongoDB 5.0+)</h3>
+                    </div>
+                    
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border] mb-6">
+                        <h4 class="text-white font-semibold mb-3">Running Totals & Moving Averages</h4>
+                        <div class="code-block text-sm">pipeline = [
+    {"$setWindowFields": {
+        "partitionBy": "$user_id",  # Separate window per user
+        "sortBy": {"timestamp": 1},
+        "output": {
+            # Running total of purchases
+            "cumulative_spent": {
+                "$sum": "$amount",
+                "window": {"documents": ["unbounded", "current"]}
+            },
+            # 7-day moving average
+            "moving_avg_7d": {
+                "$avg": "$amount",
+                "window": {"range": [-7, 0], "unit": "day"}
+            },
+            # Row number (rank)
+            "purchase_number": {
+                "$documentNumber": {}
+            }
+        }
+    }},
+    {"$match": {"purchase_number": {"$lte": 10}}}  # First 10 purchases per user
+]
+
+df = pd.DataFrame(list(collection.aggregate(pipeline)))
+print(df[['user_id', 'amount', 'cumulative_spent', 'moving_avg_7d', 'purchase_number']])</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Ranking & Percentiles</h4>
+                        <div class="code-block text-sm"># Rank users by total spending
+pipeline = [
+    {"$group": {
+        "_id": "$user_id",
+        "total_spent": {"$sum": "$amount"},
+        "purchase_count": {"$sum": 1}
+    }},
+    {"$setWindowFields": {
+        "sortBy": {"total_spent": -1},
+        "output": {
+            # Dense rank (no gaps)
+            "rank": {"$denseRank": {}},
+            # Percentile
+            "percentile": {
+                "$percentile": {
+                    "input": "$total_spent",
+                    "p": [0.5, 0.75, 0.9, 0.95],
+                    "method": "approximate"
+                }
+            }
+        }
+    }},
+    {"$limit": 100}  # Top 100 spenders
+]
+
+top_users = pd.DataFrame(list(collection.aggregate(pipeline)))
+print(top_users)</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Lead/Lag (Compare with Previous/Next Row)</h4>
+                        <div class="code-block text-sm"># Calculate time between purchases
+pipeline = [
+    {"$match": {"user_id": "user_12345"}},
+    {"$sort": {"timestamp": 1}},
+    {"$setWindowFields": {
+        "sortBy": {"timestamp": 1},
+        "output": {
+            # Previous purchase timestamp
+            "prev_timestamp": {
+                "$shift": {
+                    "output": "$timestamp",
+                    "by": -1
+                }
+            },
+            # Next purchase amount
+            "next_amount": {
+                "$shift": {
+                    "output": "$amount",
+                    "by": 1
+                }
+            }
+        }
+    }},
+    {"$addFields": {
+        # Days since last purchase
+        "days_since_last": {
+            "$divide": [
+                {"$subtract": ["$timestamp", "$prev_timestamp"]},
+                1000 * 60 * 60 * 24
+            ]
+        }
+    }}
+]
+
+df = pd.DataFrame(list(collection.aggregate(pipeline)))
+print(df[['timestamp', 'amount', 'prev_timestamp', 'days_since_last', 'next_amount']])</div>
+                    </div>
+                </section>
+
+                <!-- Section 6: Advanced Patterns -->
+                <section id="api-advanced">
+                    <div class="flex items-center text-[--mongo-green] mb-3">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" /></svg>
+                        <h3 class="text-2xl font-bold">Advanced Patterns</h3>
+                    </div>
+                    
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border] mb-6">
+                        <h4 class="text-white font-semibold mb-3">Cohort Analysis</h4>
+                        <div class="code-block text-sm"># User cohorts by signup month
+pipeline = [
+    {"$addFields": {
+        "signup_month": {"$dateToString": {"format": "%Y-%m", "date": "$created_at"}},
+        "purchase_month": {"$dateToString": {"format": "%Y-%m", "date": "$timestamp"}}
+    }},
+    {"$group": {
+        "_id": {
+            "signup_month": "$signup_month",
+            "purchase_month": "$purchase_month"
+        },
+        "users": {"$addToSet": "$user_id"},
+        "revenue": {"$sum": "$amount"}
+    }},
+    {"$project": {
+        "signup_month": "$_id.signup_month",
+        "purchase_month": "$_id.purchase_month",
+        "user_count": {"$size": "$users"},
+        "revenue": 1,
+        "_id": 0
+    }},
+    {"$sort": {"signup_month": 1, "purchase_month": 1}}
+]
+
+cohort_df = pd.DataFrame(list(collection.aggregate(pipeline)))
+
+# Pivot for cohort matrix
+cohort_matrix = cohort_df.pivot(
+    index='signup_month',
+    columns='purchase_month',
+    values='user_count'
+).fillna(0)
+
+print(cohort_matrix)</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Time-Series Bucketing</h4>
+                        <div class="code-block text-sm"># Aggregate events into 1-hour buckets
+pipeline = [
+    {"$match": {"timestamp": {"$gte": datetime.utcnow() - timedelta(days=1)}}},
+    {"$bucket": {
+        "groupBy": "$timestamp",
+        "boundaries": [
+            datetime.utcnow() - timedelta(hours=i) 
+            for i in range(24, -1, -1)
+        ],
+        "default": "Other",
+        "output": {
+            "count": {"$sum": 1},
+            "total_amount": {"$sum": "$amount"},
+            "unique_users": {"$addToSet": "$user_id"}
+        }
+    }},
+    {"$project": {
+        "hour": "$_id",
+        "count": 1,
+        "total_amount": 1,
+        "unique_users": {"$size": "$unique_users"}
+    }}
+]
+
+hourly_df = pd.DataFrame(list(collection.aggregate(pipeline)))
+print(hourly_df)</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Change Streams (Real-Time)</h4>
+                        <div class="code-block text-sm">import threading
+
+# Watch for changes in real-time
+def watch_collection():
+    with collection.watch() as stream:
+        for change in stream:
+            if change['operationType'] == 'insert':
+                doc = change['fullDocument']
+                print(f"New event: {doc['event_type']} by {doc['user_id']}")
+            elif change['operationType'] == 'update':
+                print(f"Updated document: {change['documentKey']}")
+
+# Run in background thread
+watcher_thread = threading.Thread(target=watch_collection, daemon=True)
+watcher_thread.start()
+
+# Your main application continues...
+print("Watching for changes...")</div>
+
+                        <h4 class="text-white font-semibold mb-3 mt-6">Batch Processing Pattern</h4>
+                        <div class="code-block text-sm">from pymongo import UpdateOne
+from datetime import datetime
+
+def process_batch(batch_size=1000):
+    """Process unprocessed events in batches"""
+    while True:
+        # Find unprocessed events
+        cursor = collection.find(
+            {"processed": {"$ne": True}},
+            limit=batch_size
+        )
+        
+        events = list(cursor)
+        if not events:
+            break
+        
+        # Process events (example: calculate metrics)
+        bulk_ops = []
+        for event in events:
+            # Your processing logic here
+            metrics = calculate_metrics(event)
+            
+            bulk_ops.append(UpdateOne(
+                {"_id": event["_id"]},
+                {
+                    "$set": {
+                        "processed": True,
+                        "processed_at": datetime.utcnow(),
+                        "metrics": metrics
+                    }
+                }
+            ))
+        
+        # Bulk update
+        if bulk_ops:
+            result = collection.bulk_write(bulk_ops, ordered=False)
+            print(f"Processed {result.modified_count} events")
+
+def calculate_metrics(event):
+    # Your metric calculation logic
+    return {"score": 100}
+
+# Run batch processing
+process_batch()</div>
+                    </div>
+
+                    <div class="bg-[--mongo-card-accent] p-6 rounded-lg border border-[--mongo-border]">
+                        <h4 class="text-white font-semibold mb-3">📚 Additional Resources</h4>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="https://pymongo.readthedocs.io/" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-green] hover:text-black text-[--mongo-green] border border-[--mongo-green] rounded-full transition-all">PyMongo Docs</a>
+                            <a href="https://mongo-arrow.readthedocs.io/" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-green] hover:text-black text-[--mongo-green] border border-[--mongo-green] rounded-full transition-all">PyMongoArrow Docs</a>
+                            <a href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/setWindowFields/" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-green] hover:text-black text-[--mongo-green] border border-[--mongo-green] rounded-full transition-all">Window Functions Reference</a>
+                            <a href="https://www.mongodb.com/docs/drivers/python/" target="_blank" rel="noopener noreferrer" class="text-xs px-3 py-1.5 bg-[--mongo-card] hover:bg-[--mongo-green] hover:text-black text-[--mongo-green] border border-[--mongo-green] rounded-full transition-all">Python Driver Guide</a>
                         </div>
                     </div>
                 </section>
