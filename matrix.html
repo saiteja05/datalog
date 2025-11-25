@@ -3,115 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MongoDB Strategic Architecture Engine</title>
+    <title>Decision Matrix</title>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     
     <style>
-        body {
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* Prevent scrollbars on body */
-            background-color: #f8f9fa;
-        }
+        /* --- CORE STYLES --- */
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; overflow: hidden; background-color: #f8f9fa; }
 
-        /* --- Header --- */
-        header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 60px;
-            background-color: #001e2b;
-            color: white;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            z-index: 100;
-        }
-
+        /* --- HEADER --- */
+        header { position: absolute; top: 0; left: 0; width: 100%; height: 60px; background-color: #001e2b; color: white; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 100; }
         h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
         .subtitle { margin-left: 15px; font-size: 0.9rem; color: #00ED64; border-left: 1px solid #555; padding-left: 15px; }
 
-        /* --- Diagram Container (FIXED) --- */
-        #diagram-container {
-            position: absolute;
-            top: 60px; /* Start below header */
-            left: 0;
-            right: 0;
-            bottom: 0; /* Go all the way to bottom */
-            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
-            background-size: 20px 20px;
-            overflow: hidden;
-        }
+        /* --- DIAGRAM CONTAINER --- */
+        #diagram-container { position: absolute; top: 60px; left: 0; right: 0; bottom: 0; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; transition: margin-right 0.3s ease; }
+        .mermaid { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
+        .mermaid svg { height: 100% !important; width: 100% !important; max-width: none !important; }
 
-        /* Ensure Mermaid takes full height */
-        .mermaid {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        /* Force SVG to fill parent (Crucial Fix) */
-        .mermaid svg {
-            height: 100% !important;
-            width: 100% !important;
-            max-width: none !important;
-        }
-
-        /* --- Controls --- */
-        .controls {
-            position: absolute;
-            bottom: 30px;
-            right: 30px;
-            background: white;
-            padding: 8px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            z-index: 100;
-        }
-
-        button.ctrl-btn {
-            width: 44px;
-            height: 44px;
-            border: 1px solid #e0e0e0;
-            background: white;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1.4rem;
-            color: #444;
-            transition: all 0.2s ease;
-        }
+        /* --- CONTROLS --- */
+        .controls { position: absolute; bottom: 30px; left: 30px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 8px; z-index: 90; }
+        button.ctrl-btn { width: 44px; height: 44px; border: 1px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; font-size: 1.4rem; color: #444; transition: all 0.2s ease; }
         button.ctrl-btn:hover { background-color: #f5f5f5; color: #00ED64; border-color: #00ED64; }
 
-        /* --- Legend --- */
-        .legend {
-            position: absolute;
-            top: 80px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            border: 1px solid #f0f0f0;
-            font-size: 0.85rem;
-            z-index: 90;
-        }
+        /* --- LEGEND --- */
+        .legend { position: absolute; top: 80px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; font-size: 0.85rem; z-index: 90; }
         .legend-item { display: flex; align-items: center; margin-bottom: 8px; color: #444; font-weight: 500; }
         .dot { width: 14px; height: 14px; border-radius: 4px; margin-right: 12px; }
-        
-        .l-tech { background-color: #E3F2FD; border: 1px solid #1565C0; }
-        .l-scale { background-color: #FFF3E0; border: 1px solid #EF6C00; }
-        .l-plat { background-color: #F3E5F5; border: 1px solid #7B1FA2; }
-        .l-deploy { background-color: #E8F5E9; border: 1px solid #2E7D32; }
         .l-value { background-color: #00ED64; border: 2px solid #00684A; }
+        .l-tech { background-color: #E3F2FD; border: 1px solid #1565C0; }
+
+        /* --- SIDE DRAWER (The Elegant Popup) --- */
+        #side-drawer {
+            position: fixed;
+            top: 60px; /* Below header */
+            right: -450px; /* Hidden by default */
+            width: 400px;
+            bottom: 0;
+            background: white;
+            box-shadow: -5px 0 30px rgba(0,0,0,0.1);
+            z-index: 200;
+            transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #eee;
+        }
+
+        #side-drawer.open { right: 0; }
+
+        .drawer-header {
+            background: #fff;
+            padding: 25px 30px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .drawer-header h2 { margin: 0; font-size: 1.3rem; color: #001e2b; font-weight: 700; }
+        .close-btn { background: none; border: none; font-size: 1.8rem; color: #999; cursor: pointer; padding: 0; line-height: 1; }
+        .close-btn:hover { color: #333; }
+
+        .drawer-body { padding: 30px; overflow-y: auto; flex-grow: 1; }
+
+        .value-prop-box {
+            background: #E8F5E9;
+            border-left: 4px solid #00ED64;
+            padding: 20px;
+            margin-bottom: 25px;
+            border-radius: 0 8px 8px 0;
+        }
+        .value-label { font-size: 0.75rem; text-transform: uppercase; color: #00684A; font-weight: bold; display: block; margin-bottom: 8px; letter-spacing: 0.5px; }
+        .value-text { font-size: 1.1rem; color: #111; font-weight: 600; line-height: 1.4; }
+
+        .details-text { color: #444; line-height: 1.7; font-size: 0.95rem; margin-bottom: 30px; }
+
+        .doc-link {
+            display: block;
+            text-align: center;
+            background: #001e2b;
+            color: white;
+            padding: 12px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .doc-link:hover { background: #00ED64; color: #001e2b; transform: translateY(-1px); }
+        .no-link { background: #eee; color: #999; pointer-events: none; }
 
     </style>
 </head>
@@ -119,16 +98,14 @@
 
     <header>
         <h1>Decision Matrix</h1>
-        <span class="subtitle">MongoDB v8.0</span>
+        <span class="subtitle">for MongoDB v8.0</span>
     </header>
 
     <div class="legend">
         <strong>Zone Key</strong><br><br>
-        <div class="legend-item"><div class="dot l-tech"></div>Data & Dev</div>
-        <div class="legend-item"><div class="dot l-scale"></div>Scale Strategy</div>
-        <div class="legend-item"><div class="dot l-plat"></div>Platform & AI</div>
-        <div class="legend-item"><div class="dot l-deploy"></div>Cloud & Security</div>
-        <div class="legend-item"><div class="dot l-value"></div>MongoDB Solution</div>
+        <div class="legend-item"><div class="dot l-value"></div><strong>Click Green Nodes for Details</strong></div>
+        <div class="legend-item"><div class="dot l-tech"></div>Data & Workload</div>
+        <div class="legend-item" style="font-size: 0.8em; color: #888; margin-top:10px;">(Pan/Zoom Enabled)</div>
     </div>
 
     <div class="controls">
@@ -137,7 +114,22 @@
         <button class="ctrl-btn" onclick="resetZoom()">↺</button>
     </div>
 
-    <div id="diagram-container">
+    <div id="side-drawer">
+        <div class="drawer-header">
+            <h2 id="drawer-title">Node Title</h2>
+            <button class="close-btn" onclick="closeDrawer()">×</button>
+        </div>
+        <div class="drawer-body">
+            <div class="value-prop-box">
+                <span class="value-label">Value Proposition</span>
+                <span id="drawer-value" class="value-text">...</span>
+            </div>
+            <p id="drawer-details" class="details-text">...</p>
+            <a id="drawer-link" href="#" target="_blank" class="doc-link">Read Documentation →</a>
+        </div>
+    </div>
+
+    <div id="diagram-container" onclick="closeDrawer()">
         <div class="mermaid">
 %%{init: {'theme': 'base', 'flowchart': {'curve': 'basis'}, 'themeVariables': { 'fontFamily': 'Segoe UI', 'fontSize': '16px', 'lineColor': '#555' }}}%%
 flowchart TB
@@ -244,7 +236,7 @@ flowchart TB
     OpsMan --> Secure
     
     DeployCheck -- Yes (Cloud) --> Portability{"**Lock-In Check**<br>Need Cloud Agnostic<br>or Exit Strategy?"}
-    Portability -- No (Specific Native) --> Dynamo["**cloud native db**<br>Single Cloud Lock-in"]
+    Portability -- No (Specific Native) --> Dynamo["**DynamoDB/Firestore**<br>Single Cloud Lock-in"]
     Portability -- Yes (Portable) --> NetCheck{"**Network Security**<br>Connection Method?"}
     NetCheck -- AWS/Azure Backbone --> PrivLink["**PrivateLink**<br>One-way Security"]
     NetCheck -- VPC Peering --> Peering["**VPC Peering**<br>Bi-directional"]
@@ -274,6 +266,37 @@ flowchart TB
     Secure -- Yes (Regulated) --> CSFLE["**Queryable Encryption**<br>Client-Side Keys<br>Encryption-in-Use"]
     Secure -- No --> Final(["**Final Architecture**"])
     CSFLE --> Final
+
+    %% --- CLICK BINDINGS ---
+    click ObjMatch showInfo
+    click AgileVal showInfo
+    click Consolidation showInfo
+    click Logical showInfo
+    click TenantShard showInfo
+    click Migrator showInfo
+    click MongoCore showInfo
+    click HashShard showInfo
+    click ZoneShard showInfo
+    click RangeShard showInfo
+    click Replica showInfo
+    click ASP showInfo
+    click AtlasSearch showInfo
+    click Vector showInfo
+    click AgentMem showInfo
+    click SemCache showInfo
+    click RAG showInfo
+    click TimeSeries showInfo
+    click Connectors showInfo
+    click K8s showInfo
+    click OpsMan showInfo
+    click PrivLink showInfo
+    click Peering showInfo
+    click IPList showInfo
+    click MultiCloud showInfo
+    click Standard showInfo
+    click Archive showInfo
+    click PerfAdv showInfo
+    click CSFLE showInfo
 
     %% --- STYLING ---
      Start:::startNode
@@ -351,31 +374,237 @@ flowchart TB
     classDef scaleZone fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px,color:#000
     classDef platZone fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
     classDef deployZone fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#000
-    classDef valueNode fill:#00ED64,stroke:#00684A,stroke-width:3px,font-weight:bold,color:#000
+    classDef valueNode fill:#00ED64,stroke:#00684A,stroke-width:3px,font-weight:bold,color:#000,cursor:pointer
     classDef exitNode fill:#F5F5F5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#666
         </div>
     </div>
 
     <script>
+        // --- CONTENT DATABASE ---
+        const nodeData = {
+            "ObjMatch": {
+                title: "Developer Experience",
+                value: "Code-Native Data Access",
+                detail: "Work with data as natural JSON objects. Eliminates the 'Object-Relational Impedance Mismatch' and removes the need for complex, brittle ORM layers like Hibernate or Prisma.",
+                link: "https://www.mongodb.com/developer/products/mongodb/object-relational-impedance-mismatch/"
+            },
+            "AgileVal": {
+                title: "Business Agility",
+                value: "Faster Time-to-Market",
+                detail: "Polymorphic schema allows you to launch new features without database downtime or running risky 'ALTER TABLE' migration scripts. The database adapts to your code, not vice versa.",
+                link: "https://www.mongodb.com/basics/flexible-schema"
+            },
+            "Consolidation": {
+                title: "Tech Stack Consolidation",
+                value: "Lower TCO & Complexity",
+                detail: "By combining Transactional, Search, AI, and Time Series workloads into one API, you remove the cost and maintenance burden of syncing 3-4 separate niche databases.",
+                link: "https://www.mongodb.com/products/platform"
+            },
+            "Logical": {
+                title: "Logical Sharding",
+                value: "Simple Multi-Tenancy",
+                detail: "Isolates tenants using a 'tenant_id' field within standard collections. Ideal for high-volume SaaS where tenants share resources but need logical separation.",
+                link: "https://www.mongodb.com/resources/products/capabilities/multitenancy"
+            },
+            "TenantShard": {
+                title: "Tenant-Aware Sharding",
+                value: "Physical Isolation",
+                detail: "Pin specific tenants to specific hardware. Allows you to offer 'Premium Tier' performance on dedicated NVMe nodes while keeping 'Free Tier' users on shared hardware—all in one cluster.",
+                link: "https://www.mongodb.com/docs/manual/core/sharded-cluster-partitioning/"
+            },
+            "MongoCore": {
+                title: "MongoDB Core",
+                value: "The Intelligent Document Database",
+                detail: "The foundation. Stores data in BSON (Binary JSON), supporting rich indexing, ACID transactions, and aggregations. It scales horizontally by default.",
+                link: "https://www.mongodb.com/docs/manual/core/document/"
+            },
+            "Migrator": {
+                title: "Relational Migrator",
+                value: "Automated Modernization",
+                detail: "Analyzes legacy SQL schemas and automatically generates optimized MongoDB document models and code. De-risks the migration process.",
+                link: "https://www.mongodb.com/products/relational-migrator"
+            },
+            "HashShard": {
+                title: "Hashed Sharding",
+                value: "Perfect Write Distribution",
+                detail: "Distributes data based on a hash of the shard key. Ensures writes are spread evenly across all nodes, preventing 'hotspots' during massive ingest events.",
+                link: "https://www.mongodb.com/docs/manual/core/hashed-sharding/"
+            },
+            "ZoneShard": {
+                title: "Zone Sharding",
+                value: "Data Locality / Sovereignty",
+                detail: "Allows you to tag shards by geography (e.g., 'EU-West'). Data for German users stays physically on German servers to comply with GDPR, while US data stays in Virginia.",
+                link: "https://www.mongodb.com/docs/manual/core/zone-sharding/"
+            },
+            "RangeShard": {
+                title: "Ranged Sharding",
+                value: "Optimized Range Queries",
+                detail: "Divides data into continuous ranges (e.g., Time or Alphabetical). Ideal for efficient queries that scan a specific window of time or sequence.",
+                link: "https://www.mongodb.com/docs/manual/core/ranged-sharding/"
+            },
+            "Replica": {
+                title: "Replica Set",
+                value: "High Availability (HA)",
+                detail: "A group of at least 3 nodes that maintain the same data set. Provides automatic failover and data redundancy. If the primary crashes, a secondary takes over in seconds.",
+                link: "https://www.mongodb.com/docs/manual/replication/"
+            },
+            "ASP": {
+                title: "Atlas Stream Processing",
+                value: "Analyze Data In-Flight",
+                detail: "Process high-velocity streams (Kafka/EventHub) continuously before storing them. Use standard MongoDB aggregation syntax to build real-time alerts and views.",
+                link: "https://www.mongodb.com/products/capabilities/stream-processing"
+            },
+            "AtlasSearch": {
+                title: "Atlas Search",
+                value: "Lucene-Powered Search",
+                detail: "Full-text search integrated into the database. Features fuzzy matching, autocomplete, and highlighting without managing a separate Elasticsearch cluster.",
+                link: "https://www.mongodb.com/docs/atlas/atlas-search/"
+            },
+            "Vector": {
+                title: "Vector Search",
+                value: "Unified Memory for AI",
+                detail: "Store and query vector embeddings alongside operational data. Enables semantic search and RAG workflows without an external vector DB.",
+                link: "https://www.mongodb.com/products/platform/atlas-vector-search"
+            },
+            "AgentMem": {
+                title: "Agent Memory",
+                value: "Long-Term Context",
+                detail: "Use MongoDB to store conversation history and context for AI Agents. Vector search retrieves relevant past interactions to make the AI smarter over time.",
+                link: "https://www.mongodb.com/developer/products/atlas/building-generative-ai-applications-vector-search/"
+            },
+            "SemCache": {
+                title: "Semantic Cache",
+                value: "Reduce LLM Costs",
+                detail: "Cache LLM responses based on semantic similarity. If a user asks a question similar to a previous one, serve the cached answer instantly instead of paying for a new GPU call.",
+                link: "https://www.mongodb.com/developer/products/atlas/semantic-cache-vector-search/"
+            },
+            "RAG": {
+                title: "RAG (Retrieval Augmented Generation)",
+                value: "Ground AI in Truth",
+                detail: "Retrieve accurate, private enterprise data from MongoDB and feed it to the LLM to prevent hallucinations and provide domain-specific answers.",
+                link: "https://www.mongodb.com/basics/rag"
+            },
+            "TimeSeries": {
+                title: "Time Series Collections",
+                value: "IoT Efficiency",
+                detail: "Columnar storage optimized for time-series data. significantly reduces storage costs and improves query speed for sensor data and metrics.",
+                link: "https://www.mongodb.com/docs/manual/core/timeseries-collections/"
+            },
+            "Connectors": {
+                title: "Ecosystem Connectors",
+                value: "Enterprise Integration",
+                detail: "Official connectors for Kafka, Spark, Flink, and Databricks. Ensures reliable, high-throughput data pipelines without custom glue code.",
+                link: "https://www.mongodb.com/products/tools/connectors"
+            },
+            "K8s": {
+                title: "Enterprise Operator",
+                value: "Kubernetes Native",
+                detail: "Deploy and manage MongoDB clusters inside your own Kubernetes environment (OpenShift/EKS/AKS). Automates upgrades, scaling, and backups.",
+                link: "https://www.mongodb.com/products/tools/kubernetes-operator"
+            },
+            "OpsMan": {
+                title: "Ops Manager",
+                value: "On-Prem Automation",
+                detail: "The management plane for self-managed deployments. Provides a GUI for deploying, monitoring, and backing up clusters on VMs or Bare Metal.",
+                link: "https://www.mongodb.com/docs/ops-manager/current/"
+            },
+            "PrivLink": {
+                title: "PrivateLink",
+                value: "Secure Unidirectional Access",
+                detail: "The gold standard for cloud security. Allows your VPC to connect to MongoDB Atlas privately without traversing the public internet or exposing ports.",
+                link: "https://www.mongodb.com/docs/atlas/security-private-endpoint/"
+            },
+            "Peering": {
+                title: "VPC Peering",
+                value: "Bi-Directional Networking",
+                detail: "Connects your VPC network directly to the Atlas VPC network. Useful for legacy setups, though PrivateLink is generally preferred for tighter security.",
+                link: "https://www.mongodb.com/docs/atlas/security-vpc-peering/"
+            },
+            "IPList": {
+                title: "IP Access List",
+                value: "Basic Firewalling",
+                detail: "Allow access only from specific IP addresses or CIDR blocks. Simple to set up for development or smaller deployments.",
+                link: "https://www.mongodb.com/docs/atlas/security/ip-access-list/"
+            },
+            "MultiCloud": {
+                title: "Multi-Cloud Cluster",
+                value: "Ultimate Resilience",
+                detail: "Span your cluster across AWS, Azure, and Google Cloud simultaneously. Protects against entire cloud provider outages.",
+                link: "https://www.mongodb.com/docs/atlas/configure-cluster-regions/"
+            },
+            "Standard": {
+                title: "Standard Cluster",
+                value: "Reliable & Cost-Effective",
+                detail: "A standard 3-node replica set deployed in a single region. Provides 99.99% uptime and automatic failover for most production workloads.",
+                link: "https://www.mongodb.com/pricing"
+            },
+            "Archive": {
+                title: "Online Archive",
+                value: "Cost-Efficient History",
+                detail: "Automatically moves old data to cheap S3 object storage while keeping it queryable. Reduces the cost of storing petabytes of historical logs.",
+                link: "https://www.mongodb.com/docs/atlas/online-archive/"
+            },
+            "PerfAdv": {
+                title: "Performance Advisor",
+                value: "24/7 Intelligent Ops",
+                detail: "A built-in tool that analyzes your slow queries and automatically suggests indexes to fix them. It acts as an automated DBA.",
+                link: "https://www.mongodb.com/docs/atlas/performance-advisor/"
+            },
+            "CSFLE": {
+                title: "Queryable Encryption",
+                value: "Encryption-in-Use",
+                detail: "State-of-the-art security. Encrypts data on the client side so the database server never sees the plaintext keys. Allows querying on encrypted data.",
+                link: "https://www.mongodb.com/docs/manual/core/queryable-encryption/"
+            }
+        };
+
+        // --- INTERACTIVITY LOGIC ---
         var panZoomInstance;
 
-        // Initialize Mermaid
-        mermaid.initialize({ startOnLoad: true });
+        // 1. Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
 
-        // Polling function to wait for Mermaid to actually create the <svg>
+        // 2. Define the Click Handler
+        window.showInfo = function(nodeId) {
+            // Prevent event bubbling so clicking a node doesn't immediately close the drawer via body click
+            event.stopPropagation();
+
+            const data = nodeData[nodeId];
+            if (data) {
+                document.getElementById('drawer-title').innerText = data.title;
+                document.getElementById('drawer-value').innerText = data.value;
+                document.getElementById('drawer-details').innerText = data.detail;
+                
+                const linkBtn = document.getElementById('drawer-link');
+                if (data.link) {
+                    linkBtn.href = data.link;
+                    linkBtn.classList.remove('no-link');
+                    linkBtn.innerText = "Read Documentation →";
+                    linkBtn.style.pointerEvents = "auto";
+                } else {
+                    linkBtn.classList.add('no-link');
+                    linkBtn.innerText = "No Link Available";
+                    linkBtn.style.pointerEvents = "none";
+                }
+                
+                // Open Drawer
+                document.getElementById('side-drawer').classList.add('open');
+            }
+        };
+
+        window.closeDrawer = function() {
+            document.getElementById('side-drawer').classList.remove('open');
+        };
+
+        // 3. Pan-Zoom Setup
         const interval = setInterval(() => {
             const svg = document.querySelector('.mermaid svg');
-            
-            // Wait until SVG exists AND has a computed height (meaning it's rendered)
             if (svg && svg.getBoundingClientRect().height > 10) {
                 clearInterval(interval);
-                
-                // 1. Force SVG to fill the container immediately
                 svg.style.height = '100%';
                 svg.style.width = '100%';
                 svg.style.maxWidth = 'none';
 
-                // 2. Initialize SVG Pan Zoom
                 panZoomInstance = svgPanZoom(svg, {
                     zoomEnabled: true,
                     controlIconsEnabled: false,
@@ -384,31 +613,18 @@ flowchart TB
                     minZoom: 0.1,
                     maxZoom: 10
                 });
-                
-                // 3. Force a resize event to ensure it snaps to grid
                 panZoomInstance.resize();
                 panZoomInstance.fit();
                 panZoomInstance.center();
             }
         }, 100);
 
-        // Control Functions
         function zoomIn() { if(panZoomInstance) panZoomInstance.zoomIn(); }
         function zoomOut() { if(panZoomInstance) panZoomInstance.zoomOut(); }
-        function resetZoom() { 
-            if(panZoomInstance) {
-                panZoomInstance.resetZoom(); 
-                panZoomInstance.center();
-            }
-        }
+        function resetZoom() { if(panZoomInstance) { panZoomInstance.resetZoom(); panZoomInstance.center(); } }
         
-        // Handle Window Resize
         window.addEventListener('resize', function(){
-            if(panZoomInstance) {
-                panZoomInstance.resize();
-                panZoomInstance.fit();
-                panZoomInstance.center();
-            }
+            if(panZoomInstance) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
         });
     </script>
 </body>
