@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Strategic Architecture Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+    
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevent scrollbars on body */
+            background-color: #f8f9fa;
+        }
+
+        /* --- Header --- */
+        header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background-color: #001e2b;
+            color: white;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 100;
+        }
+
+        h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
+        .subtitle { margin-left: 15px; font-size: 0.9rem; color: #00ED64; border-left: 1px solid #555; padding-left: 15px; }
+
+        /* --- Diagram Container (FIXED) --- */
+        #diagram-container {
+            position: absolute;
+            top: 60px; /* Start below header */
+            left: 0;
+            right: 0;
+            bottom: 0; /* Go all the way to bottom */
+            background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
+            background-size: 20px 20px;
+            overflow: hidden;
+        }
+
+        /* Ensure Mermaid takes full height */
+        .mermaid {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        /* Force SVG to fill parent (Crucial Fix) */
+        .mermaid svg {
+            height: 100% !important;
+            width: 100% !important;
+            max-width: none !important;
+        }
+
+        /* --- Controls --- */
+        .controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: white;
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        button.ctrl-btn {
+            width: 44px;
+            height: 44px;
+            border: 1px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.4rem;
+            color: #444;
+            transition: all 0.2s ease;
+        }
+        button.ctrl-btn:hover { background-color: #f5f5f5; color: #00ED64; border-color: #00ED64; }
+
+        /* --- Legend --- */
+        .legend {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border: 1px solid #f0f0f0;
+            font-size: 0.85rem;
+            z-index: 90;
+        }
+        .legend-item { display: flex; align-items: center; margin-bottom: 8px; color: #444; font-weight: 500; }
+        .dot { width: 14px; height: 14px; border-radius: 4px; margin-right: 12px; }
+        
+        .l-tech { background-color: #E3F2FD; border: 1px solid #1565C0; }
+        .l-scale { background-color: #FFF3E0; border: 1px solid #EF6C00; }
+        .l-plat { background-color: #F3E5F5; border: 1px solid #7B1FA2; }
+        .l-deploy { background-color: #E8F5E9; border: 1px solid #2E7D32; }
+        .l-value { background-color: #00ED64; border: 2px solid #00684A; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Decision Matrix</h1>
+        <span class="subtitle">MongoDB v8.0</span>
+    </header>
+
+    <div class="legend">
+        <strong>Zone Key</strong><br><br>
+        <div class="legend-item"><div class="dot l-tech"></div>Data & Dev</div>
+        <div class="legend-item"><div class="dot l-scale"></div>Scale Strategy</div>
+        <div class="legend-item"><div class="dot l-plat"></div>Platform & AI</div>
+        <div class="legend-item"><div class="dot l-deploy"></div>Cloud & Security</div>
+        <div class="legend-item"><div class="dot l-value"></div>MongoDB Solution</div>
+    </div>
+
+    <div class="controls">
+        <button class="ctrl-btn" onclick="zoomIn()">+</button>
+        <button class="ctrl-btn" onclick="zoomOut()">-</button>
+        <button class="ctrl-btn" onclick="resetZoom()">↺</button>
+    </div>
+
+    <div id="diagram-container">
+        <div class="mermaid">
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis'}, 'themeVariables': { 'fontFamily': 'Segoe UI', 'fontSize': '16px', 'lineColor': '#555' }}}%%
+flowchart TB
+    %% --- ZONE 0: STRATEGIC VISION ---
+    Start(["Start: Strategic Vision"]) --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
+    
+    BizModel -- "Internal App" --> WorkloadCheck
+    BizModel -- "B2B SaaS" --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
+    
+    Tenancy -- "Silo (1 DB per Tenant)" --> Silo["**Management Nightmare**<br>High TCO"]
+    Tenancy -- "Pool (Shared DB)" --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
+    
+    Isolation -- "Logical Isolation" --> Logical["**Logical Sharding**<br>Standard Collections"]
+    Isolation -- "Physical Isolation" --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
+    
+    Logical --> WorkloadCheck
+    TenantShard --> WorkloadCheck
+
+    %% --- ZONE 1: WORKLOAD & DATA ---
+    WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
+    WorkloadCheck -- Analytical (OLAP) --> AnalyticCheck{"**Analytical Nuance**<br>Massive Joins (10+),<br>Full Table Scans, OR<br>Deep History (&gt;500TB active)?"}
+    AnalyticCheck -- Yes (Data Warehouse) --> DWH["**Data Warehouse**<br>Snowflake / Databricks<br>(Cost Efficiency for Cold Data)"]
+    AnalyticCheck -- "No (Real-Time Analytics)" --> DevSkill{"**Team Skillset**<br>Code-First (Devs)<br>or SQL-First (DBAs)?"}
+    WorkloadCheck -- Transactional (OLTP) --> DevSkill
+    
+    DevSkill -- "SQL-First" --> AcidCheck{"**ACID Nuance**<br>Multi-table transactions<br>across 10+ tables?"}
+    DevSkill -- "Code-First" --> ObjMatch["**Value: Dev Experience**<br>No ORM / Impedance Mismatch"]
+    ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
+    
+    AcidCheck -- Yes --> RigidSQL{"**Modernization Check**<br>Is innovation stifled<br>by schema changes?"}
+    RigidSQL -- No --> RDBMS["**RDBMS**<br>SQL / Oracle"]
+    RigidSQL -- Yes --> Migrator["**Relational Migrator**<br>Schema Transformation"]
+    Migrator --> MongoCore["**MongoDB Core**<br>Flexible Schema"]
+    
+    AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &gt; 5k/sec?"}
+    VolCheck -- No --> RDBMS
+    VolCheck -- Yes --> MongoCore
+    
+    DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 3 hops)?"}
+    GraphCheck -- Yes --> GraphDB["**Neo4j / Neptune**"]
+    GraphCheck -- No --> KVCheck{"**Key-Value Nuance**<br>Simple ID Lookup?"}
+    DataNature -- No (Rigid) --> AcidCheck
+    
+    KVCheck -- Yes --> Latency{"**Latency Nuance**<br>Need &lt;1ms response<br>&amp; OK with data loss?"}
+    Latency -- Yes --> Redis["**Redis / Memcached**"]
+    Latency -- No --> MongoCore
+    KVCheck -- No (Complex) --> QueryCheck{"**Query Nuance**<br>Need robust filtering,<br>secondary indexes,<br>or aggregations?"}
+    QueryCheck -- Yes --> MongoCore
+    
+    MongoCore --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
+    Agility -- Yes --> AgileVal["**Value: High Agility**<br>Faster Time-to-Market"]
+    Agility -- No --> ScaleCheck{"**Scale Check**<br>Data &gt; 2TB OR<br>Writes &gt; 50k/s?"}
+    AgileVal --> ScaleCheck
+
+    %% --- ZONE 2: SCALE ---
+    ScaleCheck -- Yes --> ShardStrat{"**Sharding Strategy**<br>Access Pattern?"}
+    ShardStrat -- Distributed Writes --> HashShard["**Hashed Sharding**<br>Uniform Distribution"]
+    ShardStrat -- Location Based --> ZoneShard["**Zone Sharding**<br>Data Locality"]
+    ShardStrat -- Range Queries --> RangeShard["**Ranged Sharding**<br>Time/Alpha Grouping"]
+    ScaleCheck -- No --> Replica["**Replica Set**<br>High Availability"]
+
+    %% --- ZONE 3: PLATFORM & STREAMING ---
+    HashShard --> PlatCheck{"**Workload Nuance**<br>Need Search, AI,<br>Streams, or Time Series?"}
+    ZoneShard --> PlatCheck
+    RangeShard --> PlatCheck
+    Replica --> PlatCheck
+    
+    PlatCheck -- Just CRUD --> Integration{"**Ecosystem Check**<br>Need mature connectors<br>(Kafka/Spark)?"}
+    
+    %% Streaming Logic
+    PlatCheck -- "Real-Time Streams" --> StreamCheck{"**Streaming Nuance**<br>Process data in-flight?"}
+    StreamCheck -- "Yes (Kafka+Flink)" --> Flink["**Manage Separate Infra**<br>Complex Glue Code"]
+    StreamCheck -- "Yes (Unified)" --> ASP["**Atlas Stream Processing**<br>Continuous Intelligence"]
+    
+    PlatCheck -- Search --> SearchDec{"**ETL Tolerance**<br>Want to manage<br>sync pipelines?"}
+    SearchDec -- Yes --> Elastic["**Elasticsearch/SOLR**"]
+    SearchDec -- No --> AtlasSearch["**Atlas Search**<br>Lucene on Node"]
+    
+    PlatCheck -- AI/Vector --> AIUse{"**AI Pattern**<br>How is Vector used?"}
+    AIUse -- Chat History --> AgentMem["**Agent Memory**<br>Long-Term Context"]
+    AIUse -- Reduce LLM Cost --> SemCache["**Semantic Cache**<br>Prevent Re-runs"]
+    AIUse -- Knowledge Base --> RAG["**Knowledge Graph**<br>RAG + Filters"]
+    
+    PlatCheck -- IoT --> TimeSeries["**Time Series**<br>Columnar Store"]
+    
+    AtlasSearch --> Consolidation["**Value: Consolidation**<br>Reduced Tech Debt"]
+    AgentMem --> Consolidation
+    SemCache --> Consolidation
+    RAG --> Consolidation
+    TimeSeries --> Consolidation
+    ASP --> Consolidation
+    
+    Consolidation --> Integration
+    Integration -- No (Isolated) --> DeployCheck{"**Deployment**<br>Can data touch<br>public cloud?"}
+    Integration -- Yes --> Connectors["**Value: Ecosystem**<br>Official Drivers/Connectors"]
+    Connectors --> DeployCheck
+
+    %% --- ZONE 4: DEPLOYMENT ---
+    DeployCheck -- "No (Air-gapped)" --> SelfMan{"**Self-Managed**<br>Infrastructure?"}
+    SelfMan -- Containers --> K8s["**Enterprise Operator**<br>OpenShift/K8s"]
+    SelfMan -- VM/Metal --> OpsMan["**Ops Manager**<br>Automation"]
+    
+    K8s --> Secure{"**Trust Level**<br>Need 'Eyes-Off'?"}
+    OpsMan --> Secure
+    
+    DeployCheck -- Yes (Cloud) --> Portability{"**Lock-In Check**<br>Need Cloud Agnostic<br>or Exit Strategy?"}
+    Portability -- No (Specific Native) --> Dynamo["**DynamoDB/Firestore**<br>Single Cloud Lock-in"]
+    Portability -- Yes (Portable) --> NetCheck{"**Network Security**<br>Connection Method?"}
+    NetCheck -- AWS/Azure Backbone --> PrivLink["**PrivateLink**<br>One-way Security"]
+    NetCheck -- VPC Peering --> Peering["**VPC Peering**<br>Bi-directional"]
+    NetCheck -- Public Internet --> IPList["**IP Whitelist**<br>Standard TLS"]
+    
+    PrivLink --> RTOCheck{"**DR Strategy**<br>RTO/RPO Requirements?"}
+    Peering --> RTOCheck
+    IPList --> RTOCheck
+    
+    RTOCheck -- "Near-Zero RPO<br>(Multi-Cloud Resilience)" --> MultiCloud["**Multi-Cloud Cluster**<br>AWS+Azure+GCP"]
+    RTOCheck -- Minutes (Standard)<br>(Single Region) --> Standard["**Standard Cluster**<br>3-Node Replica"]
+    
+    %% --- ZONE 5: LIFECYCLE & OPS ---
+    Standard --> Lifecycle{"**Cost Efficiency**<br>Retain history &gt; 90 days?"}
+    MultiCloud --> Lifecycle
+    
+    Lifecycle -- Yes --> Archive["**Online Archive**<br>Auto-Tiering to S3"]
+    Lifecycle -- No --> ObsCheck
+    Archive --> ObsCheck{"**Ops Nuance**<br>Need Automated<br>Performance Tuning?"}
+    
+    ObsCheck -- "No (Manual)" --> ManualOps["**Manual Tuning**<br>Query Analysis"]
+    ObsCheck -- "Yes (Intelligent)" --> PerfAdv["**Performance Advisor**<br>Auto-Index Suggest"]
+    
+    PerfAdv --> Secure
+    ManualOps --> Secure
+    
+    Secure -- Yes (Regulated) --> CSFLE["**Queryable Encryption**<br>Client-Side Keys<br>Encryption-in-Use"]
+    Secure -- No --> Final(["**Final Architecture**"])
+    CSFLE --> Final
+
+    %% --- STYLING ---
+     Start:::startNode
+     BizModel:::techZone
+     Tenancy:::techZone
+     Silo:::exitNode
+     Isolation:::techZone
+     Logical:::valueNode
+     TenantShard:::valueNode
+     WorkloadCheck:::techZone
+     AnalyticCheck:::techZone
+     DWH:::exitNode
+     DevSkill:::techZone
+     AcidCheck:::techZone
+     ObjMatch:::valueNode
+     DataNature:::techZone
+     RigidSQL:::techZone
+     RDBMS:::exitNode
+     Migrator:::valueNode
+     MongoCore:::valueNode
+     VolCheck:::techZone
+     GraphCheck:::techZone
+     GraphDB:::exitNode
+     KVCheck:::techZone
+     Latency:::techZone
+     Redis:::exitNode
+     QueryCheck:::techZone
+     Agility:::techZone
+     AgileVal:::valueNode
+     ScaleCheck:::scaleZone
+     ShardStrat:::scaleZone
+     HashShard:::valueNode
+     ZoneShard:::valueNode
+     RangeShard:::valueNode
+     Replica:::valueNode
+     PlatCheck:::platZone
+     Integration:::platZone
+     SearchDec:::platZone
+     Elastic:::exitNode
+     AtlasSearch:::valueNode
+     AIUse:::platZone
+     AgentMem:::valueNode
+     SemCache:::valueNode
+     RAG:::valueNode
+     StreamCheck:::platZone
+     Flink:::exitNode
+     ASP:::valueNode
+     TimeSeries:::valueNode
+     Consolidation:::valueNode
+     DeployCheck:::deployZone
+     Connectors:::valueNode
+     SelfMan:::deployZone
+     K8s:::valueNode
+     OpsMan:::valueNode
+     Secure:::deployZone
+     Portability:::deployZone
+     Dynamo:::exitNode
+     NetCheck:::deployZone
+     PrivLink:::valueNode
+     Peering:::valueNode
+     IPList:::valueNode
+     RTOCheck:::deployZone
+     MultiCloud:::valueNode
+     Standard:::valueNode
+     Lifecycle:::deployZone
+     Archive:::valueNode
+     ObsCheck:::deployZone
+     ManualOps:::exitNode
+     PerfAdv:::valueNode
+     CSFLE:::valueNode
+     Final:::startNode
+
+    classDef startNode fill:#333,stroke:#333,stroke-width:2px,color:#fff
+    classDef techZone fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#000
+    classDef scaleZone fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px,color:#000
+    classDef platZone fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    classDef deployZone fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#000
+    classDef valueNode fill:#00ED64,stroke:#00684A,stroke-width:3px,font-weight:bold,color:#000
+    classDef exitNode fill:#F5F5F5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#666
+        </div>
+    </div>
+
+    <script>
+        var panZoomInstance;
+
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true });
+
+        // Polling function to wait for Mermaid to actually create the <svg>
+        const interval = setInterval(() => {
+            const svg = document.querySelector('.mermaid svg');
+            
+            // Wait until SVG exists AND has a computed height (meaning it's rendered)
+            if (svg && svg.getBoundingClientRect().height > 10) {
+                clearInterval(interval);
+                
+                // 1. Force SVG to fill the container immediately
+                svg.style.height = '100%';
+                svg.style.width = '100%';
+                svg.style.maxWidth = 'none';
+
+                // 2. Initialize SVG Pan Zoom
+                panZoomInstance = svgPanZoom(svg, {
+                    zoomEnabled: true,
+                    controlIconsEnabled: false,
+                    fit: true,
+                    center: true,
+                    minZoom: 0.1,
+                    maxZoom: 10
+                });
+                
+                // 3. Force a resize event to ensure it snaps to grid
+                panZoomInstance.resize();
+                panZoomInstance.fit();
+                panZoomInstance.center();
+            }
+        }, 100);
+
+        // Control Functions
+        function zoomIn() { if(panZoomInstance) panZoomInstance.zoomIn(); }
+        function zoomOut() { if(panZoomInstance) panZoomInstance.zoomOut(); }
+        function resetZoom() { 
+            if(panZoomInstance) {
+                panZoomInstance.resetZoom(); 
+                panZoomInstance.center();
+            }
+        }
+        
+        // Handle Window Resize
+        window.addEventListener('resize', function(){
+            if(panZoomInstance) {
+                panZoomInstance.resize();
+                panZoomInstance.fit();
+                panZoomInstance.center();
+            }
+        });
+    </script>
+</body>
+</html>
