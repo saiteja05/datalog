@@ -6,7 +6,7 @@
     <title>MongoDB Atlas At Scale - Command Center V2</title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23001E2B'/><path d='M16 4 L18 14 L16 28 L14 14 Z' fill='%2300ED64'/><ellipse cx='16' cy='14' rx='3' ry='5' fill='%2300ED64'/></svg>">
+    <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23001E2B'/><path d='M16 4 L18 14 L16 28 L14 14 Z' fill='%234DB33D'/><ellipse cx='16' cy='14' rx='3' ry='5' fill='%234DB33D'/></svg>">
     
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,14 +14,16 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
         :root {
-            /* Enhanced Color System */
-            --mongo-green: #00ED64;
-            --mongo-dark-blue: #001218;
-            --mongo-dark-green: #023430;
-            --mongo-card-accent: #002B3A;
-            --mongo-text: #F0F0F0;
-            --mongo-text-muted: #B0B4B8;
-            --mongo-border: #004F69;
+            /* MongoDB Official Brand Colors */
+            --mongo-green: #4DB33D;
+            --mongo-green-dark: #3FA037;
+            --mongo-dark-blue: #001E2B;
+            --mongo-dark-green: #2d5a2f;
+            --mongo-card: #001E2B;
+            --mongo-card-accent: #002535;
+            --mongo-text: #E8E7D5;
+            --mongo-text-muted: #C1BEBC;
+            --mongo-border: #3FA037;
             
             /* Sidebar */
             --sidebar-width: 280px;
@@ -43,8 +45,11 @@
             background: linear-gradient(135deg, #001218 0%, #001E2B 50%, #001218 100%);
             background-attachment: fixed;
             color: var(--mongo-text);
-            line-height: 1.7;
+            line-height: 1.65;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            font-size: 15px;
         }
         
         /* Animated Background */
@@ -56,8 +61,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 20% 50%, rgba(0, 237, 100, 0.03) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(0, 237, 100, 0.02) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(77, 179, 61, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(63, 160, 55, 0.015) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
         }
@@ -66,7 +71,21 @@
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 600;
-            letter-spacing: -0.02em;
+            letter-spacing: -0.015em;
+            line-height: 1.3;
+            margin-top: 0;
+        }
+        
+        h1 { font-size: 2.5rem; font-weight: 700; }
+        h2 { font-size: 2rem; font-weight: 600; margin-bottom: 1.5rem; }
+        h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.25rem; color: #FFFFFF; }
+        h4 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #6BC157; }
+        h5 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.875rem; color: #5AB649; }
+        h6 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--mongo-green-dark); }
+        
+        p {
+            margin-bottom: 1.25rem;
+            line-height: 1.7;
         }
         
         code, pre, .code-block {
@@ -80,14 +99,14 @@
             left: 0;
             right: 0;
             height: var(--header-height);
-            background: rgba(0, 18, 24, 0.95);
-            backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0, 237, 100, 0.1);
+            background: rgba(0, 30, 43, 0.98);
+            backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid rgba(77, 179, 61, 0.1);
             z-index: 1000;
             display: flex;
             align-items: center;
-            padding: 0 2rem;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            padding: 0 2.5rem;
+            box-shadow: 0 2px 16px rgba(0, 0, 0, 0.15);
         }
         
         .header-logo {
@@ -103,7 +122,7 @@
         .header-logo svg {
             width: 32px;
             height: 32px;
-            filter: drop-shadow(0 2px 8px rgba(0, 237, 100, 0.4));
+            filter: drop-shadow(0 1px 4px rgba(77, 179, 61, 0.3));
         }
         
         .header-actions {
@@ -122,20 +141,20 @@
         
         .search-input {
             width: 100%;
-            padding: 0.65rem 1rem 0.65rem 2.75rem;
-            background: rgba(0, 43, 58, 0.6);
-            border: 1px solid rgba(0, 237, 100, 0.2);
-            border-radius: 12px;
+            padding: 0.7rem 1rem 0.7rem 2.75rem;
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid rgba(77, 179, 61, 0.2);
+            border-radius: 10px;
             color: var(--mongo-text);
             font-size: 0.9rem;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
         }
         
         .search-input:focus {
             outline: none;
-            border-color: var(--mongo-green);
-            background: rgba(0, 43, 58, 0.9);
-            box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.1);
+            border-color: rgba(77, 179, 61, 0.5);
+            background: rgba(0, 30, 43, 0.8);
+            box-shadow: 0 0 0 3px rgba(77, 179, 61, 0.08);
         }
         
         .search-icon {
@@ -153,8 +172,8 @@
             right: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(0, 237, 100, 0.1);
-            border: 1px solid rgba(0, 237, 100, 0.2);
+            background: rgba(77, 179, 61, 0.1);
+            border: 1px solid rgba(77, 179, 61, 0.2);
             border-radius: 4px;
             padding: 0.2rem 0.5rem;
             font-size: 0.75rem;
@@ -169,13 +188,13 @@
             top: var(--header-height);
             width: var(--sidebar-width);
             height: calc(100vh - var(--header-height));
-            background: rgba(0, 32, 46, 0.95);
-            backdrop-filter: blur(20px);
-            border-right: 1px solid rgba(0, 237, 100, 0.1);
+            background: rgba(0, 30, 43, 0.98);
+            backdrop-filter: blur(24px) saturate(180%);
+            border-right: 1px solid rgba(77, 179, 61, 0.1);
             overflow-y: auto;
             z-index: 900;
-            padding: 1.5rem 0;
-            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.3);
+            padding: 2rem 0;
+            box-shadow: 2px 0 16px rgba(0, 0, 0, 0.15);
         }
         
         .sidebar::-webkit-scrollbar {
@@ -187,7 +206,7 @@
         }
         
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(0, 237, 100, 0.3);
+            background: rgba(77, 179, 61, 0.4);
             border-radius: 3px;
         }
         
@@ -208,13 +227,13 @@
         
         .sidebar-nav-item:hover {
             color: var(--mongo-text);
-            background: rgba(0, 237, 100, 0.05);
+            background: rgba(77, 179, 61, 0.06);
             border-left-color: var(--mongo-green);
         }
         
         .sidebar-nav-item.active {
             color: var(--mongo-green);
-            background: rgba(0, 237, 100, 0.1);
+            background: rgba(77, 179, 61, 0.12);
             border-left-color: var(--mongo-green);
             font-weight: 600;
         }
@@ -227,14 +246,14 @@
         
         .sidebar-nav-item.emergency {
             background: linear-gradient(90deg, rgba(255, 107, 107, 0.15) 0%, transparent 100%);
-            border-left-color: #FF6B6B;
+            border-left-color: #4DB33D;
             animation: pulse 2s ease-in-out infinite;
         }
         
         .sidebar-nav-item.emergency:hover,
         .sidebar-nav-item.emergency.active {
             background: linear-gradient(90deg, rgba(255, 107, 107, 0.25) 0%, transparent 100%);
-            color: #FF6B6B;
+            color: #4DB33D;
         }
         
         @keyframes pulse {
@@ -246,10 +265,11 @@
         .main-content {
             margin-left: var(--sidebar-width);
             margin-top: var(--header-height);
-            padding: 3rem;
+            padding: 3.5rem 3rem;
             min-height: calc(100vh - var(--header-height));
             position: relative;
             z-index: 1;
+            max-width: 1400px;
         }
         
         /* Code Blocks with Copy Button */
@@ -260,17 +280,17 @@
         
         .code-block {
             background: linear-gradient(135deg, #0a1520 0%, #000810 100%);
-            border: 1px solid rgba(0, 237, 100, 0.2);
-            border-radius: 12px;
+            border: 1px solid rgba(77, 179, 61, 0.2);
+            border-radius: 10px;
             padding: 1.5rem;
             color: #E0E0E0;
-            font-size: 0.9rem;
-            line-height: 1.6;
+            font-size: 0.875rem;
+            line-height: 1.7;
             overflow-x: auto;
             white-space: pre-wrap;
             word-break: break-all;
             position: relative;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.4);
+            box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.3);
         }
         
         .copy-button {
@@ -278,26 +298,27 @@
             top: 1rem;
             right: 1rem;
             padding: 0.5rem 1rem;
-            background: rgba(0, 237, 100, 0.1);
-            border: 1px solid rgba(0, 237, 100, 0.3);
-            border-radius: 8px;
+            background: rgba(77, 179, 61, 0.1);
+            border: 1px solid rgba(77, 179, 61, 0.25);
+            border-radius: 6px;
             color: var(--mongo-green);
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.25s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         
         .copy-button:hover {
-            background: rgba(0, 237, 100, 0.2);
-            transform: translateY(-2px);
+            background: rgba(77, 179, 61, 0.18);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(77, 179, 61, 0.15);
         }
         
         .copy-button.copied {
-            background: rgba(0, 237, 100, 0.3);
+            background: rgba(77, 179, 61, 0.3);
         }
         
         /* Scroll Progress */
@@ -382,9 +403,10 @@
         }
         
         .quick-links a:hover {
-            background: rgba(0, 237, 100, 0.1);
-            border-color: var(--mongo-green);
+            background: rgba(77, 179, 61, 0.1);
+            border-color: rgba(77, 179, 61, 0.4);
             color: white;
+            transform: translateY(-1px);
         }
         
         /* Responsive */
@@ -432,20 +454,20 @@
         
         /* Enhanced Expandable Box Styles */
         .expandable-box {
-            background: linear-gradient(135deg, rgba(0, 55, 78, 0.5) 0%, rgba(0, 43, 58, 0.5) 100%);
-            backdrop-filter: blur(8px);
-            border-left: 4px solid var(--mongo-green);
-            border-radius: 0.75rem;
+            background: linear-gradient(135deg, rgba(0, 30, 43, 0.4) 0%, rgba(0, 37, 53, 0.4) 100%);
+            backdrop-filter: blur(10px);
+            border-left: 3px solid var(--mongo-green);
+            border-radius: 8px;
             margin-top: 1.25rem;
             overflow: hidden;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
         
         .expandable-box:hover {
-            background: linear-gradient(135deg, rgba(0, 55, 78, 0.7) 0%, rgba(0, 43, 58, 0.7) 100%);
-            box-shadow: 0 10px 15px -3px rgba(0, 237, 100, 0.2), 0 4px 6px -2px rgba(0, 237, 100, 0.1);
-            transform: translateY(-2px);
+            background: linear-gradient(135deg, rgba(0, 30, 43, 0.6) 0%, rgba(0, 37, 53, 0.6) 100%);
+            box-shadow: 0 4px 16px rgba(77, 179, 61, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);
+            transform: translateY(-1px);
         }
         
         /* Color-coded FAQ sections */
@@ -457,7 +479,7 @@
         }
         
         .faq-sharding .expandable-box {
-            border-left-color: #3b82f6;
+            border-left-color: #4DB33D;
         }
         .faq-sharding .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
@@ -471,21 +493,21 @@
         }
         
         .faq-security .expandable-box {
-            border-left-color: #f97316;
+            border-left-color: #3FA037;
         }
         .faq-security .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
         }
         
         .faq-advanced .expandable-box {
-            border-left-color: #06b6d4;
+            border-left-color: #4DB33D;
         }
         .faq-advanced .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.2), 0 4px 6px -2px rgba(6, 182, 212, 0.1);
         }
         
         .faq-general .expandable-box {
-            border-left-color: #10b981;
+            border-left-color: #4DB33D;
         }
         .faq-general .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
@@ -493,7 +515,7 @@
         
         /* Growth Planning Section */
         #growth-planning .expandable-box {
-            border-left-color: #8b5cf6;
+            border-left-color: #4DB33D;
         }
         #growth-planning .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.2), 0 4px 6px -2px rgba(139, 92, 246, 0.1);
@@ -501,7 +523,7 @@
         
         /* Core Features Section */
         #core-features .expandable-box {
-            border-left-color: #10b981;
+            border-left-color: #4DB33D;
         }
         #core-features .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
@@ -509,7 +531,7 @@
         
         /* Advanced Features Sections */
         #advanced-search .expandable-box {
-            border-left-color: #06b6d4;
+            border-left-color: #4DB33D;
         }
         #advanced-search .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.2), 0 4px 6px -2px rgba(6, 182, 212, 0.1);
@@ -523,21 +545,21 @@
         }
         
         #advanced-hybrid .expandable-box {
-            border-left-color: #ec4899;
+            border-left-color: #3FA037;
         }
         #advanced-hybrid .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.2), 0 4px 6px -2px rgba(236, 72, 153, 0.1);
         }
         
         #advanced-voyage .expandable-box {
-            border-left-color: #f59e0b;
+            border-left-color: #3FA037;
         }
         #advanced-voyage .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.2), 0 4px 6px -2px rgba(245, 158, 11, 0.1);
         }
         
         #advanced-timeseries .expandable-box {
-            border-left-color: #14b8a6;
+            border-left-color: #4DB33D;
         }
         #advanced-timeseries .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(20, 184, 166, 0.2), 0 4px 6px -2px rgba(20, 184, 166, 0.1);
@@ -545,42 +567,42 @@
         
         /* API Examples Sections */
         #api-setup .expandable-box {
-            border-left-color: #3b82f6;
+            border-left-color: #4DB33D;
         }
         #api-setup .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
         }
         
         #api-pymongo .expandable-box {
-            border-left-color: #10b981;
+            border-left-color: #4DB33D;
         }
         #api-pymongo .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2), 0 4px 6px -2px rgba(16, 185, 129, 0.1);
         }
         
         #api-pandas .expandable-box {
-            border-left-color: #8b5cf6;
+            border-left-color: #4DB33D;
         }
         #api-pandas .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(139, 92, 246, 0.2), 0 4px 6px -2px rgba(139, 92, 246, 0.1);
         }
         
         #api-pymongoarrow .expandable-box {
-            border-left-color: #f97316;
+            border-left-color: #3FA037;
         }
         #api-pymongoarrow .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
         }
         
         #api-window .expandable-box {
-            border-left-color: #06b6d4;
+            border-left-color: #4DB33D;
         }
         #api-window .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(6, 182, 212, 0.2), 0 4px 6px -2px rgba(6, 182, 212, 0.1);
         }
         
         #api-advanced .expandable-box {
-            border-left-color: #ec4899;
+            border-left-color: #3FA037;
         }
         #api-advanced .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.2), 0 4px 6px -2px rgba(236, 72, 153, 0.1);
@@ -588,7 +610,7 @@
         
         /* Performance Troubleshooting Sections - Fixed Selectors */
         #perf-workflow + div .bg-\[#001E2B\] {
-            border-left: 4px solid #10b981;
+            border-left: 4px solid #4DB33D;
         }
         
         #perf-latency + div .bg-\[#001E2B\],
@@ -598,7 +620,7 @@
         
         #perf-query + div .bg-\[#001E2B\],
         #perf-query + div .bg-\[--mongo-card-accent\] {
-            border-left: 4px solid #3b82f6;
+            border-left: 4px solid #4DB33D;
         }
         
         #perf-sharding + div .bg-\[#001E2B\],
@@ -608,17 +630,17 @@
         
         #perf-monitoring + div .bg-\[#001E2B\],
         #perf-monitoring + div .bg-\[--mongo-card-accent\] {
-            border-left: 4px solid #f59e0b;
+            border-left: 4px solid #3FA037;
         }
         
         #perf-connections + div .bg-\[#001E2B\],
         #perf-connections + div .bg-\[--mongo-card-accent\] {
-            border-left: 4px solid #06b6d4;
+            border-left: 4px solid #4DB33D;
         }
         
         #perf-tips + div .bg-\[#001E2B\],
         #perf-tips + div .bg-\[--mongo-card-accent\] {
-            border-left: 4px solid #ec4899;
+            border-left: 4px solid #3FA037;
         }
         
         .expandable-box summary {
@@ -3704,9 +3726,7 @@ db.getSiblingDB("federated").events.aggregate([
 
             <!-- Tab 6: Performance Troubleshooting -->
             <div id="tab-api" class="tab-content p-6 md:p-10 space-y-8">
-                <h2 class="text-3xl md:text-4xl font-bold text-white mb-6">💻 API Examples: Python + Pandas + PyMongoArrow</h2>
-                <p class="text-[--mongo-text-muted] text-lg mb-8">Production-ready code examples for MongoDB Python development, including PyMongo, pandas integration, PyMongoArrow for high-performance data transfer, and advanced aggregation with window functions.</p>
-
+               
                 <!-- Quick Links -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-5 mb-8">
                     <h4 class="text-[--mongo-green] text-sm font-bold uppercase tracking-wide mb-3">Quick Links</h4>
