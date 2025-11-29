@@ -453,7 +453,7 @@
 
     <div id="diagram-container" onclick="closeDrawer()">
         <div class="mermaid">
-%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'layout': 'dagre'}, 'themeVariables': { 'background': 'transparent', 'mainBkg': 'transparent', 'fontFamily': 'Inter', 'fontSize': '16px', 'lineColor': '#555' }}}%%
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'layout': 'dagre'}, 'themeVariables': { 'background': 'transparent', 'mainBkg': 'transparent', 'fontFamily': 'Inter', 'fontSize': '16px', 'lineColor': '#ffffff' }}}%%
 flowchart TB
     Start(["Start: Strategic Vision"]) --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
     BizModel -- Internal App --> WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
@@ -544,10 +544,10 @@ flowchart TB
     Standard --> Lifecycle{"**Cost Efficiency**<br>Retain history &gt; 90 days?"}
     MultiCloud --> Lifecycle
     Lifecycle -- Yes --> Archive["**Online Archive**<br>Auto-Tiering to S3"]
-    Lifecycle -- No --> ObsCheck{"**Ops Nuance**<br>Need Automated<br>Performance Tuning?"}
+    Lifecycle -- No --> ObsCheck{"**Ops Nuance**<br>Need Automated<br> Deployment Strategies ?  Performance Tuning?"}
     Archive --> ObsCheck
     ObsCheck -- No (Manual) --> ManualOps["**Manual Tuning**<br>Query Analysis"]
-    ObsCheck -- Yes (Intelligent) --> PerfAdv["**Performance Advisor**<br>Auto-Index Suggest"]
+    ObsCheck -- Yes (Intelligent) --> PerfAdv["**MongoDB Atlas Landing Zone and Performance/Query Advisor**<br>*Templatized Deployment Configurations for control and ease of use<br>*Query Performance Visualization<br>*Auto-Index Suggest"]
     PerfAdv --> Secure
     ManualOps --> Secure
     Secure -- Yes (Regulated and High Compliance Requirements) --> CSFLE["Queryable Encryption<br>Client-Side filed encryptions<br>encryption at rest (KMIP)<br>encryption in motion<br><br>Compliance - First Platform<br>"]
