@@ -412,7 +412,7 @@
 <body>
 
     <header>
-        <h1>MongoDB Strategic Architecture Decision Matrix</h1>
+        <h1>MongoDB :  Architecture Decision Matrix</h1>
     </header>
 
     <!-- MongoDB Leaf Logo Watermark -->
@@ -458,12 +458,13 @@ flowchart TB
     Start(["Start: Strategic Vision"]) --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
     BizModel -- Internal App --> WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
     BizModel -- B2B SaaS --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
-    Tenancy -- Silo (1 DB per Tenant) --> Silo["**Management Nightmare**<br>High TCO"]
+    Tenancy -- Silo (1 Deployment per Tenant) --> Silo["**Devops Nightmare**<br>Not enforced by MongoDB even for hardware isolation"]
     Tenancy -- Pool (Shared DB) --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
     Isolation -- Logical Isolation --> Logical["**Logical Sharding**<br>Standard Collections"]
     Isolation -- Physical Isolation --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
     Logical --> WorkloadCheck
     TenantShard --> WorkloadCheck
+    Silo --> WorkloadCheck
     WorkloadCheck -- Analytical (OLAP) --> AnalyticCheck{"**Analytical Nuance**<br>Massive Joins (10+),<br>Full Table Scans, OR<br>Deep History (&gt;500TB active data set)?"}
     AnalyticCheck -- Yes (Data Warehouse) --> DWH["**Data Warehouse / Lakehouse**<br>Snowflake / Databricks<br>(Cost Efficiency for Cold Data)"]
     AnalyticCheck -- "No (Real-Time Analytics)" --> DevSkill{"**Team Skillset**<br>Code-First (Devs)<br>or SQL-First (DBAs)?"}
