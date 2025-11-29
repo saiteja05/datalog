@@ -3,115 +3,436 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Decision Matrix</title>
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.0/dist/mermaid.min.js"></script>
+    <title>MongoDB Strategic Architecture Decision Matrix</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%2300ED64' d='M15.9.087l.854 1.604c.192.296.4.558.645.802a22.406 22.406 0 012.004 2.266c1.447 1.9 2.423 4.01 3.12 6.292.418 1.394.645 2.824.662 4.27.07 4.323-1.412 8.035-4.4 11.12a12.7 12.7 0 01-1.57 1.342c-.296 0-.436-.227-.558-.436a3.589 3.589 0 01-.436-1.255c-.105-.523-.174-1.046-.14-1.586v-.244C16.057 24.21 15.796.21 15.9.087z'/%3E%3Cpath fill='%23001E2B' d='M15.9.034c-.035-.07-.07-.017-.105.017.017.35-.105.662-.296.96-.21.296-.488.523-.767.767-1.55 1.342-2.77 2.963-3.747 4.776-1.3 2.44-1.97 5.055-2.16 7.808-.087.993.314 4.497.627 5.508.854 2.684 2.388 4.933 4.375 6.885.488.47 1.01.906 1.55 1.325.157 0 .174-.14.21-.244a4.78 4.78 0 00.157-.68l.35-2.614z'/%3E%3C/svg%3E">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
     
     <style>
         /* --- CORE STYLES --- */
-        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 0; overflow: hidden; background-color: #f8f9fa; }
+        :root {
+            --bg-primary: #0a1929;
+            --bg-secondary: #1a2332;
+            --bg-tertiary: #001e2b;
+            --bg-surface: rgba(255, 255, 255, 0.95);
+            --bg-surface-gradient: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+            --bg-header: linear-gradient(135deg, #001E2B 0%, #003547 100%);
+            --text-primary: #ffffff;
+            --text-secondary: #e0e0e0;
+            --text-dark: #001e2b;
+            --text-muted: #2c3e50;
+            --accent-green: #00ED64;
+            --accent-green-dark: #4DB33D;
+            --shadow-color: rgba(0,0,0,0.4);
+            --shadow-light: rgba(0,0,0,0.2);
+            --border-color: rgba(77,179,61,0.2);
+            --grid-color: #2a3f54;
+            --control-bg: rgba(255, 255, 255, 0.95);
+            --control-text: #001e2b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, var(--bg-tertiary) 100%);
+            transition: background 0.3s ease;
+        }
 
         /* --- HEADER --- */
-        header { position: absolute; top: 0; left: 0; width: 100%; height: 60px; background-color: #001E2B; color: white; display: flex; align-items: center; padding: 0 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 100; }
-        h1 { margin: 0; font-size: 1.4rem; font-weight: 600; }
-        .subtitle { margin-left: 15px; font-size: 0.9rem; color: #4DB33D; border-left: 1px solid #555; padding-left: 15px; }
+        header { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 70px; 
+            background: linear-gradient(135deg, #001E2B 0%, #003547 100%);
+            color: white; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 30px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4), 0 0 40px rgba(77,179,61,0.1);
+            z-index: 100;
+            border-bottom: 1px solid rgba(77,179,61,0.2);
+        }
+        h1 { 
+            margin: 0; 
+            font-size: 1.5rem; 
+            font-weight: 700; 
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #fff 0%, #e0e0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle { 
+            margin-left: 20px; 
+            font-size: 0.9rem; 
+            color: #00ED64;
+            font-weight: 600;
+            border-left: 2px solid #00ED64; 
+            padding-left: 20px; 
+            letter-spacing: 0.5px;
+        }
 
         /* --- DIAGRAM CONTAINER --- */
-        #diagram-container { position: absolute; top: 60px; left: 0; right: 0; bottom: 0; background-image: radial-gradient(#e0e0e0 1px, transparent 1px); background-size: 20px 20px; overflow: hidden; transition: margin-right 0.3s ease; }
-        .mermaid { width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-        .mermaid svg { height: 100% !important; width: 100% !important; max-width: none !important; }
+        #diagram-container { 
+            position: absolute; 
+            top: 70px; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 237, 100, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 50%, rgba(77, 179, 61, 0.05) 0%, transparent 50%),
+                radial-gradient(#2a3f54 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 30px 30px;
+            overflow: hidden; 
+            transition: margin-right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .mermaid { 
+            width: 100%; 
+            height: 100%; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0;
+            animation: fadeIn 0.6s ease forwards;
+        }
+        .mermaid svg { 
+            height: 100% !important; 
+            width: 100% !important; 
+            max-width: none !important;
+            filter: drop-shadow(0 10px 30px rgba(0,0,0,0.3));
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
 
         /* --- CONTROLS --- */
-        .controls { position: absolute; bottom: 30px; left: 30px; background: white; padding: 8px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: flex; flex-direction: column; gap: 8px; z-index: 90; }
-        button.ctrl-btn { width: 44px; height: 44px; border: 1px solid #e0e0e0; background: white; border-radius: 8px; cursor: pointer; font-size: 1.4rem; color: #444; transition: all 0.2s ease; }
-        button.ctrl-btn:hover { background-color: #f5f5f5; color: #4DB33D; border-color: #4DB33D; }
+        .controls { 
+            position: absolute; 
+            bottom: 30px; 
+            left: 30px; 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 10px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1);
+            display: flex; 
+            flex-direction: column; 
+            gap: 10px; 
+            z-index: 90;
+        }
+        button.ctrl-btn { 
+            width: 48px; 
+            height: 48px; 
+            border: none;
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+            border-radius: 12px; 
+            cursor: pointer; 
+            font-size: 1.5rem; 
+            color: #001e2b;
+            font-weight: 700;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        button.ctrl-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #00ED64 0%, #4DB33D 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        button.ctrl-btn:hover::before { opacity: 0.15; }
+        button.ctrl-btn:hover { 
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 16px rgba(0,237,100,0.3);
+        }
+        button.ctrl-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+        button.ctrl-btn span {
+            position: relative;
+            z-index: 1;
+        }
 
         /* --- LEGEND --- */
-        .legend { position: absolute; top: 80px; left: 20px; background: rgba(255, 255, 255, 0.95); padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #f0f0f0; font-size: 0.85rem; z-index: 90; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 8px; color: #444; font-weight: 500; }
-        .dot { width: 14px; height: 14px; border-radius: 4px; margin-right: 12px; }
-        .l-value { background-color: #4DB33D; border: 2px solid #3FA037; }
-        .l-tech { background-color: #E3F2FD; border: 1px solid #1565C0; }
+        .legend { 
+            position: absolute; 
+            top: 90px; 
+            left: 30px; 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px; 
+            border-radius: 16px; 
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1);
+            font-size: 0.9rem; 
+            z-index: 90;
+            min-width: 240px;
+        }
+        .legend strong {
+            display: block;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #001e2b;
+            margin-bottom: 16px;
+            letter-spacing: -0.3px;
+        }
+        .legend-item { 
+            display: flex; 
+            align-items: center; 
+            margin-bottom: 12px; 
+            color: #2c3e50;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+        }
+        .legend-item:hover {
+            transform: translateX(4px);
+        }
+        .dot { 
+            width: 16px; 
+            height: 16px; 
+            border-radius: 5px; 
+            margin-right: 14px;
+            transition: transform 0.2s ease;
+        }
+        .legend-item:hover .dot {
+            transform: scale(1.2);
+        }
+        .l-value { 
+            background: linear-gradient(135deg, #00ED64 0%, #4DB33D 100%);
+            border: none;
+            box-shadow: 0 2px 8px rgba(0,237,100,0.3);
+        }
+        .l-tech { 
+            background: #E3F2FD;
+            border: 1px solid #1565C0;
+        }
+        .l-scale {
+            background: #FFF3E0;
+            border: 1px solid #EF6C00;
+        }
+        .l-plat {
+            background: #F3E5F5;
+            border: 1px solid #7B1FA2;
+        }
+        .l-deploy {
+            background: #E8F5E9;
+            border: 1px solid #2E7D32;
+        }
+        .l-start {
+            background: #333;
+            border: 1px solid #000;
+        }
+        .l-exit {
+            background: #F5F5F5;
+            border: 1px dashed #616161;
+        }
+        .l-final {
+            background: #DEFFF8;
+            border: 1px solid #46EDC8;
+        }
 
-        /* --- SIDE DRAWER (The Elegant Popup) --- */
+        /* --- SIDE DRAWER --- */
         #side-drawer {
             position: fixed;
-            top: 60px; /* Below header */
-            right: -450px; /* Hidden by default */
-            width: 400px;
+            top: 70px;
+            right: -450px;
+            width: 420px;
             bottom: 0;
-            background: white;
-            box-shadow: -5px 0 30px rgba(0,0,0,0.1);
+            background: linear-gradient(to bottom, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: -8px 0 40px rgba(0,0,0,0.3);
             z-index: 200;
-            transition: right 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             flex-direction: column;
-            border-left: 1px solid #eee;
+            border-left: 1px solid rgba(0,237,100,0.2);
         }
 
         #side-drawer.open { right: 0; }
 
         .drawer-header {
-            background: #fff;
-            padding: 25px 30px;
-            border-bottom: 1px solid #f0f0f0;
+            background: linear-gradient(135deg, #001E2B 0%, #003547 100%);
+            padding: 28px 32px;
+            border-bottom: 1px solid rgba(0,237,100,0.2);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
         }
 
-        .drawer-header h2 { margin: 0; font-size: 1.3rem; color: #001e2b; font-weight: 700; }
-        .close-btn { background: none; border: none; font-size: 1.8rem; color: #999; cursor: pointer; padding: 0; line-height: 1; }
-        .close-btn:hover { color: #333; }
+        .drawer-header h2 { 
+            margin: 0; 
+            font-size: 1.4rem; 
+            color: #ffffff;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .close-btn { 
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            font-size: 1.6rem; 
+            color: #ffffff;
+            cursor: pointer; 
+            padding: 0; 
+            line-height: 1;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-btn:hover { 
+            background: rgba(255,255,255,0.2);
+            transform: rotate(90deg);
+        }
 
-        .drawer-body { padding: 30px; overflow-y: auto; flex-grow: 1; }
+        .drawer-body { 
+            padding: 32px; 
+            overflow-y: auto; 
+            flex-grow: 1;
+        }
+
+        .drawer-body::-webkit-scrollbar {
+            width: 8px;
+        }
+        .drawer-body::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        .drawer-body::-webkit-scrollbar-thumb {
+            background: rgba(0,237,100,0.3);
+            border-radius: 4px;
+        }
+        .drawer-body::-webkit-scrollbar-thumb:hover {
+            background: rgba(0,237,100,0.5);
+        }
 
         .value-prop-box {
-            background: #E8F5E9;
-            border-left: 4px solid #4DB33D;
-            padding: 20px;
-            margin-bottom: 25px;
-            border-radius: 0 8px 8px 0;
+            background: linear-gradient(135deg, #E8F5E9 0%, #f1f8f4 100%);
+            border-left: 4px solid #00ED64;
+            padding: 24px;
+            margin-bottom: 28px;
+            border-radius: 0 12px 12px 0;
+            box-shadow: 0 4px 12px rgba(0,237,100,0.1);
         }
-        .value-label { font-size: 0.75rem; text-transform: uppercase; color: #3FA037; font-weight: bold; display: block; margin-bottom: 8px; letter-spacing: 0.5px; }
-        .value-text { font-size: 1.1rem; color: #111; font-weight: 600; line-height: 1.4; }
+        .value-label { 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            color: #2d7a4d;
+            font-weight: 800;
+            display: block; 
+            margin-bottom: 10px; 
+            letter-spacing: 1px;
+        }
+        .value-text { 
+            font-size: 1.2rem; 
+            color: #001e2b;
+            font-weight: 700;
+            line-height: 1.5;
+        }
 
-        .details-text { color: #444; line-height: 1.7; font-size: 0.95rem; margin-bottom: 30px; }
+        .details-text { 
+            color: #34495e;
+            line-height: 1.8;
+            font-size: 0.95rem; 
+            margin-bottom: 32px;
+        }
 
         .doc-link {
             display: block;
             text-align: center;
-            background: #001E2B;
+            background: linear-gradient(135deg, #001E2B 0%, #003547 100%);
             color: white;
-            padding: 12px;
+            padding: 14px 24px;
             text-decoration: none;
-            border-radius: 6px;
-            font-weight: 600;
-            transition: all 0.2s;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(0,30,43,0.3);
+            position: relative;
+            overflow: hidden;
         }
-        .doc-link:hover { background: #4DB33D; color: #001E2B; transform: translateY(-1px); }
-        .no-link { background: #eee; color: #999; pointer-events: none; }
+        .doc-link::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: linear-gradient(135deg, #00ED64 0%, #4DB33D 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .doc-link:hover::before {
+            opacity: 1;
+        }
+        .doc-link:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,237,100,0.4);
+        }
+        .doc-link span {
+            position: relative;
+            z-index: 1;
+        }
+        .no-link { 
+            background: #e0e0e0;
+            color: #999; 
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        /* --- MONGODB LEAF LOGO --- */
+        .mongodb-leaf {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            width: 100px;
+            height: 100px;
+            opacity: 0.2;
+            pointer-events: none;
+            z-index: 85;
+            transition: opacity 0.3s ease;
+        }
 
     </style>
 </head>
 <body>
 
     <header>
-        <h1>Decision Matrix</h1>
-        <span class="subtitle">for MongoDB v8.0</span>
+        <h1>MongoDB Strategic Architecture Decision Matrix</h1>
+        <span class="subtitle">Version 8.0</span>
     </header>
 
-    <div class="legend">
-        <strong>Zone Key</strong><br><br>
-        <div class="legend-item"><div class="dot l-value"></div><strong>Click Green Nodes for Details</strong></div>
-        <div class="legend-item"><div class="dot l-tech"></div>Data & Workload</div>
-        <div class="legend-item" style="font-size: 0.8em; color: #888; margin-top:10px;">(Pan/Zoom Enabled)</div>
-    </div>
+    <!-- MongoDB Leaf Logo Watermark -->
+    <svg class="mongodb-leaf" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+        <path fill="#00ED64" d="M15.9.087l.854 1.604c.192.296.4.558.645.802a22.406 22.406 0 012.004 2.266c1.447 1.9 2.423 4.01 3.12 6.292.418 1.394.645 2.824.662 4.27.07 4.323-1.412 8.035-4.4 11.12a12.7 12.7 0 01-1.57 1.342c-.296 0-.436-.227-.558-.436a3.589 3.589 0 01-.436-1.255c-.105-.523-.174-1.046-.14-1.586v-.244C16.057 24.21 15.796.21 15.9.087z"/>
+        <path fill="#001E2B" d="M15.9.034c-.035-.07-.07-.017-.105.017.017.35-.105.662-.296.96-.21.296-.488.523-.767.767-1.55 1.342-2.77 2.963-3.747 4.776-1.3 2.44-1.97 5.055-2.16 7.808-.087.993.314 4.497.627 5.508.854 2.684 2.388 4.933 4.375 6.885.488.47 1.01.906 1.55 1.325.157 0 .174-.14.21-.244a4.78 4.78 0 00.157-.68l.35-2.614z"/>
+    </svg>
 
+    <div class="legend">
+        <strong>Node Description</strong><br><br>
+        <div class="legend-item"><div class="dot l-value"></div><strong>Value Proposition (Clickable)</strong></div>
+        <div class="legend-item"><div class="dot l-tech"></div>Data & Workload</div>
+        <div class="legend-item"><div class="dot l-scale"></div>Scalability & Performance</div>
+        <div class="legend-item"><div class="dot l-plat"></div>Platform & Integration</div>
+        <div class="legend-item"><div class="dot l-deploy"></div>Deployment & Security</div>
+        <div class="legend-item"><div class="dot l-exit"></div>Exit / Alternative</div>
+        <div class="legend-item"><div class="dot l-final"></div>Final Architecture</div>
+    </div>
     <div class="controls">
-        <button class="ctrl-btn" onclick="zoomIn()">+</button>
-        <button class="ctrl-btn" onclick="zoomOut()">-</button>
-        <button class="ctrl-btn" onclick="resetZoom()">↺</button>
+        <button class="ctrl-btn" onclick="zoomIn()"><span>+</span></button>
+        <button class="ctrl-btn" onclick="zoomOut()"><span>−</span></button>
+        <button class="ctrl-btn" onclick="resetZoom()"><span>↺</span></button>
     </div>
 
     <div id="side-drawer">
@@ -125,147 +446,113 @@
                 <span id="drawer-value" class="value-text">...</span>
             </div>
             <p id="drawer-details" class="details-text">...</p>
-            <a id="drawer-link" href="#" target="_blank" class="doc-link">Read Documentation →</a>
+            <a id="drawer-link" href="#" target="_blank" class="doc-link"><span>Read Documentation →</span></a>
         </div>
     </div>
 
     <div id="diagram-container" onclick="closeDrawer()">
         <div class="mermaid">
-%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis'}, 'themeVariables': { 'fontFamily': 'Segoe UI', 'fontSize': '16px', 'lineColor': '#555' }}}%%
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'layout': 'dagre'}, 'themeVariables': { 'fontFamily': 'Segoe UI', 'fontSize': '16px', 'lineColor': '#555' }}}%%
 flowchart TB
-    %% --- ZONE 0: STRATEGIC VISION ---
     Start(["Start: Strategic Vision"]) --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
-    
-    BizModel -- "Internal App" --> WorkloadCheck
-    BizModel -- "B2B SaaS" --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
-    
-    Tenancy -- "Silo (1 DB per Tenant)" --> Silo["**Management Nightmare**<br>High TCO"]
-    Tenancy -- "Pool (Shared DB)" --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
-    
-    Isolation -- "Logical Isolation" --> Logical["**Logical Sharding**<br>Standard Collections"]
-    Isolation -- "Physical Isolation" --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
-    
+    BizModel -- Internal App --> WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
+    BizModel -- B2B SaaS --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
+    Tenancy -- Silo (1 DB per Tenant) --> Silo["**Management Nightmare**<br>High TCO"]
+    Tenancy -- Pool (Shared DB) --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
+    Isolation -- Logical Isolation --> Logical["**Logical Sharding**<br>Standard Collections"]
+    Isolation -- Physical Isolation --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
     Logical --> WorkloadCheck
     TenantShard --> WorkloadCheck
-
-    %% --- ZONE 1: WORKLOAD & DATA ---
-    WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
-    WorkloadCheck -- Analytical (OLAP) --> AnalyticCheck{"**Analytical Nuance**<br>Massive Joins (10+),<br>Full Table Scans, OR<br>Deep History (&gt;500TB active)?"}
-    AnalyticCheck -- Yes (Data Warehouse) --> DWH["**Data Warehouse**<br>Snowflake / Databricks<br>(Cost Efficiency for Cold Data)"]
+    WorkloadCheck -- Analytical (OLAP) --> AnalyticCheck{"**Analytical Nuance**<br>Massive Joins (10+),<br>Full Table Scans, OR<br>Deep History (&gt;500TB active data set)?"}
+    AnalyticCheck -- Yes (Data Warehouse) --> DWH["**Data Warehouse / Lakehouse**<br>Snowflake / Databricks<br>(Cost Efficiency for Cold Data)"]
     AnalyticCheck -- "No (Real-Time Analytics)" --> DevSkill{"**Team Skillset**<br>Code-First (Devs)<br>or SQL-First (DBAs)?"}
     WorkloadCheck -- Transactional (OLTP) --> DevSkill
-    
     DevSkill -- "SQL-First" --> AcidCheck{"**ACID Nuance**<br>Multi-table transactions<br>across 10+ tables?"}
     DevSkill -- "Code-First" --> ObjMatch["**Value: Dev Experience**<br>No ORM / Impedance Mismatch"]
     ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
-    
-    AcidCheck -- Yes --> RigidSQL{"**Modernization Check**<br>Is innovation stifled<br>by schema changes?"}
+    AcidCheck -- Yes --> NommalizationCheck{"**Rigid Data Model**<br>is data is 3rd or 4th Normal form?"}
+    NommalizationCheck -- No --> RigidSQL{"RigidSQL<br> is business logic embedded in sql and plsql?"}
     RigidSQL -- No --> RDBMS["**RDBMS**<br>SQL / Oracle"]
     RigidSQL -- Yes --> Migrator["**Relational Migrator**<br>Schema Transformation"]
+    Migrator -- extension --> AMP["**MongoDB AMP**"]
+    NommalizationCheck -- Datamodel Optimization --> Migrator
     Migrator --> MongoCore["**MongoDB Core**<br>Flexible Schema"]
-    
-    AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &gt; 5k/sec?"}
+    AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &lt; 1k/sec?"}
     VolCheck -- No --> RDBMS
     VolCheck -- Yes --> MongoCore
-    
     DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 3 hops)?"}
     GraphCheck -- Yes --> GraphDB["**Neo4j / Neptune**"]
     GraphCheck -- No --> KVCheck{"**Key-Value Nuance**<br>Simple ID Lookup?"}
     DataNature -- No (Rigid) --> AcidCheck
-    
     KVCheck -- Yes --> Latency{"**Latency Nuance**<br>Need &lt;1ms response<br>&amp; OK with data loss?"}
     Latency -- Yes --> Redis["**Redis / Memcached**"]
     Latency -- No --> MongoCore
     KVCheck -- No (Complex) --> QueryCheck{"**Query Nuance**<br>Need robust filtering,<br>secondary indexes,<br>or aggregations?"}
     QueryCheck -- Yes --> MongoCore
-    
     MongoCore --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
     Agility -- Yes --> AgileVal["**Value: High Agility**<br>Faster Time-to-Market"]
     Agility -- No --> ScaleCheck{"**Scale Check**<br>Data &gt; 2TB OR<br>Writes &gt; 50k/s?"}
     AgileVal --> ScaleCheck
-
-    %% --- ZONE 2: SCALE ---
     ScaleCheck -- Yes --> ShardStrat{"**Sharding Strategy**<br>Access Pattern?"}
     ShardStrat -- Distributed Writes --> HashShard["**Hashed Sharding**<br>Uniform Distribution"]
     ShardStrat -- Location Based --> ZoneShard["**Zone Sharding**<br>Data Locality"]
     ShardStrat -- Range Queries --> RangeShard["**Ranged Sharding**<br>Time/Alpha Grouping"]
     ScaleCheck -- No --> Replica["**Replica Set**<br>High Availability"]
-
-    %% --- ZONE 3: PLATFORM & STREAMING ---
     HashShard --> PlatCheck{"**Workload Nuance**<br>Need Search, AI,<br>Streams, or Time Series?"}
     ZoneShard --> PlatCheck
     RangeShard --> PlatCheck
     Replica --> PlatCheck
-    
     PlatCheck -- Just CRUD --> Integration{"**Ecosystem Check**<br>Need mature connectors<br>(Kafka/Spark)?"}
-    
-    %% Streaming Logic
     PlatCheck -- "Real-Time Streams" --> StreamCheck{"**Streaming Nuance**<br>Process data in-flight?"}
-    StreamCheck -- "Yes (Kafka+Flink)" --> Flink["**Manage Separate Infra**<br>Complex Glue Code"]
-    StreamCheck -- "Yes (Unified)" --> ASP["**Atlas Stream Processing**<br>Continuous Intelligence"]
-    
+    StreamCheck -- Yes (Kafka+Flink) --> Flink["**Manage Separate Infra**<br>Complex Glue Code"]
+    StreamCheck -- Yes (Unified) --> ASP["**Atlas Stream Processing**<br>Continuous Intelligence"]
     PlatCheck -- Search --> SearchDec{"**ETL Tolerance**<br>Want to manage<br>sync pipelines?"}
     SearchDec -- Yes --> Elastic["**Elasticsearch/SOLR**"]
     SearchDec -- No --> AtlasSearch["**Atlas Search**<br>Lucene on Node"]
-    
     PlatCheck -- AI/Vector --> AIUse{"**AI Pattern**<br>How is Vector used?"}
     AIUse -- Chat History --> AgentMem["**Agent Memory**<br>Long-Term Context"]
     AIUse -- Reduce LLM Cost --> SemCache["**Semantic Cache**<br>Prevent Re-runs"]
     AIUse -- Knowledge Base --> RAG["**Knowledge Graph**<br>RAG + Filters"]
-    
     PlatCheck -- IoT --> TimeSeries["**Time Series**<br>Columnar Store"]
-    
     AtlasSearch --> Consolidation["**Value: Consolidation**<br>Reduced Tech Debt"]
     AgentMem --> Consolidation
     SemCache --> Consolidation
     RAG --> Consolidation
     TimeSeries --> Consolidation
     ASP --> Consolidation
-    
     Consolidation --> Integration
     Integration -- No (Isolated) --> DeployCheck{"**Deployment**<br>Can data touch<br>public cloud?"}
     Integration -- Yes --> Connectors["**Value: Ecosystem**<br>Official Drivers/Connectors"]
     Connectors --> DeployCheck
-
-    %% --- ZONE 4: DEPLOYMENT ---
     DeployCheck -- "No (Air-gapped)" --> SelfMan{"**Self-Managed**<br>Infrastructure?"}
     SelfMan -- Containers --> K8s["**Enterprise Operator**<br>OpenShift/K8s"]
     SelfMan -- VM/Metal --> OpsMan["**Ops Manager**<br>Automation"]
-    
-    K8s --> Secure{"**Trust Level**<br>Need 'Eyes-Off'?"}
+    K8s --> Secure@{ label: "**Trust Level**<br>Need 'Eyes-Off'?" }
     OpsMan --> Secure
-    
     DeployCheck -- Yes (Cloud) --> Portability{"**Lock-In Check**<br>Need Cloud Agnostic<br>or Exit Strategy?"}
-    Portability -- No (Specific Native) --> Dynamo["**DynamoDB/Firestore**<br>Single Cloud Lock-in"]
+    Portability -- No (spefic Native) --> Dynamo["<br>cloud specific datbases"]
     Portability -- Yes (Portable) --> NetCheck{"**Network Security**<br>Connection Method?"}
     NetCheck -- AWS/Azure Backbone --> PrivLink["**PrivateLink**<br>One-way Security"]
     NetCheck -- VPC Peering --> Peering["**VPC Peering**<br>Bi-directional"]
     NetCheck -- Public Internet --> IPList["**IP Whitelist**<br>Standard TLS"]
-    
     PrivLink --> RTOCheck{"**DR Strategy**<br>RTO/RPO Requirements?"}
     Peering --> RTOCheck
     IPList --> RTOCheck
-    
     RTOCheck -- "Near-Zero RPO<br>(Multi-Cloud Resilience)" --> MultiCloud["**Multi-Cloud Cluster**<br>AWS+Azure+GCP"]
     RTOCheck -- Minutes (Standard)<br>(Single Region) --> Standard["**Standard Cluster**<br>3-Node Replica"]
-    
-    %% --- ZONE 5: LIFECYCLE & OPS ---
     Standard --> Lifecycle{"**Cost Efficiency**<br>Retain history &gt; 90 days?"}
     MultiCloud --> Lifecycle
-    
     Lifecycle -- Yes --> Archive["**Online Archive**<br>Auto-Tiering to S3"]
-    Lifecycle -- No --> ObsCheck
-    Archive --> ObsCheck{"**Ops Nuance**<br>Need Automated<br>Performance Tuning?"}
-    
-    ObsCheck -- "No (Manual)" --> ManualOps["**Manual Tuning**<br>Query Analysis"]
-    ObsCheck -- "Yes (Intelligent)" --> PerfAdv["**Performance Advisor**<br>Auto-Index Suggest"]
-    
+    Lifecycle -- No --> ObsCheck{"**Ops Nuance**<br>Need Automated<br>Performance Tuning?"}
+    Archive --> ObsCheck
+    ObsCheck -- No (Manual) --> ManualOps["**Manual Tuning**<br>Query Analysis"]
+    ObsCheck -- Yes (Intelligent) --> PerfAdv["**Performance Advisor**<br>Auto-Index Suggest"]
     PerfAdv --> Secure
     ManualOps --> Secure
-    
-    Secure -- Yes (Regulated) --> CSFLE["**Queryable Encryption**<br>Client-Side Keys<br>Encryption-in-Use"]
-    Secure -- No --> Final(["**Final Architecture**"])
+    Secure -- Yes (Regulated and High Compliance Requirements) --> CSFLE["Queryable Encryption<br>Client-Side filed encryptions<br>encryption at rest (KMIP)<br>encryption in motion<br><br>Compliance - First Platform<br>"]
+    Secure L_Secure_Final_0@-- No --> Final(["**Final DB choice : MongoDB**"])
     CSFLE --> Final
+    AMP -.-> Consolidation
 
     %% --- CLICK BINDINGS ---
     click ObjMatch showInfo
@@ -297,25 +584,30 @@ flowchart TB
     click Archive showInfo
     click PerfAdv showInfo
     click CSFLE showInfo
+    click AMP showInfo
 
     %% --- STYLING ---
+    Secure@{ shape: diamond}
+
      Start:::startNode
      BizModel:::techZone
+     WorkloadCheck:::techZone
      Tenancy:::techZone
      Silo:::exitNode
      Isolation:::techZone
      Logical:::valueNode
      TenantShard:::valueNode
-     WorkloadCheck:::techZone
      AnalyticCheck:::techZone
      DWH:::exitNode
      DevSkill:::techZone
      AcidCheck:::techZone
      ObjMatch:::valueNode
      DataNature:::techZone
+     NommalizationCheck:::techZone
      RigidSQL:::techZone
      RDBMS:::exitNode
      Migrator:::valueNode
+     AMP:::valueNode
      MongoCore:::valueNode
      VolCheck:::techZone
      GraphCheck:::techZone
@@ -334,6 +626,9 @@ flowchart TB
      Replica:::valueNode
      PlatCheck:::platZone
      Integration:::platZone
+     StreamCheck:::platZone
+     Flink:::exitNode
+     ASP:::valueNode
      SearchDec:::platZone
      Elastic:::exitNode
      AtlasSearch:::valueNode
@@ -341,9 +636,6 @@ flowchart TB
      AgentMem:::valueNode
      SemCache:::valueNode
      RAG:::valueNode
-     StreamCheck:::platZone
-     Flink:::exitNode
-     ASP:::valueNode
      TimeSeries:::valueNode
      Consolidation:::valueNode
      DeployCheck:::deployZone
@@ -367,15 +659,21 @@ flowchart TB
      ManualOps:::exitNode
      PerfAdv:::valueNode
      CSFLE:::valueNode
-     Final:::startNode
-
+     Final:::Aqua
     classDef startNode fill:#333,stroke:#333,stroke-width:2px,color:#fff
     classDef techZone fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#000
     classDef scaleZone fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px,color:#000
     classDef platZone fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
     classDef deployZone fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#000
-    classDef valueNode fill:#4DB33D,stroke:#3FA037,stroke-width:3px,font-weight:bold,color:#000,cursor:pointer
+    classDef valueNode fill:#00ED64,stroke:#00684A,stroke-width:3px,font-weight:bold,color:#000
     classDef exitNode fill:#F5F5F5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#666
+    classDef Sky stroke-width:1px, stroke-dasharray:none, stroke:#374D7C, fill:#E2EBFF, color:#374D7C
+    classDef Aqua stroke-width:1px, stroke-dasharray:none, stroke:#46EDC8, fill:#DEFFF8, color:#378E7A
+   
+
+    L_Secure_Final_0@{ curve: natural }
+
+
         </div>
     </div>
 
@@ -423,6 +721,12 @@ flowchart TB
                 value: "Automated Modernization",
                 detail: "Analyzes legacy SQL schemas and automatically generates optimized MongoDB document models and code. De-risks the migration process.",
                 link: "https://www.mongodb.com/products/relational-migrator"
+            },
+            "AMP": {
+                title: "MongoDB AMP",
+                value: "Application Modernization Platform",
+                detail: "An integrated platform extending Relational Migrator to help modernize legacy applications. Includes schema transformation, code migration, and testing capabilities to accelerate the journey from monolithic SQL systems to modern MongoDB architectures.",
+                link: "https://www.mongodb.com/products/application-modernization"
             },
             "HashShard": {
                 title: "Hashed Sharding",
@@ -579,11 +883,11 @@ flowchart TB
                 if (data.link) {
                     linkBtn.href = data.link;
                     linkBtn.classList.remove('no-link');
-                    linkBtn.innerText = "Read Documentation →";
+                    linkBtn.innerHTML = "<span>Read Documentation →</span>";
                     linkBtn.style.pointerEvents = "auto";
                 } else {
                     linkBtn.classList.add('no-link');
-                    linkBtn.innerText = "No Link Available";
+                    linkBtn.innerHTML = "<span>No Link Available</span>";
                     linkBtn.style.pointerEvents = "none";
                 }
                 
@@ -595,6 +899,8 @@ flowchart TB
         window.closeDrawer = function() {
             document.getElementById('side-drawer').classList.remove('open');
         };
+
+
 
         // 3. Pan-Zoom Setup
         const interval = setInterval(() => {
