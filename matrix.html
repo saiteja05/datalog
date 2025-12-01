@@ -118,6 +118,8 @@
             to { opacity: 1; }
         }
 
+
+
         /* --- CONTROLS --- */
         .controls { 
             position: absolute; 
@@ -453,45 +455,63 @@
 
     <div id="diagram-container" onclick="closeDrawer()">
         <div class="mermaid">
-%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'layout': 'dagre'}, 'themeVariables': { 'background': 'transparent', 'mainBkg': 'transparent', 'fontFamily': 'Inter', 'fontSize': '16px', 'lineColor': '#ffffff' }}}%%
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis', 'layout': 'dagre', 'nodeSpacing': 120, 'rankSpacing': 150}, 'themeVariables': { 'background': 'transparent', 'mainBkg': 'transparent', 'fontFamily': 'Inter', 'fontSize': '16px', 'lineColor': '#ffffff' }}}%%
 flowchart TB
-    Start(["Start: Strategic Vision"]) --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
-    BizModel -- Internal App --> WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
-    BizModel -- B2B SaaS --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
-    Tenancy -- Silo (1 Deployment per Tenant) --> Silo["**Devops Nightmare**<br>Not enforced by MongoDB even for hardware isolation"]
-    Tenancy -- Pool (Shared DB) --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
-    Isolation -- Logical Isolation --> Logical["**Logical Sharding**<br>Standard Collections"]
-    Isolation -- Physical Isolation --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
-    Logical --> WorkloadCheck
-    TenantShard --> WorkloadCheck
-    Silo --> WorkloadCheck
+    Start(["Start: Strategic Vision"]) --> WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
+    
+    %% Analytical Path
     WorkloadCheck -- Analytical (OLAP) --> AnalyticCheck{"**Analytical Nuance**<br>Massive Joins (10+),<br>Full Table Scans, OR<br>Deep History (&gt;500TB active data set)?"}
     AnalyticCheck -- Yes (Data Warehouse) --> DWH["**Data Warehouse / Lakehouse**<br>Snowflake / Databricks<br>(Cost Efficiency for Cold Data)"]
     AnalyticCheck -- "No (Real-Time Analytics)" --> DevSkill{"**Team Skillset**<br>Code-First (Devs)<br>or SQL-First (DBAs)?"}
+    
+    %% Transactional Path - Direct to DevSkill
     WorkloadCheck -- Transactional (OLTP) --> DevSkill
+    
+    %% Developer Skillset Branch
     DevSkill -- "SQL-First" --> AcidCheck{"**ACID Nuance**<br>Multi-table transactions<br>across 10+ tables?"}
     DevSkill -- "Code-First" --> ObjMatch["**Value: Dev Experience**<br>No ORM / Impedance Mismatch"]
-    ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
+    
+    %% SQL-First Path
     AcidCheck -- Yes --> NommalizationCheck{"**Rigid Data Model**<br>is data is 3rd or 4th Normal form?"}
+    AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &lt; 1k/sec?"}
     NommalizationCheck -- No --> RigidSQL{"RigidSQL<br> is business logic embedded in sql and plsql?"}
     RigidSQL -- No --> RDBMS["**RDBMS**<br>SQL / Oracle"]
     RigidSQL -- Yes --> Migrator["**Relational Migrator**<br>Schema Transformation"]
     Migrator -- extension --> AMP["**MongoDB AMP**"]
     NommalizationCheck -- Datamodel Optimization --> Migrator
     Migrator --> MongoCore["**MongoDB Core**<br>Flexible Schema"]
-    AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &lt; 1k/sec?"}
     VolCheck -- No --> RDBMS
     VolCheck -- Yes --> MongoCore
+    
+    %% Code-First Path
+    ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
     DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 3 hops)?"}
+    DataNature -- No (Rigid) --> AcidCheck
     GraphCheck -- Yes --> GraphDB["**Neo4j / Neptune**"]
     GraphCheck -- No --> KVCheck{"**Key-Value Nuance**<br>Simple ID Lookup?"}
-    DataNature -- No (Rigid) --> AcidCheck
     KVCheck -- Yes --> Latency{"**Latency Nuance**<br>Need &lt;1ms response<br>&amp; OK with data loss?"}
     Latency -- Yes --> Redis["**Redis / Memcached**"]
     Latency -- No --> MongoCore
     KVCheck -- No (Complex) --> QueryCheck{"**Query Nuance**<br>Need robust filtering,<br>secondary indexes,<br>or aggregations?"}
     QueryCheck -- Yes --> MongoCore
-    MongoCore --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
+    
+    %% MongoDB Core → Business Model (Multi-Tenancy Decision)
+    MongoCore --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
+    
+    %% B2B SaaS - Multi-Tenancy Branch
+    BizModel -- B2B SaaS --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
+    Tenancy -- Silo (1 Deployment per Tenant) --> Silo["**Devops Nightmare**<br>Not enforced by MongoDB even for hardware isolation"]
+    Tenancy -- Pool (Shared DB) --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
+    Isolation -- Logical Isolation --> Logical["**Logical Sharding**<br>Standard Collections"]
+    Isolation -- Physical Isolation --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
+    Logical --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
+    TenantShard --> Agility
+    Silo --> Agility
+    
+    %% Internal App - Direct to Agility
+    BizModel -- Internal App --> Agility
+    
+    %% Velocity & Scaling
     Agility -- Yes --> AgileVal["**Value: High Agility**<br>Faster Time-to-Market"]
     Agility -- No --> ScaleCheck{"**Scale Check**<br>Data &gt; 2TB OR<br>Writes &gt; 50k/s?"}
     AgileVal --> ScaleCheck
@@ -504,6 +524,8 @@ flowchart TB
     ZoneShard --> PlatCheck
     RangeShard --> PlatCheck
     Replica --> PlatCheck
+    
+    %% Platform Features
     PlatCheck -- Just CRUD --> Integration{"**Ecosystem Check**<br>Need mature connectors<br>(Kafka/Spark)?"}
     PlatCheck -- "Real-Time Streams" --> StreamCheck{"**Streaming Nuance**<br>Process data in-flight?"}
     StreamCheck -- Yes (Kafka+Flink) --> Flink["**Manage Separate Infra**<br>Complex Glue Code"]
@@ -523,6 +545,8 @@ flowchart TB
     TimeSeries --> Consolidation
     ASP --> Consolidation
     Consolidation --> Integration
+    
+    %% Deployment Path
     Integration -- No (Isolated) --> DeployCheck{"**Deployment**<br>Can data touch<br>public cloud?"}
     Integration -- Yes --> Connectors["**Value: Ecosystem**<br>Official Drivers/Connectors"]
     Connectors --> DeployCheck
@@ -532,7 +556,7 @@ flowchart TB
     K8s --> Secure@{ label: "**Trust Level**<br>Need 'Eyes-Off'?" }
     OpsMan --> Secure
     DeployCheck -- Yes (Cloud) --> Portability{"**Lock-In Check**<br>Need Cloud Agnostic<br>or Exit Strategy?"}
-    Portability -- No (spefic Native) --> Dynamo["<br>cloud specific datbases"]
+    Portability -- No (spefic Native) --> Dynamo["<br>cloud specific databases"]
     Portability -- Yes (Portable) --> NetCheck{"**Network Security**<br>Connection Method?"}
     NetCheck -- AWS/Azure Backbone --> PrivLink["**PrivateLink**<br>One-way Security"]
     NetCheck -- VPC Peering --> Peering["**VPC Peering**<br>Bi-directional"]
