@@ -836,7 +836,7 @@ flowchart TB
     
     %% Code-First Path
     ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
-    DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 3 hops)?"}
+    DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 5 hops)?"}
     DataNature -- No (Rigid) --> AcidCheck
     GraphCheck -- Yes --> GraphDB["**Neo4j / Neptune**"]
     GraphCheck -- No --> KVCheck{"**Key-Value Nuance**<br>Simple ID Lookup?"}
@@ -1234,8 +1234,8 @@ flowchart TB
                     subtitle: "How deep are your relationship traversals?",
                     condition: {12: 'graph'},
                     options: [
-                        { value: 'deep', title: 'Deep (>3 hops)', desc: 'Friend-of-friend-of-friend, unbounded traversals' },
-                        { value: 'shallow', title: 'Shallow (≤3 hops)', desc: 'Simple relationships' }
+                        { value: 'deep', title: 'Deep (>5 hops)', desc: 'Friend-of-friend-of-friend, unbounded traversals' },
+                        { value: 'shallow', title: 'Shallow (≤3-5 hops)', desc: 'Simple relationships' }
                     ]
                 },
                 // Key-Value Pattern (if shallow graphs OR document)
@@ -1613,12 +1613,12 @@ flowchart TB
                         // Flexible / Graph Data
                         if (answers[12] === 'graph') {
                             if (answers[13] === 'deep') {
-                                dbChoice = "Neo4j (Graph Database)";
-                                architecture = "Graph Model";
-                                reasoning = "Deep relationship traversals (>3 hops) are the primary use case for Graph Databases.";
+                                dbChoice = "MongoDB (Operational) + Neo4j (Graph Database)";
+                                architecture = "Hybrid: Document + Graph Model";
+                                reasoning = "Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while Neo4j excels at complex graph queries.";
                             } else {
                                 dbChoice = "MongoDB";
-                                reasoning = "Shallow graph relationships (≤3 hops) are efficiently handled by MongoDB's document model.";
+                                reasoning = "Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.";
                             }
                         } 
                         else if (answers[12] === 'document') {
