@@ -473,8 +473,10 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
+            justify-content: flex-start;
             padding: 40px;
+            overflow-y: auto;
+            max-height: calc(100vh - 70px);
         }
 
         .wizard-progress {
@@ -1066,15 +1068,17 @@ flowchart TB
                     id: 0,
                     icon: '🎯',
                     title: "What's your primary use case?",
-                    subtitle: "Select a scenario or choose 'Custom' for detailed guidance",
+                    subtitle: "Select a scenario or choose 'Custom' for tailored guidance",
                     options: [
-                        { value: 'custom', title: 'Custom / Not Sure', desc: 'Walk me through all questions' },
-                        { value: 'ecommerce', title: 'E-Commerce Platform', desc: 'Product catalog, orders, inventory' },
+                        { value: 'custom', title: 'Custom / Explore Options', desc: 'Tailored guidance for unique needs' },
                         { value: 'saas', title: 'B2B SaaS Application', desc: 'Solution for external customers' },
                         { value: 'logs', title: 'Log Analytics / Observability', desc: 'PB-scale logs, metrics, traces' },
                         { value: 'iot', title: 'IoT / Time-Series', desc: 'Sensor data, metrics over time' },
-                        { value: 'social', title: 'Social Network', desc: 'User relationships, feeds, graphs' },
-                        { value: 'cms', title: 'Content Management', desc: 'Articles, media, flexible content' }
+                        { value: 'cms', title: 'Content Management', desc: 'Articles, media, flexible content' },
+                        { value: 'marketplace', title: 'Marketplace', desc: 'Multi-vendor platform, product listings, transactions' },
+                        { value: 'ecommerce', title: 'E-Commerce Platform', desc: 'Product catalog, orders, inventory' },
+                        { value: 'social', title: 'Social Network', desc: 'User relationships, feeds, graphs' }
+
                     ]
                 },
                 // Workload Nature
@@ -1186,7 +1190,7 @@ flowchart TB
                     condition: {8: 'heavy'},
                     options: [
                         { value: 'rigid', title: 'Highly Normalized', desc: '3NF/4NF, strict relational integrity' },
-                        { value: 'optimizable', title: 'Can Be Denormalized', desc: 'Open to data model optimization' }
+                        { value: 'optimizable', title: 'Already use Materialized Views for faster reads? i.e Denormalization friendly?', desc: 'Open to data model optimization' }
                     ]
                 },
                 // SQL Logic Embedded
@@ -1635,11 +1639,25 @@ flowchart TB
             }
 
             // --- ARCHITECTURE REFINEMENTS ---
-            if (dbChoice.includes("MongoDB")) {
+            
+            // PETABYTE TRANSACTIONAL - Multi-tier Architecture
+            if (dbChoice.includes("MongoDB") && answers[1] === 'transactional' && answers[16] === 'massive') {
+                if (answers[20] === 'cloud') {
+                    dbChoice = "MongoDB (Hot Operational) + Online Archive (Cold) + Data Warehouse (Reporting)";
+                    architecture = "Multi-tier: Hot Cluster + Cloud Archive + Analytics Layer";
+                    reasoning += " Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data (recent transactions), Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting across the full dataset.";
+                    features.push("Online Archive", "Atlas Data Federation");
+                } else {
+                    dbChoice = "MongoDB (Hot Operational) + Object Storage (Cold) + Data Warehouse (Reporting)";
+                    architecture = "Multi-tier: Hot Cluster + S3-Compatible Storage + Analytics Layer";
+                    reasoning += " Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset.";
+                }
+            }
+            // Regular MongoDB Architecture
+            else if (dbChoice.includes("MongoDB")) {
                 // Scale
                 if (answers[16] === 'massive') {
                     architecture = "Sharded Cluster (Zone Sharding)";
-                    reasoning += " Petabyte scale typically requires non operational custom built stores.";
                 } else if (answers[16] === 'large') {
                     architecture = "Sharded Cluster";
                     if (answers[17] === 'distributed') architecture += " (Hashed Sharding)";
