@@ -1219,7 +1219,7 @@ flowchart TB
                     icon: '📂',
                     title: "Data structure?",
                     subtitle: "How flexible is your schema?",
-                    condition: {5: 'codefirst'},
+                    condition: [{5: 'codefirst'}, {5: 'sqlfirst'}],
                     options: [
                         { value: 'document', title: 'Flexible & Hierarchical', desc: 'JSON-like, nested, frequent changes' },
                         { value: 'graph', title: 'Highly Connected / Graph', desc: 'Nodes and edges, complex relationships' },
@@ -1590,8 +1590,19 @@ flowchart TB
                 }
                 // 2. TRANSACTIONAL PATH
                 else {
-                    // SQL-First Team
-                    if (answers[5] === 'sqlfirst') {
+                    // Check for Graph data first (applies to both skillsets)
+                    if (answers[12] === 'graph') {
+                        if (answers[13] === 'deep') {
+                            dbChoice = "MongoDB (Operational) + Neo4j (Graph Database)";
+                            architecture = "Hybrid: Document + Graph Model";
+                            reasoning = "Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while Neo4j excels at complex graph queries.";
+                        } else {
+                            dbChoice = "MongoDB";
+                            reasoning = "Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.";
+                        }
+                    }
+                    // SQL-First Team (non-graph)
+                    else if (answers[5] === 'sqlfirst') {
                         if (answers[8] === 'heavy' && answers[9] === 'rigid') {
                             if (answers[11] === 'high') {
                                 dbChoice = "RDBMS";
@@ -1608,20 +1619,9 @@ flowchart TB
                             reasoning = "Even with SQL skills, if the data model can be optimized or scale is high, MongoDB is a strong candidate using tools like SQL drivers and Relational Migrator.";
                         }
                     } 
-                    // Code-First Team
+                    // Code-First Team (non-graph)
                     else {
-                        // Flexible / Graph Data
-                        if (answers[12] === 'graph') {
-                            if (answers[13] === 'deep') {
-                                dbChoice = "MongoDB (Operational) + Neo4j (Graph Database)";
-                                architecture = "Hybrid: Document + Graph Model";
-                                reasoning = "Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while Neo4j excels at complex graph queries.";
-                            } else {
-                                dbChoice = "MongoDB";
-                                reasoning = "Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.";
-                            }
-                        } 
-                        else if (answers[12] === 'document') {
+                        if (answers[12] === 'document') {
                             dbChoice = "MongoDB";
                             reasoning = "Flexible JSON schema + Code-First team is the ideal fit for MongoDB.";
                         } 
