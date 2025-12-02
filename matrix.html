@@ -1446,33 +1446,40 @@ flowchart TB
             if(panZoomInstance) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
         });
 
-        // Check if question should be shown based on conditions
+        // Validate condition with error handling (CONCERN #4: Error Handling)
         function shouldShowQuestion(question) {
             if (!question.condition) return true;
             
-            // Helper to check a single condition object (AND logic within object)
-            const checkCondition = (cond) => {
-                for (let [qId, expectedValue] of Object.entries(cond)) {
-                    const answer = wizardData.answers[parseInt(qId)];
+            try {
+                const checkCondition = (cond) => {
+                    if (!cond || typeof cond !== 'object') return false;
                     
-                    // Handle array conditions (for multiselect)
-                    if (Array.isArray(expectedValue)) {
-                        if (!answer || !Array.isArray(answer)) return false;
-                        if (!expectedValue.some(val => answer.includes(val))) return false;
-                    } else {
-                        if (answer !== expectedValue) return false;
+                    for (let [qId, expectedValue] of Object.entries(cond)) {
+                        const qIdInt = parseInt(qId);
+                        if (isNaN(qIdInt)) {
+                            console.warn(`Invalid question ID in condition: ${qId}`);
+                            return false;
+                        }
+                        
+                        const answer = wizardData.answers[qIdInt];
+                        if (Array.isArray(expectedValue)) {
+                            if (!answer || !Array.isArray(answer)) return false;
+                            if (!expectedValue.some(val => answer.includes(val))) return false;
+                        } else {
+                            if (answer !== expectedValue) return false;
+                        }
                     }
+                    return true;
+                };
+
+                if (Array.isArray(question.condition)) {
+                    return question.condition.some(cond => checkCondition(cond));
                 }
-                return true;
-            };
-
-            // If condition is array, treat as OR (any condition object matching is enough)
-            if (Array.isArray(question.condition)) {
-                return question.condition.some(cond => checkCondition(cond));
+                return checkCondition(question.condition);
+            } catch (error) {
+                console.error('Error checking condition:', error, 'Question:', question);
+                return false;
             }
-
-            // Otherwise treat as single condition object
-            return checkCondition(question.condition);
         }
 
         // Find next valid question to show
@@ -1578,129 +1585,103 @@ flowchart TB
             nextStep();
         }
 
-        // Recommendation engine
-        function showRecommendation() {
-            const answers = wizardData.answers;
+        // CONCERN #5: Refactor helper functions for recommendation logic
+        // Determine primary DB choice based on core logic paths
+        function determinePrimaryDB(answers) {
+            const useCase = answers[0];
+            const workload = answers[1];
+            const dataStructure = answers[13];
+            const graphDepth = answers[14];
+            const teamSkill = answers[6];
+            const migration = answers[7];
+            const migrationSource = answers[8];
+            const acidNeeds = answers[9];
+            const normalization = answers[10];
+            const volumeNuance = answers[12];
+            const scale = answers[17];
+            const analyticalNuance = answers[3];
             
-            // Default recommendation structure
-            let dbChoice = "MongoDB Atlas";
-            let architecture = "Replica Set";
-            let deployment = "Standard Cloud Cluster";
-            let features = [];
-            let reasoning = "";
-            let useCase = answers[0]; // Use Case
-
-            // --- USE CASE SHORTCUTS ---
-            if (useCase === 'logs') {
-                dbChoice = "Elasticsearch / Solr or MongoDB Atlas Search";
-                architecture = "Search / Log Analytics Cluster";
-                reasoning = "For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads (< 3TB  size or 500GB active index size).";
-                features.push("Time Series", "Search Indexing");
-            } 
-            else if (useCase === 'iot') {
-                dbChoice = "MongoDB Time Series / InfluxDB";
-                architecture = "Time Series Optimized Cluster";
-                reasoning = "IoT workloads require high write throughput and efficient storage of time-stamped data.";
-                features.push("Time Series Collections", "Data Tiering (Hot/Cold)");
-            }
-            else {
-                // --- DETAILED DECISION TREE LOGIC ---
-
-                // 1. ANALYTICAL PATH
-                if (answers[1] === 'analytical') {
-                    // GRAPH ANALYTICS CHECK
-                    if (answers[12] === 'graph') {
-                        if (answers[13] === 'deep') {
-                            dbChoice = "Neo4j Graph Data Science / TigerGraph";
-                            architecture = "Graph Analytics Engine";
-                            reasoning = "Deep graph analytics (centrality, community detection, pathfinding >5 hops) require specialized graph algorithms and engines like Neo4j GDS.";
-                            features.push("Graph Algorithms", "Network Analysis");
-                        } else {
-                            dbChoice = "MongoDB (Aggregation Pipeline)";
-                            architecture = "Operational Analytics with $graphLookup";
-                            reasoning = "For shallower graph analytics (hierarchies, simple connections), MongoDB's aggregation framework and $graphLookup provide efficient analysis without a separate graph engine.";
-                            features.push("$graphLookup", "Recursive Search");
-                        }
-                    } 
-                    // STANDARD ANALYTICAL
-                    else if (answers[2] === 'warehouse' || answers[16] === 'massive') {
-                        dbChoice = "Data Warehouse";
-                        architecture = "Columnar Storage MPP";
-                        reasoning = "Massive joins, full table scans, >500TB working datasets, or petabyte-scale analytics require a dedicated Data Warehouse.";
-                    } else {
-                        dbChoice = "MongoDB Atlas (Analytics Nodes) or ClickHouse";
-                        architecture = "Operational Analytics";
-                        reasoning = "For real-time analytics with moderate complexity and scale, MongoDB Analytics Nodes or specialized stores like ClickHouse work well.";
-                    }
-                }
-                // 2. TRANSACTIONAL PATH
-                else {
-                    // MOBILE / EDGE CHECK
-                    if (useCase === 'mobile' && answers[22] === 'yes') {
-                        dbChoice = "MongoDB Atlas + Certified Partner (Ditto / PowerSync / ObjectBox)";
-                        architecture = "Offline-First Sync Architecture";
-                        reasoning = "For robust offline-first capabilities with seamless sync to MongoDB Atlas, leverage certified partners like Ditto, PowerSync, or ObjectBox. These solutions provide local databases that sync specifically to MongoDB Atlas when connectivity is available.";
-                        features.push("Offline Sync", "Local Database", "Edge Sync");
-                    }
-                    // Check for Graph data first (applies to both skillsets)
-                    else if (answers[12] === 'graph') {
-                        if (answers[13] === 'deep') {
-                            dbChoice = "MongoDB (Operational) + Neo4j (Graph Database)";
-                            architecture = "Hybrid: Document + Graph Model";
-                            reasoning = "Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while Neo4j excels at complex graph queries.";
-                        } else {
-                            dbChoice = "MongoDB";
-                            reasoning = "Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.";
-                        }
-                    }
-                    // SQL-First Team (non-graph)
-                    else if (answers[5] === 'sqlfirst') {
-                        // MODERNIZATION CHECK - If migrating, don't force RDBMS
-                        if (answers[6] === 'yes' && answers[8] === 'heavy' && answers[9] === 'rigid') {
-                            // User wants to modernize FROM Oracle/SQL Server but has heavy ACID + rigid
-                            const sourceDB = answers[7];
-                            const dbName = sourceDB === 'oracle' ? 'Oracle' :
-                                          sourceDB === 'sqlserver' ? 'SQL Server' :
-                                          sourceDB === 'postgresql' ? 'PostgreSQL' :
-                                          sourceDB === 'mysql' ? 'MySQL' :
-                                          sourceDB === 'db2' ? 'IBM Db2' :
-                                          'RDBMS';
-                            
-                            dbChoice = "MongoDB (with migration support)";
-                            architecture = "Replica Set (3-Node)";
-                            reasoning = `Modernization Path: While your workload has heavy ACID requirements and rigid schemas, you've indicated a desire to modernize from ${dbName}. MongoDB with Document ACID transactions, Schema Validation, and tools like Relational Migrator can help transition away from traditional RDBMS while maintaining data integrity. Consider gradual migration: keep critical ACID workloads in ${dbName} initially, migrate flexible components first.`;
-                        }
-                        // Standard RDBMS path (not modernizing OR not heavy ACID)
-                        else if (answers[8] === 'heavy' && answers[9] === 'rigid') {
-                            if (answers[11] === 'high') {
-                                dbChoice = "RDBMS";
-                                architecture = "Sharded Relational / NewSQL";
-                                reasoning = "High-volume, strictly normalized, heavy ACID workloads need scalable SQL (NewSQL) or sharded RDBMS.";
-                            } else {
-                                dbChoice = "RDBMS";
-                                architecture = "Standard RDBMS";
-                                reasoning = "Traditional RDBMS is perfect for moderate scale, structured data, and SQL-first teams.";
-                            }
-                        } else {
-                            // Moderate ACID or Optimizable
-                            dbChoice = "MongoDB ( with Sql drivers and Relational Migrator)";
-                            reasoning = "Even with SQL skills, if the data model can be optimized or scale is high, MongoDB is a strong candidate using tools like SQL drivers and Relational Migrator.";
-                        }
-                    } 
-                    // Code-First Team (non-graph)
-                    else {
-                        if (answers[12] === 'document') {
-                            dbChoice = "MongoDB";
-                            reasoning = "Flexible JSON schema + Code-First team is the ideal fit for MongoDB.";
-                        } 
-                        // Rigid Data but Code-First
-                        else {
-                            dbChoice = "MongoDB (with Schema Validation)";
-                            reasoning = "You can enforce strict schema validation in MongoDB while enjoying the developer experience of a document model.";
-                        }
-                    }
+            // Use case shortcuts
+            if (useCase === 'logs') return { db: "Elasticsearch / Solr or MongoDB Atlas Search", reason: "log-analytics" };
+            if (useCase === 'iot') return { db: "MongoDB Time Series / InfluxDB", reason: "iot-timeseries" };
+            
+            // Analytical path
+            if (workload === 'analytical') {
+                if (dataStructure === 'graph' && graphDepth === 'deep') {
+                    return { db: "Neo4j Graph Data Science / TigerGraph", reason: "analytical-deep-graph" };
+                } else if (dataStructure === 'graph') {
+                    return { db: "MongoDB (Aggregation Pipeline)", reason: "analytical-shallow-graph" };
+                } else if (analyticalNuance === 'warehouse' || scale === 'massive') {
+                    return { db: "Data Warehouse", reason: "analytical-warehouse" };
+                } else {
+                    return { db: "MongoDB Atlas (Analytics Nodes) or ClickHouse", reason: "analytical-realtime" };
                 }
             }
+            
+            // Transactional path
+            if (useCase === 'mobile' && answers[23] === 'yes') {
+                return { db: "MongoDB Atlas + Certified Partner (Ditto / PowerSync / ObjectBox)", reason: "mobile-offline" };
+            }
+            
+            if (dataStructure === 'graph') {
+                if (graphDepth === 'deep') {
+                    return { db: "MongoDB (Operational) + Neo4j (Graph Database)", reason: "transactional-deep-graph" };
+                } else {
+                    return { db: "MongoDB", reason: "transactional-shallow-graph" };
+                }
+            }
+            
+            // SQL-First team path
+            if (teamSkill === 'sqlfirst') {
+                if (migration === 'yes' && acidNeeds === 'heavy' && normalization === 'rigid') {
+                    const dbMap = { oracle: 'Oracle', sqlserver: 'SQL Server', postgres: 'PostgreSQL', mysql: 'MySQL', db2: 'IBM Db2', other: 'RDBMS' };
+                    const source = dbMap[migrationSource] || 'RDBMS';
+                    return { db: "MongoDB (with migration support)", reason: "sql-modernization", source: source };
+                } else if (acidNeeds === 'heavy' && normalization === 'rigid') {
+                    return { db: volumeNuance === 'high' ? "RDBMS" : "RDBMS", reason: "sql-heavy-acid" };
+                } else {
+                    return { db: "MongoDB (with SQL drivers and Relational Migrator)", reason: "sql-moderate" };
+                }
+            }
+            
+            // Code-First team path
+            if (dataStructure === 'document') {
+                return { db: "MongoDB", reason: "codefirst-document" };
+            } else if (dataStructure === 'rigid') {
+                return { db: "MongoDB (with Schema Validation)", reason: "codefirst-rigid" };
+            }
+            
+            return { db: "MongoDB", reason: "default" };
+        }
+
+        // Recommendation engine (CONCERN #5 & #6: Error handling + Refactored logic)
+        function showRecommendation() {
+            try {
+                const answers = wizardData.answers;
+                
+                // Default recommendation structure
+                let dbChoice = "MongoDB Atlas";
+                let architecture = "Replica Set";
+                let deployment = "Standard Cloud Cluster";
+                let features = [];
+                let reasoning = "";
+                let useCase = answers[0];
+                
+                // Get primary DB choice using helper function
+                const primaryDB = determinePrimaryDB(answers);
+                dbChoice = primaryDB.db;
+                const reason = primaryDB.reason;
+                
+                // Handle special reasons
+                if (reason === 'log-analytics') {
+                    architecture = "Search / Log Analytics Cluster";
+                    reasoning = "For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads (< 3TB size or 500GB active index size).";
+                    features.push("Time Series", "Search Indexing");
+                } else if (reason === 'iot-timeseries') {
+                    architecture = "Time Series Optimized Cluster";
+                    reasoning = "IoT workloads require high write throughput and efficient storage of time-stamped data.";
+                    features.push("Time Series Collections", "Data Tiering (Hot/Cold)");
+                }
 
             // --- ARCHITECTURE REFINEMENTS ---
             
@@ -1928,6 +1909,20 @@ flowchart TB
                     </div>
                 </div>
             `;
+            } catch (error) {
+                console.error('Error generating recommendation:', error);
+                const wizardContent = document.getElementById('wizard-content');
+                wizardContent.innerHTML = `
+                    <div class="wizard-card">
+                        <div class="wizard-icon">❌</div>
+                        <h2 class="wizard-title">Error Generating Recommendation</h2>
+                        <div class="wizard-subtitle">Something went wrong. Please try again or refresh the page.</div>
+                        <div class="wizard-nav">
+                            <button class="wizard-btn secondary" onclick="restartWizard()">Start Over</button>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         function restartWizard() {
