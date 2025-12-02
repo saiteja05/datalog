@@ -1077,7 +1077,8 @@ flowchart TB
                         { value: 'cms', title: 'Content Management', desc: 'Articles, media, flexible content' },
                         { value: 'marketplace', title: 'Marketplace', desc: 'Multi-vendor platform, product listings, transactions' },
                         { value: 'ecommerce', title: 'E-Commerce Platform', desc: 'Product catalog, orders, inventory' },
-                        { value: 'social', title: 'Social Network', desc: 'User relationships, feeds, graphs' }
+                        { value: 'social', title: 'Social Network', desc: 'User relationships, feeds, graphs' },
+                        { value: 'mobile', title: 'Mobile / Edge App', desc: 'Offline-first, local data, sync' }
 
                     ]
                 },
@@ -1217,13 +1218,25 @@ flowchart TB
                         { value: 'high', title: 'Moderate to High Scale', desc: 'Unpredictable traffic with spikes' }
                     ]
                 },
+                // Traffic Pattern (New Q23)
+                {
+                    id: 23,
+                    icon: '📊',
+                    title: "Traffic Pattern?",
+                    subtitle: "How consistent is your workload?",
+                    condition: {1: 'transactional'},
+                    options: [
+                        { value: 'consistent', title: 'Consistent / Predictable', desc: 'Steady load, predictable peaks' },
+                        { value: 'spiky', title: 'Spiky / Unpredictable', desc: 'Bursty traffic, idle periods' }
+                    ]
+                },
                 // Data Nature (if code-first)
                 {
                     id: 12,
                     icon: '📂',
                     title: "Data structure?",
                     subtitle: "How flexible is your schema?",
-                    condition: [{5: 'codefirst'}, {5: 'sqlfirst'}],
+                    condition: [{5: 'codefirst'}, {5: 'sqlfirst'}, {1: 'analytical'}],
                     options: [
                         { value: 'document', title: 'Flexible & Hierarchical', desc: 'JSON-like, nested, frequent changes' },
                         { value: 'graph', title: 'Highly Connected / Graph', desc: 'Nodes and edges, complex relationships' },
@@ -1335,10 +1348,23 @@ flowchart TB
                     id: 21,
                     icon: '🔒',
                     title: "Compliance requirements?",
-                    subtitle: "Security and regulatory needs",
+                    subtitle: "Do you need field-level encryption?",
+                    condition: {1: 'transactional'},
                     options: [
-                        { value: 'standard', title: 'Standard Security', desc: 'TLS, RBAC, encryption at rest' },
-                        { value: 'strict', title: 'Strict Compliance', desc: 'HIPAA, PCI-DSS, field-level encryption' }
+                        { value: 'standard', title: 'Standard Security', desc: 'TLS/SSL, At-Rest Encryption' },
+                        { value: 'strict', title: 'Strict Compliance', desc: 'HIPAA/PCI, Field-Level Encryption needed' }
+                    ]
+                },
+                // Mobile / Edge (New Q22)
+                {
+                    id: 22,
+                    icon: '📱',
+                    title: "Offline-First Requirement?",
+                    subtitle: "Do devices need to work without internet?",
+                    condition: {0: 'mobile'},
+                    options: [
+                        { value: 'yes', title: 'Yes, Offline Sync', desc: 'Local DB with auto-sync to cloud' },
+                        { value: 'no', title: 'No, Always Online', desc: 'Direct API calls to backend' }
                     ]
                 }
             ],
@@ -1582,7 +1608,22 @@ flowchart TB
 
                 // 1. ANALYTICAL PATH
                 if (answers[1] === 'analytical') {
-                    if (answers[2] === 'warehouse' || answers[16] === 'massive') {
+                    // GRAPH ANALYTICS CHECK
+                    if (answers[12] === 'graph') {
+                        if (answers[13] === 'deep') {
+                            dbChoice = "Neo4j Graph Data Science / TigerGraph";
+                            architecture = "Graph Analytics Engine";
+                            reasoning = "Deep graph analytics (centrality, community detection, pathfinding >5 hops) require specialized graph algorithms and engines like Neo4j GDS.";
+                            features.push("Graph Algorithms", "Network Analysis");
+                        } else {
+                            dbChoice = "MongoDB (Aggregation Pipeline)";
+                            architecture = "Operational Analytics with $graphLookup";
+                            reasoning = "For shallower graph analytics (hierarchies, simple connections), MongoDB's aggregation framework and $graphLookup provide efficient analysis without a separate graph engine.";
+                            features.push("$graphLookup", "Recursive Search");
+                        }
+                    } 
+                    // STANDARD ANALYTICAL
+                    else if (answers[2] === 'warehouse' || answers[16] === 'massive') {
                         dbChoice = "Data Warehouse";
                         architecture = "Columnar Storage MPP";
                         reasoning = "Massive joins, full table scans, >500TB working datasets, or petabyte-scale analytics require a dedicated Data Warehouse.";
@@ -1594,8 +1635,15 @@ flowchart TB
                 }
                 // 2. TRANSACTIONAL PATH
                 else {
+                    // MOBILE / EDGE CHECK
+                    if (useCase === 'mobile' && answers[22] === 'yes') {
+                        dbChoice = "MongoDB Atlas + Certified Partner (Ditto / PowerSync / ObjectBox)";
+                        architecture = "Offline-First Sync Architecture";
+                        reasoning = "For robust offline-first capabilities with seamless sync to MongoDB Atlas, leverage certified partners like Ditto, PowerSync, or ObjectBox. These solutions provide local databases that sync specifically to MongoDB Atlas when connectivity is available.";
+                        features.push("Offline Sync", "Local Database", "Edge Sync");
+                    }
                     // Check for Graph data first (applies to both skillsets)
-                    if (answers[12] === 'graph') {
+                    else if (answers[12] === 'graph') {
                         if (answers[13] === 'deep') {
                             dbChoice = "MongoDB (Operational) + Neo4j (Graph Database)";
                             architecture = "Hybrid: Document + Graph Model";
@@ -1607,7 +1655,23 @@ flowchart TB
                     }
                     // SQL-First Team (non-graph)
                     else if (answers[5] === 'sqlfirst') {
-                        if (answers[8] === 'heavy' && answers[9] === 'rigid') {
+                        // MODERNIZATION CHECK - If migrating, don't force RDBMS
+                        if (answers[6] === 'yes' && answers[8] === 'heavy' && answers[9] === 'rigid') {
+                            // User wants to modernize FROM Oracle/SQL Server but has heavy ACID + rigid
+                            const sourceDB = answers[7];
+                            const dbName = sourceDB === 'oracle' ? 'Oracle' :
+                                          sourceDB === 'sqlserver' ? 'SQL Server' :
+                                          sourceDB === 'postgresql' ? 'PostgreSQL' :
+                                          sourceDB === 'mysql' ? 'MySQL' :
+                                          sourceDB === 'db2' ? 'IBM Db2' :
+                                          'RDBMS';
+                            
+                            dbChoice = "MongoDB (with migration support)";
+                            architecture = "Replica Set (3-Node)";
+                            reasoning = `Modernization Path: While your workload has heavy ACID requirements and rigid schemas, you've indicated a desire to modernize from ${dbName}. MongoDB with Document ACID transactions, Schema Validation, and tools like Relational Migrator can help transition away from traditional RDBMS while maintaining data integrity. Consider gradual migration: keep critical ACID workloads in ${dbName} initially, migrate flexible components first.`;
+                        }
+                        // Standard RDBMS path (not modernizing OR not heavy ACID)
+                        else if (answers[8] === 'heavy' && answers[9] === 'rigid') {
                             if (answers[11] === 'high') {
                                 dbChoice = "RDBMS";
                                 architecture = "Sharded Relational / NewSQL";
@@ -1653,6 +1717,21 @@ flowchart TB
                     reasoning += " Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset.";
                 }
             }
+            
+            // RDBMS + PETABYTE SCALE - Present Two Options
+            if (dbChoice === "RDBMS" && answers[16] === 'massive') {
+                if (answers[20] === 'cloud') {
+                    dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Online Archive (Cold) + Warehouse (Reporting)";
+                    architecture = "Multi-tier Architecture with Two Paths";
+                    reasoning = "Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (cloud-based) assisted by MongoDB Modernization Programme, leveraging Online Archive for cold data and Warehouse for complex analytics. Consider migration effort, team skills, and licensing costs.";
+                    features.push("Relational Migrator (Option 2)", "App Modernization Services (Option 2)", "Online Archive (Option 2)");
+                } else {
+                    dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Object Storage (Cold) + Warehouse (Reporting)";
+                    architecture = "Multi-tier Architecture with Two Paths";
+                    reasoning = "Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (on-premise) assisted by MongoDB Modernization Programme, with S3-compatible storage for cold data and Warehouse for analytics. Consider migration effort, infrastructure, and team skills.";
+                    features.push("Relational Migrator (Option 2)", "App Modernization Services (Option 2)");
+                }
+            }
             // Regular MongoDB Architecture
             else if (dbChoice.includes("MongoDB")) {
                 // Scale
@@ -1669,12 +1748,33 @@ flowchart TB
 
                 // Multi-Tenancy
                 if (answers[3] === 'saas') {
-                    if (answers[4] === 'physical') {
-                        architecture += " with Dedicated Tenant Nodes";
-                    } else if (answers[4] === 'logical') {
-                        architecture += " with Logical Isolation (tenant_id)";
-                    } else if (answers[4] === 'silo') {
-                        architecture += " with Silo Isolation";
+                    let suffix = "";
+                    if (dbChoice.includes("Neo4j")) {
+                         suffix = " (applied to MongoDB operational layer)";
+                         reasoning += " Note: Multi-tenancy isolation strategies (Logical/Physical) are applied to the MongoDB operational layer. Neo4j can be deployed as a shared service or per-tenant instances depending on strictness.";
+                    }
+
+                    // WAREHOUSE MULTI-TENANCY
+                    if (dbChoice.includes("Data Warehouse")) {
+                        if (answers[4] === 'physical') {
+                            architecture += " with Dedicated Compute/Accounts (High Cost)";
+                            reasoning += " Note: Physical isolation in Data Warehouses typically requires dedicated compute clusters or separate accounts, which significantly increases cost.";
+                        } else if (answers[4] === 'logical') {
+                            architecture += " with Row-Level Security (RLS)";
+                            reasoning += " Note: Logical isolation in Data Warehouses is best achieved using Row-Level Security (RLS) policies.";
+                        } else if (answers[4] === 'silo') {
+                            architecture += " with Separate Schemas/Databases";
+                        }
+                    }
+                    // STANDARD / MONGODB MULTI-TENANCY
+                    else {
+                        if (answers[4] === 'physical') {
+                            architecture += " with Dedicated Tenant Nodes" + suffix;
+                        } else if (answers[4] === 'logical') {
+                            architecture += " with Logical Isolation (tenant_id)" + suffix;
+                        } else if (answers[4] === 'silo') {
+                            architecture += " with Silo Isolation" + suffix;
+                        }
                     }
                     // if 'na', do nothing (standard architecture)
                 }
@@ -1683,6 +1783,12 @@ flowchart TB
                 if (answers[15] === 'submillisecond') {
                     features.push("Redis / Cache Layer");
                     reasoning += " For <1ms latency requirements, add a caching layer like Redis.";
+                }
+
+                // Traffic Pattern (Spiky)
+                if (answers[23] === 'spiky' && dbChoice.includes("MongoDB")) {
+                    features.push("Cluster Auto-Scaling");
+                    reasoning += " For spiky or unpredictable traffic, enable Cluster Auto-Scaling to handle bursts without over-provisioning (preferred over Serverless for production stability).";
                 }
             }
 
@@ -1716,7 +1822,27 @@ flowchart TB
             
             // Search
             if (advFeatures.includes('search')) {
-                if (answers[19] === 'petabyte') {
+                // ANALYTICAL + SEARCH - Hybrid based on scale
+                if (answers[1] === 'analytical') {
+                    if (answers[16] === 'massive' || answers[2] === 'warehouse') {
+                        // Large/Petabyte scale: Search Engine + Warehouse
+                        if (dbChoice.includes("Data Warehouse")) {
+                            dbChoice = "Elasticsearch/Solr (Search Engine) + Data Warehouse (Analytics)";
+                            architecture = "Hybrid: Search-First + Columnar Analytics";
+                            reasoning = "For petabyte-scale analytical search (logs, observability), Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics on the same dataset via federation or ETL.";
+                        }
+                    } else {
+                        // Small/Medium scale: MongoDB + Search
+                        if (dbChoice.includes("MongoDB") || dbChoice.includes("ClickHouse")) {
+                            dbChoice = "MongoDB (Operational Analytics) + Atlas Search";
+                            architecture = "Real-Time Analytics with Search";
+                            reasoning = "For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with Atlas Search provide unified operational analytics and full-text search.";
+                            features.push("Atlas Search (Lucene-based)", "Analytics Nodes");
+                        }
+                    }
+                }
+                // TRANSACTIONAL + SEARCH
+                else if (answers[19] === 'petabyte') {
                     if (dbChoice.includes("MongoDB")) {
                         dbChoice = "MongoDB (Operational) + Elasticsearch/Solr (Search Engine)";
                         reasoning += " For petabyte-scale search workloads, a dedicated search engine alongside MongoDB provides optimal performance.";
@@ -1747,9 +1873,13 @@ flowchart TB
             // Compliance
             if (answers[21] === 'strict') {
                 if (dbChoice.includes("MongoDB")) {
-                    features.push("Queryable Encryption");
-                    features.push("CSFLE");
-                    features.push("Storage and network Encryption");
+                    features.push("Queryable Encryption", "CSFLE", "Storage/Network Encryption");
+                } else if (dbChoice.includes("RDBMS") || dbChoice.includes("PostgreSQL") || dbChoice.includes("MySQL")) {
+                    features.push("TDE (Transparent Data Encryption)", "Row-Level Security", "pgcrypto / Vault");
+                } else if (dbChoice.includes("Neo4j")) {
+                    features.push("Enterprise Security", "Role-Based Access Control", "Field-Level Security");
+                } else if (dbChoice.includes("Data Warehouse")) {
+                    features.push("Platform Encryption", "Dynamic Data Masking", "Governance Catalog");
                 } else {
                     features.push("App-Level Field Encryption");
                 }
