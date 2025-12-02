@@ -1328,7 +1328,7 @@ flowchart TB
                     subtitle: "How much data needs to be searchable?",
                     condition: {18: ['search']},
                     options: [
-                        { value: 'moderate', title: 'Moderate (<500GB)', desc: 'Standard search needs' },
+                        { value: 'moderate', title: 'Moderate (< 3TB  size or 500GB active index size)', desc: 'Standard search needs' },
                         { value: 'petabyte', title: 'Petabyte-Scale', desc: 'Log analytics, massive search indices' }
                     ]
                 },
@@ -1592,9 +1592,9 @@ flowchart TB
 
             // --- USE CASE SHORTCUTS ---
             if (useCase === 'logs') {
-                dbChoice = "Elasticsearch / Solr (or MongoDB Atlas Search)";
+                dbChoice = "Elasticsearch / Solr or MongoDB Atlas Search";
                 architecture = "Search / Log Analytics Cluster";
-                reasoning = "For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections.";
+                reasoning = "For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads (< 3TB  size or 500GB active index size).";
                 features.push("Time Series", "Search Indexing");
             } 
             else if (useCase === 'iot') {
@@ -1833,7 +1833,7 @@ flowchart TB
                         }
                     } else {
                         // Small/Medium scale: MongoDB + Search
-                        if (dbChoice.includes("MongoDB") || dbChoice.includes("ClickHouse")) {
+                        if (dbChoice.includes("MongoDB") || dbChoice.includes("Data Warehouse")) {
                             dbChoice = "MongoDB (Operational Analytics) + Atlas Search";
                             architecture = "Real-Time Analytics with Search";
                             reasoning = "For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with Atlas Search provide unified operational analytics and full-text search.";
