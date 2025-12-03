@@ -8,5 +8,5 @@ export default defineConfig({
     react(),
     tailwindcss(),
   ],
-  base: '/staticpages/my-weather-app/', // Keep your existing repo name here
+  base: '/datalog/my-weather-app/', // Keep your existing repo name here
 })
