@@ -1229,16 +1229,19 @@ flowchart TB
          */
         const Analytics = {
             trackEvent: (eventName, eventData = {}) => {
-                // Google Analytics 4 - with better error handling
-                if (typeof gtag !== 'undefined') {
+                // Google Tag Manager - Push to dataLayer
+                if (window.dataLayer) {
                     try {
-                        gtag('event', eventName, eventData);
-                        console.log(`[GA4] Event sent: ${eventName}`, eventData);
+                        window.dataLayer.push({
+                            event: eventName,
+                            ...eventData
+                        });
+                        console.log(`[GTM] Event pushed to dataLayer: ${eventName}`, eventData);
                     } catch (e) {
-                        console.error(`[GA4] Error sending event: ${eventName}`, e);
+                        console.error(`[GTM] Error pushing event to dataLayer: ${eventName}`, e);
                     }
                 } else {
-                    console.warn('[GA4] gtag not loaded yet');
+                    console.warn('[GTM] dataLayer not initialized yet');
                 }
                 
                 // Segment.com or custom tracking
@@ -1257,10 +1260,15 @@ flowchart TB
                 });
             },
 
-            trackRecommendationViewed: (dbChoice, reason) => {
+            trackRecommendationViewed: (dbChoice, architecture, deployment, features, reason, useCase) => {
                 Analytics.trackEvent('recommendation_viewed', {
                     db_choice: dbChoice,
+                    architecture: architecture,
+                    deployment: deployment,
+                    features: features.join(', '),
+                    features_count: features.length,
                     reason: reason,
+                    use_case: useCase,
                     total_steps_taken: wizardData.currentStep + 1,
                     session_duration: Date.now() - (window.sessionStartTime || Date.now())
                 });
@@ -2633,10 +2641,7 @@ flowchart TB
 
                 const answers = wizardData.answers;
                 
-                // PRODUCTION ENHANCEMENT: Track recommendation view (early tracking before logic)
-                const dbResult = determinePrimaryDB(answers);
-                Analytics.trackRecommendationViewed(dbResult.db, dbResult.reason);
-                Logger.info('Recommendation generated', {db: dbResult.db, reason: dbResult.reason});
+                // Note: Recommendation tracking moved to end of function after all details are computed
                 
                 // Default recommendation structure
                 let dbChoice = "MongoDB Atlas";
@@ -2959,6 +2964,17 @@ flowchart TB
             // Join reasoning points into cohesive text
             const reasoning = reasoningPoints.join(' ');
 
+            // PRODUCTION ENHANCEMENT: Track complete recommendation with all details
+            Analytics.trackRecommendationViewed(dbChoice, architecture, deployment, features, reason, useCase);
+            Logger.info('Recommendation generated', {
+                db: dbChoice,
+                architecture: architecture,
+                deployment: deployment,
+                features: features,
+                reason: reason,
+                useCase: useCase
+            });
+
             // Render recommendation
             const wizardContent = document.getElementById('wizard-content');
             wizardContent.innerHTML = `
@@ -3105,16 +3121,17 @@ flowchart TB
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
-            // Verify GA4 is loaded
-            if (typeof gtag !== 'undefined') {
-                console.log('✅ [GA4] gtag is loaded and ready');
-                // Test event to verify GA4 is receiving data
-                gtag('event', 'page_view', {
-                    'page_title': 'MongoDB Architecture Decision Matrix',
-                    'page_path': window.location.pathname
+            // Verify GTM dataLayer is initialized
+            if (window.dataLayer) {
+                console.log('✅ [GTM] dataLayer is initialized and ready');
+                // Send initial page_view event via GTM
+                window.dataLayer.push({
+                    event: 'page_view',
+                    page_title: 'MongoDB Architecture Decision Matrix',
+                    page_path: window.location.pathname
                 });
             } else {
-                console.warn('⚠️ [GA4] gtag not found - GA4 may not be tracking');
+                console.warn('⚠️ [GTM] dataLayer not found - GTM may not be tracking');
             }
             
             // PRODUCTION ENHANCEMENT: Track session start
