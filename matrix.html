@@ -2620,6 +2620,190 @@ flowchart TB
             return { db: isOnPrem ? "MongoDB" : "MongoDB Atlas", reason: "default" };
         }
 
+        /**
+         * Detect if there are conflicting signals that warrant showing competing recommendations
+         * @param {Object} answers - User's answers
+         * @returns {boolean} - True if conflict detected
+         */
+        function detectConflict(answers) {
+            const useCase = answers[Q.USE_CASE];
+            const teamSkill = answers[Q.TEAM_SKILL];
+            const advancedFeatures = answers[Q.ADVANCED_FEATURES];
+            const workload = answers[Q.WORKLOAD];
+            const migrationStatus = answers[Q.MIGRATION_STATUS];
+            
+            // Conflict: SQL team + logs/search use case
+            if (teamSkill === 'sqlfirst' && 
+                (useCase === 'logs' || advancedFeatures === 'search')) {
+                return true;
+            }
+            
+            // Conflict: SQL team + transactional workload but document-heavy use case
+            if (teamSkill === 'sqlfirst' && workload === 'transactional' && 
+                (useCase === 'cms' || useCase === 'catalog' || useCase === 'profiles')) {
+                return true;
+            }
+            
+            // Conflict: Migration from SQL but use case screams NoSQL
+            if (migrationStatus === 'yes' && 
+                (useCase === 'logs' || useCase === 'iot' || useCase === 'realtime')) {
+                return true;
+            }
+            
+            return false;
+        }
+
+        /**
+         * Generate competing recommendations with pros/cons
+         * @param {Object} answers - User's answers
+         * @param {Object} primaryRec - Primary recommendation from determinePrimaryDB
+         * @returns {Array} - Array of recommendation objects
+         */
+        function generateCompetingRecommendations(answers, primaryRec) {
+            const useCase = answers[Q.USE_CASE];
+            const advancedFeatures = answers[Q.ADVANCED_FEATURES];
+            const trafficAnswer = answers[Q.TRAFFIC_PATTERN];
+            const isLargeScale = trafficAnswer === 'large' || trafficAnswer === 'massive';
+            const migrationSource = answers[Q.MIGRATION_SOURCE];
+            const teamSkill = answers[Q.TEAM_SKILL];
+            
+            const recommendations = [];
+            
+            // Scenario: SQL team + (logs OR search)
+            if (teamSkill === 'sqlfirst' && (useCase === 'logs' || advancedFeatures === 'search')) {
+                // Option 1: MongoDB + Atlas Search
+                recommendations.push({
+                    name: "MongoDB Atlas + Atlas Search",
+                    tagline: "Modern, integrated solution (Recommended)",
+                    pros: [
+                        "Integrated full-text search powered by Apache Lucene",
+                        "No external search engine needed - everything in MongoDB",
+                        "Built-in log management with Time Series Collections",
+                        isLargeScale ? "Proven at massive scale (petabytes)" : null,
+                        "Real-time search indexing (no sync lag)",
+                        "Unified security and access control"
+                    ].filter(Boolean),
+                    cons: [
+                        "Requires code refactoring from SQL queries",
+                        "Team needs to learn MongoDB query language (MQL)"
+                    ],
+                    migration: "MongoDB provides Relational Migrator tool and extensive documentation for SQL→MongoDB transitions",
+                    features: advancedFeatures === 'search' ? 
+                        ["Atlas Search", "Time Series Collections", "Aggregation Pipeline"] :
+                        ["Time Series Collections", "Data Tiering", "Atlas Search"]
+                });
+                
+                // Option 2: PostgreSQL/NewSQL + Elasticsearch/Solr
+                const sqlDbName = migrationSource ? 
+                    (migrationSource === 'postgres' ? 'PostgreSQL' : 'PostgreSQL/NewSQL') :
+                    'PostgreSQL/NewSQL';
+                    
+                recommendations.push({
+                    name: `${sqlDbName} + Elasticsearch/Solr`,
+                    tagline: "Familiar SQL with separate search layer",
+                    pros: [
+                        "Team stays in SQL comfort zone",
+                        "Lower immediate learning curve",
+                        migrationSource ? "Minimal migration effort from existing SQL database" : null,
+                        "Mature PostgreSQL ecosystem"
+                    ].filter(Boolean),
+                    cons: [
+                        "Requires separate search engine (Elasticsearch/Solr)",
+                        "Data synchronization complexity between database and search index",
+                        "Two systems to manage, monitor, and secure",
+                        isLargeScale ? "PostgreSQL struggles at massive scale (sharding is complex)" : null,
+                        "Higher total cost of ownership (multiple systems)"
+                    ].filter(Boolean),
+                    migration: null,
+                    features: ["PostgreSQL", "Elasticsearch/Solr", "ETL pipelines for sync"]
+                });
+            }
+            
+            return recommendations;
+        }
+
+        /**
+         * Render competing recommendations UI
+         * @param {Array} recommendations - Array of recommendation objects
+         * @param {Object} answers - User answers
+         * @param {string} useCase - Primary use case
+         */
+        function renderCompetingRecommendations(recommendations, answers, useCase) {
+            const wizardContent = document.getElementById('wizard-content');
+            
+            // Build HTML for each recommendation
+            const recsHTML = recommendations.map((rec, index) => `
+                <div class="rec-option" style="flex: 1; min-width: 300px; background: ${index === 0 ? 'linear-gradient(135deg, rgba(0,237,100,0.08) 0%, rgba(77,179,61,0.05) 100%)' : 'rgba(255,255,255,0.03)'}; border: 2px solid ${index === 0 ? '#00ED64' : 'rgba(255,255,255,0.1)'}; border-radius: 16px; padding: 30px; position: relative;">
+                    ${index === 0 ? '<div style="position: absolute; top: 12px; right: 12px; background: #00ED64; color: #001e2b; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">RECOMMENDED</div>' : ''}
+                    
+                    <h3 style="color: ${index === 0 ? '#00ED64' : '#fff'}; font-size: 1.4rem; margin-bottom: 8px; font-weight: 700;">${rec.name}</h3>
+                    <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem; margin-bottom: 24px; font-style: italic;">${rec.tagline}</p>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 0.85rem; color: #00ED64; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ Advantages</div>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            ${rec.pros.map(pro => `<li style="color: rgba(255,255,255,0.85); margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #00ED64;">+</span>${pro}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px;">
+                        <div style="font-size: 0.85rem; color: #ff6b6b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">⚠️ Tradeoffs</div>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            ${rec.cons.map(con => `<li style="color: rgba(255,255,255,0.85); margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #ff6b6b;">−</span>${con}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    ${rec.migration ? `
+                    <div style="background: rgba(0,237,100,0.1); border-left: 3px solid #00ED64; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
+                        <div style="font-size: 0.75rem; color: #00ED64; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Migration Support</div>
+                        <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem; line-height: 1.5;">${rec.migration}</div>
+                    </div>
+                    ` : ''}
+                    
+                    <div>
+                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Key Technologies</div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                            ${rec.features.map(feat => `<span style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">${feat}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            wizardContent.innerHTML = `
+                <div class="recommendation-card" style="max-width: 1200px;">
+                    <div class="rec-icon">🤔</div>
+                    <h2 class="rec-title">We Found Multiple Viable Options</h2>
+                    <div class="rec-subtitle" style="max-width: 800px; margin: 0 auto 40px auto;">
+                        Your requirements show competing priorities. Here are two solid approaches with their tradeoffs:
+                    </div>
+                    
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 40px;">
+                        ${recsHTML}
+                    </div>
+                    
+                    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: left;">
+                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); line-height: 1.7;">
+                            <strong style="color: #00ED64;">💡 Our Recommendation:</strong> For your use case (<em>${useCase}</em>), we lean toward <strong>MongoDB Atlas + Atlas Search</strong> because it's purpose-built for this workload and will scale more effectively long-term. However, if minimizing immediate team disruption is critical, the PostgreSQL + Elasticsearch approach offers a shorter ramp-up period.
+                        </div>
+                    </div>
+                    
+                    <div class="rec-actions">
+                        <button class="wizard-btn secondary" onclick="exportRecommendation('json')">📥 Export Comparison</button>
+                        <button class="wizard-btn secondary" onclick="restartWizard()">Start Over</button>
+                        <button class="wizard-btn primary" onclick="viewExpertPath()">See Full Decision Tree →</button>
+                    </div>
+                </div>
+            `;
+            
+            // Track competing recommendations view
+            Analytics.trackEvent('competing_recommendations_viewed', {
+                use_case: useCase,
+                option_1: recommendations[0].name,
+                option_2: recommendations[1]?.name || 'N/A',
+                total_options: recommendations.length
+            });
+        }
+
         // Recommendation engine (CONCERN #5 & #6: Error handling + Refactored logic)
         /**
          * Generate and display the final database recommendation
@@ -2651,6 +2835,15 @@ flowchart TB
                 const primaryDB = determinePrimaryDB(answers);
                 dbChoice = primaryDB.db;
                 const reason = primaryDB.reason;
+                
+                // Check for conflicting signals - if found, show competing recommendations
+                if (detectConflict(answers)) {
+                    const competingRecs = generateCompetingRecommendations(answers, primaryDB);
+                    if (competingRecs.length > 0) {
+                        renderCompetingRecommendations(competingRecs, answers, useCase);
+                        return; // Exit early - competing view is shown
+                    }
+                }
                 
                 // Handle special reasons
                 if (reason === 'log-analytics') {
