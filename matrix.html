@@ -624,6 +624,57 @@
             cursor: not-allowed;
         }
 
+        /* Inline Sub-Question Styling */
+        .sub-question-section {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+            margin-left: 30px;
+        }
+
+        .sub-question-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #00A854;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sub-question-label::before {
+            content: '↳';
+            font-size: 1.3rem;
+        }
+
+        .sub-options {
+            gap: 12px;
+        }
+
+        .sub-option {
+            padding: 16px 20px;
+            background: #f0f8f5;
+            border: 2px solid #d0e8e0;
+        }
+
+        .sub-option:hover {
+            background: #e8f5f1;
+            border-color: #00ED64;
+        }
+
+        .sub-option.selected {
+            border-color: #00ED64;
+            background: #ffffff;
+        }
+
+        /* Keyboard navigation focus indicator */
+        .wizard-option.keyboard-focused {
+            border-color: #4DB33D !important;
+            box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.2), 0 8px 16px rgba(0,0,0,0.15);
+            transform: scale(1.02);
+            transition: all 0.2s ease;
+        }
+
         /* Recommendation Screen */
         .recommendation-card {
             width: 800px;
@@ -735,6 +786,52 @@
             50% { filter: drop-shadow(0 0 25px currentColor); }
         }
 
+        /* Toggle Switch Styles */
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid #e0e0e0;
+        }
+        
+        .toggle-label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #001e2b;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 56px;
+            height: 28px;
+            background: #ccc;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .toggle-switch.active {
+            background: #00ED64;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+        
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(28px);
+        }
     </style>
 </head>
 <body>
@@ -758,10 +855,13 @@
     <!-- Guided Mode Container -->
     <div id="guided-mode" class="mode-container active">
         <div class="wizard-progress">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.9rem; color: rgba(255,255,255,0.8); font-weight: 500;">Progress</span>
+                <span id="progress-text" style="font-size: 0.9rem; color: #00ED64; font-weight: 600;">0%</span>
+            </div>
             <div class="progress-bar">
                 <div class="progress-fill" id="progress-fill"></div>
             </div>
-            <div class="progress-text" id="progress-text">Step <span id="current-step">1</span> of <span id="total-steps">8</span></div>
         </div>
         <div id="wizard-content"></div>
     </div>
@@ -1061,6 +1161,158 @@ flowchart TB
 
     <script>
         // --- DUAL MODE WIZARD ---
+        
+        /**
+         * Sanitize HTML string to prevent XSS attacks
+         * @param {string} str - String to sanitize  
+         * @returns {string} Sanitized HTML-safe string
+         */
+        function sanitizeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // Question ID constants for type safety and maintainability
+        const Q = {
+            USE_CASE: 0,
+            WORKLOAD: 1,
+            ANALYTICAL_NUANCE: 2,
+            BUSINESS_MODEL: 3,
+            MULTI_TENANCY: 4,
+            TEAM_SKILL: 5,
+            MIGRATION_STATUS: 6,
+            MIGRATION_SOURCE: 7,
+            BUSINESS_LOGIC: 8, // WAS 10
+            ACID_NEEDS: 9,     // WAS 8
+            NORMALIZATION: 10, // WAS 9
+            TRAFFIC_PATTERN: 11,
+            SCALE: 12,
+            DISTRIBUTION: 13,
+            DATA_STRUCTURE: 14,
+            GRAPH_DEPTH: 15,
+            ACCESS_PATTERN: 16,
+            LATENCY: 17,
+            ADVANCED_FEATURES: 18,
+            SEARCH_SCALE: 19,
+            VECTOR_SCALE: 20,
+            DEPLOYMENT: 21,
+            SECURITY: 22,
+            MOBILE_OFFLINE: 23
+        };
+
+        /**
+         * Storage key for wizard state in localStorage
+         * @constant {string}
+         */
+        const STORAGE_KEY = 'mongodb_wizard_state';
+
+        /**
+         * Save current wizard state to localStorage
+         * Auto-saves answers and current step for session persistence
+         */
+        function saveWizardState() {
+            try {
+                const state = {
+                    answers: wizardData.answers,
+                    currentStep: wizardData.currentStep,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (error) {
+                console.warn('Failed to save wizard state:', error);
+            }
+        }
+
+        /**
+         * Load wizard state from localStorage
+         * @returns {Object|null} Saved state object or null if no valid state exists
+         */
+        function loadWizardState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (!saved) return null;
+                
+                const state = JSON.parse(saved);
+                // Only load if saved within last 7 days
+                if (Date.now() - state.timestamp > 7 * 24 * 60 * 60 * 1000) {
+                    clearWizardState();
+                    return null;
+                }
+                return state;
+            } catch (error) {
+                console.warn('Failed to load wizard state:', error);
+                return null;
+            }
+        }
+
+        /**
+         * Clear saved wizard state from localStorage
+         */
+        function clearWizardState() {
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+            } catch (error) {
+                console.warn('Failed to clear wizard state:', error);
+            }
+        }
+
+        /**
+         * Format timestamp into human-readable relative time
+         * @param {number} timestamp - Unix timestamp in milliseconds
+         * @returns {string} Formatted time string (e.g., "5 minutes ago")
+         */
+        function formatTimestamp(timestamp) {
+            const diff = Date.now() - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
+            if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+            return `${days} day${days !== 1 ? 's' : ''} ago`;
+        }
+
+        /**
+         * Show resume prompt if saved wizard state exists
+         * @param {Object} savedState - Previously saved wizard state
+         */
+        function showResumePrompt(savedState) {
+            const wizardContent = document.getElementById('wizard-content');
+            wizardContent.innerHTML = `
+                <div class="wizard-card">
+                    <div class="wizard-icon">🔄</div>
+                    <h2 class="wizard-title">Resume Your Session?</h2>
+                    <div class="wizard-subtitle">We found a saved wizard session from ${formatTimestamp(savedState.timestamp)}</div>
+                    <div class="wizard-nav" style="justify-content: center; gap: 16px;">
+                        <button class="wizard-btn secondary" onclick="startFresh()">Start Fresh</button>
+                        <button class="wizard-btn primary" onclick="resumeSession()">Resume Session →</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Resume wizard from saved state
+         */
+        function resumeSession() {
+            const savedState = loadWizardState();
+            if (savedState) {
+                wizardData.answers = savedState.answers;
+                wizardData.currentStep = savedState.currentStep;
+            }
+            renderWizardStep();
+        }
+
+        /**
+         * Start wizard fresh, clearing any saved state
+         */
+        function startFresh() {
+            clearWizardState();
+            renderWizardStep();
+        }
+
         const wizardData = {
             questions: [
                 // Use Case Selection
@@ -1093,9 +1345,10 @@ flowchart TB
                         { value: 'analytical', title: 'Analytical (OLAP)', desc: 'Complex queries, reporting, BI, aggregations' }
                     ]
                 },
-                // Analytical Nuance (only if analytical)
+                // Analytical Nuance (only if analytical) - INLINE
                 {
                     id: 2,
+                    isInline: true,
                     icon: '📊',
                     title: "Analytical characteristics?",
                     subtitle: "How complex are your analytical queries?",
@@ -1105,24 +1358,28 @@ flowchart TB
                         { value: 'realtime', title: 'Real-Time Analytics', desc: 'Lower latency analytics, moderate complexity' }
                     ]
                 },
-                // Business Model (before MongoDB Core decision)
+                // Business Model (before MongoDB Core decision) - INLINE
                 {
                     id: 3,
+                    isInline: true,
                     icon: '🏢',
                     title: "Business model?",
                     subtitle: "How do you serve your users?",
                     condition: {1: 'transactional'},
                     options: [
                         { value: 'internal', title: 'Internal Enterprise App', desc: 'Single organization, internal users' },
-                        { value: 'saas', title: 'External Solution/Application', desc: 'Multiple customers (tenants)' }
+                        { value: 'saas', title: 'External Solution/Application', desc: 'External App or Application withMultiple customers (tenants)' }
                     ]
                 },
-                // Multi-Tenancy Strategy (only if SaaS)
+                // Multi-Tenancy Strategy (only if SaaS) - INLINE
                 {
                     id: 4,
+                    isInline: true,
+                    hasToggle: true,
+                    toggleLabel: "Customize multi-tenancy strategy",
                     icon: '🔐',
                     title: "Multi-tenancy isolation?",
-                    subtitle: "How should tenant data be separated?",
+                    subtitle: "Select your isolation strategy",
                     condition: {3: 'saas'},
                     options: [
                         { value: 'logical', title: 'Logical Isolation', desc: 'Shared collections, tenant_id field' },
@@ -1142,97 +1399,108 @@ flowchart TB
                         { value: 'sqlfirst', title: 'SQL-First Engineers', desc: 'DBAs, data engineers - comfortable with SQL' }
                     ]
                 },
-                // Migration Intent (if SQL-first)
+                // Migration Intent
                 {
                     id: 6,
                     icon: '🔄',
-                    title: "Is this a modernization effort?",
-                    subtitle: "Are you migrating from an existing database?",
+                    title: "Migration status?",
+                    subtitle: "Are you modernizing from an existing database?",
                     condition: {5: 'sqlfirst'},
                     options: [
-                        { value: 'yes', title: 'Yes, Modernizing', desc: 'Migrating from legacy system' },
-                        { value: 'no', title: 'No, New Project', desc: 'Greenfield development' }
+                        { value: 'no', title: 'No, New Project', desc: 'Greenfield development' },
+                        { value: 'yes', title: 'Yes, Migrating', desc: 'Modernizing from existing RDBMS' }
                     ]
                 },
-                // Migration Source (if modernizing)
+                // Migration Source (inline under Q6 if 'yes') - INLINE - WAS 6.5
                 {
                     id: 7,
-                    icon: '🗄️',
-                    title: "What are you migrating from?",
-                    subtitle: "Select your current database",
+                    isInline: true,
+                    icon: '📦',
+                    title: "Source database?",
+                    subtitle: "Which database are you migrating from?",
                     condition: {6: 'yes'},
                     options: [
-                        { value: 'oracle', title: 'Oracle', desc: 'Oracle Database' },
-                        { value: 'sqlserver', title: 'SQL Server', desc: 'Microsoft SQL Server' },
-                        { value: 'postgres', title: 'PostgreSQL', desc: 'PostgreSQL' },
-                        { value: 'mysql', title: 'MySQL', desc: 'MySQL / MariaDB' },
-                        { value: 'db2', title: 'IBM Db2', desc: 'IBM Db2' },
+                        { value: 'oracle', title: 'Oracle', desc: 'Oracle Database modernization' },
+                        { value: 'sqlserver', title: 'SQL Server', desc: 'Microsoft SQL Server modernization' },
+                        { value: 'postgres', title: 'PostgreSQL flavours', desc: 'PostgreSQL modernization' },
+                        { value: 'mysql', title: 'MySQL', desc: 'MySQL / MariaDB modernization' },
+                        { value: 'db2', title: 'IBM Db2', desc: 'IBM Db2 modernization' },
                         { value: 'other', title: 'Other RDBMS', desc: 'Other relational database' }
                     ]
                 },
-                // ACID Requirements (if SQL-first)
+                // Business Logic Location (Moved before ACID) - NOW Q8
                 {
                     id: 8,
-                    icon: '🔒',
-                    title: "ACID transaction needs?",
-                    subtitle: "Do you need multi-table transactions?",
-                    condition: {5: 'sqlfirst'},
-                    options: [
-                        { value: 'heavy', title: 'Transactions with normalized data model', desc: 'Complex multi-table (10+)  transactions' },
-                        { value: 'moderate', title: 'Transactions with denormalized data model', desc: 'multi table transactions with few tables' }
-                    ]
-                },
-                // Normalization Check (if heavy ACID)
-                {
-                    id: 9,
-                    icon: '📐',
-                    title: "Data model rigidity?",
-                    subtitle: "Is your data 3rd or 4th normal form?",
-                    condition: {8: 'heavy'},
-                    options: [
-                        { value: 'rigid', title: 'Highly Normalized', desc: '3NF/4NF, strict relational integrity' },
-                        { value: 'optimizable', title: 'Already use Materialized Views for faster reads? i.e Denormalization friendly?', desc: 'Open to data model optimization' }
-                    ]
-                },
-                // SQL Logic Embedded
-                {
-                    id: 10,
+                    isInline: true,
                     icon: '💾',
                     title: "Business logic location?",
                     subtitle: "Where is your business logic?/Where do you want your business logic?",
-                    condition: {9: 'rigid'},
+                    condition: {5: 'sqlfirst'}, // Show for all SQL-First teams
                     options: [
                         { value: 'database', title: 'In Database (SQL/PL-SQL)', desc: 'Stored procedures, triggers' },
                         { value: 'application', title: 'In Application Code', desc: 'Logic in app tier' }
                     ]
                 },
-                // Volume Nuance (if moderate ACID)
+                // ACID Requirements (for both developer types) - INLINE - NOW Q9
+                {
+                    id: 9,
+                    isInline: true,
+                    icon: '🔒',
+                    title: "ACID transaction needs?",
+                    subtitle: "Do you need multi-table transactions?",
+                    condition: [{5: 'sqlfirst'}, {5: 'codefirst'}],
+                    options: [
+                        { value: 'heavy', title: 'Transactions with normalized data model', desc: 'Complex multi-table (10+)  transactions' },
+                        { value: 'moderate', title: 'Transactions with denormalized data model', desc: 'multi table transactions with few tables' }
+                    ]
+                },
+                // Normalization Check (if heavy ACID) - INLINE - NOW Q10
+                {
+                    id: 10,
+                    isInline: true,
+                    icon: '📐',
+                    title: "Data model rigidity?",
+                    subtitle: "Is your data 3rd or 4th normal form?",
+                    condition: {9: 'heavy'}, // Depends on Q9 (ACID)
+                    options: [
+                        { value: 'rigid', title: 'Highly Normalized', desc: '3NF/4NF, strict relational integrity' },
+                        { value: 'optimizable', title: 'Already use Materialized Views for faster reads? i.e Denormalization friendly?', desc: 'Open to data model optimization' }
+                    ]
+                },
+                // Traffic & Scale (Merged Q11 + Q12) - NOW Q11
                 {
                     id: 11,
+                    isInline: true,
                     icon: '📈',
-                    title: "Write volume?",
-                    subtitle: "Expected writes per second",
-                    condition: {8: 'moderate'},
+                    title: "Expected scale & traffic?",
+                    subtitle: "What is your data volume and write throughput?",
+                    condition: [{9: 'moderate'}, {9: 'heavy'}],
                     options: [
-                        { value: 'low', title: 'Low Scale (<1k writes/sec)', desc: 'low traffic without spikes' },
-                        { value: 'high', title: 'Moderate to High Scale', desc: 'Unpredictable traffic with spikes' }
+                        { value: 'very-small', title: 'Very Small (Few GBs, <1k writes/sec)', desc: 'Startup, MVP, or low traffic' },
+                        { value: 'small', title: 'Small (<2TB, <10k writes/sec)', desc: 'Moderate application' },
+                        { value: 'large', title: 'Large (>2TB or >50k writes/sec)', desc: 'High-scale production (Consistent/Spiky Traffic)' },
+                        { value: 'massive', title: 'Massive (Petabyte-scale)', desc: 'Huge datasets (Consistent/Spiky Traffic)' }
                     ]
                 },
-                // Traffic Pattern (New Q23)
+                // Data Distribution (Optional with Toggle) - Q13
                 {
-                    id: 23,
-                    icon: '📊',
-                    title: "Traffic Pattern?",
-                    subtitle: "How consistent is your workload?",
-                    condition: {1: 'transactional'},
+                    id: 13,
+                    isInline: true,
+                    hasToggle: true,
+                    toggleLabel: "Customize sharding strategy",
+                    icon: '🗂️',
+                    title: "Data distribution pattern?",
+                    subtitle: "Select your sharding strategy",
+                    condition: {11: ['large', 'massive']},
                     options: [
-                        { value: 'consistent', title: 'Consistent / Predictable', desc: 'Steady load, predictable peaks' },
-                        { value: 'spiky', title: 'Spiky / Unpredictable', desc: 'Bursty traffic, idle periods' }
+                        { value: 'distributed', title: 'Distributed Writes', desc: 'Uniform distribution across shards' },
+                        { value: 'location', title: 'Geo-Partitioned', desc: 'Data locality by region/zone' },
+                        { value: 'range', title: 'Range-Based', desc: 'Time-series or alphabetical grouping' }
                     ]
                 },
-                // Data Nature (if code-first)
+                // Data Structure (moved from Q12) - NOW Q14
                 {
-                    id: 12,
+                    id: 14,
                     icon: '📂',
                     title: "Data structure?",
                     subtitle: "How flexible is your schema?",
@@ -1243,69 +1511,47 @@ flowchart TB
                         { value: 'rigid', title: 'Rigid & Relational', desc: 'Fixed schema, normalized' }
                     ]
                 },
-                // Graph Depth (if graph)
+                // Graph Depth (moved from Q13) - NOW Q15
                 {
-                    id: 13,
+                    id: 15,
+                    isInline: true,
                     icon: '🕸️',
                     title: "Relationship depth?",
                     subtitle: "How deep are your relationship traversals?",
-                    condition: {12: 'graph'},
+                    condition: {14: 'graph'},
                     options: [
                         { value: 'deep', title: 'Deep (>5 hops)', desc: 'Friend-of-friend-of-friend, unbounded traversals' },
                         { value: 'shallow', title: 'Shallow (≤3-5 hops)', desc: 'Simple relationships' }
                     ]
                 },
-                // Key-Value Pattern (if shallow graphs OR document)
+                // Access Pattern (moved from Q14) - NOW Q16
                 {
-                    id: 14,
+                    id: 16,
+                    isInline: true,
                     icon: '🔑',
                     title: "Access pattern?",
                     subtitle: "How do you access your data?",
-                    condition: [{13: 'shallow'}, {12: 'document'}],
+                    condition: [{14: 'document'}, {15: 'shallow'}],
                     options: [
                         { value: 'simple', title: 'Simple ID Lookup', desc: 'Mostly get-by-ID, key-value style' },
                         { value: 'complex', title: 'Complex Queries', desc: 'Filtering, secondary indexes, aggregations' }
                     ]
                 },
-                // Latency Tolerance (if simple KV)
+                // Latency (moved from Q15) - NOW Q17
                 {
-                    id: 15,
+                    id: 17,
+                    isInline: true,
                     icon: '⚡',
                     title: "Latency requirements?",
                     subtitle: "How fast do you need responses?",
-                    condition: {14: 'simple'},
+                    condition: {16: 'simple'},
                     options: [
                         { value: 'submillisecond', title: 'Sub-millisecond (<1ms)', desc: 'Can tolerate some data loss for speed' },
                         { value: 'normal', title: 'Normal (1-10ms)', desc: 'Durability important' }
                     ]
                 },
-                // Scale Requirements
-                {
-                    id: 16,
-                    icon: '📊',
-                    title: "Expected scale?",
-                    subtitle: "Data volume and write throughput",
-                    options: [
-                        { value: 'small', title: 'Small (<2TB, <10k writes/sec)', desc: 'Startup or moderate app' },
-                        { value: 'large', title: 'Large (>2TB or >50k writes/sec)', desc: 'High-scale production' },
-                        { value: 'massive', title: 'Massive (Petabyte-scale)', desc: 'Logs, observability, huge datasets' }
-                    ]
-                },
-                // Sharding Strategy (if large scale)
-                {
-                    id: 17,
-                    icon: '🗂️',
-                    title: "Data distribution pattern?",
-                    subtitle: "How should data be sharded?",
-                    condition: {16: ['large', 'massive']},
-                    options: [
-                        { value: 'distributed', title: 'Distributed Writes', desc: 'Uniform distribution across shards' },
-                        { value: 'location', title: 'Geo-Partitioned', desc: 'Data locality by region/zone' },
-                        { value: 'range', title: 'Range-Based', desc: 'Time-series or alphabetical grouping' },
-                        { value: 'skip', title: 'Skip / Not Sure', desc: 'No specific sharding preference yet' }
-                    ]
-                },
-                // Advanced Features
+                
+                // Advanced Features - STAYS Q18
                 {
                     id: 18,
                     icon: '🔍',
@@ -1320,9 +1566,10 @@ flowchart TB
                     ],
                     allowSkip: true
                 },
-                // Search Scale (if search selected)
+                // Search Scale (if search selected) - INLINE - WAS 18
                 {
                     id: 19,
+                    isInline: true,
                     icon: '🔍',
                     title: "Search data scale?",
                     subtitle: "How much data needs to be searchable?",
@@ -1332,32 +1579,49 @@ flowchart TB
                         { value: 'petabyte', title: 'Petabyte-Scale', desc: 'Log analytics, massive search indices' }
                     ]
                 },
-                // Deployment Preference
+                // Vector Scale (if AI/Vector Search selected) - INLINE - WAS 18.5
                 {
                     id: 20,
-                    icon: '☁️',
-                    title: "Deployment preference?",
-                    subtitle: "Where can your data live?",
+                    isInline: true,
+                    icon: '🧠',
+                    title: "Vector data scale?",
+                    subtitle: "How many vectors do you need to store and search?",
+                    condition: {18: ['ai']},
                     options: [
-                        { value: 'cloud', title: 'Public Cloud/Hybrid Cloud', desc: 'AWS, Azure, GCP' },
-                        { value: 'onprem', title: 'On-Premise / Air-gapped', desc: 'Private infrastructure' }
+                        { value: 'small', title: '<100M vectors', desc: 'Agentic Memory, Agentic RAG, semantic search' },
+                        { value: 'large', title: '>100M vectors', desc: 'Open Source Indexing etc' }
                     ]
                 },
-                // Compliance
+                // Deployment Location - WAS 19
                 {
                     id: 21,
-                    icon: '🔒',
-                    title: "Compliance requirements?",
-                    subtitle: "Do you need field-level encryption?",
-                    condition: {1: 'transactional'},
+                    icon: '☁️',
+                    title: "Deployment location?",
+                    subtitle: "Where can your data live?",
                     options: [
-                        { value: 'standard', title: 'Standard Security', desc: 'TLS/SSL, At-Rest Encryption' },
-                        { value: 'strict', title: 'Strict Compliance', desc: 'HIPAA/PCI, Field-Level Encryption needed' }
+                        { value: 'cloud', title: 'Cloud/hybrid-multi cloud', desc: 'AWS/Azure/GCP managed infrastructure' },
+                        { value: 'onprem', title: 'On-Premise', desc: 'Private infrastructure' }
                     ]
                 },
-                // Mobile / Edge (New Q22)
+                // Security Level (Toggle) - INLINE - WAS 19.5
                 {
                     id: 22,
+                    isInline: true,
+                    hasToggle: true,
+                    toggleLabel: "Enable advanced security",
+                    icon: '🔒',
+                    title: "Security & compliance level?",
+                    subtitle: "Select your security requirements",
+                    condition: {21: ['cloud', 'onprem']},
+                    options: [
+                        { value: 'standard', title: 'Standard Security', desc: 'TLS/SSL encryption in transit' },
+                        { value: 'strict', title: 'Strict Compliance', desc: 'HIPAA/PCI, field-level encryption at rest' }
+                    ]
+                },
+                // Mobile / Edge - WAS 20
+                {
+                    id: 23,
+                    isInline: true,
                     icon: '📱',
                     title: "Offline-First Requirement?",
                     subtitle: "Do devices need to work without internet?",
@@ -1380,6 +1644,10 @@ flowchart TB
             });
         });
 
+        /**
+         * Switch between Guided Path and Expert View modes
+         * @param {string} mode - Mode to switch to ('guided' or 'expert')
+         */
         function switchMode(mode) {
             // Update tabs
             document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
@@ -1404,7 +1672,10 @@ flowchart TB
 
         // ... (renderWizardStep and other wizard functions remain here) ...
 
-        // 3. Pan-Zoom Setup
+        /**
+         * Setup pan and zoom functionality for Mermaid diagram
+         * Attempts initialization with timeout to prevent memory leaks
+         */
         function setupPanZoom() {
             // Clear any existing instance
             if (panZoomInstance) {
@@ -1412,8 +1683,13 @@ flowchart TB
                 panZoomInstance = null;
             }
 
+            let attempts = 0;
+            const maxAttempts = 50; // 5 seconds max
+            
             const interval = setInterval(() => {
+                attempts++;
                 const svg = document.querySelector('.mermaid svg');
+                
                 if (svg && svg.getBoundingClientRect().height > 10) {
                     clearInterval(interval);
                     svg.style.height = '100%';
@@ -1431,6 +1707,9 @@ flowchart TB
                     panZoomInstance.resize();
                     panZoomInstance.fit();
                     panZoomInstance.center();
+                } else if (attempts >= maxAttempts) {
+                    clearInterval(interval);
+                    console.error('Failed to initialize pan-zoom: SVG not found after 5 seconds');
                 }
             }, 100);
         }
@@ -1438,19 +1717,134 @@ flowchart TB
         // Initial setup
         setupPanZoom();
 
+        /**
+         * Handle keyboard navigation in wizard mode
+         * Supports arrow keys, Enter, Escape, Tab, and number keys (1-9)
+         * @param {KeyboardEvent} e - Keyboard event
+         */
+        function handleKeyboardNavigation(e) {
+            // Only active in guided mode
+            const guidedMode = document.getElementById('guided-mode');
+            if (!guidedMode || !guidedMode.classList.contains('active')) return;
+            
+            // Get all visible options (main and sub-questions)
+            const options = Array.from(document.querySelectorAll('.wizard-option:not([style*="display: none"])'));
+            if (options.length === 0) return;
+            
+            // Find currently focused option
+            let currentIndex = options.findIndex(opt => opt.classList.contains('keyboard-focused'));
+            
+            switch(e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    moveFocus(options, currentIndex, 1);
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    moveFocus(options, currentIndex, -1);
+                    break;
+                    
+                case 'Enter':
+                    e.preventDefault();
+                    if (currentIndex >= 0) {
+                        options[currentIndex].click();
+                    } else if (options.length > 0) {
+                        // If nothing focused, select first option
+                        options[0].click();
+                    }
+                    break;
+                    
+                case 'Escape':
+                    e.preventDefault();
+                    const prevBtn = document.querySelector('.wizard-btn.secondary');
+                    if (prevBtn && !prevBtn.disabled) {
+                        prevStep();
+                    }
+                    break;
+                    
+                case 'Tab':
+                    // Let Tab work naturally to focus Next/Skip buttons
+                    // Remove keyboard focus from options
+                    options.forEach(opt => opt.classList.remove('keyboard-focused'));
+                    break;
+                    
+                // Number keys for quick selection
+                case '1': case '2': case '3': case '4': case '5':
+                case '6': case '7': case '8': case '9':
+                    e.preventDefault();
+                    const idx = parseInt(e.key) - 1;
+                    if (idx < options.length) {
+                        moveFocus(options, currentIndex, idx - currentIndex);
+                        setTimeout(() => options[idx].click(), 100);
+                    }
+                    break;
+            }
+        }
+
+        /**
+         * Move keyboard focus between wizard options
+         * @param {HTMLElement[]} options - Array of option elements
+         * @param {number} currentIndex - Current focused index (-1 if none)
+         * @param {number} direction - Direction to move (positive or negative)
+         */
+        function moveFocus(options, currentIndex, direction) {
+            // Remove current focus
+            options.forEach(opt => opt.classList.remove('keyboard-focused'));
+            
+            // Calculate new index
+            let newIndex = currentIndex + direction;
+            
+            // Handle wraparound
+            if (newIndex < 0) newIndex = options.length - 1;
+            if (newIndex >= options.length) newIndex = 0;
+            
+            // Add new focus
+            options[newIndex].classList.add('keyboard-focused');
+            options[newIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Attach keyboard navigation listener
+        document.addEventListener('keydown', handleKeyboardNavigation);
+
+        /**
+         * Zoom in on the expert view diagram
+         */
         function zoomIn() { if(panZoomInstance) panZoomInstance.zoomIn(); }
-        function zoomOut() { if(panZoomInstance) panZoomInstance.zoomOut(); }
-        function resetZoom() { if(panZoomInstance) { panZoomInstance.resetZoom(); panZoomInstance.center(); } }
         
+        /**
+         * Zoom out on the expert view diagram
+         */
+        function zoomOut() { if(panZoomInstance) panZoomInstance.zoomOut(); }
+        
+        /**
+         * Reset zoom and center the expert view diagram
+         */
+        function resetZoom() { if(panZoomInstance) { panZoomInstance.resetZoom(); panZoomInstance.center(); } }
+       
         window.addEventListener('resize', function(){
             if(panZoomInstance) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
         });
 
-        // Validate condition with error handling (CONCERN #4: Error Handling)
+        /**
+         * Check if a question should be displayed based on its conditions
+         * Handles both single conditions and array of condition objects
+         * @param {Object} question - Question object with optional condition property
+         * @returns {boolean} True if question should be shown
+         */
         function shouldShowQuestion(question) {
-            if (!question.condition) return true;
+            if (!question || !question.condition) return true;
             
             try {
+                // Skip toggle questions if toggle is OFF
+                if (question.hasToggle) {
+                    const toggleId = `toggle-${question.id}`;
+                    const isToggleOn = window[toggleId] || false;
+                    if (!isToggleOn) {
+                        return false; // Don't show as separate question if toggle is OFF
+                    }
+                }
+
                 const checkCondition = (cond) => {
                     if (!cond || typeof cond !== 'object') return false;
                     
@@ -1482,32 +1876,33 @@ flowchart TB
             }
         }
 
-        // Find next valid question to show
-        function findNextQuestion(fromIndex) {
-            for (let i = fromIndex; i < wizardData.questions.length; i++) {
-                if (shouldShowQuestion(wizardData.questions[i])) {
-                    return i;
-                }
-            }
-            return -1; // No more questions
-        }
-
-        // Wizard rendering
+        /**
+         * Render the current wizard step with question and options
+         * Handles inline sub-questions, progress bar, and navigation buttons
+         */
         function renderWizardStep() {
             const step = wizardData.currentStep;
             const question = wizardData.questions[step];
             const totalSteps = wizardData.questions.length;
 
-            // Update progress
+            // Update progress bar and percentage text
             const progress = ((step + 1) / totalSteps) * 100;
             document.getElementById('progress-fill').style.width = `${progress}%`;
-            document.getElementById('current-step').textContent = step + 1;
-            document.getElementById('total-steps').textContent = totalSteps;
+            document.getElementById('progress-text').textContent = `${Math.round(progress)}%`;
 
             // Render question card
             const wizardContent = document.getElementById('wizard-content');
             const isMultiSelect = question.multiselect || false;
             const selectedValues = wizardData.answers[question.id] || (isMultiSelect ? [] : null);
+
+            // Build inline sub-questions recursively
+            let subQuestionHTML = '';
+            let canAdvance = selectedValues;
+
+            if (selectedValues) {
+                subQuestionHTML = renderSubQuestions(question.id, selectedValues);
+                canAdvance = validateSubQuestionChain(question.id, selectedValues);
+            }
 
             wizardContent.innerHTML = `
                 <div class="wizard-card">
@@ -1523,17 +1918,18 @@ flowchart TB
                                 <div class="wizard-option ${isSelected ? 'selected' : ''}" 
                                      onclick="selectOption(${question.id}, '${opt.value}', ${isMultiSelect})"
                                      style="${isSelected ? 'border-color: #00ED64; background: #fff;' : ''}">
-                                    <div class="wizard-option-title">${isMultiSelect ? (isSelected ? '✓ ' : '☐ ') : ''}${opt.title}</div>
-                                    <div class="wizard-option-desc">${opt.desc}</div>
+                                    <div class="wizard-option-title">${isMultiSelect ? (isSelected ? '✓ ' : '☐ ') : ''}${sanitizeHTML(opt.title)}</div>
+                                    <div class="wizard-option-desc">${sanitizeHTML(opt.desc)}</div>
                                 </div>
                             `;
                         }).join('')}
                     </div>
+                    ${subQuestionHTML}
                     <div class="wizard-nav">
                         ${step > 0 ? '<button class="wizard-btn secondary" onclick="prevStep()">← Back</button>' : ''}
                         ${question.allowSkip ? '<button class="wizard-btn secondary" onclick="skipStep()">Skip</button>' : ''}
                         <button class="wizard-btn primary" onclick="nextStep()" 
-                                ${!selectedValues || (isMultiSelect && selectedValues.length === 0) ? 'disabled' : ''}>
+                                ${!canAdvance ? 'disabled' : ''}>
                             ${step < totalSteps - 1 ? 'Next →' : 'See Recommendation'}
                         </button>
                     </div>
@@ -1541,69 +1937,381 @@ flowchart TB
             `;
         }
 
-        function selectOption(questionId, value, isMultiSelect) {
-            if (isMultiSelect) {
-                if (!wizardData.answers[questionId]) {
-                    wizardData.answers[questionId] = [];
+        /**
+         * Recursively render sub-questions that depend on parent answers
+         * @param {number} parentQuestionId - ID of parent question
+         * @param {string} parentValue - Selected value from parent question
+         * @returns {string} HTML string of sub-questions
+         */
+        function renderSubQuestions(parentQuestionId, parentValue) {
+            let html = '';
+            
+            // Find all questions that depend on this parent AND are marked inline
+            const subQuestions = wizardData.questions.filter(q => {
+                if (!q.isInline) return false; // Only render explicitly inline questions
+                if (!q.condition) return false;
+                if (typeof q.condition !== 'object') return false;
+                
+                // Handle array conditions: check if ANY condition has the parent
+                if (Array.isArray(q.condition)) {
+                    return q.condition.some(cond => cond[parentQuestionId] !== undefined);
                 }
-                const index = wizardData.answers[questionId].indexOf(value);
-                if (index > -1) {
-                    wizardData.answers[questionId].splice(index, 1);
+                
+                // Handle object conditions: check if condition has the parent
+                return q.condition[parentQuestionId] !== undefined;
+            });
+
+            // Get sub-questions that should be shown
+            const visibleSubQuestions = subQuestions.filter(subQ => {
+                if (Array.isArray(subQ.condition)) {
+                    // For array conditions, check if ANY condition matches
+                    return subQ.condition.some(cond => {
+                        const conditionValue = cond[parentQuestionId];
+                        if (conditionValue === undefined) return false;
+                        
+                        if (Array.isArray(conditionValue)) {
+                            return Array.isArray(parentValue) 
+                                ? parentValue.some(v => conditionValue.includes(v))
+                                : conditionValue.includes(parentValue);
+                        }
+                        return conditionValue === parentValue;
+                    });
                 } else {
-                    wizardData.answers[questionId].push(value);
+                    // For object conditions
+                    const conditionValue = subQ.condition[parentQuestionId];
+                    if (Array.isArray(conditionValue)) {
+                        return Array.isArray(parentValue) 
+                            ? parentValue.some(v => conditionValue.includes(v))
+                            : conditionValue.includes(parentValue);
+                    }
+                    return conditionValue === parentValue;
                 }
-            } else {
-                wizardData.answers[questionId] = value;
+            });
+
+            // Render each visible sub-question and its children
+            for (const subQ of visibleSubQuestions) {
+                const subSelectedValues = wizardData.answers[subQ.id] || (subQ.multiselect ? [] : null);
+                const subIsMultiSelect = subQ.multiselect || false;
+                
+                // Check if this sub-question has a toggle
+                if (subQ.hasToggle) {
+                    const toggleId = `toggle-${subQ.id}`;
+                    const isToggleOn = window[toggleId] || false;
+                    
+                    html += `
+                        <div class="sub-question-section" data-question-id="${subQ.id}">
+                            <div class="toggle-container" onclick="toggleSubQuestion('${toggleId}', ${subQ.id})">
+                                <div class="toggle-label">${subQ.toggleLabel || 'Show options'}</div>
+                                <div class="toggle-switch ${isToggleOn ? 'active' : ''}" id="${toggleId}">
+                                    <div class="toggle-slider"></div>
+                                </div>
+                            </div>
+                            <div id="content-${subQ.id}" style="display: ${isToggleOn ? 'block' : 'none'}">
+                                <div class="inline-question-header">
+                                    <div class="inline-question-icon">${subQ.icon}</div>
+                                    <div>
+                                        <div class="inline-question-title">${subQ.title}</div>
+                                        <div class="inline-question-subtitle">${subQ.subtitle}</div>
+                                    </div>
+                                </div>
+                                <div class="wizard-options">
+                                    ${subQ.options.map(opt => {
+                                        const isSelected = subIsMultiSelect 
+                                            ? (subSelectedValues || []).includes(opt.value)
+                                            : subSelectedValues === opt.value;
+                                        return `
+                                            <div class="wizard-option ${isSelected ? 'selected' : ''}" 
+                                                 onclick="selectOption(${subQ.id}, '${opt.value}', ${subIsMultiSelect})"
+                                                 style="${isSelected ? 'border-color: #00ED64; background: #fff;' : ''}">
+                                                <div class="wizard-option-title">${subIsMultiSelect ? (isSelected ? '✓ ' : '☐ ') : ''}${sanitizeHTML(opt.title)}</div>
+                                                <div class="wizard-option-desc">${sanitizeHTML(opt.desc)}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Standard rendering for non-toggle sub-questions
+                    html += `
+                        <div class="sub-question-section" data-question-id="${subQ.id}">
+                            <div class="inline-question-header">
+                                <div class="inline-question-icon">${subQ.icon}</div>
+                                <div>
+                                    <div class="inline-question-title">${subQ.title}</div>
+                                    <div class="inline-question-subtitle">${subQ.subtitle}</div>
+                                </div>
+                            </div>
+                            <div class="wizard-options">
+                                ${subQ.options.map(opt => {
+                                    const isSelected = subIsMultiSelect 
+                                        ? (subSelectedValues || []).includes(opt.value)
+                                        : subSelectedValues === opt.value;
+                                    return `
+                                        <div class="wizard-option ${isSelected ? 'selected' : ''}" 
+                                             onclick="selectOption(${subQ.id}, '${opt.value}', ${subIsMultiSelect})"
+                                             style="${isSelected ? 'border-color: #00ED64; background: #fff;' : ''}">
+                                            <div class="wizard-option-title">${subIsMultiSelect ? (isSelected ? '✓ ' : '☐ ') : ''}${sanitizeHTML(opt.title)}</div>
+                                            <div class="wizard-option-desc">${sanitizeHTML(opt.desc)}</div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Recursively render nested sub-questions
+                html += subSelectedValues ? renderSubQuestions(subQ.id, subSelectedValues) : '';
             }
+
+            return html;
+        }
+
+        /**
+         * Validate that all required sub-questions in a chain are answered
+         * @param {number} questionId - ID of parent question to check
+         * @param {string|string[]} questionValue - Value(s) of the parent question
+         * @returns {boolean} True if all sub-questions are answered
+         */
+        function validateSubQuestionChain(questionId, questionValue) {
+            // Find all descendants that must be answered
+            const findRequiredDescendants = (qId, val) => {
+                const descendants = [];
+                const subQuestions = wizardData.questions.filter(q => {
+                    if (!q.isInline) return false; // Only check explicitly inline questions
+                    if (!q.condition) return false;
+                    return q.condition[qId] !== undefined;
+                });
+
+                for (const subQ of subQuestions) {
+                    const conditionValue = subQ.condition[qId];
+                    const matches = Array.isArray(conditionValue)
+                        ? (Array.isArray(val) ? val.some(v => conditionValue.includes(v)) : conditionValue.includes(val))
+                        : conditionValue === val;
+                    
+                    if (matches) {
+                        // Check if this is a toggle question and if it's OFF
+                        if (subQ.hasToggle) {
+                            const toggleId = `toggle-${subQ.id}`;
+                            const isToggleOn = window[toggleId] || false;
+                            if (!isToggleOn) {
+                                continue; // Skip this branch if toggle is OFF
+                            }
+                        }
+
+                        descendants.push(subQ);
+                        const subVal = wizardData.answers[subQ.id];
+                        if (subVal) {
+                            descendants.push(...findRequiredDescendants(subQ.id, subVal));
+                        }
+                    }
+                }
+                return descendants;
+            };
+
+            const descendants = findRequiredDescendants(questionId, questionValue);
+            
+            // All required descendants must have answers
+            return descendants.length === 0 || descendants.every(d => wizardData.answers[d.id]);
+        }
+
+        /**
+         * Handle option selection in wizard
+         * Validates input and manages multiselect vs single-select behavior
+         * @param {number} questionId - ID of the question
+         * @param {string} value - Value of selected option
+         * @param {boolean} isMultiSelect - Whether question allows multiple selections
+         */
+        function selectOption(questionId, value, isMultiSelect) {
+            try {
+                const question = wizardData.questions.find(q => q.id === questionId);
+                if (!question) {
+                    console.error('Invalid question ID:', questionId);
+                    return;
+                }
+                
+                // Validate value is in allowed options
+                const validValues = question.options.map(opt => opt.value);
+                if (!validValues.includes(value)) {
+                    console.error('Invalid option value:', value);
+                    return;
+                }
+                
+                if (isMultiSelect) {
+                    if (!wizardData.answers[questionId]) {
+                        wizardData.answers[questionId] = [];
+                    }
+                    const index = wizardData.answers[questionId].indexOf(value);
+                    if (index > -1) {
+                        wizardData.answers[questionId].splice(index, 1);
+                    } else {
+                        wizardData.answers[questionId].push(value);
+                    }
+                } else {
+                    // If changing a parent answer, clear dependent answers
+                    if (wizardData.answers[questionId] !== value) {
+                        clearDependentAnswers(questionId);
+                    }
+                    wizardData.answers[questionId] = value;
+                }
+                renderWizardStep();
+                saveWizardState(); // Auto-save after selection
+            } catch (error) {
+                console.error('Error in selectOption:', error);
+            }
+        }
+
+        /**
+         * Toggle visibility of optional sub-question
+         * @param {string} toggleId - ID of the toggle element
+         * @param {number} questionId - ID of the question to toggle
+         */
+        function toggleSubQuestion(toggleId, questionId) {
+            // Toggle state
+            window[toggleId] = !window[toggleId];
+            
+            // Re-render to update validation state (Next button) and UI
             renderWizardStep();
         }
 
+        /**
+         * Clear answers for questions that depend on a changed parent question
+         * Only clears if the dependent question is no longer valid
+         * @param {number} parentId - ID of parent question that changed
+         */
+        function clearDependentAnswers(parentId) {
+            const dependents = wizardData.questions.filter(q => {
+                if (!q.condition) return false;
+                if (Array.isArray(q.condition)) {
+                    return q.condition.some(cond => cond[parentId] !== undefined);
+                }
+                return q.condition[parentId] !== undefined;
+            });
+
+            dependents.forEach(q => {
+                // Only clear if question is no longer valid with new parent value
+                if (!shouldShowQuestion(q)) {
+                    delete wizardData.answers[q.id];
+                    clearDependentAnswers(q.id); // Recursive clear
+                }
+            });
+        }
+
+
+        /**
+         * Advance to the next question in the wizard
+         * Automatically skips questions that don't meet conditions
+         */
         function nextStep() {
-            const nextIndex = findNextQuestion(wizardData.currentStep + 1);
-            if (nextIndex >= 0) {
-                wizardData.currentStep = nextIndex;
+            const nextQuestion = findNextQuestion(wizardData.currentStep + 1);
+            if (nextQuestion !== null) {
+                wizardData.currentStep = nextQuestion;
                 renderWizardStep();
+                saveWizardState(); // Auto-save after advancing
             } else {
                 showRecommendation();
             }
         }
 
-        function prevStep() {
-            // Find previous valid question
-            for (let i = wizardData.currentStep - 1; i >= 0; i--) {
+        /**
+         * Find the next visible question starting from a given index
+         * Skips questions that don't meet their display conditions
+         * @param {number} fromIndex - Index to start searching from
+         * @returns {number|null} Index of next visible question or null if none
+         */
+        function findNextQuestion(fromIndex) {
+            for (let i = fromIndex; i < wizardData.questions.length; i++) {
+                // Skip inline sub-questions - they're handled inline
+                if (wizardData.questions[i].isInline) {
+                    continue;
+                }
                 if (shouldShowQuestion(wizardData.questions[i])) {
-                    wizardData.currentStep = i;
-                    renderWizardStep();
-                    return;
+                    return i;
+                }
+            }
+            return null; // No more questions
+        }
+
+        /**
+         * Go back to the previous question in the wizard
+         * Automatically skips questions that don't meet conditions
+         */
+        function prevStep() {
+            if (wizardData.currentStep > 0) {
+                // Find the previous visible question, skipping inline sub-questions
+                for (let i = wizardData.currentStep - 1; i >= 0; i--) {
+                    const question = wizardData.questions[i];
+                    
+                    // Skip inline sub-questions - they should never be navigation targets
+                    if (question.isInline) {
+                        continue;
+                    }
+                    
+                    if (shouldShowQuestion(question)) {
+                        wizardData.currentStep = i;
+                        renderWizardStep();
+                        saveWizardState(); // Auto-save after going back
+                        return;
+                    }
                 }
             }
         }
 
+        /**
+         * Skip the current question
+         * Sets answer to empty array for multiselect, null for single-select
+         */
         function skipStep() {
             const question = wizardData.questions[wizardData.currentStep];
-            wizardData.answers[question.id] = [];
-            nextStep();
+            wizardData.answers[question.id] = question.multiselect ? [] : null;
+            nextStep(); // nextStep will auto-save
         }
 
-        // CONCERN #5: Refactor helper functions for recommendation logic
-        // Determine primary DB choice based on core logic paths
+        /**
+         * Determine primary database recommendation based on answers
+         * Core recommendation engine logic with multiple decision paths
+         * @param {Object} answers - Object mapping question IDs to answer values
+         * @returns {Object} Object with 'db' (database name) and 'reason' (decision path taken)
+         */
         function determinePrimaryDB(answers) {
-            const useCase = answers[0];
-            const workload = answers[1];
-            const dataStructure = answers[13];
-            const graphDepth = answers[14];
-            const teamSkill = answers[6];
-            const migration = answers[7];
-            const migrationSource = answers[8];
-            const acidNeeds = answers[9];
-            const normalization = answers[10];
-            const volumeNuance = answers[12];
-            const scale = answers[17];
-            const analyticalNuance = answers[3];
+            // Validate required answers
+            if (!answers[Q.USE_CASE] || !answers[Q.WORKLOAD]) {
+                return { db: "MongoDB Atlas", reason: "default" };
+            }
             
-            // Use case shortcuts
-            if (useCase === 'logs') return { db: "Elasticsearch / Solr or MongoDB Atlas Search", reason: "log-analytics" };
-            if (useCase === 'iot') return { db: "MongoDB Time Series / InfluxDB", reason: "iot-timeseries" };
+            const useCase = answers[Q.USE_CASE];
+            const workload = answers[Q.WORKLOAD];
+            const dataStructure = answers[Q.DATA_STRUCTURE];
+            const graphDepth = answers[Q.GRAPH_DEPTH];
+            const teamSkill = answers[Q.TEAM_SKILL];
+            const migrationStatus = answers[Q.MIGRATION_STATUS];
+            const migrationSource = answers[Q.MIGRATION_SOURCE];
+            const migration = (migrationStatus === 'yes' && migrationSource) ? migrationSource : migrationStatus;
+            const acidNeeds = answers[Q.ACID_NEEDS];
+            const normalization = answers[Q.NORMALIZATION];
+            
+            // New Q11 Logic: Traffic & Scale merged
+            const trafficAnswer = answers[Q.TRAFFIC_PATTERN];
+            const isLargeScale = trafficAnswer === 'large' || trafficAnswer === 'massive';
+            const isMassive = trafficAnswer === 'massive';
+            
+            const analyticalNuance = answers[Q.ANALYTICAL_NUANCE];
+            
+            // IoT workloads - Consider scale and team preferences
+            if (useCase === 'iot') {
+                if (isMassive) {
+                    // Massive IoT needs specialized time-series databases + operational layer
+                    return { db: "InfluxDB / Time Series Warehouse + MongoDB (Operational)", reason: "iot-massive" };
+                } else if (trafficAnswer === 'very-small' && teamSkill === 'sqlfirst' && acidNeeds === 'heavy' && normalization === 'rigid') {
+                    // Very small IoT with strong SQL/relational requirements
+                    return { db: "TimescaleDB (PostgreSQL)", reason: "iot-small-sql" };
+                } else {
+                    // Small to Large IoT → MongoDB Time Series
+                    return { db: "MongoDB Time Series", reason: "iot-timeseries" };
+                }
+            }
             
             // Analytical path
             if (workload === 'analytical') {
@@ -1611,18 +2319,19 @@ flowchart TB
                     return { db: "Neo4j Graph Data Science / TigerGraph", reason: "analytical-deep-graph" };
                 } else if (dataStructure === 'graph') {
                     return { db: "MongoDB (Aggregation Pipeline)", reason: "analytical-shallow-graph" };
-                } else if (analyticalNuance === 'warehouse' || scale === 'massive') {
+                } else if (analyticalNuance === 'warehouse' || isMassive) {
                     return { db: "Data Warehouse", reason: "analytical-warehouse" };
                 } else {
-                    return { db: "MongoDB Atlas (Analytics Nodes) or ClickHouse", reason: "analytical-realtime" };
+                    const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                    if (isOnPrem) {
+                        return { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse", reason: "analytical-realtime-onprem" };
+                    } else {
+                        return { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse", reason: "analytical-realtime-cloud" };
+                    }
                 }
             }
             
-            // Transactional path
-            if (useCase === 'mobile' && answers[23] === 'yes') {
-                return { db: "MongoDB Atlas + Certified Partner (Ditto / PowerSync / ObjectBox)", reason: "mobile-offline" };
-            }
-            
+            // Transactional path - Graph data structures
             if (dataStructure === 'graph') {
                 if (graphDepth === 'deep') {
                     return { db: "MongoDB (Operational) + Neo4j (Graph Database)", reason: "transactional-deep-graph" };
@@ -1633,12 +2342,35 @@ flowchart TB
             
             // SQL-First team path
             if (teamSkill === 'sqlfirst') {
-                if (migration === 'yes' && acidNeeds === 'heavy' && normalization === 'rigid') {
+                const businessLogic = answers[Q.BUSINESS_LOGIC];
+                
+                // Check business logic preference FIRST (before scale considerations)
+                // If they NEED stored procedures, recommend RDBMS even if suboptimal at scale
+                if (businessLogic === 'database') {
+                    if (isLargeScale) {
+                        // Large scale + stored procedures = challenging combination
+                        return { db: "RDBMS (with limitations) or NewSQL", reason: "sql-database-logic-large-scale" };
+                    } else {
+                        // Small/medium scale + stored procedures = perfect for RDBMS
+                        return { db: "RDBMS", reason: "sql-database-logic" };
+                    }
+                }
+                
+                // If app-tier logic OR no preference, consider ACID/scale normally
+                if (migration !== 'no' && acidNeeds === 'heavy' && normalization === 'rigid') {
+                    // migration is now the source DB directly: 'oracle', 'sqlserver', 'postgres', 'mysql', 'db2', 'other'
                     const dbMap = { oracle: 'Oracle', sqlserver: 'SQL Server', postgres: 'PostgreSQL', mysql: 'MySQL', db2: 'IBM Db2', other: 'RDBMS' };
-                    const source = dbMap[migrationSource] || 'RDBMS';
+                    const source = dbMap[migration] || 'RDBMS';
                     return { db: "MongoDB (with migration support)", reason: "sql-modernization", source: source };
                 } else if (acidNeeds === 'heavy' && normalization === 'rigid') {
-                    return { db: volumeNuance === 'high' ? "RDBMS" : "RDBMS", reason: "sql-heavy-acid" };
+                    // CRITICAL: Consider scale for RDBMS recommendation
+                    // Large/Massive scale cannot survive on traditional RDBMS
+                    if (isLargeScale) {
+                        return { db: "MongoDB (with SQL drivers) or NewSQL", reason: "sql-heavy-acid-large-scale" };
+                    } else {
+                        // Very-small/Small can use traditional RDBMS
+                        return { db: "RDBMS", reason: "sql-heavy-acid" };
+                    }
                 } else {
                     return { db: "MongoDB (with SQL drivers and Relational Migrator)", reason: "sql-moderate" };
                 }
@@ -1651,12 +2383,26 @@ flowchart TB
                 return { db: "MongoDB (with Schema Validation)", reason: "codefirst-rigid" };
             }
             
-            return { db: "MongoDB", reason: "default" };
+            // Default fallback with deployment awareness
+            const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+            return { db: isOnPrem ? "MongoDB" : "MongoDB Atlas", reason: "default" };
         }
 
         // Recommendation engine (CONCERN #5 & #6: Error handling + Refactored logic)
+        /**
+         * Generate and display the final database recommendation
+         * Analyzes all answers to suggest optimal database architecture
+         */
         function showRecommendation() {
             try {
+                // Clear saved state since wizard is complete
+                clearWizardState();
+                // Force progress bar to 100% on completion
+                const progressFill = document.getElementById('progress-fill');
+                const progressText = document.getElementById('progress-text');
+                if (progressFill) progressFill.style.width = '100%';
+                if (progressText) progressText.textContent = '100%';
+
                 const answers = wizardData.answers;
                 
                 // Default recommendation structure
@@ -1664,8 +2410,8 @@ flowchart TB
                 let architecture = "Replica Set";
                 let deployment = "Standard Cloud Cluster";
                 let features = [];
-                let reasoning = "";
-                let useCase = answers[0];
+                let reasoningPoints = []; // Changed: Use array for better formatting
+                let useCase = answers[Q.USE_CASE];
                 
                 // Get primary DB choice using helper function
                 const primaryDB = determinePrimaryDB(answers);
@@ -1675,184 +2421,281 @@ flowchart TB
                 // Handle special reasons
                 if (reason === 'log-analytics') {
                     architecture = "Search / Log Analytics Cluster";
-                    reasoning = "For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads (< 3TB size or 500GB active index size).";
+                    reasoningPoints.push("For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads on top of search (< 3TB size or 500GB active index size).");
                     features.push("Time Series", "Search Indexing");
                 } else if (reason === 'iot-timeseries') {
                     architecture = "Time Series Optimized Cluster";
-                    reasoning = "IoT workloads require high write throughput and efficient storage of time-stamped data.";
-                    features.push("Time Series Collections", "Data Tiering (Hot/Cold)");
+                    reasoningPoints.push("IoT workloads require high write throughput and efficient storage of time-stamped data. MongoDB Time Series Collections use an intelligent **bucket pattern** that groups measurements within time windows, enabling extremely efficient data compression (often 10x+ storage reduction). This makes MongoDB ideal for IoT sensor data, metrics, and event streams at massive scale.");
+                    features.push("Time Series Collections", "Data Tiering (Hot/Cold)", "Columnar Compression");
+                } else if (reason === 'iot-massive') {
+                    architecture = "Hybrid: Time Series Warehouse + Operational Layer";
+                    reasoningPoints.push("Petabyte-scale IoT requires specialized time-series databases (InfluxDB, TimescaleDB) or Data Warehouses optimized for time-series analytics, combined with MongoDB for operational queries, device management, and real-time processing.");
+                    features.push("Time Series Warehouse", "InfluxDB / TimescaleDB", "MongoDB Operational Layer", "Data Federation");
+                } else if (reason === 'iot-small-sql') {
+                    architecture = "TimescaleDB (PostgreSQL Extension)";
+                    reasoningPoints.push("For small-scale IoT with strong SQL/relational requirements, TimescaleDB provides time-series optimizations on top of PostgreSQL, giving you SQL familiarity with time-series performance. (Note: Extensions like TimescaleDB are not maintained by the core PostgreSQL team and may have different support lifecycles).");
+                    features.push("TimescaleDB", "PostgreSQL Compatibility", "Continuous Aggregates");
+                } else if (reason === 'analytical-deep-graph') {
+                    architecture = "Graph Analytics Engine";
+                    reasoningPoints.push("Deep graph analytics (centrality, community detection, pathfinding >5 hops) require specialized graph algorithms and engines like Neo4j GDS.");
+                    features.push("Graph Algorithms", "Network Analysis");
+                } else if (reason === 'analytical-shallow-graph') {
+                    architecture = "Operational Analytics with $graphLookup";
+                    reasoningPoints.push("For shallower graph analytics (hierarchies, simple connections), MongoDB's aggregation framework and $graphLookup provide efficient analysis without a separate graph engine.");
+                    features.push("$graphLookup", "Recursive Search");
+                } else if (reason === 'analytical-warehouse') {
+                    architecture = "Columnar Storage MPP";
+                    reasoningPoints.push("Massive joins, full table scans, >500TB working datasets, or petabyte-scale analytics require a dedicated Data Warehouse.");
+                } else if (reason === 'analytical-realtime-cloud') {
+                    architecture = "Operational Analytics";
+                    reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Atlas Analytics Nodes or purpose built datawarehouses work well as performance requirements mount.");
+                } else if (reason === 'analytical-realtime-onprem') {
+                    architecture = "Operational Analytics";
+                    reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Read-Only Nodes (self-managed) or on-premise data warehouses work well as performance requirements mount.");
+                } else if (reason === 'transactional-deep-graph') {
+                    architecture = "Hybrid: Document + Graph Model";
+                    reasoningPoints.push("Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while Neo4j excels at complex graph queries.");
+                } else if (reason === 'transactional-shallow-graph') {
+                    reasoningPoints.push("Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.");
+                } else if (reason === 'sql-modernization') {
+                    architecture = "Replica Set (3-Node)";
+                    reasoningPoints.push(`Modernization Path: While your workload has heavy ACID requirements and rigid schemas, you've indicated a desire to modernize from ${primaryDB.source}. MongoDB with Document ACID transactions, Schema Validation, and tools like Relational Migrator can help transition away from traditional RDBMS.`);
+                } else if (reason === 'sql-heavy-acid') {
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    if (traffic === 'large' || traffic === 'massive') {
+                        architecture = "Sharded Relational / NewSQL";
+                        reasoningPoints.push("High-volume, strictly normalized, heavy ACID workloads need scalable SQL (NewSQL) or sharded RDBMS.");
+                    } else {
+                        architecture = "Standard RDBMS";
+                        reasoningPoints.push("Traditional RDBMS is perfect for moderate scale, structured data, and SQL-first teams.");
+                    }
+                } else if (reason === 'sql-heavy-acid-large-scale') {
+                    architecture = "Sharded Relational / NewSQL or MongoDB (with SQL drivers)";
+                    reasoningPoints.push("Large-scale, strictly normalized, heavy ACID workloads cannot survive on traditional RDBMS. Consider NewSQL (e.g., CockroachDB, TiDB) for distributed SQL, or MongoDB with SQL drivers and document design patterns for scalability.");
+                } else if (reason === 'sql-database-logic') {
+                    architecture = "Traditional RDBMS with Stored Procedures";
+                    reasoningPoints.push("For workloads requiring business logic in the database (stored procedures, triggers, functions),RDBMS do provide mature, battle-tested procedural languages (PL/pgSQL, T-SQL) with rich ecosystems. MongoDB supports server-side JavaScript but is application-logic-first by desig which is more extensible.");
+                } else if (reason === 'sql-database-logic-large-scale') {
+                    architecture = "RDBMS(with scaling caveats) or NewSQL or MongoDB (with Rearchitecturing)";
+                    reasoningPoints.push("⚠️ CHALLENGING COMBINATION: You need stored procedures at large scale. Traditional RDBMS struggle with horizontal scaling beyond sharding limits. Consider: (1) Re-architecting to move business logic to application tier with MongoDB.  (2) NewSQL databases like CockroachDB/Spanner for handling scale (limited stored procedure support), or (3) Shard traditional rdbms (ex : PostgreSQL with Citus extension for distributed queries - Note: 3rd party extensions are not maintained by core PG team)");
+                } else if (reason === 'sql-moderate') {
+                    reasoningPoints.push("Even with SQL skills, if the data model can be optimized or scale is high, MongoDB is a strong candidate using tools like SQL drivers and Relational Migrator.");
+                } else if (reason === 'codefirst-document') {
+                    reasoningPoints.push("Flexible JSON schema + Code-First team is the ideal fit for MongoDB.");
+                } else if (reason === 'codefirst-rigid') {
+                    reasoningPoints.push("You can enforce strict schema validation in MongoDB while enjoying the developer experience of a document model.");
                 }
 
             // --- ARCHITECTURE REFINEMENTS ---
             
+            // Determine scale and traffic characteristics from new Q11
+            const trafficValue = answers[Q.TRAFFIC_PATTERN];
+            const isMassive = trafficValue === 'massive';
+            const isLarge = trafficValue === 'large' || isMassive;
+            const isSpiky = isLarge; // User rule: Large/Massive assumes spiky
+            const isVerySmall = trafficValue === 'very-small';
+
             // PETABYTE TRANSACTIONAL - Multi-tier Architecture
-            if (dbChoice.includes("MongoDB") && answers[1] === 'transactional' && answers[16] === 'massive') {
-                if (answers[20] === 'cloud') {
+            if (dbChoice.includes("MongoDB") && answers[Q.WORKLOAD] === 'transactional' && isMassive) {
+                if (answers[Q.DEPLOYMENT] !== 'onprem') {
                     dbChoice = "MongoDB (Hot Operational) + Online Archive (Cold) + Data Warehouse (Reporting)";
                     architecture = "Multi-tier: Hot Cluster + Cloud Archive + Analytics Layer";
-                    reasoning += " Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data (recent transactions), Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting across the full dataset.";
+                    reasoningPoints = ["Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data (recent transactions), Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting across the full dataset."]; // Reset reasoning
                     features.push("Online Archive", "Atlas Data Federation");
                 } else {
                     dbChoice = "MongoDB (Hot Operational) + Object Storage (Cold) + Data Warehouse (Reporting)";
                     architecture = "Multi-tier: Hot Cluster + S3-Compatible Storage + Analytics Layer";
-                    reasoning += " Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset.";
+                    reasoningPoints = ["Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset."]; // Reset reasoning
                 }
             }
             
             // RDBMS + PETABYTE SCALE - Present Two Options
-            if (dbChoice === "RDBMS" && answers[16] === 'massive') {
-                if (answers[20] === 'cloud') {
+            if (dbChoice === "RDBMS" && isMassive) {
+                if (answers[Q.DEPLOYMENT] !== 'onprem') {
                     dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Online Archive (Cold) + Warehouse (Reporting)";
                     architecture = "Multi-tier Architecture with Two Paths";
-                    reasoning = "Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (cloud-based) assisted by MongoDB Modernization Programme, leveraging Online Archive for cold data and Warehouse for complex analytics. Consider migration effort, team skills, and licensing costs.";
+                    reasoningPoints = ["Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (cloud-based) assisted by MongoDB Modernization Programme, leveraging Online Archive for cold data and Warehouse for complex analytics. Consider migration effort, team skills, and licensing costs."]; // Reset reasoning
                     features.push("Relational Migrator (Option 2)", "App Modernization Services (Option 2)", "Online Archive (Option 2)");
                 } else {
                     dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Object Storage (Cold) + Warehouse (Reporting)";
                     architecture = "Multi-tier Architecture with Two Paths";
-                    reasoning = "Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (on-premise) assisted by MongoDB Modernization Programme, with S3-compatible storage for cold data and Warehouse for analytics. Consider migration effort, infrastructure, and team skills.";
+                    reasoningPoints = ["Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (on-premise) assisted by MongoDB Modernization Programme, with S3-compatible storage for cold data and Warehouse for analytics. Consider migration effort, infrastructure, and team skills."]; // Reset reasoning
                     features.push("Relational Migrator (Option 2)", "App Modernization Services (Option 2)");
                 }
             }
             // Regular MongoDB Architecture
             else if (dbChoice.includes("MongoDB")) {
-                // Scale
-                if (answers[16] === 'massive') {
+                
+                if (isMassive) {
                     architecture = "Sharded Cluster (Zone Sharding)";
-                } else if (answers[16] === 'large') {
+                } else if (isLarge) {
                     architecture = "Sharded Cluster";
-                    if (answers[17] === 'distributed') architecture += " (Hashed Sharding)";
-                    else if (answers[17] === 'location') architecture += " (Zone Sharding)";
-                    else if (answers[17] === 'range') architecture += " (Ranged Sharding)";
+                    // Only add sharding strategy suffix if user specified it
+                    if (answers[Q.DISTRIBUTION]) {
+                        if (answers[Q.DISTRIBUTION] === 'distributed') architecture += " (Hashed Sharding)";
+                        else if (answers[Q.DISTRIBUTION] === 'location') architecture += " (Zone Sharding)";
+                        else if (answers[Q.DISTRIBUTION] === 'range') architecture += " (Ranged Sharding)";
+                    }
                 } else {
                     architecture = "Replica Set (3-Node)";
                 }
 
                 // Multi-Tenancy
-                if (answers[3] === 'saas') {
+                if (answers[Q.BUSINESS_MODEL] === 'saas') {
                     let suffix = "";
                     if (dbChoice.includes("Neo4j")) {
                          suffix = " (applied to MongoDB operational layer)";
-                         reasoning += " Note: Multi-tenancy isolation strategies (Logical/Physical) are applied to the MongoDB operational layer. Neo4j can be deployed as a shared service or per-tenant instances depending on strictness.";
+                         reasoningPoints.push("Multi-tenancy isolation strategies (Logical/Physical) are applied to the MongoDB operational layer. Neo4j can be deployed as a shared service or per-tenant instances depending on strictness.");
                     }
+
+                    // Default to logical if not specified (toggle off)
+                    const isolation = answers[Q.MULTI_TENANCY] || 'logical';
 
                     // WAREHOUSE MULTI-TENANCY
                     if (dbChoice.includes("Data Warehouse")) {
-                        if (answers[4] === 'physical') {
+                        if (isolation === 'physical') {
                             architecture += " with Dedicated Compute/Accounts (High Cost)";
-                            reasoning += " Note: Physical isolation in Data Warehouses typically requires dedicated compute clusters or separate accounts, which significantly increases cost.";
-                        } else if (answers[4] === 'logical') {
-                            architecture += " with Row-Level Security (RLS)";
-                            reasoning += " Note: Logical isolation in Data Warehouses is best achieved using Row-Level Security (RLS) policies.";
-                        } else if (answers[4] === 'silo') {
-                            architecture += " with Separate Schemas/Databases";
+                            reasoningPoints.push("Physical isolation in Data Warehouses typically requires dedicated compute clusters or separate accounts, which significantly increases cost.");
+                        } else if (isolation === 'logical') {
+                            architecture += " (Multi-Tenant / Logical Isolation)";
                         }
-                    }
-                    // STANDARD / MONGODB MULTI-TENANCY
+                    } 
+                    // MONGODB MULTI-TENANCY
                     else {
-                        if (answers[4] === 'physical') {
-                            architecture += " with Dedicated Tenant Nodes" + suffix;
-                        } else if (answers[4] === 'logical') {
-                            architecture += " with Logical Isolation (tenant_id)" + suffix;
-                        } else if (answers[4] === 'silo') {
+                        if (isolation === 'logical') {
+                            architecture += " (Multi-Tenant / Logical Isolation)" + suffix;
+                        } else if (isolation === 'physical') {
+                            architecture += " (Multi-Tenant / Dedicated Nodes)" + suffix;
+                        } else if (isolation === 'silo') {
                             architecture += " with Silo Isolation" + suffix;
                         }
                     }
-                    // if 'na', do nothing (standard architecture)
                 }
 
-                // Latency
-                if (answers[15] === 'submillisecond') {
+                // Latency + Access Pattern
+                const accessPattern = answers[Q.ACCESS_PATTERN];
+                const latency = answers[Q.LATENCY];
+                const isReadHeavy = accessPattern === 'simple'; // Simple ID lookups are typically read-heavy
+                
+                if (latency === 'submillisecond' && isReadHeavy) {
                     features.push("Redis / Cache Layer");
-                    reasoning += " For <1ms latency requirements, add a caching layer like Redis.";
+                    reasoningPoints.push("For <1ms latency with read-heavy workloads, add a caching layer like Redis for hot data.");
+                } else if (isReadHeavy && dbChoice.includes("MongoDB")) {
+                    features.push("Read Replicas");
+                    reasoningPoints.push("For read-heavy workloads with simple lookups, use read replicas to distribute load and improve query performance.");
                 }
 
                 // Traffic Pattern (Spiky)
-                if (answers[23] === 'spiky' && dbChoice.includes("MongoDB")) {
-                    features.push("Cluster Auto-Scaling");
-                    reasoning += " For spiky or unpredictable traffic, enable Cluster Auto-Scaling to handle bursts without over-provisioning (preferred over Serverless for production stability).";
+                if (isSpiky && dbChoice.includes("MongoDB")) {
+                    const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                    if (isOnPrem) {
+                        features.push("Automated Scaling (Ops Manager API / K8s Operator)");
+                        reasoningPoints.push("For spiky traffic on-premise, use Ops Manager API or Kubernetes Operator for automated scaling, or plan capacity for peak loads.");
+                    } else {
+                        features.push("Cluster Auto-Scaling");
+                        reasoningPoints.push("For spiky or unpredictable traffic, enable Cluster Auto-Scaling to handle bursts without over-provisioning (preferred over Serverless for production stability).");
+                    }
                 }
             }
 
             // --- APP MODERNIZATION VALUE PROPOSITION ---
-            if (answers[6] === 'yes' && dbChoice.includes("MongoDB")) {
-                const sourceDB = answers[7] || 'legacy system';
-                const dbName = sourceDB === 'oracle' ? 'Oracle' :
-                              sourceDB === 'sqlserver' ? 'SQL Server' :
-                              sourceDB === 'postgres' ? 'PostgreSQL' :
-                              sourceDB === 'mysql' ? 'MySQL' :
-                              sourceDB === 'db2' ? 'IBM Db2' :
-                              'RDBMS';
+            if (answers[Q.MIGRATION_STATUS] === 'yes' && answers[Q.MIGRATION_SOURCE] && dbChoice.includes("MongoDB")) {
+                const dbMap = { oracle: 'Oracle', sqlserver: 'SQL Server', postgres: 'PostgreSQL', mysql: 'MySQL', db2: 'IBM Db2', other: 'RDBMS' };
+                const dbName = dbMap[answers[Q.MIGRATION_SOURCE]] || 'RDBMS';
                 
-                reasoning += ` Coupled with MongoDB'sApp Modernization Services, Migrating from ${dbName} to MongoDB eliminates ORM complexity, accelerates development with flexible schemas, and reduces licensing costs. MongoDB's Relational Migrator automates schema conversion and data migration.`;
+                reasoningPoints.push(`Migrating from ${dbName} to MongoDB (with MongoDB's App Modernization Services) eliminates ORM complexity, accelerates development with flexible schemas, and reduces licensing costs. MongoDB's Relational Migrator automates schema conversion and data migration.`);
                 features.push("Relational Migrator", "App Modernization Services");
             }
 
-            // --- DEPLOYMENT ---
-            if (answers[20] === 'onprem') {
-                deployment = "Self-Managed / On-Premise";
+            // --- DEPLOYMENT --- CRITICAL FIX: Q21 is deployment, Q22 is security!
+            const securityLevel = answers[Q.SECURITY] || 'standard'; // Default to standard if toggle OFF
+            if (answers[Q.DEPLOYMENT] === 'onprem') {
+                deployment = securityLevel === 'strict' ? "Self-Managed / On-Premise (Strict Compliance)" : "Self-Managed / On-Premise";
             } else {
                 if (dbChoice.includes("MongoDB")) {
-                    deployment = "Fully Managed Cloud (Atlas)";
+                    deployment = securityLevel === 'strict' ? "Fully Managed Cloud (Atlas - Strict Compliance)" : "Fully Managed Cloud (Atlas)";
                 } else {
                     deployment = "Fully Managed Cloud (as applicable)";
                 }
             }
 
-            // --- ADVANCED FEATURES ---
-            const advFeatures = answers[18] || [];
+            // --- ADVANCED FEATURES --- CRITICAL FIX: Q18 is advanced features, not Q19!
+            const advFeatures = answers[Q.ADVANCED_FEATURES] || [];
             
             // Search
             if (advFeatures.includes('search')) {
                 // ANALYTICAL + SEARCH - Hybrid based on scale
-                if (answers[1] === 'analytical') {
-                    if (answers[16] === 'massive' || answers[2] === 'warehouse') {
+                if (answers[Q.WORKLOAD] === 'analytical') {
+                    if (answers[Q.TRAFFIC_PATTERN] === 'massive' || answers[Q.ANALYTICAL_NUANCE] === 'warehouse') {
                         // Large/Petabyte scale: Search Engine + Warehouse
                         if (dbChoice.includes("Data Warehouse")) {
                             dbChoice = "Elasticsearch/Solr (Search Engine) + Data Warehouse (Analytics)";
                             architecture = "Hybrid: Search-First + Columnar Analytics";
-                            reasoning = "For petabyte-scale analytical search (logs, observability), Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics on the same dataset via federation or ETL.";
+                            reasoningPoints = ["For petabyte-scale analytical search (logs, observability), Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics on the same dataset via federation or ETL."]; // Reset
                         }
                     } else {
                         // Small/Medium scale: MongoDB + Search
                         if (dbChoice.includes("MongoDB") || dbChoice.includes("Data Warehouse")) {
-                            dbChoice = "MongoDB (Operational Analytics) + Atlas Search";
+                            const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                            const searchFeature = isOnPrem ? "MongoDB Search (Lucene-based)" : "Atlas Search (Lucene-based)";
+                            dbChoice = isOnPrem ? "MongoDB (Operational Analytics) + MongoDB Search" : "MongoDB (Operational Analytics) + Atlas Search";
                             architecture = "Real-Time Analytics with Search";
-                            reasoning = "For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with Atlas Search provide unified operational analytics and full-text search.";
-                            features.push("Atlas Search (Lucene-based)", "Analytics Nodes");
+                            reasoningPoints = ["For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with " + (isOnPrem ? "MongoDB Search" : "Atlas Search") + " provide unified operational analytics and full-text search."]; // Reset
+                            features.push(searchFeature, "Analytics Nodes");
                         }
                     }
                 }
-                // TRANSACTIONAL + SEARCH
-                else if (answers[19] === 'petabyte') {
+                // TRANSACTIONAL + SEARCH - CRITICAL FIX: Q19 is search scale, not Q20!
+                else if (answers[Q.SEARCH_SCALE] === 'petabyte') {
                     if (dbChoice.includes("MongoDB")) {
                         dbChoice = "MongoDB (Operational) + Elasticsearch/Solr (Search Engine)";
-                        reasoning += " For petabyte-scale search workloads, a dedicated search engine alongside MongoDB provides optimal performance.";
+                        reasoningPoints.push("For petabyte-scale search workloads, a dedicated search engine alongside MongoDB provides optimal performance.");
                     }
                 } else if (dbChoice.includes("MongoDB")) {
-                    features.push("Atlas Search (Lucene-based)");
+                    const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                    features.push(isOnPrem ? "MongoDB Search (Lucene-based)" : "Atlas Search (Lucene-based)");
                 }
             }
 
             // AI / Vector
             if (advFeatures.includes('ai')) {
-                if (dbChoice.includes("MongoDB")) {
-                    features.push("Atlas Vector Search");
+                const vectorScale = answers[Q.VECTOR_SCALE]; // CRITICAL FIX: Q20 is vector scale, not Q21!
+                const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                if (vectorScale === 'large') {
+                    // >100M vectors - offer specialized solutions
+                    if (dbChoice.includes("MongoDB")) {
+                        dbChoice = "MongoDB + Pinecone / Weaviate (Vector DB)";
+                        features.push("Pinecone / Weaviate (Primary Vector Store)", "MongoDB (Metadata & Context)");
+                    } else {
+                        features.push("Pinecone / Weaviate / Milvus (Vector Search)");
+                    }
                 } else {
-                    features.push("Pinecone / Weaviate");
+                    // <100M vectors - MongoDB Vector Search is sufficient
+                    if (dbChoice.includes("MongoDB")) {
+                        const vectorFeature = isOnPrem ? "MongoDB Vector Search" : "Atlas Vector Search";
+                        features.push(vectorFeature);
+                    } else {
+                        features.push("Pinecone / Weaviate");
+                    }
                 }
             }
 
             // Streams
             if (advFeatures.includes('streams')) {
+                const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
                 if (dbChoice.includes("MongoDB")) {
-                    features.push("Change Streams / Stream Processing");
+                    if (isOnPrem) {
+                        features.push("Change Streams", "Apache Flink / Kafka Streams");
+                    } else {
+                        features.push("Change Streams", "Atlas Stream Processing");
+                    }
                 } else {
-                    features.push("Kafka Flink");
+                    features.push("CDC (Change Data Capture)", "Apache Kafka");
                 }
             }
 
-            // Compliance
-            if (answers[21] === 'strict') {
+            // Compliance - CRITICAL FIX: Q22 is security, not Q23!
+            if (securityLevel === 'strict') {
                 if (dbChoice.includes("MongoDB")) {
                     features.push("Queryable Encryption", "CSFLE", "Storage/Network Encryption");
                 } else if (dbChoice.includes("RDBMS") || dbChoice.includes("PostgreSQL") || dbChoice.includes("MySQL")) {
@@ -1865,6 +2708,23 @@ flowchart TB
                     features.push("App-Level Field Encryption");
                 }
             }
+
+            // Mobile Offline Sync
+            if (useCase === 'mobile' && answers[Q.MOBILE_OFFLINE] === 'yes') {
+                const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                if (dbChoice.includes("MongoDB")) {
+                    if (isOnPrem) {
+                        features.push("Offline Sync (Ditto / PowerSync / ObjectBox)", "Self-Managed Sync Server", "Local Database");
+                        reasoningPoints.push("For offline-first mobile apps with self-managed backend, leverage certified MongoDB partners (Ditto, PowerSync, ObjectBox) for seamless device-to-server sync and conflict resolution.");
+                    } else {
+                        features.push("Offline Sync (Ditto / PowerSync / ObjectBox)", "Atlas Device Sync", "Local Database");
+                        reasoningPoints.push("For offline-first mobile apps with cloud backend, leverage certified MongoDB partners (Ditto, PowerSync, ObjectBox) or Atlas Device Sync for seamless device-to-server sync and conflict resolution.");
+                    }
+                }
+            }
+
+            // Join reasoning points into cohesive text
+            const reasoning = reasoningPoints.join(' ');
 
             // Render recommendation
             const wizardContent = document.getElementById('wizard-content');
@@ -1925,12 +2785,21 @@ flowchart TB
             }
         }
 
+        /**
+         * Restart the wizard from the beginning
+         * Clears all answers and saved state
+         */
         function restartWizard() {
+            clearWizardState(); // Clear localStorage
             wizardData.answers = {};
             wizardData.currentStep = 0;
             renderWizardStep();
         }
 
+        /**
+         * View the expert path (flowchart diagram)
+         * Switches to expert mode and sets up pan-zoom
+         */
         function viewExpertPath() {
             switchMode('expert');
             document.getElementById('back-to-guided').classList.add('visible');
@@ -1940,9 +2809,15 @@ flowchart TB
             switchMode('guided');
         });
 
-        // Initialize wizard on load
+        // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
-            renderWizardStep();
+            const savedState = loadWizardState();
+            
+            if (savedState && Object.keys(savedState.answers).length > 0) {
+                showResumePrompt(savedState);
+            } else {
+                renderWizardStep();
+            }
         });
 
         // --- CONTENT DATABASE ---
@@ -2124,7 +2999,7 @@ flowchart TB
             "CSFLE": {
                 title: "Security and Compliance at everylevel",
                 value: "Encryption-in-Use",
-                detail: "State-of-the-art security, compliance, and encryption, with the ability to query encrypted data.",
+                detail: "State-of-the-art security,compliance(GDPR etc), and encryption, with the ability to query encrypted data.",
                 link: "https://trust.mongodb.com/"
             }
         };
@@ -2132,10 +3007,13 @@ flowchart TB
         // --- INTERACTIVITY LOGIC ---
         var panZoomInstance;
 
-        // 1. Initialize Mermaid
-        mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
+        // 1. Initialize Mermaid with strict security
+        mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });
 
-        // 2. Define the Click Handler
+        /**
+         * Show information drawer for a flowchart node
+         * @param {string} nodeId - ID of the node to display info for
+         */
         window.showInfo = function(nodeId) {
             // Prevent event bubbling so clicking a node doesn't immediately close the drawer via body click
             event.stopPropagation();
@@ -2163,6 +3041,9 @@ flowchart TB
             }
         };
 
+        /**
+         * Close the information drawer
+         */
         window.closeDrawer = function() {
             document.getElementById('side-drawer').classList.remove('open');
         };
