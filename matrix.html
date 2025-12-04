@@ -3085,6 +3085,14 @@ flowchart TB
             switchMode('guided');
         });
 
+        // Suppress harmless runtime errors from third-party libraries
+        window.addEventListener('error', (event) => {
+            if (event.message && event.message.includes('Could not establish connection')) {
+                event.preventDefault();
+                return true;
+            }
+        });
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
             // PRODUCTION ENHANCEMENT: Track session start
