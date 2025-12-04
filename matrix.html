@@ -1203,21 +1203,15 @@ flowchart TB
                 // Always log to console
                 console.log(`[${level}] ${message}`, data);
                 
-                // Send to external logging service in production
+                // Send to external logging service in production (if available)
                 if (window.Sentry) {
                     const sentryLevel = level === 'ERROR' ? 'error' : level === 'WARN' ? 'warning' : 'info';
                     window.Sentry.captureMessage(message, sentryLevel);
                     window.Sentry.setContext('data', data);
                 }
                 
-                // Optional: Send to custom logging endpoint
-                if (typeof fetch !== 'undefined' && window.location.hostname !== 'localhost') {
-                    fetch('/api/logs', {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify(logEntry)
-                    }).catch(() => {}); // Silently fail if logging endpoint unavailable
-                }
+                // Note: Custom API endpoint logging disabled for static hosting
+                // Can be enabled if backend API becomes available
             },
 
             debug: (message, data) => Logger.log(Logger.levels.DEBUG, message, data),
