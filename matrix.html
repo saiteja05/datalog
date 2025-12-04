@@ -1226,9 +1226,16 @@ flowchart TB
          */
         const Analytics = {
             trackEvent: (eventName, eventData = {}) => {
-                // Google Analytics 4
-                if (window.gtag) {
-                    gtag('event', eventName, eventData);
+                // Google Analytics 4 - with better error handling
+                if (typeof gtag !== 'undefined') {
+                    try {
+                        gtag('event', eventName, eventData);
+                        console.log(`[GA4] Event sent: ${eventName}`, eventData);
+                    } catch (e) {
+                        console.error(`[GA4] Error sending event: ${eventName}`, e);
+                    }
+                } else {
+                    console.warn('[GA4] gtag not loaded yet');
                 }
                 
                 // Segment.com or custom tracking
