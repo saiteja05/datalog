@@ -2388,7 +2388,7 @@ flowchart TB
                     wizardData.answers[questionId] = value;
                 }
                 
-                // PRODUCTION ENHANCEMENT: Track user answer via analytics
+                //Track user answer via analytics
                 Analytics.trackQuestionAnswered(questionId, wizardData.answers[questionId]);
                 Logger.debug(`Question answered`, {questionId, answer: wizardData.answers[questionId]});
                 
@@ -2965,7 +2965,7 @@ flowchart TB
             // Join reasoning points into cohesive text
             const reasoning = reasoningPoints.join(' ');
 
-            // PRODUCTION ENHANCEMENT: Track complete recommendation with all details
+            // Track complete recommendation with all details
             Analytics.trackRecommendationViewed(dbChoice, architecture, deployment, features, reason, useCase);
             Logger.info('Recommendation generated', {
                 db: dbChoice,
@@ -3049,7 +3049,7 @@ flowchart TB
         }
 
         /**
-         * PRODUCTION ENHANCEMENT: Export recommendation in various formats
+         * Export recommendation in various formats
          * @param {string} format - Export format ('json' or 'csv')
          */
         function exportRecommendation(format) {
@@ -3135,7 +3135,7 @@ flowchart TB
                 console.warn('⚠️ [GTM] dataLayer not found - GTM may not be tracking');
             }
             
-            // PRODUCTION ENHANCEMENT: Track session start
+            //  Track session start
             Analytics.trackSessionStart();
             
             const savedState = loadWizardState();
