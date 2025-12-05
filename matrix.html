@@ -3660,6 +3660,16 @@ flowchart TB
             {
                 id: 'analytical-warehouse',
                 conditions: (answers) => {
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
                     return answers[Q.WORKLOAD] === 'analytical' && 
                            (answers[Q.ANALYTICAL_NUANCE] === 'warehouse' || answers[Q.TRAFFIC_PATTERN] === 'massive');
                 },
@@ -3667,15 +3677,37 @@ flowchart TB
             },
             {
                 id: 'analytical-realtime-onprem',
-                conditions: { 
-                    [Q.WORKLOAD]: 'analytical', 
-                    [Q.DEPLOYMENT]: 'onprem'
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return answers[Q.WORKLOAD] === 'analytical' && 
+                           answers[Q.DEPLOYMENT] === 'onprem';
                 },
                 result: { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse" }
             },
             {
                 id: 'analytical-realtime-cloud',
-                conditions: { [Q.WORKLOAD]: 'analytical' },
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return answers[Q.WORKLOAD] === 'analytical';
+                },
                 result: { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse" }
             },
 
@@ -3732,7 +3764,31 @@ flowchart TB
                     [Q.TEAM_SKILL]: 'sqlfirst',
                     [Q.BUSINESS_LOGIC]: 'database'
                 },
-                result: { db: "RDBMS" }
+                result: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES] || [];
+                    const hasVector = Array.isArray(features) && features.includes('ai');
+                    const hasSearch = Array.isArray(features) && features.includes('search');
+                    
+                    // Build recommendation with extensions
+                    if (hasVector && hasSearch) {
+                        return { 
+                            db: "PostgreSQL (with pgvector + full-text search + stored procedures)",
+                            note: "RDBMS with database logic, vector, and search capabilities"
+                        };
+                    } else if (hasVector) {
+                        return { 
+                            db: "PostgreSQL (with pgvector + stored procedures)",
+                            note: "RDBMS with database logic and vector search"
+                        };
+                    } else if (hasSearch) {
+                        return { 
+                            db: "PostgreSQL (with full-text search + stored procedures)",
+                            note: "RDBMS with database logic and full-text search"
+                        };
+                    }
+                    
+                    return { db: "RDBMS (PostgreSQL / Oracle / SQL Server)" };
+                }
             },
             {
                 id: 'sql-modernization',
@@ -3777,7 +3833,31 @@ flowchart TB
                     [Q.ACID_NEEDS]: 'heavy',
                     [Q.NORMALIZATION]: 'rigid'
                 },
-                result: { db: "RDBMS" }
+                result: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES] || [];
+                    const hasVector = Array.isArray(features) && features.includes('ai');
+                    const hasSearch = Array.isArray(features) && features.includes('search');
+                    
+                    // Build recommendation with extensions
+                    if (hasVector && hasSearch) {
+                        return { 
+                            db: "PostgreSQL (with pgvector + full-text search extensions)",
+                            note: "RDBMS with vector and search capabilities via extensions"
+                        };
+                    } else if (hasVector) {
+                        return { 
+                            db: "PostgreSQL (with pgvector extension)",
+                            note: "RDBMS with vector search capability"
+                        };
+                    } else if (hasSearch) {
+                        return { 
+                            db: "PostgreSQL (with full-text search)",
+                            note: "RDBMS with built-in full-text search"
+                        };
+                    }
+                    
+                    return { db: "RDBMS (PostgreSQL / Oracle / SQL Server)" };
+                }
             },
             {
                 id: 'sql-moderate',
