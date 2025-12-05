@@ -3544,39 +3544,54 @@ flowchart TB
                 id: 'vector-search-massive',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+                    // Massive scale always needs specialized DB, even with SQL constraints.
+                    // We will handle the "Hybrid" recommendation in the result function.
                     return Array.isArray(features) && 
                            features.includes('ai') && 
                            answers[Q.VECTOR_SCALE] === 'billions';
                 },
-                result: { db: "Pinecone / Weaviate + MongoDB (Operational)" }
+                result: (answers) => {
+                    // Check for SQL constraints
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                    if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + Pinecone / Weaviate (Vector Scale)",
+                            note: "Dual-database architecture required for massive vector scale with strict ACID/SQL needs."
+                        };
+                    }
+                    return { db: "Pinecone / Weaviate + MongoDB (Operational)" };
+                }
             },
             {
                 id: 'vector-search-standard',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
+                    const scale = answers[Q.TRAFFIC_PATTERN];
+                    const isSmallScale = scale === 'very-small' || scale === 'small';
+
+                    // If small scale AND SQL constraints, exclude (let SQL rules suggest extensions)
+                    if (isSmallScale) {
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
                     }
-                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+
                     return Array.isArray(features) && features.includes('ai');
                 },
-                result: { db: "MongoDB Atlas (Vector Search)" }
+                result: (answers) => {
+                    // Check for SQL constraints (which implies Large/Massive scale here, otherwise we would have returned false above)
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                    if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + MongoDB Atlas Vector Search",
+                            note: "Hybrid architecture recommended for large-scale vector workloads with strict ACID/SQL needs."
+                        };
+                    }
+                    return { db: "MongoDB Atlas (Vector Search)" };
+                }
             },
 
             // --- Full-Text Search Workloads ---
@@ -3584,60 +3599,82 @@ flowchart TB
                 id: 'fulltext-search-petabyte',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+                    // Petabyte scale always needs specialized DB.
                     return Array.isArray(features) && 
                            features.includes('search') && 
                            answers[Q.SEARCH_SCALE] === 'petabyte';
                 },
-                result: { db: "Elasticsearch / OpenSearch + MongoDB (Operational)" }
+                result: (answers) => {
+                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                    if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + Elasticsearch / OpenSearch",
+                            note: "Dual-database architecture required for petabyte-scale search with strict ACID/SQL needs."
+                        };
+                    }
+                    return { db: "Elasticsearch / OpenSearch + MongoDB (Operational)" };
+                }
             },
             {
                 id: 'fulltext-search-moderate',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
+                    const scale = answers[Q.TRAFFIC_PATTERN];
+                    const isSmallScale = scale === 'very-small' || scale === 'small';
+
+                    // If small scale AND SQL constraints, exclude (let SQL rules suggest extensions)
+                    if (isSmallScale) {
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
                     }
-                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+                    
                     return Array.isArray(features) && features.includes('search');
                 },
-                result: { db: "MongoDB Atlas (Atlas Search)" }
+                result: (answers) => {
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                    if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + MongoDB Atlas Search",
+                            note: "Hybrid architecture recommended for large-scale search with strict ACID/SQL needs."
+                        };
+                    }
+                    return { db: "MongoDB Atlas (Atlas Search)" };
+                }
             },
 
             // --- Analytical Workloads ---
             {
                 id: 'analytical-deep-graph',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
+                    const scale = answers[Q.TRAFFIC_PATTERN];
+                    const isSmallScale = scale === 'very-small' || scale === 'small';
+
+                    // If small scale AND SQL constraints, exclude (let SQL rules handle it)
+                    if (isSmallScale) {
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
                     }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+
                     return answers[Q.WORKLOAD] === 'analytical' && 
                            answers[Q.DATA_STRUCTURE] === 'graph' &&
                            answers[Q.GRAPH_DEPTH] === 'deep';
                 },
-                result: { db: "Neo4j Graph Data Science / TigerGraph" }
+                result: (answers) => {
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                    if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + Neo4j / TigerGraph (Graph Analytics)",
+                            note: "Hybrid architecture recommended for deep graph analytics with strict ACID/SQL needs."
+                        };
+                    }
+                    return { db: "Neo4j Graph Data Science / TigerGraph" };
+                }
             },
             {
                 id: 'analytical-shallow-graph',
@@ -3715,20 +3752,30 @@ flowchart TB
             {
                 id: 'transactional-deep-graph',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
+                    const scale = answers[Q.TRAFFIC_PATTERN];
+                    const isSmallScale = scale === 'very-small' || scale === 'small';
+
+                    // If small scale AND SQL constraints, exclude (let SQL rules handle it)
+                    if (isSmallScale) {
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
+                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
                     }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+
                     return answers[Q.DATA_STRUCTURE] === 'graph' &&
                            answers[Q.GRAPH_DEPTH] === 'deep';
                 },
-                result: { db: "MongoDB (Operational) + Neo4j (Graph Database)" }
+                result: (answers) => {
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                    if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + Neo4j (Graph Database)",
+                            note: "Hybrid architecture recommended for deep graph transactions with strict ACID/SQL needs."
+                        };
+                    }
+                    return { db: "MongoDB (Operational) + Neo4j (Graph Database)" };
+                }
             },
             {
                 id: 'transactional-shallow-graph',
