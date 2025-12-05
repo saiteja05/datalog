@@ -3544,11 +3544,11 @@ flowchart TB
                 id: 'vector-search-massive',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    // Massive scale always needs specialized DB, even with SQL constraints.
+                    // Massive scale (>100M vectors) always needs specialized DB, even with SQL constraints.
                     // We will handle the "Hybrid" recommendation in the result function.
                     return Array.isArray(features) && 
                            features.includes('ai') && 
-                           answers[Q.VECTOR_SCALE] === 'billions';
+                           answers[Q.VECTOR_SCALE] === 'large';
                 },
                 result: (answers) => {
                     // Check for SQL constraints
@@ -3558,7 +3558,7 @@ flowchart TB
                     if (isSQLConstraint) {
                         return { 
                             db: "Hybrid: RDBMS (Transactional) + Pinecone / Weaviate (Vector Scale)",
-                            note: "Dual-database architecture required for massive vector scale with strict ACID/SQL needs."
+                            note: "Dual-database architecture required for massive vector scale (>100M) with strict ACID/SQL needs."
                         };
                     }
                     return { db: "Pinecone / Weaviate + MongoDB (Operational)" };
@@ -3569,6 +3569,12 @@ flowchart TB
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
                     const scale = answers[Q.TRAFFIC_PATTERN];
+                    const vectorScale = answers[Q.VECTOR_SCALE];
+                    
+                    // Only match if vector scale is small (or unspecified)
+                    // If vector scale is large, the massive rule above should have caught it
+                    if (vectorScale === 'large') return false;
+
                     const isSmallScale = scale === 'very-small' || scale === 'small';
 
                     // If small scale AND SQL constraints, exclude (let SQL rules suggest extensions)
@@ -3820,12 +3826,12 @@ flowchart TB
                     if (hasVector && hasSearch) {
                         return { 
                             db: "PostgreSQL (with pgvector + full-text search + stored procedures)",
-                            note: "RDBMS with database logic, vector, and search capabilities"
+                            note: "RDBMS with database logic, vector, and search capabilities. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
                         };
                     } else if (hasVector) {
                         return { 
                             db: "PostgreSQL (with pgvector + stored procedures)",
-                            note: "RDBMS with database logic and vector search"
+                            note: "RDBMS with database logic and vector search. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
                         };
                     } else if (hasSearch) {
                         return { 
@@ -3889,12 +3895,12 @@ flowchart TB
                     if (hasVector && hasSearch) {
                         return { 
                             db: "PostgreSQL (with pgvector + full-text search extensions)",
-                            note: "RDBMS with vector and search capabilities via extensions"
+                            note: "RDBMS with vector and search capabilities via extensions. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
                         };
                     } else if (hasVector) {
                         return { 
                             db: "PostgreSQL (with pgvector extension)",
-                            note: "RDBMS with vector search capability"
+                            note: "RDBMS with vector search capability. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
                         };
                     } else if (hasSearch) {
                         return { 
