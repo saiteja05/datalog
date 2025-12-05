@@ -480,6 +480,16 @@
             visibility: visible;
         }
 
+        /* Allow scrolling for decision logic table */
+        #logic-mode {
+            overflow-y: auto;
+        }
+
+        /* Allow scrolling for rule engine documentation */
+        #rule-engine-mode {
+            overflow-y: auto;
+        }
+
         /* Guided Mode - Wizard */
         #guided-mode {
             display: flex;
@@ -755,6 +765,125 @@
             justify-content: center;
         }
 
+        /* Feedback Section */
+        .feedback-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+
+        .feedback-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1a1a1a;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .feedback-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+
+        .feedback-btn {
+            padding: 12px 32px;
+            border: 2px solid rgba(0,0,0,0.2);
+            background: rgba(0,0,0,0.05);
+            color: #1a1a1a;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-btn:hover {
+            background: rgba(0,0,0,0.1);
+            border-color: rgba(0,0,0,0.3);
+            transform: translateY(-2px);
+        }
+
+        .feedback-btn.helpful:hover {
+            background: rgba(0,237,100,0.15);
+            border-color: #00ED64;
+            color: #00a854;
+        }
+
+        .feedback-btn.not-helpful:hover {
+            background: rgba(255,107,107,0.15);
+            border-color: #ff6b6b;
+            color: #d93a3a;
+        }
+
+        .feedback-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 12px 16px;
+            background: rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.2);
+            border-radius: 12px;
+            color: #1a1a1a;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            resize: vertical;
+            margin-bottom: 12px;
+        }
+
+        .feedback-textarea::placeholder {
+            color: rgba(0,0,0,0.4);
+        }
+
+        .feedback-textarea:focus {
+            outline: none;
+            border-color: #00ED64;
+            background: rgba(0,0,0,0.08);
+        }
+
+        .feedback-submit {
+            padding: 10px 24px;
+            background: linear-gradient(135deg, #00ED64 0%, #4DB33D 100%);
+            border: none;
+            border-radius: 10px;
+            color: #001e2b;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .feedback-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,237,100,0.3);
+        }
+
+        .feedback-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .feedback-success {
+            text-align: center;
+            padding: 24px;
+            color: #00ED64;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .feedback-success::before {
+            content: '✓';
+            display: block;
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
         /* Expert View Enhancements */
 
 
@@ -861,6 +990,14 @@
         <button class="mode-tab" data-mode="expert">
             <span>🗺️</span>
             <span>Expert View</span>
+        </button>
+        <button class="mode-tab" data-mode="logic" id="debug-tab" style="display: none;">
+            <span>📋</span>
+            <span>Decision Logic</span>
+        </button>
+        <button class="mode-tab" data-mode="rule-engine" id="rule-engine-tab" style="display: none;">
+            <span>⚙️</span>
+            <span>Rule Engine</span>
         </button>
     </div>
 
@@ -1171,6 +1308,697 @@ flowchart TB
 
     </div> <!-- /expert-mode -->
 
+    <!-- Decision Logic Mode Container -->
+    <div id="logic-mode" class="mode-container">
+        <div style="max-width: 1400px; margin: 0 auto; padding: 40px 20px;">
+            <div style="text-align: center; margin-bottom: 40px;">
+                <div style="font-size: 3rem; margin-bottom: 16px;">📋</div>
+                <h1 style="font-size: 2.5rem; font-weight: 700; color: #fff; margin-bottom: 16px;">
+                    Decision Logic Table
+                </h1>
+                <p style="font-size: 1.1rem; color: rgba(255,255,255,0.7); max-width: 700px; margin: 0 auto;">
+                    Complete breakdown of all recommendation paths. Use this to understand exactly how the wizard makes its recommendations.
+                </p>
+            </div>
+
+            <div style="background: rgba(255,255,255,0.03); border-radius: 16px; padding: 24px; margin-bottom: 30px;">
+                <h3 style="color: #00ED64; margin-bottom: 12px; font-size: 1.1rem;">How to Read This Table</h3>
+                <ul style="color: rgba(255,255,255,0.8); line-height: 1.8; font-size: 0.95rem;">
+                    <li><strong>Conditions:</strong> Answers that trigger this recommendation path</li>
+                    <li><strong>Database Choice:</strong> The recommended database/architecture</li>
+                    <li><strong>Reason Code:</strong> Internal identifier for this decision path</li>
+                    <li><strong>Key Features:</strong> Recommended features/capabilities for this use case</li>
+                </ul>
+            </div>
+
+            <!-- Decision Table -->
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.02); border-radius: 12px; overflow: hidden;">
+                    <thead>
+                        <tr style="background: rgba(0,237,100,0.1); color: #00ED64;">
+                            <th style="padding: 16px; text-align: left; border-bottom: 2px solid rgba(0,237,100,0.3); font-weight: 600;">Conditions</th>
+                            <th style="padding: 16px; text-align: left; border-bottom: 2px solid rgba(0,237,100,0.3); font-weight: 600;">Database Choice</th>
+                            <th style="padding: 16px; text-align: left; border-bottom: 2px solid rgba(0,237,100,0.3); font-weight: 600;">Reason Code</th>
+                            <th style="padding: 16px; text-align: left; border-bottom: 2px solid rgba(0,237,100,0.3); font-weight: 600;">Key Features</th>
+                        </tr>
+                    </thead>
+                    <tbody style="color: rgba(255,255,255,0.9);">
+                        <!-- CATEGORY: IoT Workloads (3 paths) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                📡 IoT WORKLOADS (3 paths)
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> IoT<br>
+                                <strong>Q11 Traffic:</strong> Massive (Petabytes)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                InfluxDB / TimescaleDB + MongoDB (Operational)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">iot-massive</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Time Series Warehouse, Operational Layer, Data Federation
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> IoT<br>
+                                <strong>Q11 Traffic:</strong> Very Small<br>
+                                <strong>Q5 Team:</strong> SQL-first<br>
+                                <strong>Q9 ACID:</strong> Heavy<br>
+                                <strong>Q10 Normalization:</strong> Rigid
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                TimescaleDB (PostgreSQL)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">iot-small-sql</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                TimescaleDB Extension, PostgreSQL Compatibility, Continuous Aggregates
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> IoT<br>
+                                <strong>Q11 Traffic:</strong> Small to Large<br>
+                                <strong>(Default IoT path)</strong>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB Time Series
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">iot-timeseries</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Time Series Collections, Bucket Pattern, Columnar Compression, Data Tiering
+                            </td>
+                        </tr>
+
+                        <!-- CATEGORY: Analytical Workloads (5 paths) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                📊 ANALYTICAL WORKLOADS (5 paths)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
+                                <strong>Q2 Data Structure:</strong> Graph<br>
+                                <strong>Q3 Graph Depth:</strong> Deep (>5 hops)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Neo4j Graph Data Science / TigerGraph
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-deep-graph</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Graph Algorithms, Centrality Analysis, Community Detection, Path Finding
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
+                                <strong>Q2 Data Structure:</strong> Graph<br>
+                                <strong>Q3 Graph Depth:</strong> Shallow (≤5 hops)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (Aggregation Pipeline)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-shallow-graph</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                $graphLookup, Aggregation Pipeline, Hierarchies
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
+                                <strong>Q12 Analytical Nuance:</strong> Warehouse<br>
+                                <strong>OR Q11 Traffic:</strong> Massive
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Data Warehouse (Snowflake, BigQuery, Redshift)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-warehouse</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Columnar Storage, MPP Queries, Massive Joins, Full Table Scans
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
+                                <strong>Q12 Analytical Nuance:</strong> Real-time<br>
+                                <strong>Q4 Deployment:</strong> On-premise
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (Read-Only Nodes) or Data Warehouse
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-realtime-onprem</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Read-Only Nodes, Analytics Workload Isolation
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
+                                <strong>Q12 Analytical Nuance:</strong> Real-time<br>
+                                <strong>Q4 Deployment:</strong> Cloud
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB Atlas (Analytics Nodes) or Data Warehouse
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-realtime-cloud</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Analytics Nodes, Workload Isolation, Materialized Views
+                            </td>
+                        </tr>
+
+                        <!-- CATEGORY: Transactional Graph Workloads (2 paths) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                🔗 TRANSACTIONAL GRAPH WORKLOADS (2 paths)
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Transactional<br>
+                                <strong>Q2 Data Structure:</strong> Graph<br>
+                                <strong>Q3 Graph Depth:</strong> Deep (>5 hops)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (Operational) + Neo4j (Graph Database)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">transactional-deep-graph</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Hybrid Architecture, MongoDB for Operations, Neo4j for Graph Queries
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q1 Workload:</strong> Transactional<br>
+                                <strong>Q2 Data Structure:</strong> Graph<br>
+                                <strong>Q3 Graph Depth:</strong> Shallow (≤5 hops)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">transactional-shallow-graph</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                $graphLookup, Document References, Aggregation Pipeline
+                            </td>
+                        </tr>
+
+                        <!-- CATEGORY: SQL-First Team Paths (5 paths) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                🗄️ SQL-FIRST TEAM PATHS (5 paths)
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> SQL-first<br>
+                                <strong>Q8 Business Logic:</strong> In Database<br>
+                                <strong>Q11 Traffic:</strong> Large or Massive
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                RDBMS (with limitations) or NewSQL
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-database-logic-large-scale</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Stored Procedures, Triggers, Functions (Consider NewSQL for scale)
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> SQL-first<br>
+                                <strong>Q8 Business Logic:</strong> In Database<br>
+                                <strong>Q11 Traffic:</strong> Very Small to Medium
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                RDBMS (PostgreSQL, MySQL, SQL Server)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-database-logic</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Stored Procedures, Triggers, SQL Functions, Mature Ecosystem
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> SQL-first<br>
+                                <strong>Q6 Migration:</strong> Yes (from RDBMS)<br>
+                                <strong>Q9 ACID:</strong> Heavy<br>
+                                <strong>Q10 Normalization:</strong> Rigid
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (with migration support)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-modernization</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Relational Migrator, Multi-Doc Transactions, SQL Drivers, Schema Design
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> SQL-first<br>
+                                <strong>Q8 Business Logic:</strong> App-tier or No preference<br>
+                                <strong>Q9 ACID:</strong> Heavy<br>
+                                <strong>Q10 Normalization:</strong> Rigid<br>
+                                <strong>Q11 Traffic:</strong> Large or Massive
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (with SQL drivers) or NewSQL
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-heavy-acid-large-scale</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB SQL Interface, Horizontal Scaling, Multi-Doc Transactions
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> SQL-first<br>
+                                <strong>Q8 Business Logic:</strong> App-tier or No preference<br>
+                                <strong>Q9 ACID:</strong> Heavy<br>
+                                <strong>Q10 Normalization:</strong> Rigid<br>
+                                <strong>Q11 Traffic:</strong> Very Small to Medium
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                RDBMS (PostgreSQL, MySQL)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-heavy-acid</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                ACID Transactions, Referential Integrity, SQL Ecosystem
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> SQL-first<br>
+                                <strong>(Moderate requirements - not Heavy ACID + Rigid)</strong>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (with SQL drivers and Relational Migrator)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-moderate</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                SQL Compatibility Layer, Relational Migrator, Flexible Schema
+                            </td>
+                        </tr>
+
+                        <!-- CATEGORY: Code-First Team Paths (2 paths) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                💻 CODE-FIRST TEAM PATHS (2 paths)
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> Code-first<br>
+                                <strong>Q2 Data Structure:</strong> Document
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">codefirst-document</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Flexible Schema, Document Model, Native Drivers, BSON Support
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q5 Team:</strong> Code-first<br>
+                                <strong>Q2 Data Structure:</strong> Rigid/Normalized
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (with Schema Validation)
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">codefirst-rigid</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                JSON Schema Validation, Enforced Structure, Data Governance
+                            </td>
+                        </tr>
+
+                        <!-- CATEGORY: Default Fallback (1 path) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                ⚙️ DEFAULT FALLBACK (1 path)
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px;">
+                                <strong style="color: #00ED64;">No specific conditions matched</strong><br>
+                                <strong>Q4 Deployment:</strong> Cloud = MongoDB Atlas<br>
+                                <strong>Q4 Deployment:</strong> On-premise = MongoDB
+                            </td>
+                            <td style="padding: 16px;">
+                                MongoDB Atlas (Cloud) or MongoDB (On-prem)
+                            </td>
+                            <td style="padding: 16px;">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">default</code>
+                            </td>
+                            <td style="padding: 16px;">
+                                Standard Deployment, Replica Set, Auto-scaling (Atlas)
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- VECTOR SEARCH / AI WORKLOADS -->
+                <h3 style="color: #00ED64; margin-top: 40px; margin-bottom: 15px; padding: 12px; background: rgba(0,237,100,0.05); border-radius: 8px;">
+                    🤖 VECTOR SEARCH / AI WORKLOADS (2 paths)
+                </h3>
+                <table class="decision-table" style="color: rgba(255,255,255,0.9);">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%; color: #00ED64;">Conditions</th>
+                            <th style="width: 25%; color: #00ED64;">Database Choice</th>
+                            <th style="width: 20%; color: #00ED64;">Reason Code</th>
+                            <th style="width: 25%; color: #00ED64;">Key Features</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong style="color: rgba(255,255,255,0.9);">Q18 Advanced Features:</strong> <span style="color: rgba(255,255,255,0.8);">AI/Vector Search selected</span><br>
+                                <strong style="color: rgba(255,255,255,0.9);">Q20 Vector Scale:</strong> <span style="color: rgba(255,255,255,0.8);">Billions+ vectors</span>
+                            </td>
+                            <td><strong style="color: rgba(255,255,255,0.95);">Pinecone / Weaviate + MongoDB (Operational)</strong></td>
+                            <td><code style="background: rgba(0,237,100,0.2); padding: 4px 8px; border-radius: 4px; color: #00ED64;">vector-search-massive</code></td>
+                            <td style="color: rgba(255,255,255,0.8);">
+                                • Specialized vector DB<br>
+                                • Billions of embeddings<br>
+                                • MongoDB for metadata<br>
+                                • Hybrid architecture
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: rgba(255,255,255,0.9);">Q18 Advanced Features:</strong> <span style="color: rgba(255,255,255,0.8);">AI/Vector Search selected</span><br>
+                                <em style="color: rgba(255,255,255,0.6);">(Standard scale or not specified)</em>
+                            </td>
+                            <td><strong style="color: rgba(255,255,255,0.95);">MongoDB Atlas (Vector Search)</strong></td>
+                            <td><code style="background: rgba(0,237,100,0.2); padding: 4px 8px; border-radius: 4px; color: #00ED64;">vector-search-standard</code></td>
+                            <td style="color: rgba(255,255,255,0.8);">
+                                • Atlas Vector Search<br>
+                                • Semantic search<br>
+                                • RAG applications<br>
+                                • ML embeddings storage
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- FULL-TEXT SEARCH WORKLOADS -->
+                <h3 style="color: #00ED64; margin-top: 40px; margin-bottom: 15px; padding: 12px; background: rgba(0,237,100,0.05); border-radius: 8px;">
+                    🔍 FULL-TEXT SEARCH WORKLOADS (2 paths)
+                </h3>
+                <table class="decision-table" style="color: rgba(255,255,255,0.9);">
+                    <thead>
+                        <tr>
+                            <th style="width: 30%; color: #00ED64;">Conditions</th>
+                            <th style="width: 25%; color: #00ED64;">Database Choice</th>
+                            <th style="width: 20%; color: #00ED64;">Reason Code</th>
+                            <th style="width: 25%; color: #00ED64;">Key Features</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <strong style="color: rgba(255,255,255,0.9);">Q18 Advanced Features:</strong> <span style="color: rgba(255,255,255,0.8);">Full-Text Search selected</span><br>
+                                <strong style="color: rgba(255,255,255,0.9);">Q19 Search Scale:</strong> <span style="color: rgba(255,255,255,0.8);">Petabyte-Scale</span>
+                            </td>
+                            <td><strong style="color: rgba(255,255,255,0.95);">Elasticsearch / OpenSearch + MongoDB (Operational)</strong></td>
+                            <td><code style="background: rgba(0,237,100,0.2); padding: 4px 8px; border-radius: 4px; color: #00ED64;">fulltext-search-petabyte</code></td>
+                            <td style="color: rgba(255,255,255,0.8);">
+                                • Petabyte-scale search<br>
+                                • Log analytics optimized<br>
+                                • MongoDB for operational<br>
+                                • Dedicated search cluster
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <strong style="color: rgba(255,255,255,0.9);">Q18 Advanced Features:</strong> <span style="color: rgba(255,255,255,0.8);">Full-Text Search selected</span><br>
+                                <em style="color: rgba(255,255,255,0.6);">(Moderate scale or not specified)</em>
+                            </td>
+                            <td><strong style="color: rgba(255,255,255,0.95);">MongoDB Atlas (Atlas Search)</strong></td>
+                            <td><code style="background: rgba(0,237,100,0.2); padding: 4px 8px; border-radius: 4px; color: #00ED64;">fulltext-search-moderate</code></td>
+                            <td style="color: rgba(255,255,255,0.8);">
+                                • Atlas Search<br>
+                                • Lucene-based indexing<br>
+                                • Fuzzy search, autocomplete<br>
+                                • Single platform
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+
+            <!-- Notes Section -->
+            <div style="background: rgba(255,107,107,0.1); border-left: 4px solid #ff6b6b; padding: 20px; border-radius: 12px; margin-top: 30px;">
+                <h4 style="color: #ff6b6b; margin-bottom: 12px;">📌 Important Notes</h4>
+                <ul style="color: rgba(255,255,255,0.8); line-height: 1.8;">
+                    <li><strong>Complete Coverage:</strong> This table contains all 23 decision paths from the recommendation engine, organized into 9 categories.</li>
+                    <li><strong>Question IDs:</strong> Each condition references specific wizard questions (e.g., Q0 = Use Case, Q5 = Team Skillset, Q11 = Traffic Pattern, Q18 = Advanced Features, Q19/Q20 = Scale).</li>
+                    <li><strong>Evaluation Order:</strong> Conditions are checked in order of specificity - more specific conditions are evaluated first.</li>
+                    <li><strong>Competing Recommendations:</strong> When answers conflict (e.g., SQL team + NoSQL use case), the wizard shows multiple options side-by-side.</li>
+                    <li><strong>Reason Codes:</strong> These appear in exported recommendations and analytics tracking for identifying decision paths.</li>
+                </ul>
+            </div>
+
+            <!-- Back to Guided Button -->
+            <div style="text-align: center; margin-top: 40px;">
+                <button class="wizard-btn primary" onclick="switchMode('guided')" style="font-size: 1.1rem; padding: 14px 32px;">
+                    ← Back to Guided Wizard
+                </button>
+            </div>
+        </div>
+    </div> <!-- /logic-mode -->
+
+    <!-- Rule Engine Documentation Container -->
+    <div id="rule-engine-mode" class="mode-container">
+        <div class="expert-container">
+            <div class="expert-header">
+                <h2>Rule Engine Documentation</h2>
+                <p>Technical reference for the data-driven recommendation logic.</p>
+            </div>
+            
+            <div class="decision-table-container" style="color: #e0e0e0; line-height: 1.6; max-width: 1000px; margin: 0 auto; padding-bottom: 50px;">
+                
+                <h3 style="color: #00ED64; margin-top: 30px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">🏗️ Architecture</h3>
+                <p style="margin-top: 15px;">The system consists of two main components:</p>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li><strong>Rule Engine (RuleEngine):</strong> A generic engine that evaluates user answers against a set of rules.</li>
+                    <li><strong>Decision Rules (DECISION_RULES):</strong> An ordered list of rule objects defining the logic.</li>
+                </ul>
+
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📝 Rule Structure</h3>
+                <p style="margin-top: 15px;">Each rule is an object with the following properties:</p>
+                <pre style="background: #001e2b; padding: 20px; border-radius: 8px; border: 1px solid #333; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin-top: 10px;"><code>{
+    id: 'unique-rule-id',       // Used for tracking and debugging
+    conditions: {               // Object of required answers
+        [Q.USE_CASE]: 'iot',    // Exact match
+        [Q.TRAFFIC]: ['large', 'massive'] // Array = OR condition
+    },
+    result: {                   // Result to return
+        db: "MongoDB Atlas",
+        architecture: "..."
+    }
+}</code></pre>
+
+                <h4 style="color: #00ED64; margin-top: 25px;">Advanced Conditions</h4>
+                <p>Conditions can also be a <strong>function</strong> for complex logic:</p>
+                <pre style="background: #001e2b; padding: 20px; border-radius: 8px; border: 1px solid #333; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin-top: 10px;"><code>conditions: (answers) => {
+    return answers[Q.USE_CASE] === 'iot' && someComplexCheck(answers);
+}</code></pre>
+
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">⚙️ Enhancement Features</h3>
+                <p style="color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 20px;">
+                    After rule evaluation, the system can add optional enhancements based on answered questions:
+                </p>
+
+                <div style="background: rgba(0,237,100,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <strong style="color: #00ED64;">🗂️ Sharding Guidance (Q13)</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                        If user answers Q13 (Distribution), adds sharding strategy, shard key pattern, and use case guidance.
+                        <br><strong>3 Strategies:</strong> Distributed (hashed), Location (geo), Range (time-series)
+                    </span>
+                </div>
+
+                <div style="background: rgba(0,180,240,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <strong style="color: #00b4f0;">🔑 Access Pattern Optimization (Q16)</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                        If user answers Q16 (Access Pattern), adds optimization strategy and actionable recommendations.
+                        <br><strong>2 Patterns:</strong> Simple (key-value caching), Complex (indexes/aggregations)
+                    </span>
+                </div>
+
+                <div style="background: rgba(255,193,7,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <strong style="color: #ffc107;">⚡ Caching (Q17)</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                        If Q16 = Simple AND Q17 = Sub-millisecond, recommends Redis + MongoDB for in-memory performance.
+                    </span>
+                </div>
+
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">➕ How to Add a New Rule</h3>
+                <ol style="color: rgba(255,255,255,0.7); line-height: 1.8;">
+                    <li>Open <code>matrix.html</code></li>
+                    <li>Locate the <code>DECISION_RULES</code> array (around line 3364)</li>
+                    <li>Insert your new rule object in the correct position (order matters!).</li>
+                </ol>
+
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📋 Current Rules List</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">IoT Workloads</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>iot-massive</li>
+                            <li>iot-small-sql</li>
+                            <li>iot-timeseries</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Vector Search / AI</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>vector-search-massive</li>
+                            <li>vector-search-standard</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Full-Text Search</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>fulltext-search-petabyte</li>
+                            <li>fulltext-search-moderate</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Analytical Workloads</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>analytical-deep-graph</li>
+                            <li>analytical-shallow-graph</li>
+                            <li>analytical-warehouse</li>
+                            <li>analytical-realtime-onprem</li>
+                            <li>analytical-realtime-cloud</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Transactional Graph</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>transactional-deep-graph</li>
+                            <li>transactional-shallow-graph</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">SQL-First Team</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>sql-database-logic-large-scale</li>
+                            <li>sql-database-logic</li>
+                            <li>sql-modernization</li>
+                            <li>sql-heavy-acid-large-scale</li>
+                            <li>sql-heavy-acid</li>
+                            <li>sql-moderate</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Code-First / Structure</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>codefirst-document</li>
+                            <li>codefirst-rigid</li>
+                        </ul>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
+                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Default</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>default</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📊 Question Coverage</h3>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; background: rgba(0,0,0,0.3);">
+                    <thead style="background: rgba(0,237,100,0.15);">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">Question</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">ID</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">Purpose</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Distribution</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q13</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Sharding strategy</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Access Pattern</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q16</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Query optimization</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Latency</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q17</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Caching guidance</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Advanced Features</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q18</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Feature detection</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Search Scale</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q19</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Search workload scale</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Vector Scale</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q20</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector workload scale</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Mobile Offline</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q23</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Sync partners</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                
+            </div>
+        </div>
+    </div>
+
     <script>
         // --- DUAL MODE WIZARD ---
         
@@ -1220,6 +2048,113 @@ flowchart TB
             info: (message, data) => Logger.log(Logger.levels.INFO, message, data),
             warn: (message, data) => Logger.log(Logger.levels.WARN, message, data),
             error: (message, data) => Logger.log(Logger.levels.ERROR, message, data)
+        };
+
+        /**
+         * A/B Testing Framework
+         * Enables controlled experiments for features
+         */
+        const ABTesting = {
+            // Get or create persistent user ID
+            getUserId: () => {
+                let userId = localStorage.getItem('ab_user_id');
+                if (!userId) {
+                    userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    localStorage.setItem('ab_user_id', userId);
+                }
+                return userId;
+            },
+
+            // Simple hash function for consistent variant assignment
+            hashCode: (str) => {
+                let hash = 0;
+                for (let i = 0; i < str.length; i++) {
+                    const char = str.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash = hash & hash; // Convert to 32bit integer
+                }
+                return Math.abs(hash);
+            },
+
+            // Get variant for an experiment (A or B)
+            getVariant: (experimentName) => {
+                const userId = ABTesting.getUserId();
+                const hash = ABTesting.hashCode(userId + experimentName);
+                const variant = hash % 2 === 0 ? 'A' : 'B';
+                
+                // Store variant assignment in session
+                const key = `ab_variant_${experimentName}`;
+                if (!sessionStorage.getItem(key)) {
+                    sessionStorage.setItem(key, variant);
+                    console.log(`[A/B Test] ${experimentName}: Assigned to variant ${variant}`);
+                }
+                
+                return variant;
+            },
+
+           // Check if user is in a specific variant
+            isVariant: (experimentName, variant) => {
+                return ABTesting.getVariant(experimentName) === variant;
+            },
+
+            // Track experiment exposure
+            trackExperiment: (experimentName) => {
+                const variant = ABTesting.getVariant(experimentName);
+                if (typeof gtag !== 'undefined') {
+                    gtag('event', 'experiment_exposure', {
+                        experiment_name: experimentName,
+                        variant: variant
+                    });
+                }
+            },
+
+            // Predefined experiments (toggle on/off)
+            experiments: {
+                // Experiment 1: Show competing recommendations for ALL conflicts vs only specific ones
+                competing_recs_always: {
+                    enabled: false, // Set to true to activate
+                    name: 'competing_recs_always',
+                    description: 'Show competing recommendations for all conflicts vs. selective'
+                },
+                
+                // Experiment 2: Question order - Use case first vs Team skill first
+                question_order: {
+                    enabled: false,
+                    name: 'question_order',
+                    description: 'Ask use case first (A) vs team skillset first (B)'
+                },
+                
+                // Experiment 3: Recommendation wording style
+                rec_wording: {
+                    enabled: false,
+                    name: 'rec_wording',
+                    description: 'Technical wording (A) vs business-friendly (B)'
+                },
+
+                // Experiment 4: Feedback placement
+                feedback_placement: {
+                    enabled: false,
+                    name: 'feedback_placement',
+                    description: 'Feedback at top (A) vs bottom (B) of recommendation'
+                }
+            },
+
+            // Initialize experiments on page load
+            init: () => {
+                Object.values(ABTesting.experiments).forEach(exp => {
+                    if (exp.enabled) {
+                        const variant = ABTesting.getVariant(exp.name);
+                        console.log(`[A/B Test] ${exp.name} active - Variant: ${variant}`);
+                        
+                        // Set variant as user property in GA4
+                        if (typeof gtag !== 'undefined') {
+                            gtag('set', 'user_properties', {
+                                [`exp_${exp.name}`]: variant
+                            });
+                        }
+                    }
+                });
+            }
         };
 
         /**
@@ -2507,119 +3442,461 @@ flowchart TB
          * @param {Object} answers - Object mapping question IDs to answer values
          * @returns {Object} Object with 'db' (database name) and 'reason' (decision path taken)
          */
+        /**
+         * Rule Engine
+         * Data-driven decision logic that decouples rules from code.
+         * Replaces the hardcoded if/else logic in determinePrimaryDB.
+         */
+        const RuleEngine = {
+            rules: [],
+
+            /**
+             * Add a rule to the engine
+             * @param {Object} rule - Rule object with id, conditions, and result
+             */
+            addRule: (rule) => {
+                RuleEngine.rules.push(rule);
+            },
+
+            /**
+             * Evaluate answers against all rules in order
+             * @param {Object} answers - User answers object
+             * @returns {Object|null} - Result object with 'db', 'reason', etc., or null if no match
+             */
+            evaluate: (answers) => {
+                for (const rule of RuleEngine.rules) {
+                    if (RuleEngine.matches(answers, rule.conditions)) {
+                        // Execute result function if it's a function, otherwise return object
+                        const result = typeof rule.result === 'function' ? rule.result(answers) : rule.result;
+                        return { ...result, reason: rule.id };
+                    }
+                }
+                return null; // Should not happen if default rule exists
+            },
+
+            /**
+             * Check if answers match conditions
+             * @param {Object} answers - User answers
+             * @param {Object|Function} conditions - Conditions to check
+             * @returns {boolean} - True if matches
+             */
+            matches: (answers, conditions) => {
+                // If conditions is a function, evaluate it
+                if (typeof conditions === 'function') {
+                    return conditions(answers);
+                }
+
+                // Otherwise check object properties
+                for (const [key, value] of Object.entries(conditions)) {
+                    const answer = answers[key];
+                    
+                    // Handle array of acceptable values (OR logic)
+                    if (Array.isArray(value)) {
+                        if (!value.includes(answer)) return false;
+                    } 
+                    // Handle exact match
+                    else if (answer !== value) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        };
+
+        /**
+         * Decision Rules
+         * Ordered list of rules. First match wins.
+         * Preserves exact logic from original determinePrimaryDB function.
+         */
+        const DECISION_RULES = [
+            // --- IoT Workloads ---
+            {
+                id: 'iot-massive',
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic (needs full RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    return answers[Q.USE_CASE] === 'iot' && 
+                           answers[Q.TRAFFIC_PATTERN] === 'massive';
+                },
+                result: { db: "InfluxDB / TimescaleDB + MongoDB (Operational)" }
+            },
+            {
+                id: 'iot-small-sql',
+                conditions: { 
+                    [Q.USE_CASE]: 'iot', 
+                    [Q.TRAFFIC_PATTERN]: 'very-small',
+                    [Q.TEAM_SKILL]: 'sqlfirst',
+                    [Q.ACID_NEEDS]: 'heavy',
+                    [Q.NORMALIZATION]: 'rigid'
+                },
+                result: { db: "TimescaleDB (PostgreSQL)" }
+            },
+            {
+                id: 'iot-timeseries',
+                conditions: { [Q.USE_CASE]: 'iot' },
+                result: { db: "MongoDB Time Series" }
+            },
+
+            // --- Vector Search / AI Workloads ---
+            {
+                id: 'vector-search-massive',
+                conditions: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES];
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return Array.isArray(features) && 
+                           features.includes('ai') && 
+                           answers[Q.VECTOR_SCALE] === 'billions';
+                },
+                result: { db: "Pinecone / Weaviate + MongoDB (Operational)" }
+            },
+            {
+                id: 'vector-search-standard',
+                conditions: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES];
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return Array.isArray(features) && features.includes('ai');
+                },
+                result: { db: "MongoDB Atlas (Vector Search)" }
+            },
+
+            // --- Full-Text Search Workloads ---
+            {
+                id: 'fulltext-search-petabyte',
+                conditions: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES];
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return Array.isArray(features) && 
+                           features.includes('search') && 
+                           answers[Q.SEARCH_SCALE] === 'petabyte';
+                },
+                result: { db: "Elasticsearch / OpenSearch + MongoDB (Operational)" }
+            },
+            {
+                id: 'fulltext-search-moderate',
+                conditions: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES];
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema (let SQL rules handle it)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return Array.isArray(features) && features.includes('search');
+                },
+                result: { db: "MongoDB Atlas (Atlas Search)" }
+            },
+
+            // --- Analytical Workloads ---
+            {
+                id: 'analytical-deep-graph',
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic (needs RDBMS)
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return answers[Q.WORKLOAD] === 'analytical' && 
+                           answers[Q.DATA_STRUCTURE] === 'graph' &&
+                           answers[Q.GRAPH_DEPTH] === 'deep';
+                },
+                result: { db: "Neo4j Graph Data Science / TigerGraph" }
+            },
+            {
+                id: 'analytical-shallow-graph',
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return answers[Q.WORKLOAD] === 'analytical' && 
+                           answers[Q.DATA_STRUCTURE] === 'graph';
+                },
+                result: { db: "MongoDB (Aggregation Pipeline)" }
+            },
+            {
+                id: 'analytical-warehouse',
+                conditions: (answers) => {
+                    return answers[Q.WORKLOAD] === 'analytical' && 
+                           (answers[Q.ANALYTICAL_NUANCE] === 'warehouse' || answers[Q.TRAFFIC_PATTERN] === 'massive');
+                },
+                result: { db: "Data Warehouse" }
+            },
+            {
+                id: 'analytical-realtime-onprem',
+                conditions: { 
+                    [Q.WORKLOAD]: 'analytical', 
+                    [Q.DEPLOYMENT]: 'onprem'
+                },
+                result: { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse" }
+            },
+            {
+                id: 'analytical-realtime-cloud',
+                conditions: { [Q.WORKLOAD]: 'analytical' },
+                result: { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse" }
+            },
+
+            // --- Transactional Graph Workloads ---
+            {
+                id: 'transactional-deep-graph',
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return answers[Q.DATA_STRUCTURE] === 'graph' &&
+                           answers[Q.GRAPH_DEPTH] === 'deep';
+                },
+                result: { db: "MongoDB (Operational) + Neo4j (Graph Database)" }
+            },
+            {
+                id: 'transactional-shallow-graph',
+                conditions: (answers) => {
+                    // Exclude if SQL team with database logic
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
+                        return false;
+                    }
+                    // Exclude if SQL team with heavy ACID + rigid schema
+                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                        answers[Q.ACID_NEEDS] === 'heavy' && 
+                        answers[Q.NORMALIZATION] === 'rigid') {
+                        return false;
+                    }
+                    return answers[Q.DATA_STRUCTURE] === 'graph';
+                },
+                result: { db: "MongoDB (with $graphLookup)" }
+            },
+
+            // --- SQL-First Team Paths ---
+            {
+                id: 'sql-database-logic-large-scale',
+                conditions: { 
+                    [Q.TEAM_SKILL]: 'sqlfirst',
+                    [Q.BUSINESS_LOGIC]: 'database',
+                    [Q.TRAFFIC_PATTERN]: ['large', 'massive']
+                },
+                result: { db: "RDBMS (with limitations) or NewSQL" }
+            },
+            {
+                id: 'sql-database-logic',
+                conditions: { 
+                    [Q.TEAM_SKILL]: 'sqlfirst',
+                    [Q.BUSINESS_LOGIC]: 'database'
+                },
+                result: { db: "RDBMS" }
+            },
+            {
+                id: 'sql-modernization',
+                conditions: (answers) => {
+                    // Check complex condition: migration != 'no' AND heavy ACID AND rigid schema
+                    if (answers[Q.TEAM_SKILL] !== 'sqlfirst') return false;
+                    
+                    const migrationStatus = answers[Q.MIGRATION_STATUS];
+                    const migrationSource = answers[Q.MIGRATION_SOURCE];
+                    // Logic from original code:
+                    const migration = (migrationStatus === 'yes' && migrationSource) ? migrationSource : migrationStatus;
+                    
+                    return migration !== 'no' && 
+                           answers[Q.ACID_NEEDS] === 'heavy' && 
+                           answers[Q.NORMALIZATION] === 'rigid';
+                },
+                result: (answers) => {
+                    const migrationStatus = answers[Q.MIGRATION_STATUS];
+                    const migrationSource = answers[Q.MIGRATION_SOURCE];
+                    const migration = (migrationStatus === 'yes' && migrationSource) ? migrationSource : migrationStatus;
+                    
+                    const dbMap = { oracle: 'Oracle', sqlserver: 'SQL Server', postgres: 'PostgreSQL', mysql: 'MySQL', db2: 'IBM Db2', other: 'RDBMS' };
+                    const source = dbMap[migration] || 'RDBMS';
+                    
+                    return { db: "MongoDB (with migration support)", source: source };
+                }
+            },
+            {
+                id: 'sql-heavy-acid-large-scale',
+                conditions: { 
+                    [Q.TEAM_SKILL]: 'sqlfirst',
+                    [Q.ACID_NEEDS]: 'heavy',
+                    [Q.NORMALIZATION]: 'rigid',
+                    [Q.TRAFFIC_PATTERN]: ['large', 'massive']
+                },
+                result: { db: "MongoDB (with SQL drivers) or NewSQL" }
+            },
+            {
+                id: 'sql-heavy-acid',
+                conditions: { 
+                    [Q.TEAM_SKILL]: 'sqlfirst',
+                    [Q.ACID_NEEDS]: 'heavy',
+                    [Q.NORMALIZATION]: 'rigid'
+                },
+                result: { db: "RDBMS" }
+            },
+            {
+                id: 'sql-moderate',
+                conditions: { [Q.TEAM_SKILL]: 'sqlfirst' },
+                result: { db: "MongoDB (with SQL drivers and Relational Migrator)" }
+            },
+
+            // --- Code-First Team / Structure Paths ---
+            {
+                id: 'codefirst-document',
+                conditions: { [Q.DATA_STRUCTURE]: 'document' },
+                result: { db: "MongoDB" }
+            },
+            {
+                id: 'codefirst-rigid',
+                conditions: { [Q.DATA_STRUCTURE]: 'rigid' },
+                result: { db: "MongoDB (with Schema Validation)" }
+            },
+
+            // --- Default Fallback ---
+            {
+                id: 'default',
+                conditions: {}, // Always matches
+                result: (answers) => {
+                    const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
+                    return { db: isOnPrem ? "MongoDB" : "MongoDB Atlas" };
+                }
+            }
+        ];
+
+        // Initialize Engine
+        DECISION_RULES.forEach(rule => RuleEngine.addRule(rule));
+
         function determinePrimaryDB(answers) {
             // Validate required answers
             if (!answers[Q.USE_CASE] || !answers[Q.WORKLOAD]) {
-                return { db: "MongoDB Atlas", reason: "default" };
+                console.warn("Missing required answers for determination");
+                return { db: "MongoDB", reason: "incomplete_data" };
             }
-            
-            const useCase = answers[Q.USE_CASE];
-            const workload = answers[Q.WORKLOAD];
-            const dataStructure = answers[Q.DATA_STRUCTURE];
-            const graphDepth = answers[Q.GRAPH_DEPTH];
-            const teamSkill = answers[Q.TEAM_SKILL];
-            const migrationStatus = answers[Q.MIGRATION_STATUS];
-            const migrationSource = answers[Q.MIGRATION_SOURCE];
-            const migration = (migrationStatus === 'yes' && migrationSource) ? migrationSource : migrationStatus;
-            const acidNeeds = answers[Q.ACID_NEEDS];
-            const normalization = answers[Q.NORMALIZATION];
-            
-            // New Q11 Logic: Traffic & Scale merged
-            const trafficAnswer = answers[Q.TRAFFIC_PATTERN];
-            const isLargeScale = trafficAnswer === 'large' || trafficAnswer === 'massive';
-            const isMassive = trafficAnswer === 'massive';
-            
-            const analyticalNuance = answers[Q.ANALYTICAL_NUANCE];
-            
-            // IoT workloads - Consider scale and team preferences
-            if (useCase === 'iot') {
-                if (isMassive) {
-                    // Massive IoT needs specialized time-series databases + operational layer
-                    return { db: "InfluxDB / Time Series Warehouse + MongoDB (Operational)", reason: "iot-massive" };
-                } else if (trafficAnswer === 'very-small' && teamSkill === 'sqlfirst' && acidNeeds === 'heavy' && normalization === 'rigid') {
-                    // Very small IoT with strong SQL/relational requirements
-                    return { db: "TimescaleDB (PostgreSQL)", reason: "iot-small-sql" };
-                } else {
-                    // Small to Large IoT → MongoDB Time Series
-                    return { db: "MongoDB Time Series", reason: "iot-timeseries" };
-                }
-            }
-            
-            // Analytical path
-            if (workload === 'analytical') {
-                if (dataStructure === 'graph' && graphDepth === 'deep') {
-                    return { db: "Neo4j Graph Data Science / TigerGraph", reason: "analytical-deep-graph" };
-                } else if (dataStructure === 'graph') {
-                    return { db: "MongoDB (Aggregation Pipeline)", reason: "analytical-shallow-graph" };
-                } else if (analyticalNuance === 'warehouse' || isMassive) {
-                    return { db: "Data Warehouse", reason: "analytical-warehouse" };
-                } else {
-                    const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
-                    if (isOnPrem) {
-                        return { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse", reason: "analytical-realtime-onprem" };
-                    } else {
-                        return { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse", reason: "analytical-realtime-cloud" };
-                    }
-                }
-            }
-            
-            // Transactional path - Graph data structures
-            if (dataStructure === 'graph') {
-                if (graphDepth === 'deep') {
-                    return { db: "MongoDB (Operational) + Neo4j (Graph Database)", reason: "transactional-deep-graph" };
-                } else {
-                    return { db: "MongoDB", reason: "transactional-shallow-graph" };
-                }
-            }
-            
-            // SQL-First team path
-            if (teamSkill === 'sqlfirst') {
-                const businessLogic = answers[Q.BUSINESS_LOGIC];
-                
-                // Check business logic preference FIRST (before scale considerations)
-                // If they NEED stored procedures, recommend RDBMS even if suboptimal at scale
-                if (businessLogic === 'database') {
-                    if (isLargeScale) {
-                        // Large scale + stored procedures = challenging combination
-                        return { db: "RDBMS (with limitations) or NewSQL", reason: "sql-database-logic-large-scale" };
-                    } else {
-                        // Small/medium scale + stored procedures = perfect for RDBMS
-                        return { db: "RDBMS", reason: "sql-database-logic" };
-                    }
-                }
-                
-                // If app-tier logic OR no preference, consider ACID/scale normally
-                if (migration !== 'no' && acidNeeds === 'heavy' && normalization === 'rigid') {
-                    // migration is now the source DB directly: 'oracle', 'sqlserver', 'postgres', 'mysql', 'db2', 'other'
-                    const dbMap = { oracle: 'Oracle', sqlserver: 'SQL Server', postgres: 'PostgreSQL', mysql: 'MySQL', db2: 'IBM Db2', other: 'RDBMS' };
-                    const source = dbMap[migration] || 'RDBMS';
-                    return { db: "MongoDB (with migration support)", reason: "sql-modernization", source: source };
-                } else if (acidNeeds === 'heavy' && normalization === 'rigid') {
-                    // CRITICAL: Consider scale for RDBMS recommendation
-                    // Large/Massive scale cannot survive on traditional RDBMS
-                    if (isLargeScale) {
-                        return { db: "MongoDB (with SQL drivers) or NewSQL", reason: "sql-heavy-acid-large-scale" };
-                    } else {
-                        // Very-small/Small can use traditional RDBMS
-                        return { db: "RDBMS", reason: "sql-heavy-acid" };
-                    }
-                } else {
-                    return { db: "MongoDB (with SQL drivers and Relational Migrator)", reason: "sql-moderate" };
-                }
-            }
-            
-            // Code-First team path
-            if (dataStructure === 'document') {
-                return { db: "MongoDB", reason: "codefirst-document" };
-            } else if (dataStructure === 'rigid') {
-                return { db: "MongoDB (with Schema Validation)", reason: "codefirst-rigid" };
-            }
-            
-            // Default fallback with deployment awareness
-            const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
-            return { db: isOnPrem ? "MongoDB" : "MongoDB Atlas", reason: "default" };
-        }
 
+
+            // Use Rule Engine
+            const result = RuleEngine.evaluate(answers);
+            
+            // Fallback if no rule matches (should be covered by 'default' rule)
+            if (!result) {
+                console.warn("No matching rule found, falling back to default");
+                return { db: "MongoDB", reason: "fallback" };
+            }
+
+
+            // ENHANCEMENT: Add sharding guidance if Q13 (Distribution) is answered
+            if (answers[Q.DISTRIBUTION]) {
+                const distribution = answers[Q.DISTRIBUTION];
+                const shardingGuidance = {
+                    'distributed': {
+                        strategy: 'Hashed Sharding',
+                        shardKey: 'Uniform distribution (e.g., hashed _id or userId)',
+                        useCase: 'Best for evenly distributed writes across shards'
+                    },
+                    'location': {
+                        strategy: 'Zone/Geo Sharding',
+                        shardKey: 'Location-based (e.g., country, region, zone)',
+                        useCase: 'Best for data locality, GDPR compliance, multi-region apps'
+                    },
+                    'range': {
+                        strategy: 'Range-Based Sharding',
+                        shardKey: 'Time-series (timestamp) or alphabetical (name, category)',
+                        useCase: 'Best for time-series data, ordered queries, archival patterns'
+                    }
+                };
+
+                if (shardingGuidance[distribution]) {
+                    result.sharding = shardingGuidance[distribution];
+                }
+            }
+
+            // ENHANCEMENT: Add access pattern optimization guidance if Q16 is answered
+            if (answers[Q.ACCESS_PATTERN]) {
+                const accessPattern = answers[Q.ACCESS_PATTERN];
+                const optimizationGuidance = {
+                    'simple': {
+                        pattern: 'Simple ID Lookup (Key-Value)',
+                        optimization: 'Single-field index on _id (default), in-memory caching',
+                        recommendations: [
+                            'Use Redis/Memcached for hot data caching',
+                            'Consider read replicas for high read throughput',
+                            'Enable connection pooling',
+                            'Use projection to fetch only needed fields'
+                        ]
+                    },
+                    'complex': {
+                        pattern: 'Complex Queries (Filtering, Aggregations)',
+                        optimization: 'Compound indexes, query optimization, materialized views',
+                        recommendations: [
+                            'Create compound indexes for frequent query patterns',
+                            'Use covered queries (index-only) where possible',
+                            'Implement aggregation pipeline optimization',
+                            'Consider read-from-secondary for analytics',
+                            'Use $lookup sparingly, denormalize where beneficial'
+                        ]
+                    }
+                };
+
+                if (optimizationGuidance[accessPattern]) {
+                    result.accessOptimization = optimizationGuidance[accessPattern];
+                }
+
+                // Special case: Simple access + Latency requirement
+                if (accessPattern === 'simple' && answers[Q.LATENCY] === 'submillisecond') {
+                    result.accessOptimization.caching = {
+                        recommendation: 'Redis (In-Memory Primary) + MongoDB (Durable Backup)',
+                        reason: 'Sub-millisecond latency requires in-memory data store'
+                    };
+                }
+            }
+
+            return result;
+        }
         /**
          * Detect if there are conflicting signals that warrant showing competing recommendations
          * @param {Object} answers - User's answers
@@ -2631,22 +3908,70 @@ flowchart TB
             const advancedFeatures = answers[Q.ADVANCED_FEATURES];
             const workload = answers[Q.WORKLOAD];
             const migrationStatus = answers[Q.MIGRATION_STATUS];
+            const analyticalNuance = answers[Q.ANALYTICAL_NUANCE];
+            const acidNeeds = answers[Q.ACID_NEEDS];
+            const mobileOffline = answers[Q.MOBILE_OFFLINE];
+            const trafficPattern = answers[Q.TRAFFIC_PATTERN];
+            const distribution = answers[Q.DISTRIBUTION];
+            const normalization = answers[Q.NORMALIZATION];
+            const dataStructure = answers[Q.DATA_STRUCTURE];
             
-            // Conflict: SQL team + logs/search use case
+            // EXISTING: Conflict: SQL team + logs/search use case
             if (teamSkill === 'sqlfirst' && 
                 (useCase === 'logs' || advancedFeatures === 'search')) {
                 return true;
             }
             
-            // Conflict: SQL team + transactional workload but document-heavy use case
+            // EXISTING: Conflict: SQL team + transactional workload but document-heavy use case
             if (teamSkill === 'sqlfirst' && workload === 'transactional' && 
                 (useCase === 'cms' || useCase === 'catalog' || useCase === 'profiles')) {
                 return true;
             }
             
-            // Conflict: Migration from SQL but use case screams NoSQL
+            // EXISTING: Conflict: Migration from SQL but use case screams NoSQL
             if (migrationStatus === 'yes' && 
                 (useCase === 'logs' || useCase === 'iot' || useCase === 'realtime')) {
+                return true;
+            }
+            
+            // NEW 1: Real-time Analytics + SQL Team
+            if (workload === 'analytical' && analyticalNuance === 'realtime' && teamSkill === 'sqlfirst') {
+                return true;
+            }
+            
+            // NEW 2: IoT + Heavy ACID Requirements
+            if (useCase === 'iot' && acidNeeds === 'heavy') {
+                return true;
+            }
+            
+            // NEW 3: Mobile Offline + Large Scale
+            if (mobileOffline === 'yes' && (trafficPattern === 'large' || trafficPattern === 'massive')) {
+                return true;
+            }
+            
+            // NEW 4: Multi-region + Strong Consistency (distributed but needs consistency)
+            if (distribution === 'multiregion' && acidNeeds === 'heavy') {
+                return true;
+            }
+            
+            // NEW 5: E-commerce + SQL Team
+            if (useCase === 'ecommerce' && teamSkill === 'sqlfirst') {
+                return true;
+            }
+            
+            // NEW 6: CMS/Catalog + Rigid Schema Requirements
+            if ((useCase === 'cms' || useCase === 'catalog') && normalization === 'rigid') {
+                return true;
+            }
+            
+            // NEW 7: Graph Workload + SQL Team
+            if (dataStructure === 'graph' && teamSkill === 'sqlfirst') {
+                return true;
+            }
+            
+            // NEW 8: Logs + Small Scale + SQL Team (different from large scale scenario)
+            if (useCase === 'logs' && teamSkill === 'sqlfirst' && 
+                (trafficPattern === 'very-small' || trafficPattern === 'small')) {
                 return true;
             }
             
@@ -2719,6 +4044,347 @@ flowchart TB
                 });
             }
             
+            // NEW SCENARIO 1: Real-time Analytics + SQL Team
+            const workload = answers[Q.WORKLOAD];
+            const analyticalNuance = answers[Q.ANALYTICAL_NUANCE];
+            
+            if (workload === 'analytical' && analyticalNuance === 'realtime' && teamSkill === 'sqlfirst') {
+                recommendations.push({
+                    name: "MongoDB Atlas Analytics Nodes",
+                    tagline: "Real-time analytics on operational data (Recommended)",
+                    pros: [
+                        "Real-time analytics without ETL pipelines",
+                        "Dedicated analytics nodes don't impact transactional workload",
+                        "Powerful aggregation framework for complex queries",
+                        "Native time-series support for metrics",
+                        "Auto-scales analytics separately from operational tier"
+                    ],
+                    cons: [
+                        "Team needs to learn MongoDB aggregation pipeline",
+                        "Less mature than traditional SQL for complex joins"
+                    ],
+                    migration: "SQL queries can be translated to aggregation pipelines. MongoDB provides query conversion tools.",
+                    features: ["Analytics Nodes", "Aggregation Pipeline", "Materialized Views", "$merge stages"]
+                });
+                
+                recommendations.push({
+                    name: "PostgreSQL + Apache Druid",
+                    tagline: "SQL familiarity with OLAP engine",
+                    pros: [
+                        "Team stays with SQL",
+                        "PostgreSQL handles transactional workload",
+                        "Apache Druid optimized for fast aggregations",
+                        "SQL interface for analytics"
+                    ],
+                    cons: [
+                        "Two separate systems to manage",
+                        "Data pipeline complexity (sync PostgreSQL → Druid)",
+                        "Higher operational overhead",
+                        "Druid has steeper learning curve than expected"
+                    ],
+                    migration: null,
+                    features: ["PostgreSQL", "Apache Druid", "ETL/CDC pipelines"]
+                });
+            }
+            
+            // NEW SCENARIO 2: IoT + Heavy ACID Requirements
+            const acidNeeds = answers[Q.ACID_NEEDS];
+            
+            if (useCase === 'iot' && acidNeeds === 'heavy') {
+                recommendations.push({
+                    name: "MongoDB Time Series + Transactions",
+                    tagline: "IoT-optimized with ACID support (Recommended)",
+                    pros: [
+                        "Time Series Collections designed for IoT data (10x compression)",
+                        "Multi-document ACID transactions when needed",
+                        "Single database for both time-series and transactional data",
+                        "Automatic data expiration (TTL indexes)",
+                        "Real-time aggregations on sensor data"
+                    ],
+                    cons: [
+                        "ACID transactions have performance cost - use sparingly",
+                        "Team needs to design schema for time-series optimization"
+                    ],
+                    migration: "MongoDB supports hybrid workloads - time-series data + transactional business logic in one database",
+                    features: ["Time Series Collections", "Multi-Document Transactions", "TTL Indexes", "Aggregation Pipeline"]
+                });
+                
+                recommendations.push({
+                    name: "TimescaleDB (PostgreSQL Extension)",
+                    tagline: "SQL-based time-series database",
+                    pros: [
+                        "Built on PostgreSQL - full SQL and ACID support",
+                        "Automatic time-based partitioning (hypertables)",
+                        "SQL queries for analytics",
+                        "Strong ACID guarantees"
+                    ],
+                    cons: [
+                        "Extension maintained separately from core PostgreSQL",
+                        "Limited to single-node or complex sharding for scale",
+                        "Less mature time-series compression than MongoDB",
+                        "Vendor lock-in to Timescale Cloud for managed service"
+                    ],
+                    migration: null,
+                    features: ["TimescaleDB", "Hypertables", "Continuous Aggregates", "PostgreSQL ACID"]
+                });
+            }
+            
+            // NEW SCENARIO 3: Mobile Offline + Large Scale
+            const mobileOffline = answers[Q.MOBILE_OFFLINE];
+            
+            if (mobileOffline === 'yes' && isLargeScale) {
+                recommendations.push({
+                    name: "MongoDB Atlas Device Sync (Realm)",
+                    tagline: "Purpose-built for offline-first mobile (Recommended)",
+                    pros: [
+                        "Automatic bidirectional sync between devices and cloud",
+                        "Conflict resolution built-in (last-write-wins or custom)",
+                        "Scales to millions of devices",
+                        "Works seamlessly with MongoDB Atlas backend",
+                        "Native mobile SDKs (iOS, Android, React Native)"
+                    ],
+                    cons: [
+                        "Requires MongoDB Atlas (cloud-only)",
+                        "Learning curve for Realm SDK",
+                        "Sync can consume significant bandwidth for large datasets"
+                    ],
+                    migration: "Realm integrates directly with MongoDB Atlas - no separate sync infrastructure needed",
+                    features: ["Atlas Device Sync", "Realm Mobile Database", "Conflict Resolution", "Flexible Sync"]
+                });
+                
+                recommendations.push({
+                    name: "CouchDB + Custom Sync Layer",
+                    tagline: "Open-source offline-first database",
+                    pros: [
+                        "Designed for offline-first patterns",
+                        "HTTP-based replication protocol",
+                        "Multi-master replication",
+                        "Can self-host"
+                    ],
+                    cons: [
+                        "Must build custom sync layer for complex requirements",
+                        "Limited query capabilities vs. MongoDB",
+                        "Smaller ecosystem and community",
+                        "Scaling to large clusters is complex",
+                        "Less mature mobile SDKs"
+                    ],
+                    migration: null,
+                    features: ["CouchDB", "PouchDB (client)", "Custom conflict resolution", "Replication protocol"]
+                });
+            }
+            
+            // NEW SCENARIO 4: Multi-region + Strong Consistency
+            const distribution = answers[Q.DISTRIBUTION];
+            
+            if (distribution === 'multiregion' && acidNeeds === 'heavy') {
+                recommendations.push({
+                    name: "MongoDB Global Clusters",
+                    tagline: "Multi-region with zone-based data placement (Recommended)",
+                    pros: [
+                        "Zone-based sharding for data locality (GDPR compliance)",
+                        "Low latency reads from nearest region",
+                        "Strong consistency within zones",
+                        "Automatic failover across regions",
+                        "Single global database view"
+                    ],
+                    cons: [
+                        "Cross-region writes have higher latency",
+                        "More complex configuration than single-region",
+                        "Requires careful shard key design"
+                    ],
+                    migration: "MongoDB Global Clusters provide tunable consistency - strong within region, eventual across regions",
+                    features: ["Global Clusters", "Zone Sharding", "Cross-Region Replication", "Multi-Document Transactions"]
+                });
+                
+                recommendations.push({
+                    name: "CockroachDB (NewSQL)",
+                    tagline: "Distributed SQL with strong consistency",
+                    pros: [
+                        "Distributed SQL with ACID guarantees",
+                        "Strong consistency across regions (via Raft)",
+                        "PostgreSQL-compatible SQL",
+                        "Automatic rebalancing"
+                    ],
+                    cons: [
+                        "Higher latency due to consensus protocol",
+                        "Complex operational model",
+                        "Smaller ecosystem than MongoDB or PostgreSQL",
+                        "Performance can degrade with many regions (>3)",
+                        "More expensive for equivalent throughput"
+                    ],
+                    migration: null,
+                    features: ["CockroachDB", "Distributed SQL", "Multi-Region Replication", "Serializable Isolation"]
+                });
+            }
+            
+            // NEW SCENARIO 5: E-commerce + SQL Team
+            if (useCase === 'ecommerce' && teamSkill === 'sqlfirst') {
+                recommendations.push({
+                    name: "MongoDB Atlas",
+                    tagline: "Flexible schema for products + fast queries (Recommended)",
+                    pros: [
+                        "Document model perfect for product catalogs (varying attributes)",
+                        "Fast queries for product search and filtering",
+                        "ACID transactions for order processing",
+                        "Easy to add new product types without schema migrations",
+                        "Atlas Search for product search"
+                    ],
+                    cons: [
+                        "Team needs to learn MongoDB query language",
+                        "Different mental model from relational tables"
+                    ],
+                    migration: "E-commerce is one of MongoDB's sweet spots. Relational Migrator can help transition product catalogs.",
+                    features: ["Document Model", "Atlas Search", "Multi-Document Transactions", "Change Streams for inventory"]
+                });
+                
+                recommendations.push({
+                    name: "PostgreSQL with JSONB",
+                    tagline: "SQL with flexible product attributes",
+                    pros: [
+                        "Team stays with SQL",
+                        "JSONB columns for flexible product attributes",
+                        "Strong ACID guarantees",
+                        "Mature ecosystem"
+                    ],
+                    cons: [
+                        "JSONB indexing limited vs. native document queries",
+                        "Complex queries mixing relational + JSONB get messy",
+                        "Scaling requires manual sharding (Citus extension)",
+                        "Performance degrades with large JSONB documents"
+                    ],
+                    migration: null,
+                    features: ["PostgreSQL", "JSONB columns", "GIN indexes", "Stored procedures"]
+                });
+            }
+            
+            // NEW SCENARIO 6: CMS/Catalog + Rigid Schema Requirements
+            const normalization = answers[Q.NORMALIZATION];
+            
+            if ((useCase === 'cms' || useCase === 'catalog') && normalization === 'rigid') {
+                recommendations.push({
+                    name: "MongoDB with Schema Validation",
+                    tagline: "Flexibility with enforced structure (Recommended)",
+                    pros: [
+                        "Schema validation enforces required fields and types",
+                        "Flexible document model for content variations",
+                        "Can evolve schema over time with validation rules",
+                        "Fast queries for content retrieval",
+                        "Atlas Search for full-text content search"
+                    ],
+                    cons: [
+                        "Schema validation is less strict than SQL constraints",
+                        "Team needs to define and maintain validation rules"
+                    ],
+                    migration: "MongoDB Schema Validation provides structure where needed while keeping flexibility for content",
+                    features: ["Schema Validation (JSON Schema)", "Document Model", "Atlas Search", "Change Streams"]
+                });
+                
+                recommendations.push({
+                    name: "PostgreSQL",
+                    tagline: "Strict schema enforcement",
+                    pros: [
+                        "Strong schema enforcement with constraints",
+                        "Referential integrity via foreign keys",
+                        "Mature tooling for schema migrations",
+                        "SQL queries"
+                    ],
+                    cons: [
+                        "Schema changes require migrations (downtime risk)",
+                        "Difficult to handle varying content types",
+                        "Performance issues with deeply nested data (many joins)",
+                        "Less flexible for CMS content variations"
+                    ],
+                    migration: null,
+                    features: ["PostgreSQL", "Foreign Keys", "Check Constraints", "Schema Migrations"]
+                });
+            }
+            
+            // NEW SCENARIO 7: Graph Workload + SQL Team
+            const dataStructure = answers[Q.DATA_STRUCTURE];
+            
+            if (dataStructure === 'graph' && teamSkill === 'sqlfirst') {
+                recommendations.push({
+                    name: "MongoDB $graphLookup",
+                    tagline: "Graph queries in familiar aggregation pipeline (Recommended)",
+                    pros: [
+                        "No separate graph database needed",
+                        "$graphLookup for recursive graph traversal",
+                        "Works well for moderate graph depth (≤5 hops)",
+                        "Single database for both document and graph operations",
+                        "Easier to learn than dedicated graph query languages"
+                    ],
+                    cons: [
+                        "Not optimized for deep graph analytics (>5 hops)",
+                        "Less efficient than dedicated graph databases for complex algorithms",
+                        "Team needs to learn aggregation pipeline"
+                    ],
+                    migration: "For social networks, hierarchies, and moderate graph workloads, MongoDB $graphLookup is often sufficient",
+                    features: ["$graphLookup", "Aggregation Pipeline", "Recursive Queries", "Document Model"]
+                });
+                
+                recommendations.push({
+                    name: "PostgreSQL + Apache AGE",
+                    tagline: "Graph queries in PostgreSQL",
+                    pros: [
+                        "Team stays with PostgreSQL",
+                        "Apache AGE adds graph query capabilities (Cypher)",
+                        "Can combine SQL and graph queries",
+                        "ACID guarantees"
+                    ],
+                    cons: [
+                        "AGE is an extension (not core PostgreSQL)",
+                        "Learning Cypher query language still required",
+                        "Performance not as good as dedicated graph databases",
+                        "Limited community and tooling vs. Neo4j",
+                        "Scaling graph queries is challenging"
+                    ],
+                    migration: null,
+                    features: ["PostgreSQL", "Apache AGE extension", "Cypher queries", "Graph algorithms"]
+                });
+            }
+            
+            // NEW SCENARIO 8: Logs + Small Scale + SQL Team
+            if (useCase === 'logs' && teamSkill === 'sqlfirst' && 
+                (trafficAnswer === 'very-small' || trafficAnswer === 'small')) {
+                recommendations.push({
+                    name: "PostgreSQL with TimescaleDB",
+                    tagline: "Good enough for small log volumes",
+                    pros: [
+                        "Team stays with SQL",
+                        "TimescaleDB optimizes time-series log data",
+                        "Familiar SQL queries for log analysis",
+                        "Lower cost at small scale",
+                        "Fast to get started"
+                    ],
+                    cons: [
+                        "Will need to migrate if log volume grows significantly",
+                        "Less efficient than specialized log databases",
+                        "Full-text search limited compared to Elasticsearch/Atlas Search",
+                        "Manual partitioning management"
+                    ],
+                    migration: null,
+                    features: ["PostgreSQL", "TimescaleDB", "Hypertables", "SQL queries"]
+                });
+                
+                recommendations.push({
+                    name: "MongoDB Time Series + Atlas Search",
+                    tagline: "Better long-term scalability (Recommended)",
+                    pros: [
+                        "Purpose-built for log data (Time Series Collections)",
+                        "Scales seamlessly if log volume grows",
+                        "Atlas Search for full-text log search",
+                        "10x better compression for log storage",
+                        "Easier to add new log formats (flexible schema)"
+                    ],
+                    cons: [
+                        "Team needs to learn MongoDB",
+                        "Might feel like over-engineering for small scale initially"
+                    ],
+                    migration: "Starting with MongoDB avoids future migration pain as log volume grows",
+                    features: ["Time Series Collections", "Atlas Search", "Automatic Archiving", "Compression"]
+                });
+            }
+            
             return recommendations;
         }
 
@@ -2733,37 +4399,37 @@ flowchart TB
             
             // Build HTML for each recommendation
             const recsHTML = recommendations.map((rec, index) => `
-                <div class="rec-option" style="flex: 1; min-width: 300px; background: ${index === 0 ? 'linear-gradient(135deg, rgba(0,237,100,0.08) 0%, rgba(77,179,61,0.05) 100%)' : 'rgba(255,255,255,0.03)'}; border: 2px solid ${index === 0 ? '#00ED64' : 'rgba(255,255,255,0.1)'}; border-radius: 16px; padding: 30px; position: relative;">
+                <div class="rec-option" style="flex: 1; min-width: 300px; background: ${index === 0 ? 'linear-gradient(135deg, rgba(0,237,100,0.08) 0%, rgba(77,179,61,0.05) 100%)' : 'rgba(0,0,0,0.02)'}; border: 2px solid ${index === 0 ? '#00ED64' : 'rgba(0,0,0,0.1)'}; border-radius: 16px; padding: 30px; position: relative;">
                     ${index === 0 ? '<div style="position: absolute; top: 12px; right: 12px; background: #00ED64; color: #001e2b; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">RECOMMENDED</div>' : ''}
                     
-                    <h3 style="color: ${index === 0 ? '#00ED64' : '#fff'}; font-size: 1.4rem; margin-bottom: 8px; font-weight: 700;">${rec.name}</h3>
-                    <p style="color: rgba(255,255,255,0.7); font-size: 0.95rem; margin-bottom: 24px; font-style: italic;">${rec.tagline}</p>
+                    <h3 style="color: ${index === 0 ? '#00a854' : '#1a1a1a'}; font-size: 1.4rem; margin-bottom: 8px; font-weight: 700;">${rec.name}</h3>
+                    <p style="color: #666; font-size: 0.95rem; margin-bottom: 24px; font-style: italic;">${rec.tagline}</p>
                     
                     <div style="margin-bottom: 20px;">
-                        <div style="font-size: 0.85rem; color: #00ED64; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ Advantages</div>
+                        <div style="font-size: 0.85rem; color: #00a854; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ ADVANTAGES</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
-                            ${rec.pros.map(pro => `<li style="color: rgba(255,255,255,0.85); margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #00ED64;">+</span>${pro}</li>`).join('')}
+                            ${rec.pros.map(pro => `<li style="color: #333; margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #00a854;">+</span>${pro}</li>`).join('')}
                         </ul>
                     </div>
                     
                     <div style="margin-bottom: 20px;">
-                        <div style="font-size: 0.85rem; color: #ff6b6b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">⚠️ Tradeoffs</div>
+                        <div style="font-size: 0.85rem; color: #d93a3a; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">⚠️ TRADEOFFS</div>
                         <ul style="list-style: none; padding: 0; margin: 0;">
-                            ${rec.cons.map(con => `<li style="color: rgba(255,255,255,0.85); margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #ff6b6b;">−</span>${con}</li>`).join('')}
+                            ${rec.cons.map(con => `<li style="color: #333; margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #d93a3a;">−</span>${con}</li>`).join('')}
                         </ul>
                     </div>
                     
                     ${rec.migration ? `
                     <div style="background: rgba(0,237,100,0.1); border-left: 3px solid #00ED64; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
-                        <div style="font-size: 0.75rem; color: #00ED64; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Migration Support</div>
-                        <div style="color: rgba(255,255,255,0.9); font-size: 0.9rem; line-height: 1.5;">${rec.migration}</div>
+                        <div style="font-size: 0.75rem; color: #00a854; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">MIGRATION SUPPORT</div>
+                        <div style="color: #1a1a1a; font-size: 0.9rem; line-height: 1.5;">${rec.migration}</div>
                     </div>
                     ` : ''}
                     
                     <div>
-                        <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">Key Technologies</div>
+                        <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">KEY TECHNOLOGIES</div>
                         <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                            ${rec.features.map(feat => `<span style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">${feat}</span>`).join('')}
+                            ${rec.features.map(feat => `<span style="background: rgba(0,0,0,0.08); color: #333; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">${feat}</span>`).join('')}
                         </div>
                     </div>
                 </div>
@@ -2781,9 +4447,9 @@ flowchart TB
                         ${recsHTML}
                     </div>
                     
-                    <div style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: left;">
-                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); line-height: 1.7;">
-                            <strong style="color: #00ED64;">💡 Our Recommendation:</strong> For your use case (<em>${useCase}</em>), we lean toward <strong>MongoDB Atlas + Atlas Search</strong> because it's purpose-built for this workload and will scale more effectively long-term. However, if minimizing immediate team disruption is critical, the PostgreSQL + Elasticsearch approach offers a shorter ramp-up period.
+                    <div style="background: rgba(0,237,100,0.08); border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: left;">
+                        <div style="font-size: 0.9rem; color: #333; line-height: 1.7;">
+                            <strong style="color: #00a854;">💡 Our Recommendation:</strong> For your use case (<em>${useCase}</em>), we lean toward <strong>MongoDB Atlas + Atlas Search</strong> because it's purpose-built for this workload and will scale more effectively long-term. However, if minimizing immediate team disruption is critical, the PostgreSQL + Elasticsearch approach offers a shorter ramp-up period.
                         </div>
                     </div>
                     
@@ -2804,6 +4470,141 @@ flowchart TB
             });
         }
 
+        /**
+         * Validate user answers for incompatible combinations
+         * @param {Object} answers - User's answers
+         * @returns {Array} - Array of validation warnings
+         */
+        function validateAnswers(answers) {
+            const warnings = [];
+            
+            const trafficPattern = answers[Q.TRAFFIC_PATTERN];
+            const distribution = answers[Q.DISTRIBUTION];
+            const mobileOffline = answers[Q.MOBILE_OFFLINE];
+            const deployment = answers[Q.DEPLOYMENT];
+            const acidNeeds = answers[Q.ACID_NEEDS];
+            const dataStructure = answers[Q.DATA_STRUCTURE];
+            const advancedFeatures = answers[Q.ADVANCED_FEATURES];
+            const useCase = answers[Q.USE_CASE];
+            const teamSkill = answers[Q.TEAM_SKILL];
+            
+            // Validation 1: Massive scale + single region/node
+            if ((trafficPattern === 'massive' || trafficPattern === 'large') && 
+                distribution === 'single') {
+                warnings.push({
+                    severity: 'warning',
+                    icon: '⚠️',
+                    message: 'Large/Massive scale typically requires distributed architecture',
+                    detail: 'Single-region deployments may struggle with high traffic volumes. Consider multi-region or sharded deployment.',
+                    questions: [Q.TRAFFIC_PATTERN, Q.DISTRIBUTION]
+                });
+            }
+            
+            // Validation 2: Mobile offline + cloud-only deployment (if onprem selected)
+            if (mobileOffline === 'yes' && deployment === 'onprem') {
+                warnings.push({
+                    severity: 'info',
+                    icon: 'ℹ️',
+                    message: 'Mobile offline sync typically requires cloud infrastructure',
+                    detail: 'MongoDB Realm Device Sync and similar solutions require cloud deployment. On-premise may need custom sync implementation.',
+                    questions: [Q.MOBILE_OFFLINE, Q.DEPLOYMENT]
+                });
+            }
+            
+            // Validation 3: Heavy ACID + document structure (actually compatible, just informational)
+            if (acidNeeds === 'heavy' && dataStructure === 'document') {
+                warnings.push({
+                    severity: 'info',
+                    icon: '💡',
+                    message: 'MongoDB supports ACID transactions with document model',
+                    detail: 'Heavy ACID requirements are fully supported via multi-document transactions. No conflicts here!',
+                    questions: [Q.ACID_NEEDS, Q.DATA_STRUCTURE]
+                });
+            }
+            
+            // Validation 4: Advanced search + no search-capable database in recommendation
+            // (We'll check this after recommendation is determined - skip for now)
+            
+            // Validation 5: Multi-region + strong consistency = performance tradeoff
+            if (distribution === 'multiregion' && acidNeeds === 'heavy') {
+                warnings.push({
+                    severity: 'info',
+                    icon: '🌍',
+                    message: 'Multi-region with strong consistency involves latency tradeoffs',
+                    detail: 'Cross-region strong consistency requires consensus protocols, which adds latency. Consider zone-based sharding for data locality.',
+                    questions: [Q.DISTRIBUTION, Q.ACID_NEEDS]
+                });
+            }
+            
+            // Validation 6: Logs use case + small scale + SQL (informational)
+            if (useCase === 'logs' && teamSkill === 'sqlfirst' && 
+                (trafficPattern === 'very-small' || trafficPattern === 'small')) {
+                warnings.push({
+                    severity: 'info',
+                    icon: '📊',
+                    message: 'Small-scale logs: PostgreSQL viable now, MongoDB better long-term',
+                    detail: 'At small scale, PostgreSQL+TimescaleDB works well. However, starting with MongoDB avoids migration pain if log volume grows.',
+                    questions: [Q.USE_CASE, Q.TEAM_SKILL, Q.TRAFFIC_PATTERN]
+                });
+            }
+            
+            return warnings;
+        }
+
+        /**
+         * Show validation warnings to user
+         * @param {Array} warnings - Array of warning objects
+         * @param {Function} continueCallback - Function to call if user continues anyway
+         */
+        function showValidationWarnings(warnings, continueCallback) {
+            const wizardContent = document.getElementById('wizard-content');
+            
+            const warningsHTML = warnings.map(w => `
+                <div style="background: ${w.severity === 'warning' ? 'rgba(255,107,107,0.1)' : 'rgba(0,237,100,0.1)'}; 
+                            border-left: 4px solid ${w.severity === 'warning' ? '#ff6b6b' : '#00ED64'}; 
+                            padding: 16px 20px; 
+                            border-radius: 8px; 
+                            margin-bottom: 16px;">
+                    <div style="font-size: 1rem; font-weight: 600; color: ${w.severity === 'warning' ? '#d93a3a' : '#00a854'}; margin-bottom: 8px;">
+                        ${w.icon} ${w.message}
+                    </div>
+                    <div style="font-size: 0.9rem; color: #333; line-height: 1.6;">
+                        ${w.detail}
+                    </div>
+                </div>
+            `).join('');
+            
+            wizardContent.innerHTML = `
+                <div class="wizard-card" style="max-width: 800px;">
+                    <div class="wizard-icon">🔍</div>
+                    <h2 class="wizard-title">Potential Considerations Detected</h2>
+                    <div class="wizard-subtitle" style="margin-bottom: 30px;">
+                        Based on your answers, here are some things to consider:
+                    </div>
+                    
+                    ${warningsHTML}
+                    
+                    <div style="margin-top: 30px; padding: 16px; background: rgba(0,0,0,0.05); border-radius: 12px; text-align: left;">
+                        <div style="font-size: 0.9rem; color: #333; line-height: 1.6;">
+                            <strong style="color: #1a1a1a;">What to do:</strong> These are informational notes to help you make the best decision. 
+                            You can review your answers or continue to see the recommendation with these considerations in mind.
+                        </div>
+                    </div>
+                    
+                    <div class="wizard-nav" style="margin-top: 30px;">
+                        <button class="wizard-btn secondary" onclick="previousStep()">← Review Answers</button>
+                        <button class="wizard-btn primary" onclick="(${continueCallback.toString()})()">Continue to Recommendation →</button>
+                    </div>
+                </div>
+            `;
+            
+            // Track validation warnings shown
+            Analytics.trackEvent('validation_warnings_shown', {
+                warning_count: warnings.length,
+                warning_types: warnings.map(w => w.severity).join(',')
+            });
+        }
+
         // Recommendation engine (CONCERN #5 & #6: Error handling + Refactored logic)
         /**
          * Generate and display the final database recommendation
@@ -2815,6 +4616,58 @@ flowchart TB
                 clearWizardState();
                 // Force progress bar to 100% on completion
                 const progressFill = document.getElementById('progress-fill');
+                const progressText = document.getElementById('progress-text');
+                if (progressFill) progressFill.style.width = '100%';
+                if (progressText) progressText.textContent = '100%';
+
+                const answers = wizardData.answers;
+                
+                // Validate answers for potential conflicts
+                const warnings = validateAnswers(answers);
+                if (warnings.length > 0) {
+                    // Show warnings and let user decide
+                    showValidationWarnings(warnings, function showRecommendationAfterValidation() {
+                        // User clicked continue - show recommendation anyway
+                        // Clear progress bar and re-render recommendation
+                        const progressFill = document.getElementById('progress-fill');
+                        const progressText = document.getElementById('progress-text');
+                        if (progressFill) progressFill.style.width = '100%';
+                        if (progressText) progressText.style.textContent = '100%';
+                        
+                        // Re-run show recommendation butbypass validation
+                        showRecommendationDirect();
+                    });
+                    return; // Exit early - validation screen shown
+                }
+                
+                showRecommendationDirect();
+            } catch (error) {
+                console.error('Error generating recommendation:', error);
+                const wizardContent = document.getElementById('wizard-content');
+                wizardContent.innerHTML = `
+                    <div class="wizard-card">
+                        <div class="wizard-icon">❌</div>
+                        <h2 class="wizard-title">Error Generating Recommendation</h2>
+                        <div class="wizard-subtitle">Something went wrong. Please try again or refresh the page.</div>
+                        <div class="wizard-nav">
+                            <button class="wizard-btn secondary" onclick="restartWizard()">Start Over</button>
+                        </div>
+                    </div>
+                `;
+                Logger.error('Recommendation generation failed', {error: error.message});
+            }
+        }
+
+        /**
+         * Show recommendation without validation (internal function)
+         * Called either directly or after user acknowledges validation warnings
+         */
+        function showRecommendationDirect() {
+            try {
+                // Clear saved state since wizard is complete
+                clearWizardState();
+                // Force progress bar to 100% on completion
+                const progressFill  = document.getElementById('progress-fill');
                 const progressText = document.getElementById('progress-text');
                 if (progressFill) progressFill.style.width = '100%';
                 if (progressText) progressText.textContent = '100%';
@@ -3199,6 +5052,36 @@ flowchart TB
                                 <div class="rec-section-value" style="font-size: 1rem; font-weight: 500; line-height: 1.5;">${reasoning}</div>
                             </div>
                         ` : ''}
+                        ${primaryDB.sharding ? `
+                            <div class="rec-section" style="background: rgba(0,237,100,0.05); border-left: 3px solid #00ED64; padding-left: 15px;">
+                                <div class="rec-section-title" style="color: #00ED64;">🗂️ Sharding Strategy</div>
+                                <div class="rec-section-value" style="font-size: 0.95rem; color: #1a1a1a;">
+                                    <div style="margin-bottom: 8px; color: #1a1a1a;"><strong>Strategy:</strong> ${primaryDB.sharding.strategy}</div>
+                                    <div style="margin-bottom: 8px; color: #1a1a1a;"><strong>Shard Key:</strong> ${primaryDB.sharding.shardKey}</div>
+                                    <div style="color: #1a1a1a;"><strong>Use Case:</strong> ${primaryDB.sharding.useCase}</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        ${primaryDB.accessOptimization ? `
+                            <div class="rec-section" style="background: rgba(0,180,240,0.05); border-left: 3px solid #00b4f0; padding-left: 15px;">
+                                <div class="rec-section-title" style="color: #00b4f0;">🔑 Access Pattern Optimization</div>
+                                <div class="rec-section-value" style="font-size: 0.95rem; color: #1a1a1a;">
+                                    <div style="margin-bottom: 8px; color: #1a1a1a;"><strong>Pattern:</strong> ${primaryDB.accessOptimization.pattern}</div>
+                                    <div style="margin-bottom: 12px; color: #1a1a1a;"><strong>Optimization:</strong> ${primaryDB.accessOptimization.optimization}</div>
+                                    ${primaryDB.accessOptimization.caching ? `
+                                        <div style="background: rgba(255,193,7,0.1); padding: 10px; border-radius: 6px; margin-bottom: 12px;">
+                                            <strong style="color: #d97700;">⚡ Caching Recommendation:</strong><br>
+                                            <span style="color: #1a1a1a;">${primaryDB.accessOptimization.caching.recommendation}</span><br>
+                                            <em style="font-size: 0.9em; color: #666;">${primaryDB.accessOptimization.caching.reason}</em>
+                                        </div>
+                                    ` : ''}
+                                    <div style="color: #1a1a1a;"><strong>Recommendations:</strong></div>
+                                    <ul style="margin-top: 6px; margin-left: 20px; color: #333;">
+                                        ${primaryDB.accessOptimization.recommendations.map(rec => `<li style="margin-bottom: 4px; color: #333;">${rec}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            </div>
+                        ` : ''}
                     </div>
 
                     <div class="rec-actions">
@@ -3219,6 +5102,94 @@ flowchart TB
                         <div class="wizard-subtitle">Something went wrong. Please try again or refresh the page.</div>
                         <div class="wizard-nav">
                             <button class="wizard-btn secondary" onclick="restartWizard()">Start Over</button>
+                        </div>
+                    </div>
+                `;
+                Logger.error('Recommendation generation failed', {error: error.message});
+            }
+        }
+
+
+        /**
+         * Generate feedback UI HTML
+         * @param {string} recommendationType - 'single' or 'competing'
+         * @returns {string} - HTML string for feedback section
+         */
+        function getFeedbackHTML(recommendationType = 'single') {
+            return `
+                <div class="feedback-section" id="feedback-section">
+                    <div class="feedback-title">Was this recommendation helpful?</div>
+                    <div class="feedback-buttons">
+                        <button class="feedback-btn helpful" onclick="handleFeedbackClick(true, '${recommendationType}')">
+                            👍 Helpful
+                        </button>
+                        <button class="feedback-btn not-helpful" onclick="handleFeedbackClick(false, '${recommendationType}')">
+                            👎 Not Helpful
+                        </button>
+                    </div>
+                    <div id="feedback-comment-area" style="display: none;">
+                        <textarea class="feedback-textarea" id="feedback-comment" placeholder="Optional: Tell us why (helps us improve)..."></textarea>
+                        <button class="feedback-submit" onclick="submitFeedback('${recommendationType}')">Submit Feedback</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Handle feedback button click (Helpful/Not Helpful)
+         * @param {boolean} helpful - True if helpful, false if not helpful
+         * @param {string} recommendationType - Type of recommendation shown
+         */
+        function handleFeedbackClick(helpful, recommendationType) {
+            // Store feedback choice temporarily
+            window.feedbackChoice = helpful;
+            
+            // Show comment area
+            const commentArea = document.getElementById('feedback-comment-area');
+            if (commentArea) {
+                commentArea.style.display = 'block';
+                document.getElementById('feedback-comment').focus();
+            }
+            
+            // Disable feedback buttons
+            const buttons = document.querySelectorAll('.feedback-btn');
+            buttons.forEach(btn => btn.disabled = true);
+            
+            // Log immediate feedback
+            Analytics.trackEvent('recommendation_feedback_quick', {
+                helpful: helpful,
+                recommendation_type: recommendationType
+            });
+        }
+
+        /**
+         * Submit detailed feedback with optional comment
+         * @param {string} recommendationType - Type of recommendation shown
+         */
+        function submitFeedback(recommendationType) {
+            const helpful = window.feedbackChoice;
+            const comment = document.getElementById('feedback-comment')?.value || '';
+            const answers = wizardData.answers;
+            const primaryDB = determinePrimaryDB(answers);
+            
+            // Track detailed feedback to GA4
+            Analytics.trackEvent('recommendation_feedback', {
+                helpful: helpful,
+                db_recommendation: primaryDB.db,
+                use_case: answers[Q.USE_CASE],
+                recommendation_type: recommendationType,
+                feedback_text: comment.substring(0, 500), // Limit to 500 chars for GA4
+                has_comment: comment.length > 0
+            });
+            
+            // Show thank you message
+            const feedbackSection = document.getElementById('feedback-section');
+            if (feedbackSection) {
+                feedbackSection.innerHTML = `
+                    <div class="feedback-success">
+                        Thank you for your feedback!
+                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); margin-top: 12px; font-weight: 400;">
+                            Your input helps us improve recommendations for everyone.
                         </div>
                     </div>
                 `;
@@ -3308,8 +5279,98 @@ flowchart TB
             }
         });
 
+        /**
+         * Debug Mode
+         * Shows hidden Decision Logic tab for administrators
+         */
+        const DebugMode = {
+            isEnabled: false,
+            
+            enable: () => {
+                DebugMode.isEnabled = true;
+                const debugTab = document.getElementById('debug-tab');
+                const ruleEngineTab = document.getElementById('rule-engine-tab');
+                if (debugTab) {
+                    debugTab.style.display = 'flex';
+                }
+                if (ruleEngineTab) {
+                    ruleEngineTab.style.display = 'flex';
+                }
+                console.log('🔓 [Debug Mode] Decision Logic and Rule Engine tabs enabled');
+                    
+                // Add visual indicator
+                const indicator = document.createElement('div');
+                indicator.id = 'debug-indicator';
+                indicator.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: rgba(255,107,107,0.9);
+                    color: white;
+                    padding: 8px 16px;
+                    border-radius: 8px;
+                    font-size: 0.85rem;
+                    font-weight: 600;
+                    z-index: 9999;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                `;
+                indicator.textContent = '🔧 Debug Mode';
+                document.body.appendChild(indicator);
+            },
+            
+            disable: () => {
+                DebugMode.isEnabled = false;
+                const debugTab = document.getElementById('debug-tab');
+                const ruleEngineTab = document.getElementById('rule-engine-tab');
+                if (debugTab) {
+                    debugTab.style.display = 'none';
+                }
+                if (ruleEngineTab) {
+                    ruleEngineTab.style.display = 'none';
+                }
+                console.log('🔒 [Debug Mode] Decision Logic and Rule Engine tabs hidden');
+                const indicator = document.getElementById('debug-indicator');
+                if (indicator) {
+                    indicator.remove();
+                }
+            },
+            
+            toggle: () => {
+                if (DebugMode.isEnabled) {
+                    DebugMode.disable();
+                } else {
+                    DebugMode.enable();
+                }
+            },
+            
+            checkUrlParam: () => {
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('debug') === 'true') {
+                    DebugMode.enable();
+                }
+            }
+        };
+        
+        // Make debug mode globally accessible for console commands
+        window.enableDebugMode = DebugMode.enable;
+        window.disableDebugMode = DebugMode.disable;
+        window.toggleDebugMode = DebugMode.toggle;
+        
+        // Keyboard shortcut: Shift + D
+        document.addEventListener('keydown', (e) => {
+            if (e.shiftKey && e.key === 'D') {
+                DebugMode.toggle();
+            }
+        });
+
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
+            // Check for debug mode via URL parameter
+            DebugMode.checkUrlParam();
+            
+            // Initialize A/B Testing
+            ABTesting.init();
+            
             // Verify GA4 is initialized
             if (typeof gtag !== 'undefined') {
                 console.log('✅ [GA4] Google Analytics is initialized and ready');
