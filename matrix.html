@@ -2016,7 +2016,7 @@ flowchart TB
                     <span style="color: rgba(255,255,255,0.7);">Every rule ID must have a matching handler in <code>showRecommendationDirect()</code>. Without it, the rule's <code>reason</code> code won't generate proper architecture/reasoning output.</span>
                 </div>
 
-                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📋 Current Rules List (27 rules + 1 default)</h3>
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📋 Current Rules List (32 rules + 1 default)</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; margin-top: 20px;">
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00b4f0;">
                         <strong style="color: #00b4f0; display: block; margin-bottom: 10px;">🌊 Streams Processing</strong>
@@ -2095,10 +2095,21 @@ flowchart TB
                             <li>codefirst-rigid (→ MongoDB + Schema Validation)</li>
                         </ul>
                     </div>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #03a9f4;">
+                        <strong style="color: #03a9f4; display: block; margin-bottom: 10px;">🏪 Use Case Specific (6 rules)</strong>
+                        <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                            <li>saas-multitenant (SQL constraints aware)</li>
+                            <li>ecommerce (SQL constraints aware)</li>
+                            <li>cms-content (→ MongoDB flexible schema)</li>
+                            <li>marketplace (SQL + scale aware)</li>
+                            <li>social-network (Graph depth + SQL aware)</li>
+                            <li>custom-explore (SQL constraints aware)</li>
+                        </ul>
+                    </div>
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #607d8b;">
                         <strong style="color: #607d8b; display: block; margin-bottom: 10px;">⚙️ Default Fallback</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                            <li>default (→ MongoDB Atlas / MongoDB Enterprise)</li>
+                            <li>default (SQL constraints aware → RDBMS or MongoDB)</li>
                         </ul>
                     </div>
                 </div>
@@ -4226,6 +4237,45 @@ flowchart TB
                 }
             },
             {
+                id: 'marketplace',
+                conditions: (answers) => answers[Q.USE_CASE] === 'marketplace',
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    
+                    if (sqlConstraints.isStrong) {
+                        if (traffic === 'massive' || traffic === 'large') {
+                            return { db: resolveComponents(answers, 'hybrid') };
+                        }
+                        return { db: resolveComponents(answers, 'rdbms') };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
+            },
+            {
+                id: 'social-network',
+                conditions: (answers) => answers[Q.USE_CASE] === 'social',
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const dataStructure = answers[Q.DATA_STRUCTURE];
+                    const graphDepth = answers[Q.GRAPH_DEPTH];
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    
+                    if (dataStructure === 'graph' && graphDepth === 'deep') {
+                        if (sqlConstraints.isStrong) {
+                            return { db: "Hybrid: RDBMS + Graph Database" };
+                        }
+                        const mongoPart = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                        return { db: `${mongoPart} + Graph Database` };
+                    }
+                    
+                    if (sqlConstraints.isStrong) {
+                        return { db: resolveComponents(answers, 'hybrid') };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
+            },
+            {
                 id: 'custom-explore',
                 conditions: (answers) => answers[Q.USE_CASE] === 'custom',
                 result: (answers) => {
@@ -4253,11 +4303,17 @@ flowchart TB
                 }
             },
 
-            // Default Fallback
+            // Default Fallback - respects SQL constraints
             {
                 id: 'default',
                 conditions: {},
-                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: resolveComponents(answers, 'rdbms') };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
             }
         ];
 
@@ -4268,9 +4324,12 @@ flowchart TB
             // Validate required answers
             if (!answers[Q.USE_CASE] || !answers[Q.WORKLOAD]) {
                 console.warn("Missing required answers for determination");
-                return { db: "MongoDB", reason: "incomplete_data" };
+                const sqlConstraints = getSQLConstraints(answers);
+                if (sqlConstraints.isStrong) {
+                    return { db: "RDBMS or MongoDB (incomplete data)", reason: "incomplete_data" };
+                }
+                return { db: resolveComponents(answers, 'mongodb'), reason: "incomplete_data" };
             }
-
 
             // Use Rule Engine
             const result = RuleEngine.evaluate(answers);
@@ -4278,7 +4337,11 @@ flowchart TB
             // Fallback if no rule matches (should be covered by 'default' rule)
             if (!result) {
                 console.warn("No matching rule found, falling back to default");
-                return { db: "MongoDB", reason: "fallback" };
+                const sqlConstraints = getSQLConstraints(answers);
+                if (sqlConstraints.isStrong) {
+                    return { db: resolveComponents(answers, 'rdbms'), reason: "fallback" };
+                }
+                return { db: resolveComponents(answers, 'mongodb'), reason: "fallback" };
             }
 
 
@@ -4689,7 +4752,7 @@ flowchart TB
                 } else if (reason === 'sql-moderate') {
                     reasoningPoints.push("Even with SQL skills, if the data model can be optimized or scale is high, MongoDB is a strong candidate using tools like SQL drivers and Relational Migrator.");
                 } else if (reason === 'codefirst-document') {
-                    reasoningPoints.push("Flexible JSON schema + Code-First team is the ideal fit for MongoDB.");
+                    reasoningPoints.push("Flexible JSON schema with Code-First teams works well with MongoDB's document model and native language drivers.");
                 } else if (reason === 'codefirst-rigid') {
                     reasoningPoints.push("You can enforce strict schema validation in MongoDB while enjoying the developer experience of a document model.");
                 } else if (reason === 'saas-multitenant') {
@@ -4707,13 +4770,35 @@ flowchart TB
                     if (sqlConstraints.isStrong) {
                         reasoningPoints.push("E-commerce with SQL requirements: RDBMS ensures strong ACID for order transactions and inventory management.");
                     } else {
-                        reasoningPoints.push("MongoDB excels at e-commerce: flexible product catalogs, session management, personalization, and multi-document ACID transactions for order processing.");
+                        reasoningPoints.push("E-commerce platforms work well with MongoDB: flexible product catalogs, session management, personalization, and multi-document ACID transactions for order processing.");
                     }
                     features.push("Product Catalog", "Order Management", "Session Handling");
                 } else if (reason === 'cms-content') {
                     architecture = "Content Management System";
                     reasoningPoints.push("Content management is naturally document-oriented. MongoDB's flexible schema handles varied content types, rich media metadata, and hierarchical page structures without rigid table migrations.");
                     features.push("Flexible Content Schema", "Media Metadata", "Hierarchical Data");
+                } else if (reason === 'marketplace') {
+                    architecture = "Multi-Vendor Marketplace";
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        reasoningPoints.push("Marketplace with SQL requirements: RDBMS provides strong ACID for vendor transactions, order management, and financial reconciliation.");
+                    } else {
+                        reasoningPoints.push("Marketplaces benefit from MongoDB's flexible schema for varied product catalogs across vendors, document model for complex listings, and multi-document ACID for order orchestration.");
+                    }
+                    features.push("Multi-Vendor Catalogs", "Order Orchestration", "Vendor Management");
+                } else if (reason === 'social-network') {
+                    architecture = "Social Network Platform";
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const graphDepth = answers[Q.GRAPH_DEPTH];
+                    if (graphDepth === 'deep') {
+                        reasoningPoints.push("Social networks with deep relationship traversals (friends-of-friends, influence networks, recommendations >5 hops) benefit from a dedicated Graph Database alongside MongoDB for operational data.");
+                        features.push("Graph Database", "Relationship Analytics", "Social Graph");
+                    } else if (sqlConstraints.isStrong) {
+                        reasoningPoints.push("Social network with SQL requirements: Hybrid architecture provides RDBMS for structured user data while MongoDB handles flexible content (posts, media, feeds).");
+                    } else {
+                        reasoningPoints.push("Social networks are naturally document-oriented: user profiles, posts, comments, and feeds map well to MongoDB's document model. $graphLookup handles shallow relationship queries efficiently.");
+                    }
+                    features.push("User Profiles", "Activity Feeds", "Content Storage");
                 } else if (reason === 'custom-explore') {
                     architecture = "Custom Solution";
                     reasoningPoints.push("Based on your specific requirements, the recommendation considers your team's skills, scale needs, and feature requirements.");
@@ -4724,7 +4809,6 @@ flowchart TB
             const trafficValue = answers[Q.TRAFFIC_PATTERN];
             const isMassive = trafficValue === 'massive';
             const isLarge = trafficValue === 'large' || isMassive;
-            const isSpiky = isLarge;
 
             if (dbChoice.includes("MongoDB") && answers[Q.WORKLOAD] === 'transactional' && isMassive) {
                 if (answers[Q.DEPLOYMENT] !== 'onprem') {
@@ -4808,15 +4892,15 @@ flowchart TB
                     reasoningPoints.push("For read-heavy workloads with simple lookups, use read replicas to distribute load and improve query performance.");
                 }
 
-                // Traffic Pattern (Spiky)
-                if (isSpiky && dbChoice.includes("MongoDB")) {
+                // Traffic Pattern (Large/Massive scale needs scaling strategies)
+                if (isLarge && dbChoice.includes("MongoDB")) {
                     const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
                     if (isOnPrem) {
                         features.push("Automated Scaling (Ops Manager API / K8s Operator)");
-                        reasoningPoints.push("For spiky traffic on-premise, use Ops Manager API or Kubernetes Operator for automated scaling, or plan capacity for peak loads.");
+                        reasoningPoints.push("For high-traffic on-premise deployments, use Ops Manager API or Kubernetes Operator for automated scaling, or plan capacity for peak loads.");
                     } else {
                         features.push("Cluster Auto-Scaling");
-                        reasoningPoints.push("For spiky or unpredictable traffic, enable Cluster Auto-Scaling to handle bursts without over-provisioning (preferred over Serverless for production stability).");
+                        reasoningPoints.push("For high-traffic workloads, enable Cluster Auto-Scaling to handle traffic variations without over-provisioning.");
                     }
                 }
             }
