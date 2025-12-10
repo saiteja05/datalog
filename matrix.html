@@ -2685,22 +2685,22 @@ flowchart TB
         /**
          * Resume wizard from saved state
          */
-        function resumeSession() {
+        window.resumeSession = function() {
             const savedState = loadWizardState();
             if (savedState) {
                 wizardData.answers = savedState.answers;
                 wizardData.currentStep = savedState.currentStep;
             }
             renderWizardStep();
-        }
+        };
 
         /**
          * Start wizard fresh, clearing any saved state
          */
-        function startFresh() {
+        window.startFresh = function() {
             clearWizardState();
             renderWizardStep();
-        }
+        };
 
         const wizardData = {
             questions: [
@@ -3021,27 +3021,24 @@ flowchart TB
          * Switch between Guided Path and Expert View modes
          * @param {string} mode - Mode to switch to ('guided' or 'expert')
          */
-        function switchMode(mode) {
-            // Update tabs
+        window.switchMode = function(mode) {
             document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
             document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
             
-            // Update containers
             document.querySelectorAll('.mode-container').forEach(c => c.classList.remove('active'));
             document.getElementById(`${mode}-mode`).classList.add('active');
 
             if (mode === 'guided') {
                 renderWizardStep();
             } else if (mode === 'expert') {
-                // Re-render Mermaid diagram and re-init pan-zoom
                 setTimeout(() => {
                     if (window.mermaid) {
                         mermaid.init(undefined, '.mermaid');
-                        setupPanZoom(); // Re-attach pan-zoom to new SVG
+                        setupPanZoom();
                     }
                 }, 100);
             }
-        }
+        };
 
         // ... (renderWizardStep and other wizard functions remain here) ...
 
@@ -3183,17 +3180,17 @@ flowchart TB
         /**
          * Zoom in on the expert view diagram
          */
-        function zoomIn() { if(panZoomInstance) panZoomInstance.zoomIn(); }
+        window.zoomIn = function() { if(panZoomInstance) panZoomInstance.zoomIn(); };
         
         /**
          * Zoom out on the expert view diagram
          */
-        function zoomOut() { if(panZoomInstance) panZoomInstance.zoomOut(); }
+        window.zoomOut = function() { if(panZoomInstance) panZoomInstance.zoomOut(); };
         
         /**
          * Reset zoom and center the expert view diagram
          */
-        function resetZoom() { if(panZoomInstance) { panZoomInstance.resetZoom(); panZoomInstance.center(); } }
+        window.resetZoom = function() { if(panZoomInstance) { panZoomInstance.resetZoom(); panZoomInstance.center(); } };
        
         window.addEventListener('resize', function(){
             if(panZoomInstance) { panZoomInstance.resize(); panZoomInstance.fit(); panZoomInstance.center(); }
@@ -3497,7 +3494,7 @@ flowchart TB
          * @param {string} value - Value of selected option
          * @param {boolean} isMultiSelect - Whether question allows multiple selections
          */
-        function selectOption(questionId, value, isMultiSelect) {
+        window.selectOption = function(questionId, value, isMultiSelect) {
             try {
                 const question = wizardData.questions.find(q => q.id === questionId);
                 if (!question) {
@@ -3505,7 +3502,6 @@ flowchart TB
                     return;
                 }
                 
-                // Validate value is in allowed options
                 const validValues = question.options.map(opt => opt.value);
                 if (!validValues.includes(value)) {
                     console.error('Invalid option value:', value);
@@ -3523,37 +3519,32 @@ flowchart TB
                         wizardData.answers[questionId].push(value);
                     }
                 } else {
-                    // If changing a parent answer, clear dependent answers
                     if (wizardData.answers[questionId] !== value) {
                         clearDependentAnswers(questionId);
                     }
                     wizardData.answers[questionId] = value;
                 }
                 
-                //Track user answer via analytics
                 Analytics.trackQuestionAnswered(questionId, wizardData.answers[questionId]);
                 Logger.debug(`Question answered`, {questionId, answer: wizardData.answers[questionId]});
                 
                 renderWizardStep();
-                saveWizardState(); // Auto-save after selection
+                saveWizardState();
             } catch (error) {
                 console.error('Error in selectOption:', error);
                 Logger.error('selectOption error', {questionId, value, error: error.message});
             }
-        }
+        };
 
         /**
          * Toggle visibility of optional sub-question
          * @param {string} toggleId - ID of the toggle element
          * @param {number} questionId - ID of the question to toggle
          */
-        function toggleSubQuestion(toggleId, questionId) {
-            // Toggle state
+        window.toggleSubQuestion = function(toggleId, questionId) {
             window[toggleId] = !window[toggleId];
-            
-            // Re-render to update validation state (Next button) and UI
             renderWizardStep();
-        }
+        };
 
         /**
          * Clear answers for questions that depend on a changed parent question
@@ -3583,16 +3574,16 @@ flowchart TB
          * Advance to the next question in the wizard
          * Automatically skips questions that don't meet conditions
          */
-        function nextStep() {
+        window.nextStep = function() {
             const nextQuestion = findNextQuestion(wizardData.currentStep + 1);
             if (nextQuestion !== null) {
                 wizardData.currentStep = nextQuestion;
                 renderWizardStep();
-                saveWizardState(); // Auto-save after advancing
+                saveWizardState();
             } else {
                 showRecommendation();
             }
-        }
+        };
 
         /**
          * Find the next visible question starting from a given index
@@ -3617,36 +3608,32 @@ flowchart TB
          * Go back to the previous question in the wizard
          * Automatically skips questions that don't meet conditions
          */
-        function prevStep() {
+        window.prevStep = function() {
             if (wizardData.currentStep > 0) {
-                // Find the previous visible question, skipping inline sub-questions
                 for (let i = wizardData.currentStep - 1; i >= 0; i--) {
                     const question = wizardData.questions[i];
-                    
-                    // Skip inline sub-questions - they should never be navigation targets
                     if (question.isInline) {
                         continue;
                     }
-                    
                     if (shouldShowQuestion(question)) {
                         wizardData.currentStep = i;
                         renderWizardStep();
-                        saveWizardState(); // Auto-save after going back
+                        saveWizardState();
                         return;
                     }
                 }
             }
-        }
+        };
 
         /**
          * Skip the current question
          * Sets answer to empty array for multiselect, null for single-select
          */
-        function skipStep() {
+        window.skipStep = function() {
             const question = wizardData.questions[wizardData.currentStep];
             wizardData.answers[question.id] = question.multiselect ? [] : null;
-            nextStep(); // nextStep will auto-save
-        }
+            window.nextStep();
+        };
 
         /**
          * Determine primary database recommendation based on answers
@@ -5057,23 +5044,22 @@ flowchart TB
          * Restart the wizard from the beginning
          * Clears all answers and saved state
          */
-        function restartWizard() {
-            clearWizardState(); // Clear localStorage
+        window.restartWizard = function() {
+            clearWizardState();
             wizardData.answers = {};
             wizardData.currentStep = 0;
             renderWizardStep();
-        }
+        };
 
         /**
          * Export recommendation in various formats
          * @param {string} format - Export format ('json' or 'csv')
          */
-        function exportRecommendation(format) {
+        window.exportRecommendation = function(format) {
             try {
                 const answers = wizardData.answers;
                 const primaryDB = determinePrimaryDB(answers);
                 
-                // Build recommendation object for export
                 const recommendation = {
                     db: primaryDB.db,
                     architecture: 'See full recommendation on screen',
@@ -5083,7 +5069,6 @@ flowchart TB
                 };
                 
                 if (format === 'json') {
-                    // Build complete recommendation data with questions
                     const recommendationData = RecommendationExport.generateJSON(
                         recommendation.db,
                         recommendation.architecture,
@@ -5100,7 +5085,6 @@ flowchart TB
                     
                     Logger.info('Recommendation exported as JSON');
                 } else if (format === 'csv') {
-                    // Generate CSV with recommendation verdict at top
                     const csv = RecommendationExport.generateCSV(answers, recommendation);
                     RecommendationExport.downloadCSV(
                         csv,
@@ -5113,16 +5097,16 @@ flowchart TB
                 Logger.error('Export failed', {format, error: error.message});
                 alert('Export failed. Please try again or check the console for details.');
             }
-        }
+        };
 
         /**
          * View the expert path (flowchart diagram)
          * Switches to expert mode and sets up pan-zoom
          */
-        function viewExpertPath() {
+        window.viewExpertPath = function() {
             switchMode('expert');
             document.getElementById('back-to-guided').classList.add('visible');
-        }
+        };
 
         document.getElementById('back-to-guided').addEventListener('click', () => {
             switchMode('guided');
