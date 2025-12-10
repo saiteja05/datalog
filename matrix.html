@@ -4485,7 +4485,7 @@ flowchart TB
                     </div>
                     
                     <div class="wizard-nav" style="margin-top: 30px;">
-                        <button class="wizard-btn secondary" onclick="previousStep()">← Review Answers</button>
+                        <button class="wizard-btn secondary" onclick="prevStep()">← Review Answers</button>
                         <button class="wizard-btn primary" onclick="(${continueCallback.toString()})()">Continue to Recommendation →</button>
                     </div>
                 </div>
@@ -5052,92 +5052,6 @@ flowchart TB
             }
         }
 
-
-        /**
-         * Generate feedback UI HTML
-         * @param {string} recommendationType - 'single' or 'competing'
-         * @returns {string} - HTML string for feedback section
-         */
-        function getFeedbackHTML(recommendationType = 'single') {
-            return `
-                <div class="feedback-section" id="feedback-section">
-                    <div class="feedback-title">Was this recommendation helpful?</div>
-                    <div class="feedback-buttons">
-                        <button class="feedback-btn helpful" onclick="handleFeedbackClick(true, '${recommendationType}')">
-                            👍 Helpful
-                        </button>
-                        <button class="feedback-btn not-helpful" onclick="handleFeedbackClick(false, '${recommendationType}')">
-                            👎 Not Helpful
-                        </button>
-                    </div>
-                    <div id="feedback-comment-area" style="display: none;">
-                        <textarea class="feedback-textarea" id="feedback-comment" placeholder="Optional: Tell us why (helps us improve)..."></textarea>
-                        <button class="feedback-submit" onclick="submitFeedback('${recommendationType}')">Submit Feedback</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        /**
-         * Handle feedback button click (Helpful/Not Helpful)
-         * @param {boolean} helpful - True if helpful, false if not helpful
-         * @param {string} recommendationType - Type of recommendation shown
-         */
-        function handleFeedbackClick(helpful, recommendationType) {
-            // Store feedback choice temporarily
-            window.feedbackChoice = helpful;
-            
-            // Show comment area
-            const commentArea = document.getElementById('feedback-comment-area');
-            if (commentArea) {
-                commentArea.style.display = 'block';
-                document.getElementById('feedback-comment').focus();
-            }
-            
-            // Disable feedback buttons
-            const buttons = document.querySelectorAll('.feedback-btn');
-            buttons.forEach(btn => btn.disabled = true);
-            
-            // Log immediate feedback
-            Analytics.trackEvent('recommendation_feedback_quick', {
-                helpful: helpful,
-                recommendation_type: recommendationType
-            });
-        }
-
-        /**
-         * Submit detailed feedback with optional comment
-         * @param {string} recommendationType - Type of recommendation shown
-         */
-        function submitFeedback(recommendationType) {
-            const helpful = window.feedbackChoice;
-            const comment = document.getElementById('feedback-comment')?.value || '';
-            const answers = wizardData.answers;
-            const primaryDB = determinePrimaryDB(answers);
-            
-            // Track detailed feedback to GA4
-            Analytics.trackEvent('recommendation_feedback', {
-                helpful: helpful,
-                db_recommendation: primaryDB.db,
-                use_case: answers[Q.USE_CASE],
-                recommendation_type: recommendationType,
-                feedback_text: comment.substring(0, 500), // Limit to 500 chars for GA4
-                has_comment: comment.length > 0
-            });
-            
-            // Show thank you message
-            const feedbackSection = document.getElementById('feedback-section');
-            if (feedbackSection) {
-                feedbackSection.innerHTML = `
-                    <div class="feedback-success">
-                        Thank you for your feedback!
-                        <div style="font-size: 0.9rem; color: rgba(255,255,255,0.7); margin-top: 12px; font-weight: 400;">
-                            Your input helps us improve recommendations for everyone.
-                        </div>
-                    </div>
-                `;
-            }
-        }
 
         /**
          * Restart the wizard from the beginning
