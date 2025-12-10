@@ -1946,15 +1946,12 @@ flowchart TB
                 <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📝 Rule Structure</h3>
                 <p style="margin-top: 15px;">Each rule is an object with the following properties:</p>
                 <pre style="background: #001e2b; padding: 20px; border-radius: 8px; border: 1px solid #333; overflow-x: auto; font-family: 'Fira Code', monospace; font-size: 0.9rem; margin-top: 10px;"><code>{
-    id: 'unique-rule-id',       // Used for tracking and debugging
-    conditions: {               // Object of required answers
-        [Q.USE_CASE]: 'iot',    // Exact match
-        [Q.TRAFFIC]: ['large', 'massive'] // Array = OR condition
+    id: 'unique-rule-id',
+    conditions: {
+        [Q.USE_CASE]: 'iot',
+        [Q.TRAFFIC_PATTERN]: ['large', 'massive']
     },
-    result: {                   // Result to return
-        db: "MongoDB Atlas",
-        architecture: "..."
-    }
+    result: { db: "MongoDB Atlas" }
 }</code></pre>
 
                 <h4 style="color: #00ED64; margin-top: 25px;">Advanced Conditions</h4>
@@ -4367,107 +4364,6 @@ flowchart TB
             return result;
         }
         /**
-         * Detect if there are conflicting signals that warrant showing competing recommendations
-         * @param {Object} answers - User's answers
-         * @returns {boolean} - True if conflict detected
-         */
-        function detectConflict(answers) {
-            // User Feedback: "Ditto is not a competitor... you are just showing ditto/other alternatives... where the fuck would be my operational data."
-            // Strategy: Disable competing recommendations entirely to strictly follow the improved, deterministic Rule Engine logic
-            // which now handles Hybrid and Partner scenarios correctly within the primary recommendation.
-            return false;
-        }
-
-        /**
-         * Generate competing recommendations - Deprecated/Disabled
-         */
-        function generateCompetingRecommendations(answers, primaryRec) {
-            return [];
-        }
-
-        /**
-         * Render competing recommendations UI
-         * @param {Array} recommendations - Array of recommendation objects
-         * @param {Object} answers - User answers
-         * @param {string} useCase - Primary use case
-         */
-        function renderCompetingRecommendations(recommendations, answers, useCase) {
-            const wizardContent = document.getElementById('wizard-content');
-            
-            // Build HTML for each recommendation
-            const recsHTML = recommendations.map((rec, index) => `
-                <div class="rec-option" style="flex: 1; min-width: 300px; background: ${index === 0 ? 'linear-gradient(135deg, rgba(0,237,100,0.08) 0%, rgba(77,179,61,0.05) 100%)' : 'rgba(0,0,0,0.02)'}; border: 2px solid ${index === 0 ? '#00ED64' : 'rgba(0,0,0,0.1)'}; border-radius: 16px; padding: 30px; position: relative;">
-                    ${index === 0 ? '<div style="position: absolute; top: 12px; right: 12px; background: #00ED64; color: #001e2b; padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;">RECOMMENDED</div>' : ''}
-                    
-                    <h3 style="color: ${index === 0 ? '#00a854' : '#1a1a1a'}; font-size: 1.4rem; margin-bottom: 8px; font-weight: 700;">${rec.name}</h3>
-                    <p style="color: #666; font-size: 0.95rem; margin-bottom: 24px; font-style: italic;">${rec.tagline}</p>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <div style="font-size: 0.85rem; color: #00a854; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">✅ ADVANTAGES</div>
-                        <ul style="list-style: none; padding: 0; margin: 0;">
-                            ${rec.pros.map(pro => `<li style="color: #333; margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #00a854;">+</span>${pro}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    <div style="margin-bottom: 20px;">
-                        <div style="font-size: 0.85rem; color: #d93a3a; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">⚠️ TRADEOFFS</div>
-                        <ul style="list-style: none; padding: 0; margin: 0;">
-                            ${rec.cons.map(con => `<li style="color: #333; margin-bottom: 8px; padding-left: 20px; position: relative; line-height: 1.5;"><span style="position: absolute; left: 0; color: #d93a3a;">−</span>${con}</li>`).join('')}
-                        </ul>
-                    </div>
-                    
-                    ${rec.migration ? `
-                    <div style="background: rgba(0,237,100,0.1); border-left: 3px solid #00ED64; padding: 12px 16px; border-radius: 8px; margin-bottom: 20px;">
-                        <div style="font-size: 0.75rem; color: #00a854; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">MIGRATION SUPPORT</div>
-                        <div style="color: #1a1a1a; font-size: 0.9rem; line-height: 1.5;">${rec.migration}</div>
-                    </div>
-                    ` : ''}
-                    
-                    <div>
-                        <div style="font-size: 0.75rem; color: #666; font-weight: 600; text-transform: uppercase; margin-bottom: 8px;">KEY TECHNOLOGIES</div>
-                        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
-                            ${rec.features.map(feat => `<span style="background: rgba(0,0,0,0.08); color: #333; padding: 4px 12px; border-radius: 12px; font-size: 0.8rem; font-weight: 500;">${feat}</span>`).join('')}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-            
-            wizardContent.innerHTML = `
-                <div class="recommendation-card" style="max-width: 1200px;">
-                    <div class="rec-icon">🤔</div>
-                    <h2 class="rec-title">We Found Multiple Viable Options</h2>
-                    <div class="rec-subtitle" style="max-width: 800px; margin: 0 auto 40px auto;">
-                        Your requirements show competing priorities. Here are two solid approaches with their tradeoffs:
-                    </div>
-                    
-                    <div style="display: flex; gap: 24px; flex-wrap: wrap; margin-bottom: 40px;">
-                        ${recsHTML}
-                    </div>
-                    
-                    <div style="background: rgba(0,237,100,0.08); border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: left;">
-                        <div style="font-size: 0.9rem; color: #333; line-height: 1.7;">
-                            <strong style="color: #00a854;">💡 Our Recommendation:</strong> For your use case (<em>${useCase}</em>), we lean toward <strong>MongoDB Atlas + Atlas Search</strong> because it's purpose-built for this workload and will scale more effectively long-term. However, if minimizing immediate team disruption is critical, the RDBMS + Search Engine approach offers a shorter ramp-up period.
-                        </div>
-                    </div>
-                    
-                    <div class="rec-actions">
-                        <button class="wizard-btn secondary" onclick="exportRecommendation('json')">📥 Export Comparison</button>
-                        <button class="wizard-btn secondary" onclick="restartWizard()">Start Over</button>
-                        <button class="wizard-btn primary" onclick="viewExpertPath()">See Full Decision Tree →</button>
-                    </div>
-                </div>
-            `;
-            
-            // Track competing recommendations view
-            Analytics.trackEvent('competing_recommendations_viewed', {
-                use_case: useCase,
-                option_1: recommendations[0].name,
-                option_2: recommendations[1]?.name || 'N/A',
-                total_options: recommendations.length
-            });
-        }
-
-        /**
          * Validate user answers for incompatible combinations
          * @param {Object} answers - User's answers
          * @returns {Array} - Array of validation warnings
@@ -4686,24 +4582,16 @@ flowchart TB
                 dbChoice = primaryDB.db;
                 const reason = primaryDB.reason;
                 
-                // Check for conflicting signals - if found, show competing recommendations
-                if (detectConflict(answers)) {
-                    const competingRecs = generateCompetingRecommendations(answers, primaryDB);
-                    if (competingRecs.length > 0) {
-                        renderCompetingRecommendations(competingRecs, answers, useCase);
-                        return; // Exit early - competing view is shown
-                    }
-                }
-                
                 // Handle special reasons
                 if (reason === 'log-analytics') {
                     const traffic = answers[Q.TRAFFIC_PATTERN];
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
                     if (traffic === 'massive') {
                         architecture = "Search Engine + Data Lakehouse";
                         reasoningPoints.push("Petabyte-scale log analytics requires dedicated search engines (Elasticsearch, OpenSearch, Splunk) optimized for log ingestion. Use a Data Lakehouse for long-term retention and cost optimization.");
                     } else {
-                        architecture = "MongoDB + Atlas Search";
-                        reasoningPoints.push("For moderate-scale log analytics (<3TB index), MongoDB with Atlas Search provides unified storage and search without separate infrastructure.");
+                        architecture = isCloud ? "MongoDB Atlas + Atlas Search" : "MongoDB Enterprise + Search";
+                        reasoningPoints.push(`For moderate-scale log analytics (<3TB index), MongoDB with ${isCloud ? 'Atlas Search' : 'integrated search'} provides unified storage and search without separate infrastructure.`);
                     }
                     features.push("Full-Text Search", "Time Series Collections", "Data Tiering");
                 } else if (reason === 'streams-processing') {
@@ -4846,24 +4734,17 @@ flowchart TB
 
             // --- ARCHITECTURE REFINEMENTS ---
             
-            // Determine scale and traffic characteristics from new Q11
             const trafficValue = answers[Q.TRAFFIC_PATTERN];
             const isMassive = trafficValue === 'massive';
             const isLarge = trafficValue === 'large' || isMassive;
-            const isSpiky = isLarge; // User rule: Large/Massive assumes spiky
-            const isVerySmall = trafficValue === 'very-small';
+            const isSpiky = isLarge;
 
-            // PETABYTE TRANSACTIONAL - Multi-tier Architecture
             if (dbChoice.includes("MongoDB") && answers[Q.WORKLOAD] === 'transactional' && isMassive) {
                 if (answers[Q.DEPLOYMENT] !== 'onprem') {
-                    // dbChoice = "MongoDB (Hot Operational) + Online Archive (Cold) + Data Warehouse (Reporting)";
-                    // architecture = "Multi-tier: Hot Cluster + Cloud Archive + Analytics Layer";
-                    reasoningPoints.push("Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data (recent transactions), Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting across the full dataset.");
+                    reasoningPoints.push("Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting.");
                     features.push("Online Archive", "Atlas Data Federation");
                 } else {
-                    // dbChoice = "MongoDB (Hot Operational) + Object Storage (Cold) + Data Warehouse (Reporting)";
-                    // architecture = "Multi-tier: Hot Cluster + S3-Compatible Storage + Analytics Layer";
-                    reasoningPoints.push("Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset.");
+                    reasoningPoints.push("Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data, and a Data Warehouse provides reporting.");
                 }
             }
             
@@ -4979,28 +4860,19 @@ flowchart TB
                 // ANALYTICAL + SEARCH - Hybrid based on scale
                 if (answers[Q.WORKLOAD] === 'analytical') {
                     if (answers[Q.TRAFFIC_PATTERN] === 'massive' || answers[Q.ANALYTICAL_NUANCE] === 'warehouse') {
-                        // Large/Petabyte scale: Search Engine + Warehouse
                         if (dbChoice.includes("Data Warehouse")) {
-                            // dbChoice = "Elasticsearch/Solr (Search Engine) + Data Warehouse (Analytics)";
-                            // architecture = "Hybrid: Search-First + Columnar Analytics";
-                            reasoningPoints.push("For petabyte-scale analytical search (logs, observability), Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics on the same dataset via federation or ETL.");
+                            reasoningPoints.push("For petabyte-scale analytical search, Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics.");
                         }
                     } else {
-                        // Small/Medium scale: MongoDB + Search
                         if (dbChoice.includes("MongoDB") || dbChoice.includes("Data Warehouse")) {
                             const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
                             const searchFeature = isOnPrem ? "MongoDB Search (Lucene-based)" : "Atlas Search (Lucene-based)";
-                            // dbChoice = isOnPrem ? "MongoDB (Operational Analytics) + MongoDB Search" : "MongoDB (Operational Analytics) + Atlas Search";
-                            // architecture = "Real-Time Analytics with Search";
-                            reasoningPoints.push("For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with " + (isOnPrem ? "MongoDB Search" : "Atlas Search") + " provide unified operational analytics and full-text search.");
+                            reasoningPoints.push(`For moderate-scale analytical workloads, MongoDB Analytics Nodes with ${isOnPrem ? "MongoDB Search" : "Atlas Search"} provide unified analytics and search.`);
                             features.push(searchFeature, "Analytics Nodes");
                         }
                     }
-                }
-                // TRANSACTIONAL + SEARCH - CRITICAL FIX: Q19 is search scale, not Q20!
-                else if (answers[Q.SEARCH_SCALE] === 'petabyte') {
+                } else if (answers[Q.SEARCH_SCALE] === 'petabyte') {
                     if (dbChoice.includes("MongoDB")) {
-                        // dbChoice = "MongoDB (Operational) + Elasticsearch/Solr (Search Engine)";
                         reasoningPoints.push("For petabyte-scale search workloads, a dedicated search engine alongside MongoDB provides optimal performance.");
                     }
                 } else if (dbChoice.includes("MongoDB")) {
@@ -5009,25 +4881,20 @@ flowchart TB
                 }
             }
 
-            // AI / Vector
             if (advFeatures.includes('ai')) {
-                const vectorScale = answers[Q.VECTOR_SCALE]; // CRITICAL FIX: Q20 is vector scale, not Q21!
+                const vectorScale = answers[Q.VECTOR_SCALE];
                 const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
                 if (vectorScale === 'large') {
-                    // >100M vectors - offer specialized solutions
                     if (dbChoice.includes("MongoDB")) {
-                        // dbChoice = "MongoDB + Pinecone / Weaviate (Vector DB)";
-                        features.push("Pinecone / Weaviate (Primary Vector Store)", "MongoDB (Metadata & Context)");
+                        features.push("Vector Search Engine (Primary)", "MongoDB (Metadata)");
                     } else {
-                        features.push("Pinecone / Weaviate / Milvus (Vector Search)");
+                        features.push("Vector Search Engine");
                     }
                 } else {
-                    // <100M vectors - MongoDB Vector Search is sufficient
                     if (dbChoice.includes("MongoDB")) {
-                        const vectorFeature = isOnPrem ? "MongoDB Vector Search" : "Atlas Vector Search";
-                        features.push(vectorFeature);
+                        features.push(isOnPrem ? "MongoDB Vector Search" : "Atlas Vector Search");
                     } else {
-                        features.push("Pinecone / Weaviate");
+                        features.push("Vector Search Engine");
                     }
                 }
             }
@@ -5075,7 +4942,11 @@ flowchart TB
                 }
             }
 
-            // Join reasoning points into cohesive text
+            // Deduplicate features array
+            const uniqueFeatures = [...new Set(features)];
+            features.length = 0;
+            features.push(...uniqueFeatures);
+
             const reasoning = reasoningPoints.join(' ');
 
             // Track complete recommendation with all details
