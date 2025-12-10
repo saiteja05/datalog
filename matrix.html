@@ -1089,7 +1089,7 @@ flowchart TB
     ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
     DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 5 hops)?"}
     DataNature -- No (Rigid) --> AcidCheck
-    GraphCheck -- Yes --> GraphDB["**Neo4j / Neptune**"]
+    GraphCheck -- Yes --> GraphDB["**Graph Database**"]
     GraphCheck -- No --> KVCheck{"**Key-Value Nuance**<br>Simple ID Lookup?"}
     KVCheck -- Yes --> Latency{"**Latency Nuance**<br>Need &lt;1ms response<br>&amp; OK with data loss?"}
     Latency -- Yes --> Redis["**Redis / Memcached**"]
@@ -1133,7 +1133,7 @@ flowchart TB
     StreamCheck -- Yes (Kafka+Flink) --> Flink["**Manage Separate Infra**<br>Complex Glue Code"]
     StreamCheck -- Yes (Unified) --> ASP["**Atlas Stream Processing**<br>Continuous Intelligence"]
     PlatCheck -- Search --> SearchDec{"**ETL Tolerance**<br>Want to manage<br>sync pipelines?"}
-    SearchDec -- Yes --> Elastic["**Elasticsearch/SOLR**"]
+    SearchDec -- Yes --> Elastic["**Search Engine**"]
     SearchDec -- No --> AtlasSearch["**Atlas Search**<br>Lucene on Node"]
     PlatCheck -- AI/Vector --> AIUse{"**AI Pattern**<br>How is Vector used?"}
     AIUse -- Chat History --> AgentMem["**Agent Memory**<br>Long-Term Context"]
@@ -1352,10 +1352,10 @@ flowchart TB
                         <tr style="background: rgba(255,255,255,0.03);">
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q0 Use Case:</strong> IoT<br>
-                                <strong>Q11 Traffic:</strong> Massive (Petabytes)
+                                <strong>Q11 Traffic:</strong> Massive
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                InfluxDB / TimescaleDB + MongoDB (Operational)
+                                Time Series Engine + MongoDB (Operational)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">iot-massive</code>
@@ -1373,13 +1373,13 @@ flowchart TB
                                 <strong>Q10 Normalization:</strong> Rigid
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                TimescaleDB (PostgreSQL)
+                                RDBMS (Operational) + Time Series Extensions
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">iot-small-sql</code>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                TimescaleDB Extension, PostgreSQL Compatibility, Continuous Aggregates
+                                Time Series Extensions, PostgreSQL Compatibility, Continuous Aggregates
                             </td>
                         </tr>
                         <tr style="background: rgba(255,255,255,0.03);">
@@ -1412,7 +1412,7 @@ flowchart TB
                                 <strong>Q3 Graph Depth:</strong> Deep (>5 hops)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                Neo4j Graph Data Science / TigerGraph
+                                Graph Database
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-deep-graph</code>
@@ -1444,7 +1444,7 @@ flowchart TB
                                 <strong>OR Q11 Traffic:</strong> Massive
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                Data Warehouse (Snowflake, BigQuery, Redshift)
+                                Data Warehouse
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-warehouse</code>
@@ -1499,13 +1499,13 @@ flowchart TB
                                 <strong>Q3 Graph Depth:</strong> Deep (>5 hops)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB (Operational) + Neo4j (Graph Database)
+                                MongoDB (Operational) + Graph Database
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">transactional-deep-graph</code>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                Hybrid Architecture, MongoDB for Operations, Neo4j for Graph Queries
+                                Hybrid Architecture, MongoDB for Operations, Graph Database for Graph Queries
                             </td>
                         </tr>
                         <tr>
@@ -1538,13 +1538,13 @@ flowchart TB
                                 <strong>Q11 Traffic:</strong> Large or Massive
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                RDBMS (with limitations) or NewSQL
+                                RDBMS (with limitations) or Distributed SQL
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-database-logic-large-scale</code>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                Stored Procedures, Triggers, Functions (Consider NewSQL for scale)
+                                Stored Procedures, Triggers, Functions (Consider Distributed SQL for scale)
                             </td>
                         </tr>
                         <tr>
@@ -1554,7 +1554,7 @@ flowchart TB
                                 <strong>Q11 Traffic:</strong> Very Small to Medium
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                RDBMS (PostgreSQL, MySQL, SQL Server)
+                                RDBMS
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-database-logic</code>
@@ -1589,8 +1589,9 @@ flowchart TB
                                 <strong>Q11 Traffic:</strong> Large or Massive
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB (with SQL drivers) or NewSQL
-                            </td>
+                             result: (answers) => {
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }                           </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-heavy-acid-large-scale</code>
                             </td>
@@ -1607,7 +1608,7 @@ flowchart TB
                                 <strong>Q11 Traffic:</strong> Very Small to Medium
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                RDBMS (PostgreSQL, MySQL)
+                                RDBMS
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-heavy-acid</code>
@@ -1713,7 +1714,7 @@ flowchart TB
                                 <strong style="color: rgba(255,255,255,0.9);">Q18 Advanced Features:</strong> <span style="color: rgba(255,255,255,0.8);">AI/Vector Search selected</span><br>
                                 <strong style="color: rgba(255,255,255,0.9);">Q20 Vector Scale:</strong> <span style="color: rgba(255,255,255,0.8);">Billions+ vectors</span>
                             </td>
-                            <td><strong style="color: rgba(255,255,255,0.95);">Pinecone / Weaviate + MongoDB (Operational)</strong></td>
+                            <td><strong style="color: rgba(255,255,255,0.95);">Vector Search Engine + MongoDB (Operational)</strong></td>
                             <td><code style="background: rgba(0,237,100,0.2); padding: 4px 8px; border-radius: 4px; color: #00ED64;">vector-search-massive</code></td>
                             <td style="color: rgba(255,255,255,0.8);">
                                 • Specialized vector DB<br>
@@ -1758,7 +1759,7 @@ flowchart TB
                                 <strong style="color: rgba(255,255,255,0.9);">Q18 Advanced Features:</strong> <span style="color: rgba(255,255,255,0.8);">Full-Text Search selected</span><br>
                                 <strong style="color: rgba(255,255,255,0.9);">Q19 Search Scale:</strong> <span style="color: rgba(255,255,255,0.8);">Petabyte-Scale</span>
                             </td>
-                            <td><strong style="color: rgba(255,255,255,0.95);">Elasticsearch / OpenSearch + MongoDB (Operational)</strong></td>
+                            <td><strong style="color: rgba(255,255,255,0.95);">Search Engine + MongoDB (Operational)</strong></td>
                             <td><code style="background: rgba(0,237,100,0.2); padding: 4px 8px; border-radius: 4px; color: #00ED64;">fulltext-search-petabyte</code></td>
                             <td style="color: rgba(255,255,255,0.8);">
                                 • Petabyte-scale search<br>
@@ -2516,7 +2517,7 @@ flowchart TB
                     condition: {1: 'analytical'},
                     options: [
                         { value: 'warehouse', title: 'Data Warehouse Needs', desc: 'Massive joins (10+), full table scans, >500TB working dataset' },
-                        { value: 'realtime', title: 'Real-Time Analytics', desc: 'Lower latency analytics, moderate complexity' }
+                        { value: 'realtime', title: 'Lower latency analytics, moderate complexity', desc: 'Lower latency analytics, moderate complexity' }
                     ]
                 },
                 // Business Model (before MongoDB Core decision) - INLINE
@@ -3445,7 +3446,7 @@ flowchart TB
         /**
          * Rule Engine
          * Data-driven decision logic that decouples rules from code.
-         * Replaces the hardcoded if/else logic in determinePrimaryDB.
+         * Replaces the hardcoded if/else logic in determinePrimaryDB function.
          */
         const RuleEngine = {
             rules: [],
@@ -3502,6 +3503,77 @@ flowchart TB
                 return true;
             }
         };
+        
+        /**
+         * Master Helper to resolve component names based on deployment and ALL selected features.
+         * Ensures additive logic: Base + Partner (if mobile) + Vector + Search + TimeSeries.
+         * 
+         * @param {Object} answers - User answers
+         * @param {string} baseDB - 'mongodb', 'rdbms', 'hybrid', or a CUSTOM string
+         * @returns {string} - Constructed recommendation string
+         */
+        function resolveComponents(answers, baseDB) {
+            const deployment = answers[Q.DEPLOYMENT];
+            const isCloud = deployment !== 'onprem'; 
+            
+            // Get all feature signals
+            const features = answers[Q.ADVANCED_FEATURES] || [];
+            const isMobile = answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile';
+
+            let parts = [];
+
+            // 1. Core DB (Operational)
+            if (baseDB === 'mongodb') {
+                parts.push(isCloud ? "MongoDB Atlas (Operational)" : "MongoDB Enterprise (Operational)");
+            } else if (baseDB === 'rdbms') {
+                parts.push("RDBMS (Operational)");
+            } else if (baseDB === 'hybrid') {
+                parts.push("RDBMS (Operational)");
+                parts.push(isCloud ? "MongoDB Atlas" : "MongoDB Enterprise");
+            } else {
+                // Custom base string passed (e.g. from IoT/Graph rules)
+                parts.push(baseDB);
+            }
+            
+            // Determine if base includes MongoDB (for feature naming)
+            const hasMongoDB = baseDB === 'mongodb' || baseDB === 'hybrid' || (typeof baseDB === 'string' && baseDB.includes('MongoDB'));
+
+            // 2. Partner Solutions (Sync Layer) - Additive if mobile
+            if (isMobile) {
+                parts.push("Partner Solutions (ObjectBox, Ditto, PowerSync) - offline sync");
+            }
+
+            // 3. Vector - Additive if selected
+            if (features.includes('ai')) {
+                // User confirmed Enterprise has integrated vector search.
+                if (hasMongoDB) {
+                     parts.push(isCloud ? "Atlas Vector Search" : "MongoDB Enterprise Vector Search");
+                } else {
+                    parts.push("Vector Search Engine");
+                }
+            }
+
+            // 4. Search - Additive if selected
+            if (features.includes('search')) {
+                if (hasMongoDB) {
+                     parts.push(isCloud ? "Atlas Search" : "MongoDB Enterprise Search");
+                } else {
+                    parts.push("Search Engine");
+                }
+            }
+            
+            // 5. Time Series - Additive if selected
+            if (features.includes('timeseries')) {
+                parts.push("Time Series Collections");
+            }
+
+            // 6. Stream Processing - Additive if selected
+            if (features.includes('streams')) {
+                 parts.push(isCloud ? "Atlas Stream Processing" : "Stream Processing Engine");
+            }
+
+            return parts.join(" + ");
+        }
 
         /**
          * Decision Rules
@@ -3509,59 +3581,76 @@ flowchart TB
          * Preserves exact logic from original determinePrimaryDB function.
          */
         const DECISION_RULES = [
-            // --- IoT Workloads ---
+            // --- Advanced Features First (To prevent short-circuiting) ---
+            
+            // 1. Stream Processing
             {
-                id: 'iot-massive',
+                id: 'streams-processing',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic (needs full RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    return answers[Q.USE_CASE] === 'iot' && 
-                           answers[Q.TRAFFIC_PATTERN] === 'massive';
+                    const features = answers[Q.ADVANCED_FEATURES];
+                    return Array.isArray(features) && features.includes('streams');
                 },
-                result: { db: "InfluxDB / TimescaleDB + MongoDB (Operational)" }
-            },
-            {
-                id: 'iot-small-sql',
-                conditions: { 
-                    [Q.USE_CASE]: 'iot', 
-                    [Q.TRAFFIC_PATTERN]: 'very-small',
-                    [Q.TEAM_SKILL]: 'sqlfirst',
-                    [Q.ACID_NEEDS]: 'heavy',
-                    [Q.NORMALIZATION]: 'rigid'
-                },
-                result: { db: "TimescaleDB (PostgreSQL)" }
-            },
-            {
-                id: 'iot-timeseries',
-                conditions: { [Q.USE_CASE]: 'iot' },
-                result: { db: "MongoDB Time Series" }
+                result: (answers) => { return { db: resolveComponents(answers, 'mongodb') }; }
             },
 
-            // --- Vector Search / AI Workloads ---
+            // 2. Vector Search / AI Workloads
             {
                 id: 'vector-search-massive',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
+                    
+                    // Check for SQL constraints - if present, let SQL rules handle it (they are now feature-aware)
+                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    if (isSQLConstraint) return false;
+
                     // Massive scale (>100M vectors) always needs specialized DB, even with SQL constraints.
-                    // We will handle the "Hybrid" recommendation in the result function.
                     return Array.isArray(features) && 
                            features.includes('ai') && 
                            answers[Q.VECTOR_SCALE] === 'large';
                 },
                 result: (answers) => {
-                    // Check for SQL constraints
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    // Massive scale vector always needs specialized engine.
+                    // If SQL constraints, we might recommend RDBMS + Vector Engine
+                    // But here we are just saying "Vector Search Engine + Core DB"
                     
-                    if (isSQLConstraint) {
-                        return { 
-                            db: "Hybrid: RDBMS (Transactional) + Pinecone / Weaviate (Vector Scale)",
-                            note: "Dual-database architecture required for massive vector scale (>100M) with strict ACID/SQL needs."
-                        };
-                    }
-                    return { db: "Pinecone / Weaviate + MongoDB (Operational)" };
+                    // Actually, the previous logic was "Pinecone/Weaviate + MongoDB".
+                    // User wants generic: "Vector Search Engine".
+                    // And we should check base DB.
+                    
+                    // But this specific rule 'vector-search-massive' implies the vector workload is SO big 
+                    // that maybe even Atlas Vector isn't the primary path? 
+                    // Original rule was: "Pinecone / Weaviate + MongoDB"
+                    
+                    // Let's standardize:
+                    // If strictly massive vector and NOT SQL constraint:
+                    // "MongoDB (Operational) + Vector Search Engine"
+                    
+                    const dbStr = resolveComponents(answers, 'mongodb');
+                    // We need to force "Vector Search Engine" here if it wasn't added (e.g. if we consider Atlas Vector capable)
+                    // But for "massive", the original intent was specialized DB.
+                    // So let's override the vector part of resolveComponents if needed, OR just trust resolveComponents 
+                    // but implies 'Vector Search Engine' is external.
+                    
+                    // Simpler: Just use resolveComponents with 'mongodb'. 
+                    // If cloud -> MongoDB Atlas + Atlas Vector Search (if it supports massive? The original rule said NO).
+                    // ORIGINAL RULE: "Pinecone / Weaviate + MongoDB"
+                    // USER: "RDBMS + Search + Vector Search"
+                    
+                    // So: "MongoDB + Vector Search Engine"
+                    
+                    // If I use resolveComponents(answers, 'mongodb'), it gives "MongoDB Atlas + Atlas Vector Search".
+                    // We want to force "Vector Search Engine" (generic) for massive scale if Atlas Check fails?
+                    // User said: "do not call out any vendor... any vector search engine needed - callout Vector Search Engine"
+                    
+                    // So for massive scale, let's explicitly append Generic Vector Engine.
+                    // We can trick resolveComponents by temporarily removing 'ai' from features matching?
+                    // No, let's just build it manually or handle it.
+                    
+                    // Standardize: "MongoDB Atlas/Enterprise + Vector Search Engine" + ...
+                    const deployment = answers[Q.DEPLOYMENT];
+                    const base = deployment === 'onprem' ? "MongoDB Enterprise" : "MongoDB Atlas";
+                    return { db: resolveComponents(answers, `${base} + Vector Search Engine`) };
                 }
             },
             {
@@ -3572,55 +3661,48 @@ flowchart TB
                     const vectorScale = answers[Q.VECTOR_SCALE];
                     
                     // Only match if vector scale is small (or unspecified)
-                    // If vector scale is large, the massive rule above should have caught it
                     if (vectorScale === 'large') return false;
 
-                    const isSmallScale = scale === 'very-small' || scale === 'small';
+                    // If ANY SQL constraints are present, exclude (specifically handled by SQL rules now)
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    if (isSQLConstraint) return false;
 
-                    // If small scale AND SQL constraints, exclude (let SQL rules suggest extensions)
-                    if (isSmallScale) {
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
-                    }
+                    // Yield to specific architectural drivers (IoT, Graph, Mobile) which have their own specialized rules
+                    // These rules will add vector search via resolveComponents anyway.
+                    if (answers[Q.USE_CASE] === 'iot') return false;
+                    if (answers[Q.DATA_STRUCTURE] === 'graph') return false;
+                    if (answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile') return false;
 
                     return Array.isArray(features) && features.includes('ai');
                 },
                 result: (answers) => {
-                    // Check for SQL constraints (which implies Large/Massive scale here, otherwise we would have returned false above)
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    
-                    if (isSQLConstraint) {
-                        return { 
-                            db: "Hybrid: RDBMS (Transactional) + MongoDB Atlas Vector Search",
-                            note: "Hybrid architecture recommended for large-scale vector workloads with strict ACID/SQL needs."
-                        };
-                    }
-                    return { db: "MongoDB Atlas (Vector Search)" };
+                    // Standard vector search -> Use helper
+                    // Helper now handles Mobile check too, so we don't need manual suffix here!
+                    return { db: resolveComponents(answers, 'mongodb') };
                 }
             },
 
-            // --- Full-Text Search Workloads ---
+            // 3. Full-Text Search Workloads
             {
                 id: 'fulltext-search-petabyte',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    // Petabyte scale always needs specialized DB.
+                    
+                    // Specific SQL constraint check - yield to SQL rules
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    if (isSQLConstraint) return false;
+
                     return Array.isArray(features) && 
                            features.includes('search') && 
                            answers[Q.SEARCH_SCALE] === 'petabyte';
                 },
                 result: (answers) => {
-                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    
-                    if (isSQLConstraint) {
-                        return { 
-                            db: "Hybrid: RDBMS (Transactional) + Elasticsearch / OpenSearch",
-                            note: "Dual-database architecture required for petabyte-scale search with strict ACID/SQL needs."
-                        };
-                    }
-                    return { db: "Elasticsearch / OpenSearch + MongoDB (Operational)" };
+                    // Petabyte scale search -> "Search Engine + MongoDB"
+                    const deployment = answers[Q.DEPLOYMENT];
+                    const base = deployment === 'onprem' ? "MongoDB Enterprise" : "MongoDB Atlas";
+                    return { db: resolveComponents(answers, `${base} + Search Engine`) }; 
                 }
             },
             {
@@ -3628,43 +3710,90 @@ flowchart TB
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
                     const scale = answers[Q.TRAFFIC_PATTERN];
-                    const isSmallScale = scale === 'very-small' || scale === 'small';
 
-                    // If small scale AND SQL constraints, exclude (let SQL rules suggest extensions)
-                    if (isSmallScale) {
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
-                    }
+                    // Specific SQL constraint check - yield to SQL rules
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    if (isSQLConstraint) return false;
+                    
+                    // Yield to specific architectural drivers (IoT, Graph, Mobile)
+                    if (answers[Q.USE_CASE] === 'iot') return false;
+                    if (answers[Q.DATA_STRUCTURE] === 'graph') return false;
+                    if (answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile') return false;
                     
                     return Array.isArray(features) && features.includes('search');
                 },
                 result: (answers) => {
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
+            },
+
+            // 4. Mobile / Offline-First (Architectural Driver)
+            {
+                id: 'mobile-offline',
+                conditions: (answers) => {
+                    // Trigger if 'Offline Sync' is explicitly selected OR 'Mobile' use case is chosen
+                    // (Mobile use case usually implies need for sync/local db consideration)
+                    return answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile';
+                },
+                result: (answers) => {
+                    // Mobile/Offline -> Use Master Helper
+                    return { 
+                        db: resolveComponents(answers, 'mongodb'),
+                        note: "Offline-first architecture. Partner solutions handle edge/device sync, integrated with MongoDB backend."
+                    };
+                }
+            },
+
+            // --- IoT Workloads ---
+            {
+                id: 'iot-massive',
+                conditions: (answers) => {
+                    return answers[Q.USE_CASE] === 'iot' && 
+                           answers[Q.TRAFFIC_PATTERN] === 'massive';
+                },
+                result: (answers) => {
+                    // Check for SQL constraints
+                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database');
+                    
+                    const deployment = answers[Q.DEPLOYMENT];
+                    const mongoPart = deployment === 'onprem' ? "MongoDB Enterprise (Operational)" : "MongoDB Atlas (Operational)";
                     
                     if (isSQLConstraint) {
-                        return { 
-                            db: "Hybrid: RDBMS (Transactional) + MongoDB Atlas Search",
-                            note: "Hybrid architecture recommended for large-scale search with strict ACID/SQL needs."
+                         return { 
+                            db: resolveComponents(answers, "Hybrid: RDBMS (Transactional) + Time Series Engine"),
+                            note: "Hybrid architecture required for massive IoT scale with strict SQL/Database logic needs."
                         };
                     }
-                    return { db: "MongoDB Atlas (Atlas Search)" };
+                    return { db: resolveComponents(answers, `Time Series Engine + ${mongoPart}`) };
                 }
+            },
+            {
+                id: 'iot-small-sql',
+                conditions: { 
+                    [Q.USE_CASE]: 'iot', 
+                    [Q.TRAFFIC_PATTERN]: 'very-small',
+                    [Q.TEAM_SKILL]: 'sqlfirst',
+                    [Q.ACID_NEEDS]: 'heavy',
+                    [Q.NORMALIZATION]: 'rigid'
+                },
+                result: (answers) => ({ db: resolveComponents(answers, "RDBMS (Operational) + Time Series Extensions") })
+            },
+            {
+                id: 'timeseries-universal',
+                conditions: (answers) => {
+                    const features = answers[Q.ADVANCED_FEATURES];
+                    const hasTimeSeriesFeature = Array.isArray(features) && features.includes('timeseries');
+                    const isIoTUseCase = answers[Q.USE_CASE] === 'iot';
+                    return hasTimeSeriesFeature || isIoTUseCase;
+                },
+                result: (answers) => { return { db: resolveComponents(answers, 'mongodb') }; }
             },
 
             // --- Analytical Workloads ---
             {
                 id: 'analytical-deep-graph',
                 conditions: (answers) => {
-                    const scale = answers[Q.TRAFFIC_PATTERN];
-                    const isSmallScale = scale === 'very-small' || scale === 'small';
-
-                    // If small scale AND SQL constraints, exclude (let SQL rules handle it)
-                    if (isSmallScale) {
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
-                    }
-
                     return answers[Q.WORKLOAD] === 'analytical' && 
                            answers[Q.DATA_STRUCTURE] === 'graph' &&
                            answers[Q.GRAPH_DEPTH] === 'deep';
@@ -3675,44 +3804,38 @@ flowchart TB
                     
                     if (isSQLConstraint) {
                         return { 
-                            db: "Hybrid: RDBMS (Transactional) + Neo4j / TigerGraph (Graph Analytics)",
+                            db: resolveComponents(answers, "Hybrid: RDBMS (Transactional) + Graph Database"),
                             note: "Hybrid architecture recommended for deep graph analytics with strict ACID/SQL needs."
                         };
                     }
-                    return { db: "Neo4j Graph Data Science / TigerGraph" };
+                    return { db: resolveComponents(answers, "Graph Database") };
                 }
             },
             {
                 id: 'analytical-shallow-graph',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
-                    return answers[Q.WORKLOAD] === 'analytical' && 
+                     return answers[Q.WORKLOAD] === 'analytical' && 
                            answers[Q.DATA_STRUCTURE] === 'graph';
                 },
-                result: { db: "MongoDB (Aggregation Pipeline)" }
+                result: (answers) => {
+                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                     if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + MongoDB (Aggregation Pipeline)",
+                            note: "Hybrid architecture: RDBMS for transactional core, MongoDB for flexible analytical graph queries."
+                        };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
             },
             {
                 id: 'analytical-warehouse',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
+                    // Warehouse usually implies massive scale/complexity which supersedes SQL constraints (usually leads to separate Warehouse tech anyway)
+                    // But if strictly SQL-first usage for everything...
+                    // Actually, if it's 'Warehouse' nuance, we should recommend a Warehouse.
                     return answers[Q.WORKLOAD] === 'analytical' && 
                            (answers[Q.ANALYTICAL_NUANCE] === 'warehouse' || answers[Q.TRAFFIC_PATTERN] === 'massive');
                 },
@@ -3721,53 +3844,40 @@ flowchart TB
             {
                 id: 'analytical-realtime-onprem',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
                     return answers[Q.WORKLOAD] === 'analytical' && 
                            answers[Q.DEPLOYMENT] === 'onprem';
                 },
-                result: { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse" }
+                result: (answers) => {
+                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                     
+                     if (isSQLConstraint) {
+                         return { db: "Hybrid: RDBMS (Transactional) + Data Warehouse / MongoDB (Analytics Nodes)" };
+                     }
+                    return { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse" };
+                }
             },
             {
                 id: 'analytical-realtime-cloud',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic (needs RDBMS)
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
-                    return answers[Q.WORKLOAD] === 'analytical';
+                     return answers[Q.WORKLOAD] === 'analytical';
                 },
-                result: { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse" }
+                result: (answers) => {
+                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                     
+                     if (isSQLConstraint) {
+                         return { db: "Hybrid: RDBMS (Transactional) + MongoDB Atlas (Analytics Nodes) / Cloud Warehouse" };
+                     }
+                    return { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse" };
+                }
             },
 
             // --- Transactional Graph Workloads ---
             {
                 id: 'transactional-deep-graph',
                 conditions: (answers) => {
-                    const scale = answers[Q.TRAFFIC_PATTERN];
-                    const isSmallScale = scale === 'very-small' || scale === 'small';
-
-                    // If small scale AND SQL constraints, exclude (let SQL rules handle it)
-                    if (isSmallScale) {
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') return false;
-                        if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid') return false;
-                    }
-
-                    return answers[Q.DATA_STRUCTURE] === 'graph' &&
+                     return answers[Q.DATA_STRUCTURE] === 'graph' &&
                            answers[Q.GRAPH_DEPTH] === 'deep';
                 },
                 result: (answers) => {
@@ -3776,29 +3886,32 @@ flowchart TB
                     
                     if (isSQLConstraint) {
                         return { 
-                            db: "Hybrid: RDBMS (Transactional) + Neo4j (Graph Database)",
+                            db: resolveComponents(answers, "Hybrid: RDBMS (Transactional) + Graph Database"),
                             note: "Hybrid architecture recommended for deep graph transactions with strict ACID/SQL needs."
                         };
                     }
-                    return { db: "MongoDB (Operational) + Neo4j (Graph Database)" };
+                    const deployment = answers[Q.DEPLOYMENT];
+                    const mongoPart = deployment === 'onprem' ? "MongoDB Enterprise (Operational)" : "MongoDB Atlas (Operational)";
+                    return { db: resolveComponents(answers, `${mongoPart} + Graph Database`) };
                 }
             },
             {
                 id: 'transactional-shallow-graph',
                 conditions: (answers) => {
-                    // Exclude if SQL team with database logic
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') {
-                        return false;
-                    }
-                    // Exclude if SQL team with heavy ACID + rigid schema
-                    if (answers[Q.TEAM_SKILL] === 'sqlfirst' && 
-                        answers[Q.ACID_NEEDS] === 'heavy' && 
-                        answers[Q.NORMALIZATION] === 'rigid') {
-                        return false;
-                    }
-                    return answers[Q.DATA_STRUCTURE] === 'graph';
+                   return answers[Q.DATA_STRUCTURE] === 'graph';
                 },
-                result: { db: "MongoDB (with $graphLookup)" }
+                result: (answers) => {
+                   const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
+                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    
+                   if (isSQLConstraint) {
+                        return { 
+                            db: "Hybrid: RDBMS (Transactional) + MongoDB ($graphLookup)",
+                            note: "Hybrid architecture: RDBMS for core transactions, MongoDB for graph capabilities."
+                        };
+                   }     
+                   return { db: "MongoDB (with $graphLookup)" };
+                }
             },
 
             // --- SQL-First Team Paths ---
@@ -3809,7 +3922,12 @@ flowchart TB
                     [Q.BUSINESS_LOGIC]: 'database',
                     [Q.TRAFFIC_PATTERN]: ['large', 'massive']
                 },
-                result: { db: "RDBMS (with limitations) or NewSQL" }
+                result: (answers) => {
+                    return { 
+                        db: resolveComponents(answers, 'hybrid'),
+                        note: "Dual-database architecture: RDBMS for stored procedures/logic, MongoDB for scalable Vector and Full-Text Search."
+                    };
+                }
             },
             {
                 id: 'sql-database-logic',
@@ -3818,29 +3936,21 @@ flowchart TB
                     [Q.BUSINESS_LOGIC]: 'database'
                 },
                 result: (answers) => {
-                    const features = answers[Q.ADVANCED_FEATURES] || [];
-                    const hasVector = Array.isArray(features) && features.includes('ai');
-                    const hasSearch = Array.isArray(features) && features.includes('search');
+                    // SQL Logic, Small/Moderate Scale -> RDBMS
+                    const dbName = resolveComponents(answers, 'rdbms');
                     
-                    // Build recommendation with extensions
-                    if (hasVector && hasSearch) {
-                        return { 
-                            db: "PostgreSQL (with pgvector + full-text search + stored procedures)",
-                            note: "RDBMS with database logic, vector, and search capabilities. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
-                        };
-                    } else if (hasVector) {
-                        return { 
-                            db: "PostgreSQL (with pgvector + stored procedures)",
-                            note: "RDBMS with database logic and vector search. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
-                        };
-                    } else if (hasSearch) {
-                        return { 
-                            db: "PostgreSQL (with full-text search + stored procedures)",
-                            note: "RDBMS with database logic and full-text search"
+                    // Add generic note about extensions if features are present?
+                    // "RDBMS + Vector Search Engine"
+                    
+                    const features = answers[Q.ADVANCED_FEATURES] || [];
+                    if (features.includes('ai') || features.includes('search')) {
+                         return { 
+                            db: resolveComponents(answers, 'rdbms'), // This will add + Vector Search Engine / + Search Engine
+                            note: "RDBMS with necessary search/vector extensions or separate engines."
                         };
                     }
                     
-                    return { db: "RDBMS (PostgreSQL / Oracle / SQL Server)" };
+                    return { db: "RDBMS" };
                 }
             },
             {
@@ -3864,9 +3974,14 @@ flowchart TB
                     const migration = (migrationStatus === 'yes' && migrationSource) ? migrationSource : migrationStatus;
                     
                     const dbMap = { oracle: 'Oracle', sqlserver: 'SQL Server', postgres: 'PostgreSQL', mysql: 'MySQL', db2: 'IBM Db2', other: 'RDBMS' };
+                    // User requested generic names, but 'source' implies migration FROM something specific.
+                    // Keep source specific if known, but recommendation itself is generic.
                     const source = dbMap[migration] || 'RDBMS';
                     
-                    return { db: "MongoDB (with migration support)", source: source };
+                    // Modernization -> Moving TO MongoDB.
+                    const dbName = resolveComponents(answers, 'mongodb');
+                    
+                    return { db: `${dbName} (with migration support)`, source: source };
                 }
             },
             {
@@ -3877,7 +3992,19 @@ flowchart TB
                     [Q.NORMALIZATION]: 'rigid',
                     [Q.TRAFFIC_PATTERN]: ['large', 'massive']
                 },
-                result: { db: "MongoDB (with SQL drivers) or NewSQL" }
+                result: (answers) => {
+                    // Heavy ACID, Large Scale -> MongoDB can handle it.
+                    // Previous logic listed explicitly. Now just use resolveComponents.
+                    // Wait, previous logic recommended "MongoDB (with SQL drivers...)"
+                    // Lets keep the SQL drivers note if important, or just standard names?
+                    // "MongoDB + Vector Search" is the requested standard.
+                    
+                    const dbName = resolveComponents(answers, 'mongodb');
+                    return { 
+                        db: dbName,
+                        note: "MongoDB supports multi-document ACID transactions at scale."
+                    };
+                }
             },
             {
                 id: 'sql-heavy-acid',
@@ -3887,47 +4014,41 @@ flowchart TB
                     [Q.NORMALIZATION]: 'rigid'
                 },
                 result: (answers) => {
-                    const features = answers[Q.ADVANCED_FEATURES] || [];
-                    const hasVector = Array.isArray(features) && features.includes('ai');
-                    const hasSearch = Array.isArray(features) && features.includes('search');
-                    
-                    // Build recommendation with extensions
-                    if (hasVector && hasSearch) {
-                        return { 
-                            db: "PostgreSQL (with pgvector + full-text search extensions)",
-                            note: "RDBMS with vector and search capabilities via extensions. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
-                        };
-                    } else if (hasVector) {
-                        return { 
-                            db: "PostgreSQL (with pgvector extension)",
-                            note: "RDBMS with vector search capability. <br><br><strong>⚠️ WARNING:</strong> pgvector may face performance challenges (TOAST tables, page size constraints) even at moderate scales (few hundred thousand vectors). A bespoke vector engine is recommended for production."
-                        };
-                    } else if (hasSearch) {
-                        return { 
-                            db: "PostgreSQL (with full-text search)",
-                            note: "RDBMS with built-in full-text search"
+                    // Heavy ACID, Small Scale -> RDBMS
+                     const features = answers[Q.ADVANCED_FEATURES] || [];
+                    if (features.includes('ai') || features.includes('search')) {
+                         return { 
+                            db: resolveComponents(answers, 'rdbms'), 
+                            note: "RDBMS with necessary search/vector extensions or separate engines."
                         };
                     }
                     
-                    return { db: "RDBMS (PostgreSQL / Oracle / SQL Server)" };
+                    return { db: "RDBMS" };
                 }
             },
             {
                 id: 'sql-moderate',
                 conditions: { [Q.TEAM_SKILL]: 'sqlfirst' },
-                result: { db: "MongoDB (with SQL drivers and Relational Migrator)" }
+                result: (answers) => {
+                   return { db: resolveComponents(answers, 'mongodb') };
+                }
             },
 
             // --- Code-First Team / Structure Paths ---
             {
                 id: 'codefirst-document',
                 conditions: { [Q.DATA_STRUCTURE]: 'document' },
-                result: { db: "MongoDB" }
+                result: (answers) => {
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
             },
             {
                 id: 'codefirst-rigid',
                 conditions: { [Q.DATA_STRUCTURE]: 'rigid' },
-                result: { db: "MongoDB (with Schema Validation)" }
+                result: (answers) => {
+                    // Code first rigid -> MongoDB
+                    return { db: resolveComponents(answers, 'mongodb') + " (with Schema Validation)" };
+                }
             },
 
             // --- Default Fallback ---
@@ -4036,489 +4157,17 @@ flowchart TB
          * @returns {boolean} - True if conflict detected
          */
         function detectConflict(answers) {
-            const useCase = answers[Q.USE_CASE];
-            const teamSkill = answers[Q.TEAM_SKILL];
-            const advancedFeatures = answers[Q.ADVANCED_FEATURES];
-            const workload = answers[Q.WORKLOAD];
-            const migrationStatus = answers[Q.MIGRATION_STATUS];
-            const analyticalNuance = answers[Q.ANALYTICAL_NUANCE];
-            const acidNeeds = answers[Q.ACID_NEEDS];
-            const mobileOffline = answers[Q.MOBILE_OFFLINE];
-            const trafficPattern = answers[Q.TRAFFIC_PATTERN];
-            const distribution = answers[Q.DISTRIBUTION];
-            const normalization = answers[Q.NORMALIZATION];
-            const dataStructure = answers[Q.DATA_STRUCTURE];
-            
-            // EXISTING: Conflict: SQL team + logs/search use case
-            if (teamSkill === 'sqlfirst' && 
-                (useCase === 'logs' || advancedFeatures === 'search')) {
-                return true;
-            }
-            
-            // EXISTING: Conflict: SQL team + transactional workload but document-heavy use case
-            if (teamSkill === 'sqlfirst' && workload === 'transactional' && 
-                (useCase === 'cms' || useCase === 'catalog' || useCase === 'profiles')) {
-                return true;
-            }
-            
-            // EXISTING: Conflict: Migration from SQL but use case screams NoSQL
-            if (migrationStatus === 'yes' && 
-                (useCase === 'logs' || useCase === 'iot' || useCase === 'realtime')) {
-                return true;
-            }
-            
-            // NEW 1: Real-time Analytics + SQL Team
-            if (workload === 'analytical' && analyticalNuance === 'realtime' && teamSkill === 'sqlfirst') {
-                return true;
-            }
-            
-            // NEW 2: IoT + Heavy ACID Requirements
-            if (useCase === 'iot' && acidNeeds === 'heavy') {
-                return true;
-            }
-            
-            // NEW 3: Mobile Offline + Large Scale
-            if (mobileOffline === 'yes' && (trafficPattern === 'large' || trafficPattern === 'massive')) {
-                return true;
-            }
-            
-            // NEW 4: Multi-region + Strong Consistency (distributed but needs consistency)
-            if (distribution === 'multiregion' && acidNeeds === 'heavy') {
-                return true;
-            }
-            
-            // NEW 5: E-commerce + SQL Team
-            if (useCase === 'ecommerce' && teamSkill === 'sqlfirst') {
-                return true;
-            }
-            
-            // NEW 6: CMS/Catalog + Rigid Schema Requirements
-            if ((useCase === 'cms' || useCase === 'catalog') && normalization === 'rigid') {
-                return true;
-            }
-            
-            // NEW 7: Graph Workload + SQL Team
-            if (dataStructure === 'graph' && teamSkill === 'sqlfirst') {
-                return true;
-            }
-            
-            // NEW 8: Logs + Small Scale + SQL Team (different from large scale scenario)
-            if (useCase === 'logs' && teamSkill === 'sqlfirst' && 
-                (trafficPattern === 'very-small' || trafficPattern === 'small')) {
-                return true;
-            }
-            
+            // User Feedback: "Ditto is not a competitor... you are just showing ditto/other alternatives... where the fuck would be my operational data."
+            // Strategy: Disable competing recommendations entirely to strictly follow the improved, deterministic Rule Engine logic
+            // which now handles Hybrid and Partner scenarios correctly within the primary recommendation.
             return false;
         }
 
         /**
-         * Generate competing recommendations with pros/cons
-         * @param {Object} answers - User's answers
-         * @param {Object} primaryRec - Primary recommendation from determinePrimaryDB
-         * @returns {Array} - Array of recommendation objects
+         * Generate competing recommendations - Deprecated/Disabled
          */
         function generateCompetingRecommendations(answers, primaryRec) {
-            const useCase = answers[Q.USE_CASE];
-            const advancedFeatures = answers[Q.ADVANCED_FEATURES];
-            const trafficAnswer = answers[Q.TRAFFIC_PATTERN];
-            const isLargeScale = trafficAnswer === 'large' || trafficAnswer === 'massive';
-            const migrationSource = answers[Q.MIGRATION_SOURCE];
-            const teamSkill = answers[Q.TEAM_SKILL];
-            
-            const recommendations = [];
-            
-            // Scenario: SQL team + (logs OR search)
-            if (teamSkill === 'sqlfirst' && (useCase === 'logs' || advancedFeatures === 'search')) {
-                // Option 1: MongoDB + Atlas Search
-                recommendations.push({
-                    name: "MongoDB Atlas + Atlas Search",
-                    tagline: "Modern, integrated solution (Recommended)",
-                    pros: [
-                        "Integrated full-text search powered by Apache Lucene",
-                        "No external search engine needed - everything in MongoDB",
-                        "Built-in log management with Time Series Collections",
-                        isLargeScale ? "Proven at massive scale (petabytes)" : null,
-                        "Real-time search indexing (no sync lag)",
-                        "Unified security and access control"
-                    ].filter(Boolean),
-                    cons: [
-                        "Requires code refactoring from SQL queries",
-                        "Team needs to learn MongoDB query language (MQL)"
-                    ],
-                    migration: "MongoDB provides Relational Migrator tool and extensive documentation for SQL→MongoDB transitions",
-                    features: advancedFeatures === 'search' ? 
-                        ["Atlas Search", "Time Series Collections", "Aggregation Pipeline"] :
-                        ["Time Series Collections", "Data Tiering", "Atlas Search"]
-                });
-                
-                // Option 2: PostgreSQL/NewSQL + Elasticsearch/Solr
-                const sqlDbName = migrationSource ? 
-                    (migrationSource === 'postgres' ? 'PostgreSQL' : 'PostgreSQL/NewSQL') :
-                    'PostgreSQL/NewSQL';
-                    
-                recommendations.push({
-                    name: `${sqlDbName} + Elasticsearch/Solr`,
-                    tagline: "Familiar SQL with separate search layer",
-                    pros: [
-                        "Team stays in SQL comfort zone",
-                        "Lower immediate learning curve",
-                        migrationSource ? "Minimal migration effort from existing SQL database" : null,
-                        "Mature PostgreSQL ecosystem"
-                    ].filter(Boolean),
-                    cons: [
-                        "Requires separate search engine (Elasticsearch/Solr)",
-                        "Data synchronization complexity between database and search index",
-                        "Two systems to manage, monitor, and secure",
-                        isLargeScale ? "PostgreSQL struggles at massive scale (sharding is complex)" : null,
-                        "Higher total cost of ownership (multiple systems)"
-                    ].filter(Boolean),
-                    migration: null,
-                    features: ["PostgreSQL", "Elasticsearch/Solr", "ETL pipelines for sync"]
-                });
-            }
-            
-            // NEW SCENARIO 1: Real-time Analytics + SQL Team
-            const workload = answers[Q.WORKLOAD];
-            const analyticalNuance = answers[Q.ANALYTICAL_NUANCE];
-            
-            if (workload === 'analytical' && analyticalNuance === 'realtime' && teamSkill === 'sqlfirst') {
-                recommendations.push({
-                    name: "MongoDB Atlas Analytics Nodes",
-                    tagline: "Real-time analytics on operational data (Recommended)",
-                    pros: [
-                        "Real-time analytics without ETL pipelines",
-                        "Dedicated analytics nodes don't impact transactional workload",
-                        "Powerful aggregation framework for complex queries",
-                        "Native time-series support for metrics",
-                        "Auto-scales analytics separately from operational tier"
-                    ],
-                    cons: [
-                        "Team needs to learn MongoDB aggregation pipeline",
-                        "Less mature than traditional SQL for complex joins"
-                    ],
-                    migration: "SQL queries can be translated to aggregation pipelines. MongoDB provides query conversion tools.",
-                    features: ["Analytics Nodes", "Aggregation Pipeline", "Materialized Views", "$merge stages"]
-                });
-                
-                recommendations.push({
-                    name: "PostgreSQL + Apache Druid",
-                    tagline: "SQL familiarity with OLAP engine",
-                    pros: [
-                        "Team stays with SQL",
-                        "PostgreSQL handles transactional workload",
-                        "Apache Druid optimized for fast aggregations",
-                        "SQL interface for analytics"
-                    ],
-                    cons: [
-                        "Two separate systems to manage",
-                        "Data pipeline complexity (sync PostgreSQL → Druid)",
-                        "Higher operational overhead",
-                        "Druid has steeper learning curve than expected"
-                    ],
-                    migration: null,
-                    features: ["PostgreSQL", "Apache Druid", "ETL/CDC pipelines"]
-                });
-            }
-            
-            // NEW SCENARIO 2: IoT + Heavy ACID Requirements
-            const acidNeeds = answers[Q.ACID_NEEDS];
-            
-            if (useCase === 'iot' && acidNeeds === 'heavy') {
-                recommendations.push({
-                    name: "MongoDB Time Series + Transactions",
-                    tagline: "IoT-optimized with ACID support (Recommended)",
-                    pros: [
-                        "Time Series Collections designed for IoT data (10x compression)",
-                        "Multi-document ACID transactions when needed",
-                        "Single database for both time-series and transactional data",
-                        "Automatic data expiration (TTL indexes)",
-                        "Real-time aggregations on sensor data"
-                    ],
-                    cons: [
-                        "ACID transactions have performance cost - use sparingly",
-                        "Team needs to design schema for time-series optimization"
-                    ],
-                    migration: "MongoDB supports hybrid workloads - time-series data + transactional business logic in one database",
-                    features: ["Time Series Collections", "Multi-Document Transactions", "TTL Indexes", "Aggregation Pipeline"]
-                });
-                
-                recommendations.push({
-                    name: "TimescaleDB (PostgreSQL Extension)",
-                    tagline: "SQL-based time-series database",
-                    pros: [
-                        "Built on PostgreSQL - full SQL and ACID support",
-                        "Automatic time-based partitioning (hypertables)",
-                        "SQL queries for analytics",
-                        "Strong ACID guarantees"
-                    ],
-                    cons: [
-                        "Extension maintained separately from core PostgreSQL",
-                        "Limited to single-node or complex sharding for scale",
-                        "Less mature time-series compression than MongoDB",
-                        "Vendor lock-in to Timescale Cloud for managed service"
-                    ],
-                    migration: null,
-                    features: ["TimescaleDB", "Hypertables", "Continuous Aggregates", "PostgreSQL ACID"]
-                });
-            }
-            
-            // NEW SCENARIO 3: Mobile Offline + Large Scale
-            const mobileOffline = answers[Q.MOBILE_OFFLINE];
-            
-            if (mobileOffline === 'yes' && isLargeScale) {
-                recommendations.push({
-                    name: "MongoDB Atlas Device Sync (Realm)",
-                    tagline: "Purpose-built for offline-first mobile (Recommended)",
-                    pros: [
-                        "Automatic bidirectional sync between devices and cloud",
-                        "Conflict resolution built-in (last-write-wins or custom)",
-                        "Scales to millions of devices",
-                        "Works seamlessly with MongoDB Atlas backend",
-                        "Native mobile SDKs (iOS, Android, React Native)"
-                    ],
-                    cons: [
-                        "Requires MongoDB Atlas (cloud-only)",
-                        "Learning curve for Realm SDK",
-                        "Sync can consume significant bandwidth for large datasets"
-                    ],
-                    migration: "Realm integrates directly with MongoDB Atlas - no separate sync infrastructure needed",
-                    features: ["Atlas Device Sync", "Realm Mobile Database", "Conflict Resolution", "Flexible Sync"]
-                });
-                
-                recommendations.push({
-                    name: "CouchDB + Custom Sync Layer",
-                    tagline: "Open-source offline-first database",
-                    pros: [
-                        "Designed for offline-first patterns",
-                        "HTTP-based replication protocol",
-                        "Multi-master replication",
-                        "Can self-host"
-                    ],
-                    cons: [
-                        "Must build custom sync layer for complex requirements",
-                        "Limited query capabilities vs. MongoDB",
-                        "Smaller ecosystem and community",
-                        "Scaling to large clusters is complex",
-                        "Less mature mobile SDKs"
-                    ],
-                    migration: null,
-                    features: ["CouchDB", "PouchDB (client)", "Custom conflict resolution", "Replication protocol"]
-                });
-            }
-            
-            // NEW SCENARIO 4: Multi-region + Strong Consistency
-            const distribution = answers[Q.DISTRIBUTION];
-            
-            if (distribution === 'multiregion' && acidNeeds === 'heavy') {
-                recommendations.push({
-                    name: "MongoDB Global Clusters",
-                    tagline: "Multi-region with zone-based data placement (Recommended)",
-                    pros: [
-                        "Zone-based sharding for data locality (GDPR compliance)",
-                        "Low latency reads from nearest region",
-                        "Strong consistency within zones",
-                        "Automatic failover across regions",
-                        "Single global database view"
-                    ],
-                    cons: [
-                        "Cross-region writes have higher latency",
-                        "More complex configuration than single-region",
-                        "Requires careful shard key design"
-                    ],
-                    migration: "MongoDB Global Clusters provide tunable consistency - strong within region, eventual across regions",
-                    features: ["Global Clusters", "Zone Sharding", "Cross-Region Replication", "Multi-Document Transactions"]
-                });
-                
-                recommendations.push({
-                    name: "CockroachDB (NewSQL)",
-                    tagline: "Distributed SQL with strong consistency",
-                    pros: [
-                        "Distributed SQL with ACID guarantees",
-                        "Strong consistency across regions (via Raft)",
-                        "PostgreSQL-compatible SQL",
-                        "Automatic rebalancing"
-                    ],
-                    cons: [
-                        "Higher latency due to consensus protocol",
-                        "Complex operational model",
-                        "Smaller ecosystem than MongoDB or PostgreSQL",
-                        "Performance can degrade with many regions (>3)",
-                        "More expensive for equivalent throughput"
-                    ],
-                    migration: null,
-                    features: ["CockroachDB", "Distributed SQL", "Multi-Region Replication", "Serializable Isolation"]
-                });
-            }
-            
-            // NEW SCENARIO 5: E-commerce + SQL Team
-            if (useCase === 'ecommerce' && teamSkill === 'sqlfirst') {
-                recommendations.push({
-                    name: "MongoDB Atlas",
-                    tagline: "Flexible schema for products + fast queries (Recommended)",
-                    pros: [
-                        "Document model perfect for product catalogs (varying attributes)",
-                        "Fast queries for product search and filtering",
-                        "ACID transactions for order processing",
-                        "Easy to add new product types without schema migrations",
-                        "Atlas Search for product search"
-                    ],
-                    cons: [
-                        "Team needs to learn MongoDB query language",
-                        "Different mental model from relational tables"
-                    ],
-                    migration: "E-commerce is one of MongoDB's sweet spots. Relational Migrator can help transition product catalogs.",
-                    features: ["Document Model", "Atlas Search", "Multi-Document Transactions", "Change Streams for inventory"]
-                });
-                
-                recommendations.push({
-                    name: "PostgreSQL with JSONB",
-                    tagline: "SQL with flexible product attributes",
-                    pros: [
-                        "Team stays with SQL",
-                        "JSONB columns for flexible product attributes",
-                        "Strong ACID guarantees",
-                        "Mature ecosystem"
-                    ],
-                    cons: [
-                        "JSONB indexing limited vs. native document queries",
-                        "Complex queries mixing relational + JSONB get messy",
-                        "Scaling requires manual sharding (Citus extension)",
-                        "Performance degrades with large JSONB documents"
-                    ],
-                    migration: null,
-                    features: ["PostgreSQL", "JSONB columns", "GIN indexes", "Stored procedures"]
-                });
-            }
-            
-            // NEW SCENARIO 6: CMS/Catalog + Rigid Schema Requirements
-            const normalization = answers[Q.NORMALIZATION];
-            
-            if ((useCase === 'cms' || useCase === 'catalog') && normalization === 'rigid') {
-                recommendations.push({
-                    name: "MongoDB with Schema Validation",
-                    tagline: "Flexibility with enforced structure (Recommended)",
-                    pros: [
-                        "Schema validation enforces required fields and types",
-                        "Flexible document model for content variations",
-                        "Can evolve schema over time with validation rules",
-                        "Fast queries for content retrieval",
-                        "Atlas Search for full-text content search"
-                    ],
-                    cons: [
-                        "Schema validation is less strict than SQL constraints",
-                        "Team needs to define and maintain validation rules"
-                    ],
-                    migration: "MongoDB Schema Validation provides structure where needed while keeping flexibility for content",
-                    features: ["Schema Validation (JSON Schema)", "Document Model", "Atlas Search", "Change Streams"]
-                });
-                
-                recommendations.push({
-                    name: "PostgreSQL",
-                    tagline: "Strict schema enforcement",
-                    pros: [
-                        "Strong schema enforcement with constraints",
-                        "Referential integrity via foreign keys",
-                        "Mature tooling for schema migrations",
-                        "SQL queries"
-                    ],
-                    cons: [
-                        "Schema changes require migrations (downtime risk)",
-                        "Difficult to handle varying content types",
-                        "Performance issues with deeply nested data (many joins)",
-                        "Less flexible for CMS content variations"
-                    ],
-                    migration: null,
-                    features: ["PostgreSQL", "Foreign Keys", "Check Constraints", "Schema Migrations"]
-                });
-            }
-            
-            // NEW SCENARIO 7: Graph Workload + SQL Team
-            const dataStructure = answers[Q.DATA_STRUCTURE];
-            
-            if (dataStructure === 'graph' && teamSkill === 'sqlfirst') {
-                recommendations.push({
-                    name: "MongoDB $graphLookup",
-                    tagline: "Graph queries in familiar aggregation pipeline (Recommended)",
-                    pros: [
-                        "No separate graph database needed",
-                        "$graphLookup for recursive graph traversal",
-                        "Works well for moderate graph depth (≤5 hops)",
-                        "Single database for both document and graph operations",
-                        "Easier to learn than dedicated graph query languages"
-                    ],
-                    cons: [
-                        "Not optimized for deep graph analytics (>5 hops)",
-                        "Less efficient than dedicated graph databases for complex algorithms",
-                        "Team needs to learn aggregation pipeline"
-                    ],
-                    migration: "For social networks, hierarchies, and moderate graph workloads, MongoDB $graphLookup is often sufficient",
-                    features: ["$graphLookup", "Aggregation Pipeline", "Recursive Queries", "Document Model"]
-                });
-                
-                recommendations.push({
-                    name: "PostgreSQL + Apache AGE",
-                    tagline: "Graph queries in PostgreSQL",
-                    pros: [
-                        "Team stays with PostgreSQL",
-                        "Apache AGE adds graph query capabilities (Cypher)",
-                        "Can combine SQL and graph queries",
-                        "ACID guarantees"
-                    ],
-                    cons: [
-                        "AGE is an extension (not core PostgreSQL)",
-                        "Learning Cypher query language still required",
-                        "Performance not as good as dedicated graph databases",
-                        "Limited community and tooling vs. Neo4j",
-                        "Scaling graph queries is challenging"
-                    ],
-                    migration: null,
-                    features: ["PostgreSQL", "Apache AGE extension", "Cypher queries", "Graph algorithms"]
-                });
-            }
-            
-            // NEW SCENARIO 8: Logs + Small Scale + SQL Team
-            if (useCase === 'logs' && teamSkill === 'sqlfirst' && 
-                (trafficAnswer === 'very-small' || trafficAnswer === 'small')) {
-                recommendations.push({
-                    name: "PostgreSQL with TimescaleDB",
-                    tagline: "Good enough for small log volumes",
-                    pros: [
-                        "Team stays with SQL",
-                        "TimescaleDB optimizes time-series log data",
-                        "Familiar SQL queries for log analysis",
-                        "Lower cost at small scale",
-                        "Fast to get started"
-                    ],
-                    cons: [
-                        "Will need to migrate if log volume grows significantly",
-                        "Less efficient than specialized log databases",
-                        "Full-text search limited compared to Elasticsearch/Atlas Search",
-                        "Manual partitioning management"
-                    ],
-                    migration: null,
-                    features: ["PostgreSQL", "TimescaleDB", "Hypertables", "SQL queries"]
-                });
-                
-                recommendations.push({
-                    name: "MongoDB Time Series + Atlas Search",
-                    tagline: "Better long-term scalability (Recommended)",
-                    pros: [
-                        "Purpose-built for log data (Time Series Collections)",
-                        "Scales seamlessly if log volume grows",
-                        "Atlas Search for full-text log search",
-                        "10x better compression for log storage",
-                        "Easier to add new log formats (flexible schema)"
-                    ],
-                    cons: [
-                        "Team needs to learn MongoDB",
-                        "Might feel like over-engineering for small scale initially"
-                    ],
-                    migration: "Starting with MongoDB avoids future migration pain as log volume grows",
-                    features: ["Time Series Collections", "Atlas Search", "Automatic Archiving", "Compression"]
-                });
-            }
-            
-            return recommendations;
+            return [];
         }
 
         /**
@@ -4582,7 +4231,7 @@ flowchart TB
                     
                     <div style="background: rgba(0,237,100,0.08); border-radius: 12px; padding: 20px; margin-bottom: 30px; text-align: left;">
                         <div style="font-size: 0.9rem; color: #333; line-height: 1.7;">
-                            <strong style="color: #00a854;">💡 Our Recommendation:</strong> For your use case (<em>${useCase}</em>), we lean toward <strong>MongoDB Atlas + Atlas Search</strong> because it's purpose-built for this workload and will scale more effectively long-term. However, if minimizing immediate team disruption is critical, the PostgreSQL + Elasticsearch approach offers a shorter ramp-up period.
+                            <strong style="color: #00a854;">💡 Our Recommendation:</strong> For your use case (<em>${useCase}</em>), we lean toward <strong>MongoDB Atlas + Atlas Search</strong> because it's purpose-built for this workload and will scale more effectively long-term. However, if minimizing immediate team disruption is critical, the RDBMS + Search Engine approach offers a shorter ramp-up period.
                         </div>
                     </div>
                     
@@ -4639,7 +4288,7 @@ flowchart TB
                     severity: 'info',
                     icon: 'ℹ️',
                     message: 'Mobile offline sync typically requires cloud infrastructure',
-                    detail: 'MongoDB Realm Device Sync and similar solutions require cloud deployment. On-premise may need custom sync implementation.',
+                    detail: 'Mobile offline sync solutions (ObjectBox, Ditto, PowerSync) typically require cloud infrastructure. On-premise may need custom sync implementation.',
                     questions: [Q.MOBILE_OFFLINE, Q.DEPLOYMENT]
                 });
             }
@@ -4675,8 +4324,8 @@ flowchart TB
                 warnings.push({
                     severity: 'info',
                     icon: '📊',
-                    message: 'Small-scale logs: PostgreSQL viable now, MongoDB better long-term',
-                    detail: 'At small scale, PostgreSQL+TimescaleDB works well. However, starting with MongoDB avoids migration pain if log volume grows.',
+                    message: 'Small-scale logs: RDBMS viable now, MongoDB better long-term',
+                    detail: 'At small scale, RDBMS+Time Series Extensions works well. However, starting with MongoDB avoids migration pain if log volume grows.',
                     questions: [Q.USE_CASE, Q.TEAM_SKILL, Q.TRAFFIC_PATTERN]
                 });
             }
@@ -4833,25 +4482,25 @@ flowchart TB
                 
                 // Handle special reasons
                 if (reason === 'log-analytics') {
-                    architecture = "Search / Log Analytics Cluster";
-                    reasoningPoints.push("For petabyte-scale log analytics, dedicated search engines like Elasticsearch are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads on top of search (< 3TB size or 500GB active index size).");
-                    features.push("Time Series", "Search Indexing");
+            architecture = "Search / Log Analytics Cluster";
+            reasoningPoints.push("For petabyte-scale log analytics, dedicated search engines are often preferred, though MongoDB can handle logs with Time Series collections and moderate size log loads on top of search (< 3TB size or 500GB active index size).");
+            features.push("Time Series", "Search Indexing");
                 } else if (reason === 'iot-timeseries') {
                     architecture = "Time Series Optimized Cluster";
                     reasoningPoints.push("IoT workloads require high write throughput and efficient storage of time-stamped data. MongoDB Time Series Collections use an intelligent **bucket pattern** that groups measurements within time windows, enabling extremely efficient data compression (often 10x+ storage reduction). This makes MongoDB ideal for IoT sensor data, metrics, and event streams at massive scale.");
                     features.push("Time Series Collections", "Data Tiering (Hot/Cold)", "Columnar Compression");
                 } else if (reason === 'iot-massive') {
-                    architecture = "Hybrid: Time Series Warehouse + Operational Layer";
-                    reasoningPoints.push("Petabyte-scale IoT requires specialized time-series databases (InfluxDB, TimescaleDB) or Data Warehouses optimized for time-series analytics, combined with MongoDB for operational queries, device management, and real-time processing.");
-                    features.push("Time Series Warehouse", "InfluxDB / TimescaleDB", "MongoDB Operational Layer", "Data Federation");
-                } else if (reason === 'iot-small-sql') {
-                    architecture = "TimescaleDB (PostgreSQL Extension)";
-                    reasoningPoints.push("For small-scale IoT with strong SQL/relational requirements, TimescaleDB provides time-series optimizations on top of PostgreSQL, giving you SQL familiarity with time-series performance. (Note: Extensions like TimescaleDB are not maintained by the core PostgreSQL team and may have different support lifecycles).");
-                    features.push("TimescaleDB", "PostgreSQL Compatibility", "Continuous Aggregates");
-                } else if (reason === 'analytical-deep-graph') {
-                    architecture = "Graph Analytics Engine";
-                    reasoningPoints.push("Deep graph analytics (centrality, community detection, pathfinding >5 hops) require specialized graph algorithms and engines like Neo4j GDS.");
-                    features.push("Graph Algorithms", "Network Analysis");
+            architecture = "Hybrid: Time Series Warehouse + Operational Layer";
+            reasoningPoints.push("Petabyte-scale IoT requires specialized time-series databases or Data Warehouses optimized for time-series analytics, combined with MongoDB for operational queries, device management, and real-time processing.");
+            features.push("Time Series Warehouse", "Time Series Engine", "MongoDB Operational Layer", "Data Federation");
+        } else if (reason === 'iot-small-sql') {
+            architecture = "RDBMS + Time Series Extensions";
+            reasoningPoints.push("For small-scale IoT with strong SQL/relational requirements, RDBMS extensions can provide time-series optimizations gives you SQL familiarity. (Note: Extensions are often maintained separately and may have different support lifecycles).");
+            features.push("Time Series Extensions", "SQL Compatibility", "Continuous Aggregates");
+        } else if (reason === 'analytical-deep-graph') {
+            architecture = "Graph Analytics Engine";
+            reasoningPoints.push("Deep graph analytics (centrality, community detection, pathfinding >5 hops) require specialized graph algorithms and engines.");
+            features.push("Graph Algorithms", "Network Analysis");
                 } else if (reason === 'analytical-shallow-graph') {
                     architecture = "Operational Analytics with $graphLookup";
                     reasoningPoints.push("For shallower graph analytics (hierarchies, simple connections), MongoDB's aggregation framework and $graphLookup provide efficient analysis without a separate graph engine.");
@@ -4867,7 +4516,7 @@ flowchart TB
                     reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Read-Only Nodes (self-managed) or on-premise data warehouses work well as performance requirements mount.");
                 } else if (reason === 'transactional-deep-graph') {
                     architecture = "Hybrid: Document + Graph Model";
-                    reasoningPoints.push("Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while Neo4j excels at complex graph queries.");
+                    reasoningPoints.push("Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while specialized Graph DBs excel at complex graph queries.");
                 } else if (reason === 'transactional-shallow-graph') {
                     reasoningPoints.push("Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.");
                 } else if (reason === 'sql-modernization') {
@@ -4876,21 +4525,21 @@ flowchart TB
                 } else if (reason === 'sql-heavy-acid') {
                     const traffic = answers[Q.TRAFFIC_PATTERN];
                     if (traffic === 'large' || traffic === 'massive') {
-                        architecture = "Sharded Relational / NewSQL";
-                        reasoningPoints.push("High-volume, strictly normalized, heavy ACID workloads need scalable SQL (NewSQL) or sharded RDBMS.");
+                        architecture = "Sharded Relational / Distributed SQL";
+                        reasoningPoints.push("High-volume, strictly normalized, heavy ACID workloads need scalable SQL (Distributed SQL) or sharded RDBMS.");
                     } else {
                         architecture = "Standard RDBMS";
                         reasoningPoints.push("Traditional RDBMS is perfect for moderate scale, structured data, and SQL-first teams.");
                     }
                 } else if (reason === 'sql-heavy-acid-large-scale') {
-                    architecture = "Sharded Relational / NewSQL or MongoDB (with SQL drivers)";
-                    reasoningPoints.push("Large-scale, strictly normalized, heavy ACID workloads cannot survive on traditional RDBMS. Consider NewSQL (e.g., CockroachDB, TiDB) for distributed SQL, or MongoDB with SQL drivers and document design patterns for scalability.");
+                    architecture = "Sharded Relational / Distributed SQL or MongoDB (with SQL drivers)";
+                    reasoningPoints.push("Large-scale, strictly normalized, heavy ACID workloads cannot survive on traditional RDBMS. Consider Distributed SQL for distributed consistency, or MongoDB with SQL drivers and document design patterns for scalability.");
                 } else if (reason === 'sql-database-logic') {
                     architecture = "Traditional RDBMS with Stored Procedures";
                     reasoningPoints.push("For workloads requiring business logic in the database (stored procedures, triggers, functions),RDBMS do provide mature, battle-tested procedural languages (PL/pgSQL, T-SQL) with rich ecosystems. MongoDB supports server-side JavaScript but is application-logic-first by desig which is more extensible.");
                 } else if (reason === 'sql-database-logic-large-scale') {
-                    architecture = "RDBMS(with scaling caveats) or NewSQL or MongoDB (with Rearchitecturing)";
-                    reasoningPoints.push("⚠️ CHALLENGING COMBINATION: You need stored procedures at large scale. Traditional RDBMS struggle with horizontal scaling beyond sharding limits. Consider: (1) Re-architecting to move business logic to application tier with MongoDB.  (2) NewSQL databases like CockroachDB/Spanner for handling scale (limited stored procedure support), or (3) Shard traditional rdbms (ex : PostgreSQL with Citus extension for distributed queries - Note: 3rd party extensions are not maintained by core PG team)");
+                    architecture = "RDBMS(with scaling caveats) or Distributed SQL or MongoDB (with Rearchitecturing)";
+                    reasoningPoints.push("⚠️ CHALLENGING COMBINATION: You need stored procedures at large scale. Traditional RDBMS struggle with horizontal scaling beyond sharding limits. Consider: (1) Re-architecting to move business logic to application tier with MongoDB.  (2) Distributed SQL databases for handling scale (limited stored procedure support), or (3) Shard traditional RDBMS (ex : RDBMS with sharding extensions - Note: 3rd party extensions are often not maintained by core DB team)");
                 } else if (reason === 'sql-moderate') {
                     reasoningPoints.push("Even with SQL skills, if the data model can be optimized or scale is high, MongoDB is a strong candidate using tools like SQL drivers and Relational Migrator.");
                 } else if (reason === 'codefirst-document') {
@@ -4911,28 +4560,28 @@ flowchart TB
             // PETABYTE TRANSACTIONAL - Multi-tier Architecture
             if (dbChoice.includes("MongoDB") && answers[Q.WORKLOAD] === 'transactional' && isMassive) {
                 if (answers[Q.DEPLOYMENT] !== 'onprem') {
-                    dbChoice = "MongoDB (Hot Operational) + Online Archive (Cold) + Data Warehouse (Reporting)";
-                    architecture = "Multi-tier: Hot Cluster + Cloud Archive + Analytics Layer";
-                    reasoningPoints = ["Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data (recent transactions), Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting across the full dataset."]; // Reset reasoning
+                    // dbChoice = "MongoDB (Hot Operational) + Online Archive (Cold) + Data Warehouse (Reporting)";
+                    // architecture = "Multi-tier: Hot Cluster + Cloud Archive + Analytics Layer";
+                    reasoningPoints.push("Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data (recent transactions), Online Archive stores cold historical data cost-effectively in S3, and a Data Warehouse provides optimized reporting across the full dataset.");
                     features.push("Online Archive", "Atlas Data Federation");
                 } else {
-                    dbChoice = "MongoDB (Hot Operational) + Object Storage (Cold) + Data Warehouse (Reporting)";
-                    architecture = "Multi-tier: Hot Cluster + S3-Compatible Storage + Analytics Layer";
-                    reasoningPoints = ["Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset."]; // Reset reasoning
+                    // dbChoice = "MongoDB (Hot Operational) + Object Storage (Cold) + Data Warehouse (Reporting)";
+                    // architecture = "Multi-tier: Hot Cluster + S3-Compatible Storage + Analytics Layer";
+                    reasoningPoints.push("Petabyte-scale transactional workloads require a tiered architecture. MongoDB handles hot operational data, S3-compatible object storage holds cold historical data cost-effectively, and a Data Warehouse provides optimized reporting across the full dataset.");
                 }
             }
             
             // RDBMS + PETABYTE SCALE - Present Two Options
             if (dbChoice === "RDBMS" && isMassive) {
                 if (answers[Q.DEPLOYMENT] !== 'onprem') {
-                    dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Online Archive (Cold) + Warehouse (Reporting)";
-                    architecture = "Multi-tier Architecture with Two Paths";
-                    reasoningPoints = ["Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (cloud-based) assisted by MongoDB Modernization Programme, leveraging Online Archive for cold data and Warehouse for complex analytics. Consider migration effort, team skills, and licensing costs."]; // Reset reasoning
+                    // dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Online Archive (Cold) + Warehouse (Reporting)";
+                    // architecture = "Multi-tier Architecture with Two Paths";
+                    reasoningPoints.push("Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (cloud-based) assisted by MongoDB Modernization Programme, leveraging Online Archive for cold data and Warehouse for analytics. Consider migration effort, team skills, and licensing costs."); // Changed to push
                     features.push("Relational Migrator (Option 2)", "App Modernization Services (Option 2)", "Online Archive (Option 2)");
                 } else {
-                    dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Object Storage (Cold) + Warehouse (Reporting)";
-                    architecture = "Multi-tier Architecture with Two Paths";
-                    reasoningPoints = ["Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (on-premise) assisted by MongoDB Modernization Programme, with S3-compatible storage for cold data and Warehouse for analytics. Consider migration effort, infrastructure, and team skills."]; // Reset reasoning
+                    // dbChoice = "Option 1: RDBMS (Hot) + Data Warehouse (Cold) | Option 2: MongoDB (Hot) + Object Storage (Cold) + Warehouse (Reporting)";
+                    // architecture = "Multi-tier Architecture with Two Paths";
+                    reasoningPoints.push("Petabyte-scale relational data requires strategic decision: **Option 1** - Stay in RDBMS ecosystem with tiering (hot operational + cold warehouse). **Option 2** - Modernize to MongoDB (on-premise) assisted by MongoDB Modernization Programme, with S3-compatible storage for cold data and Warehouse for analytics. Consider migration effort, infrastructure, and team skills."); // Changed to push
                     features.push("Relational Migrator (Option 2)", "App Modernization Services (Option 2)");
                 }
             }
@@ -4956,9 +4605,9 @@ flowchart TB
                 // Multi-Tenancy
                 if (answers[Q.BUSINESS_MODEL] === 'saas') {
                     let suffix = "";
-                    if (dbChoice.includes("Neo4j")) {
+                    if (dbChoice.includes("Graph Database")) {
                          suffix = " (applied to MongoDB operational layer)";
-                         reasoningPoints.push("Multi-tenancy isolation strategies (Logical/Physical) are applied to the MongoDB operational layer. Neo4j can be deployed as a shared service or per-tenant instances depending on strictness.");
+                         reasoningPoints.push("Multi-tenancy isolation strategies (Logical/Physical) are applied to the MongoDB operational layer. The Graph Database can be deployed as a shared service or per-tenant instances depending on strictness.");
                     }
 
                     // Default to logical if not specified (toggle off)
@@ -5042,18 +4691,18 @@ flowchart TB
                     if (answers[Q.TRAFFIC_PATTERN] === 'massive' || answers[Q.ANALYTICAL_NUANCE] === 'warehouse') {
                         // Large/Petabyte scale: Search Engine + Warehouse
                         if (dbChoice.includes("Data Warehouse")) {
-                            dbChoice = "Elasticsearch/Solr (Search Engine) + Data Warehouse (Analytics)";
-                            architecture = "Hybrid: Search-First + Columnar Analytics";
-                            reasoningPoints = ["For petabyte-scale analytical search (logs, observability), Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics on the same dataset via federation or ETL."]; // Reset
+                            // dbChoice = "Elasticsearch/Solr (Search Engine) + Data Warehouse (Analytics)";
+                            // architecture = "Hybrid: Search-First + Columnar Analytics";
+                            reasoningPoints.push("For petabyte-scale analytical search (logs, observability), Elasticsearch/Solr handles search queries while Data Warehouse provides deep analytics on the same dataset via federation or ETL.");
                         }
                     } else {
                         // Small/Medium scale: MongoDB + Search
                         if (dbChoice.includes("MongoDB") || dbChoice.includes("Data Warehouse")) {
                             const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
                             const searchFeature = isOnPrem ? "MongoDB Search (Lucene-based)" : "Atlas Search (Lucene-based)";
-                            dbChoice = isOnPrem ? "MongoDB (Operational Analytics) + MongoDB Search" : "MongoDB (Operational Analytics) + Atlas Search";
-                            architecture = "Real-Time Analytics with Search";
-                            reasoningPoints = ["For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with " + (isOnPrem ? "MongoDB Search" : "Atlas Search") + " provide unified operational analytics and full-text search."]; // Reset
+                            // dbChoice = isOnPrem ? "MongoDB (Operational Analytics) + MongoDB Search" : "MongoDB (Operational Analytics) + Atlas Search";
+                            // architecture = "Real-Time Analytics with Search";
+                            reasoningPoints.push("For moderate-scale analytical workloads with search requirements, MongoDB Analytics Nodes combined with " + (isOnPrem ? "MongoDB Search" : "Atlas Search") + " provide unified operational analytics and full-text search.");
                             features.push(searchFeature, "Analytics Nodes");
                         }
                     }
@@ -5061,7 +4710,7 @@ flowchart TB
                 // TRANSACTIONAL + SEARCH - CRITICAL FIX: Q19 is search scale, not Q20!
                 else if (answers[Q.SEARCH_SCALE] === 'petabyte') {
                     if (dbChoice.includes("MongoDB")) {
-                        dbChoice = "MongoDB (Operational) + Elasticsearch/Solr (Search Engine)";
+                        // dbChoice = "MongoDB (Operational) + Elasticsearch/Solr (Search Engine)";
                         reasoningPoints.push("For petabyte-scale search workloads, a dedicated search engine alongside MongoDB provides optimal performance.");
                     }
                 } else if (dbChoice.includes("MongoDB")) {
@@ -5077,7 +4726,7 @@ flowchart TB
                 if (vectorScale === 'large') {
                     // >100M vectors - offer specialized solutions
                     if (dbChoice.includes("MongoDB")) {
-                        dbChoice = "MongoDB + Pinecone / Weaviate (Vector DB)";
+                        // dbChoice = "MongoDB + Pinecone / Weaviate (Vector DB)";
                         features.push("Pinecone / Weaviate (Primary Vector Store)", "MongoDB (Metadata & Context)");
                     } else {
                         features.push("Pinecone / Weaviate / Milvus (Vector Search)");
@@ -5113,7 +4762,7 @@ flowchart TB
                     features.push("Queryable Encryption", "CSFLE", "Storage/Network Encryption");
                 } else if (dbChoice.includes("RDBMS") || dbChoice.includes("PostgreSQL") || dbChoice.includes("MySQL")) {
                     features.push("TDE (Transparent Data Encryption)", "Row-Level Security", "pgcrypto / Vault");
-                } else if (dbChoice.includes("Neo4j")) {
+                } else if (dbChoice.includes("Graph Database")) {
                     features.push("Enterprise Security", "Role-Based Access Control", "Field-Level Security");
                 } else if (dbChoice.includes("Data Warehouse")) {
                     features.push("Platform Encryption", "Dynamic Data Masking", "Governance Catalog");
@@ -5123,15 +4772,15 @@ flowchart TB
             }
 
             // Mobile Offline Sync
-            if (useCase === 'mobile' && answers[Q.MOBILE_OFFLINE] === 'yes') {
+            if (answers[Q.MOBILE_OFFLINE] === 'yes') {
                 const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
                 if (dbChoice.includes("MongoDB")) {
                     if (isOnPrem) {
                         features.push("Offline Sync (Ditto / PowerSync / ObjectBox)", "Self-Managed Sync Server", "Local Database");
                         reasoningPoints.push("For offline-first mobile apps with self-managed backend, leverage certified MongoDB partners (Ditto, PowerSync, ObjectBox) for seamless device-to-server sync and conflict resolution.");
                     } else {
-                        features.push("Offline Sync (Ditto / PowerSync / ObjectBox)", "Atlas Device Sync", "Local Database");
-                        reasoningPoints.push("For offline-first mobile apps with cloud backend, leverage certified MongoDB partners (Ditto, PowerSync, ObjectBox) or Atlas Device Sync for seamless device-to-server sync and conflict resolution.");
+                        features.push("Offline Sync (Ditto / PowerSync / ObjectBox)", "Local Database");
+                        reasoningPoints.push("For offline-first mobile apps with cloud backend, leverage certified MongoDB partners (Ditto, PowerSync, ObjectBox) for seamless device-to-server sync and conflict resolution.");
                     }
                 }
             }
@@ -5611,7 +5260,7 @@ flowchart TB
             "AtlasSearch": {
                 title: "Atlas Search",
                 value: "Lucene-Powered Search",
-                detail: "Full-text search integrated into the database. Features fuzzy matching, autocomplete, and highlighting without managing a separate Elasticsearch cluster.",
+                detail: "Full-text search integrated into the database. Features fuzzy matching, autocomplete, and highlighting without managing a separate search engine cluster.",
                 link: "https://www.mongodb.com/docs/atlas/atlas-search/"
             },
             "Vector": {
