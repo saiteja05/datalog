@@ -1965,8 +1965,16 @@ flowchart TB
 
                 <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">⚙️ Enhancement Features</h3>
                 <p style="color: rgba(255,255,255,0.7); line-height: 1.6; margin-bottom: 20px;">
-                    After rule evaluation, the system can add optional enhancements based on answered questions:
+                    After rule evaluation, the system adds optional enhancements based on answered questions:
                 </p>
+
+                <div style="background: rgba(156,39,176,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <strong style="color: #ce93d8;">🤖 MongoDB AMP - AI Modernization (Q6)</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                        If user selects "Yes" for migration (Q6), automatically adds MongoDB AMP (Application Modernization Platform) as a feature.
+                        <br><strong>Features:</strong> Relational Migrator, App Modernization Services, AI-Driven schema transformation
+                    </span>
+                </div>
 
                 <div style="background: rgba(0,237,100,0.05); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
                     <strong style="color: #00ED64;">🗂️ Sharding Guidance (Q13)</strong><br>
@@ -1988,6 +1996,13 @@ flowchart TB
                     <strong style="color: #ffc107;">⚡ Caching (Q17)</strong><br>
                     <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
                         If Q16 = Simple AND Q17 = Sub-millisecond, recommends Redis + MongoDB for in-memory performance.
+                    </span>
+                </div>
+                
+                <div style="background: rgba(233,30,99,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                    <strong style="color: #f48fb1;">🔍 Feature Detection (Q18)</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                        Based on selected advanced features, automatically adds: Vector Search, Full-Text Search, Time Series Collections, Stream Processing, Mobile Sync partners.
                     </span>
                 </div>
 
@@ -2047,97 +2062,168 @@ flowchart TB
                             <li>fulltext-search-moderate</li>
                         </ul>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
-                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Analytical Workloads</strong>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #2196f3;">
+                        <strong style="color: #2196f3; display: block; margin-bottom: 10px;">📈 Analytical Workloads</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                            <li>analytical-deep-graph</li>
-                            <li>analytical-shallow-graph</li>
-                            <li>analytical-warehouse</li>
+                            <li>analytical-deep-graph (>5 hops → Graph DB)</li>
+                            <li>analytical-shallow-graph (→ MongoDB $graphLookup)</li>
+                            <li>analytical-warehouse (→ Data Warehouse)</li>
                             <li>analytical-realtime-onprem</li>
                             <li>analytical-realtime-cloud</li>
                         </ul>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
-                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Transactional Graph</strong>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #673ab7;">
+                        <strong style="color: #673ab7; display: block; margin-bottom: 10px;">🔗 Transactional Graph</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                            <li>transactional-deep-graph</li>
-                            <li>transactional-shallow-graph</li>
+                            <li>transactional-deep-graph (→ MongoDB + Graph DB)</li>
+                            <li>transactional-shallow-graph (→ MongoDB)</li>
                         </ul>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
-                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">SQL-First Team</strong>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #ff5722;">
+                        <strong style="color: #ff5722; display: block; margin-bottom: 10px;">🗄️ SQL-First Team (7 rules)</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
                             <li>sql-database-logic-large-scale</li>
                             <li>sql-database-logic</li>
-                            <li>sql-modernization</li>
-                            <li>sql-heavy-acid-massive (NewSQL OR MongoDB Tiered + Data Warehouse)</li>
-                            <li>sql-heavy-acid-large (RDBMS with Option 1/2)</li>
-                            <li>sql-heavy-acid (New app: RDBMS or MongoDB; Existing: RDBMS)</li>
-                            <li>sql-moderate</li>
+                            <li>sql-modernization (→ MongoDB + AMP)</li>
+                            <li><strong>sql-heavy-acid-massive</strong> (→ Tiered: NewSQL OR MongoDB + Data Warehouse)</li>
+                            <li><strong>sql-heavy-acid-large</strong> (→ RDBMS with Option 1/2 comparison)</li>
+                            <li><strong>sql-heavy-acid</strong> (New app: RDBMS or MongoDB)</li>
+                            <li>sql-moderate (→ MongoDB)</li>
                         </ul>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
-                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Code-First / Structure</strong>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #795548;">
+                        <strong style="color: #795548; display: block; margin-bottom: 10px;">💻 Code-First / Structure</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                            <li>codefirst-document</li>
-                            <li>codefirst-rigid</li>
+                            <li>codefirst-document (→ MongoDB)</li>
+                            <li>codefirst-rigid (→ MongoDB + Schema Validation)</li>
                         </ul>
                     </div>
-                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #00ED64;">
-                        <strong style="color: #00ED64; display: block; margin-bottom: 10px;">Default</strong>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #607d8b;">
+                        <strong style="color: #607d8b; display: block; margin-bottom: 10px;">⚙️ Default Fallback</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                            <li>default</li>
+                            <li>default (→ MongoDB Atlas / MongoDB Enterprise)</li>
                         </ul>
                     </div>
                 </div>
+                
+                <!-- Scale-Aware Rules Highlight -->
+                <div style="background: rgba(0,237,100,0.08); border: 1px solid rgba(0,237,100,0.3); padding: 20px; border-radius: 12px; margin-top: 30px;">
+                    <h4 style="color: #00ED64; margin-bottom: 15px;">📏 Scale-Aware Decision Points</h4>
+                    <p style="color: rgba(255,255,255,0.8); margin-bottom: 15px;">These rules adapt recommendations based on Q11 (Traffic Pattern):</p>
+                    <table style="width: 100%; font-size: 0.9em; border-collapse: collapse;">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <td style="padding: 8px; color: #ffc107;"><strong>Massive (PB)</strong></td>
+                            <td style="padding: 8px; color: rgba(255,255,255,0.7);">Tiered architecture required. No single DB handles PB efficiently.</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <td style="padding: 8px; color: #ff9800;"><strong>Large (TB)</strong></td>
+                            <td style="padding: 8px; color: rgba(255,255,255,0.7);">Option 1/2 pattern: Scale RDBMS vs Modernize to MongoDB.</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                            <td style="padding: 8px; color: #4caf50;"><strong>Small/Medium</strong></td>
+                            <td style="padding: 8px; color: rgba(255,255,255,0.7);">Standard recommendations. New apps: RDBMS or MongoDB both valid.</td>
+                        </tr>
+                    </table>
+                </div>
 
-                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📊 Question Coverage</h3>
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">📊 Question Reference (Q Constants)</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 0.9em; background: rgba(0,0,0,0.3);">
                     <thead style="background: rgba(0,237,100,0.15);">
                         <tr>
                             <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">Question</th>
                             <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">ID</th>
                             <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">Purpose</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64; font-weight: 600;">Impact</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Use Case</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q0</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Primary use case selection</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers IoT, Logs, Mobile rules</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Workload Type</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q1</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Transactional vs Analytical</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - determines workload path</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Data Structure</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q2</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Document / Graph / Relational</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - triggers graph rules</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Team Skillset</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q5</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">SQL-first vs Code-first</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - determines SQL vs MongoDB path</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Migration Status</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q6</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">New app vs Modernization</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers AMP features, new app options</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">ACID Needs</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q9</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Transaction requirements</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - affects SQL-heavy-acid rules</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Traffic Pattern</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q11</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Scale: Very Small → Massive</td>
+                            <td style="padding: 10px; color: #f44336;">🔴🔴 Critical - determines tiered architecture</td>
+                        </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Distribution</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q13</code></td>
                             <td style="padding: 10px; color: rgba(255,255,255,0.8);">Sharding strategy</td>
+                            <td style="padding: 10px; color: #4caf50;">🟢 Enhancement - adds sharding guidance</td>
                         </tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Access Pattern</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q16</code></td>
                             <td style="padding: 10px; color: rgba(255,255,255,0.8);">Query optimization</td>
-                        </tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
-                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Latency</td>
-                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q17</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Caching guidance</td>
+                            <td style="padding: 10px; color: #4caf50;">🟢 Enhancement - adds caching options</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Advanced Features</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q18</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Feature detection</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector, Search, Streams, etc.</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers specialized rules</td>
                         </tr>
-                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Search Scale</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q19</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Search workload scale</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Full-text search workload</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - affects search rule selection</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Vector Scale</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q20</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector workload scale</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector embedding count</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - >100M → dedicated vector DB</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Mobile Offline</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q23</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Sync partners</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Offline-first requirements</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers mobile-offline rule</td>
                         </tr>
                     </tbody>
                 </table>
+                
+                <div style="background: rgba(33,150,243,0.1); border-left: 4px solid #2196f3; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                    <strong style="color: #2196f3;">💡 Removed Questions</strong><br>
+                    <span style="font-size: 0.9em; color: rgba(255,255,255,0.7);">
+                        <strong>Q7 (Migration Source)</strong> was removed - it only personalized text without affecting recommendations. Now we use generic "RDBMS (Oracle, SQL Server, PostgreSQL, MySQL)" messaging.
+                    </span>
+                </div>
 
                 
             </div>
