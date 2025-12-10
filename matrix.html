@@ -2013,7 +2013,7 @@ flowchart TB
                     <li>Insert your new rule object in the correct position (order matters - more specific rules first!).</li>
                     <li><strong>Important:</strong> Add a corresponding handler in <code>showRecommendationDirect()</code> for the new rule's <code>id</code>.</li>
                 </ol>
-                
+
                 <div style="background: rgba(255,193,7,0.1); border-left: 4px solid #ffc107; padding: 15px; border-radius: 8px; margin-top: 15px;">
                     <strong style="color: #ffc107;">⚠️ Rule + Handler Requirement</strong><br>
                     <span style="color: rgba(255,255,255,0.7);">Every rule ID must have a matching handler in <code>showRecommendationDirect()</code>. Without it, the rule's <code>reason</code> code won't generate proper architecture/reasoning output.</span>
@@ -2105,7 +2105,7 @@ flowchart TB
                         </ul>
                     </div>
                 </div>
-                
+
                 <!-- Scale-Aware Rules Highlight -->
                 <div style="background: rgba(0,237,100,0.08); border: 1px solid rgba(0,237,100,0.3); padding: 20px; border-radius: 12px; margin-top: 30px;">
                     <h4 style="color: #00ED64; margin-bottom: 15px;">📏 Scale-Aware Decision Points</h4>
@@ -3790,252 +3790,214 @@ flowchart TB
         }
 
         /**
-         * Decision Rules
-         * Ordered list of rules. First match wins.
-         * Preserves exact logic from original determinePrimaryDB function.
+         * Helper: Detect if user has strong SQL/RDBMS constraints
+         * Used to yield feature-based rules to SQL-specific rules when appropriate.
+         * Returns object with constraint details for flexible handling.
          */
-        const DECISION_RULES = [
-            // --- Advanced Features First (To prevent short-circuiting) ---
+        function getSQLConstraints(answers) {
+            const teamSkill = answers[Q.TEAM_SKILL];
+            const businessLogic = answers[Q.BUSINESS_LOGIC];
+            const acidNeeds = answers[Q.ACID_NEEDS];
+            const normalization = answers[Q.NORMALIZATION];
             
-            // 1. Stream Processing
+            return {
+                isSQLFirst: teamSkill === 'sqlfirst',
+                hasDBLogic: businessLogic === 'database',
+                hasHeavyACID: acidNeeds === 'heavy',
+                hasRigidSchema: normalization === 'rigid',
+                // Strong constraint = SQL team + (DB logic OR (heavy ACID + rigid schema))
+                isStrong: teamSkill === 'sqlfirst' && 
+                          (businessLogic === 'database' || (acidNeeds === 'heavy' && normalization === 'rigid')),
+                // Moderate constraint = SQL team only
+                isModerate: teamSkill === 'sqlfirst'
+            };
+        }
+
+        /**
+         * Helper: Check if use case has architectural priority
+         * These use cases have specific infrastructure patterns that should be evaluated
+         * even when advanced features are selected.
+         */
+        function hasArchitecturalPriority(answers) {
+            const useCase = answers[Q.USE_CASE];
+            const mobileOffline = answers[Q.MOBILE_OFFLINE];
+            const dataStructure = answers[Q.DATA_STRUCTURE];
+            
+            return {
+                isIoT: useCase === 'iot',
+                isLogs: useCase === 'logs',
+                isMobile: useCase === 'mobile' || mobileOffline === 'yes',
+                isGraph: dataStructure === 'graph',
+                // Any architectural driver present
+                hasAny: useCase === 'iot' || useCase === 'logs' || 
+                        useCase === 'mobile' || mobileOffline === 'yes' || 
+                        dataStructure === 'graph'
+            };
+        }
+
+        const DECISION_RULES = [
+            // Advanced Features (yield to SQL/architectural rules when appropriate)
             {
                 id: 'streams-processing',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    return Array.isArray(features) && features.includes('streams');
+                    if (!Array.isArray(features) || !features.includes('streams')) return false;
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) return false;
+                    const archPriority = hasArchitecturalPriority(answers);
+                    if (archPriority.hasAny) return false;
+                    return true;
                 },
-                result: (answers) => { return { db: resolveComponents(answers, 'mongodb') }; }
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
             },
-
-            // 2. Vector Search / AI Workloads
             {
                 id: 'vector-search-massive',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    
-                    // Check for SQL constraints - if present, let SQL rules handle it (they are now feature-aware)
-                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    if (isSQLConstraint) return false;
-
-                    // Massive scale (>100M vectors) always needs specialized DB, even with SQL constraints.
-                    return Array.isArray(features) && 
-                           features.includes('ai') && 
-                           answers[Q.VECTOR_SCALE] === 'large';
+                    if (!Array.isArray(features) || !features.includes('ai')) return false;
+                    if (answers[Q.VECTOR_SCALE] !== 'large') return false;
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) return false;
+                    return true;
                 },
                 result: (answers) => {
-                    // Massive scale vector always needs specialized engine.
-                    // If SQL constraints, we might recommend RDBMS + Vector Engine
-                    // But here we are just saying "Vector Search Engine + Core DB"
-                    
-                    // Actually, the previous logic was "Pinecone/Weaviate + MongoDB".
-                    // User wants generic: "Vector Search Engine".
-                    // And we should check base DB.
-                    
-                    // But this specific rule 'vector-search-massive' implies the vector workload is SO big 
-                    // that maybe even Atlas Vector isn't the primary path? 
-                    // Original rule was: "Pinecone / Weaviate + MongoDB"
-                    
-                    // Let's standardize:
-                    // If strictly massive vector and NOT SQL constraint:
-                    // "MongoDB (Operational) + Vector Search Engine"
-                    
-                    const dbStr = resolveComponents(answers, 'mongodb');
-                    // We need to force "Vector Search Engine" here if it wasn't added (e.g. if we consider Atlas Vector capable)
-                    // But for "massive", the original intent was specialized DB.
-                    // So let's override the vector part of resolveComponents if needed, OR just trust resolveComponents 
-                    // but implies 'Vector Search Engine' is external.
-                    
-                    // Simpler: Just use resolveComponents with 'mongodb'. 
-                    // If cloud -> MongoDB Atlas + Atlas Vector Search (if it supports massive? The original rule said NO).
-                    // ORIGINAL RULE: "Pinecone / Weaviate + MongoDB"
-                    // USER: "RDBMS + Search + Vector Search"
-                    
-                    // So: "MongoDB + Vector Search Engine"
-                    
-                    // If I use resolveComponents(answers, 'mongodb'), it gives "MongoDB Atlas + Atlas Vector Search".
-                    // We want to force "Vector Search Engine" (generic) for massive scale if Atlas Check fails?
-                    // User said: "do not call out any vendor... any vector search engine needed - callout Vector Search Engine"
-                    
-                    // So for massive scale, let's explicitly append Generic Vector Engine.
-                    // We can trick resolveComponents by temporarily removing 'ai' from features matching?
-                    // No, let's just build it manually or handle it.
-                    
-                    // Standardize: "MongoDB Atlas/Enterprise + Vector Search Engine" + ...
-                    const deployment = answers[Q.DEPLOYMENT];
-                    const base = deployment === 'onprem' ? "MongoDB Enterprise" : "MongoDB Atlas";
-                    return { db: resolveComponents(answers, `${base} + Vector Search Engine`) };
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    const base = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                    return { db: `${base} + Vector Search Engine` };
                 }
             },
             {
                 id: 'vector-search-standard',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    const scale = answers[Q.TRAFFIC_PATTERN];
-                    const vectorScale = answers[Q.VECTOR_SCALE];
-                    
-                    // Only match if vector scale is small (or unspecified)
-                    if (vectorScale === 'large') return false;
-
-                    // If ANY SQL constraints are present, exclude (specifically handled by SQL rules now)
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    if (isSQLConstraint) return false;
-
-                    // Yield to specific architectural drivers (IoT, Graph, Mobile) which have their own specialized rules
-                    // These rules will add vector search via resolveComponents anyway.
-                    if (answers[Q.USE_CASE] === 'iot') return false;
-                    if (answers[Q.DATA_STRUCTURE] === 'graph') return false;
-                    if (answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile') return false;
-
-                    return Array.isArray(features) && features.includes('ai');
+                    if (!Array.isArray(features) || !features.includes('ai')) return false;
+                    if (answers[Q.VECTOR_SCALE] === 'large') return false;
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) return false;
+                    const archPriority = hasArchitecturalPriority(answers);
+                    if (archPriority.hasAny) return false;
+                    return true;
                 },
-                result: (answers) => {
-                    // Standard vector search -> Use helper
-                    // Helper now handles Mobile check too, so we don't need manual suffix here!
-                    return { db: resolveComponents(answers, 'mongodb') };
-                }
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
             },
 
-            // 3. Full-Text Search Workloads
             {
                 id: 'fulltext-search-petabyte',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    
-                    // Specific SQL constraint check - yield to SQL rules
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    if (isSQLConstraint) return false;
-
-                    return Array.isArray(features) && 
-                           features.includes('search') && 
-                           answers[Q.SEARCH_SCALE] === 'petabyte';
+                    if (!Array.isArray(features) || !features.includes('search')) return false;
+                    if (answers[Q.SEARCH_SCALE] !== 'petabyte') return false;
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) return false;
+                    return true;
                 },
                 result: (answers) => {
-                    // Petabyte scale search -> "Search Engine + MongoDB"
-                    const deployment = answers[Q.DEPLOYMENT];
-                    const base = deployment === 'onprem' ? "MongoDB Enterprise" : "MongoDB Atlas";
-                    return { db: resolveComponents(answers, `${base} + Search Engine`) }; 
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    const base = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                    return { db: `${base} + Search Engine` }; 
                 }
             },
             {
                 id: 'fulltext-search-moderate',
                 conditions: (answers) => {
                     const features = answers[Q.ADVANCED_FEATURES];
-                    const scale = answers[Q.TRAFFIC_PATTERN];
-
-                    // Specific SQL constraint check - yield to SQL rules
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    if (isSQLConstraint) return false;
-                    
-                    // Yield to specific architectural drivers (IoT, Graph, Mobile)
-                    if (answers[Q.USE_CASE] === 'iot') return false;
-                    if (answers[Q.DATA_STRUCTURE] === 'graph') return false;
-                    if (answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile') return false;
-                    
-                    return Array.isArray(features) && features.includes('search');
+                    if (!Array.isArray(features) || !features.includes('search')) return false;
+                    if (answers[Q.SEARCH_SCALE] === 'petabyte') return false;
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) return false;
+                    const archPriority = hasArchitecturalPriority(answers);
+                    if (archPriority.hasAny) return false;
+                    return true;
                 },
-                result: (answers) => {
-                    return { db: resolveComponents(answers, 'mongodb') };
-                }
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
             },
 
-            // 4. Mobile / Offline-First (Architectural Driver)
+            // Architectural Drivers
             {
                 id: 'mobile-offline',
                 conditions: (answers) => {
-                    // Trigger if 'Offline Sync' is explicitly selected OR 'Mobile' use case is chosen
-                    // (Mobile use case usually implies need for sync/local db consideration)
                     return answers[Q.MOBILE_OFFLINE] === 'yes' || answers[Q.USE_CASE] === 'mobile';
                 },
                 result: (answers) => {
-                    // Mobile/Offline -> Use Master Helper
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { 
+                            db: resolveComponents(answers, 'hybrid') + " + Partner Solutions (offline sync)",
+                            note: "Hybrid: RDBMS backend + MongoDB/sync partners for mobile edge."
+                        };
+                    }
                     return { 
                         db: resolveComponents(answers, 'mongodb'),
-                        note: "Offline-first architecture. Partner solutions handle edge/device sync, integrated with MongoDB backend."
+                        note: "Partner solutions (Ditto, PowerSync, ObjectBox) handle edge/device sync."
                     };
                 }
             },
-
-            // --- Log Analytics Workloads ---
             {
                 id: 'log-analytics',
-                conditions: (answers) => {
-                    return answers[Q.USE_CASE] === 'logs';
-                },
+                conditions: (answers) => answers[Q.USE_CASE] === 'logs',
                 result: (answers) => {
                     const traffic = answers[Q.TRAFFIC_PATTERN];
                     const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    const sqlConstraints = getSQLConstraints(answers);
                     
-                    // Petabyte-scale logs need dedicated search/analytics
                     if (traffic === 'massive') {
-                        return { 
-                            db: "Search Engine (Elasticsearch/OpenSearch) + Data Lakehouse",
-                            note: "Petabyte-scale log analytics requires dedicated search engines optimized for log ingestion and querying. Consider Elasticsearch, OpenSearch, or Splunk with a Data Lakehouse for long-term retention."
-                        };
+                        if (sqlConstraints.isStrong) {
+                         return { 
+                                db: "Search Engine + Data Lakehouse + RDBMS",
+                                note: "Petabyte logs: Search engine for ingestion, RDBMS for metadata."
+                            };
+                        }
+                        return { db: "Search Engine + Data Lakehouse" };
                     }
                     
-                    // Moderate scale - MongoDB can handle it
+                    if (sqlConstraints.isStrong) {
+                        return { db: resolveComponents(answers, 'hybrid') };
+                    }
+                    
                     const features = answers[Q.ADVANCED_FEATURES] || [];
                     if (features.includes('search')) {
-                        return { 
-                            db: isCloud ? "MongoDB Atlas + Atlas Search" : "MongoDB Enterprise + Search",
-                            note: "For moderate-scale log analytics (<3TB index), MongoDB with Atlas Search provides unified storage and search without separate infrastructure."
-                        };
+                        return { db: isCloud ? "MongoDB Atlas + Atlas Search" : "MongoDB Enterprise + Search" };
                     }
                     
                     return { db: resolveComponents(answers, 'mongodb') };
                 }
             },
 
-            // --- IoT Workloads ---
+            // IoT Workloads
             {
                 id: 'iot-massive',
-                conditions: (answers) => {
-                    return answers[Q.USE_CASE] === 'iot' && 
-                           answers[Q.TRAFFIC_PATTERN] === 'massive';
-                },
+                conditions: (answers) => answers[Q.USE_CASE] === 'iot' && answers[Q.TRAFFIC_PATTERN] === 'massive',
                 result: (answers) => {
-                    // Check for SQL constraints
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database');
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    const mongoPart = isCloud ? "MongoDB Atlas (Operational)" : "MongoDB Enterprise (Operational)";
                     
-                    const deployment = answers[Q.DEPLOYMENT];
-                    const mongoPart = deployment === 'onprem' ? "MongoDB Enterprise (Operational)" : "MongoDB Atlas (Operational)";
-                    
-                    if (isSQLConstraint) {
-                         return { 
-                            db: resolveComponents(answers, "Hybrid: RDBMS (Transactional) + Time Series Engine"),
-                            note: "Hybrid architecture required for massive IoT scale with strict SQL/Database logic needs."
-                        };
+                    if (sqlConstraints.hasDBLogic) {
+                        return { db: "Hybrid: RDBMS (Transactional) + Time Series Engine" };
                     }
-                    return { db: resolveComponents(answers, `Time Series Engine + ${mongoPart}`) };
+                    return { db: `Time Series Engine + ${mongoPart}` };
                 }
             },
             {
                 id: 'iot-small-sql',
-                conditions: { 
-                    [Q.USE_CASE]: 'iot', 
-                    [Q.TRAFFIC_PATTERN]: 'very-small',
-                    [Q.TEAM_SKILL]: 'sqlfirst',
-                    [Q.ACID_NEEDS]: 'heavy',
-                    [Q.NORMALIZATION]: 'rigid'
+                conditions: (answers) => {
+                    if (answers[Q.USE_CASE] !== 'iot') return false;
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    if (traffic !== 'very-small' && traffic !== 'small') return false;
+                    return getSQLConstraints(answers).isStrong;
                 },
-                result: (answers) => ({ db: resolveComponents(answers, "RDBMS (Operational) + Time Series Extensions") })
+                result: (answers) => ({ db: "RDBMS + Time Series Extensions" })
             },
             {
                 id: 'timeseries-universal',
                 conditions: (answers) => {
-                    const features = answers[Q.ADVANCED_FEATURES];
-                    const hasTimeSeriesFeature = Array.isArray(features) && features.includes('timeseries');
-                    const isIoTUseCase = answers[Q.USE_CASE] === 'iot';
-                    return hasTimeSeriesFeature || isIoTUseCase;
+                    const features = answers[Q.ADVANCED_FEATURES] || [];
+                    return features.includes('timeseries') || answers[Q.USE_CASE] === 'iot';
                 },
-                result: (answers) => { return { db: resolveComponents(answers, 'mongodb') }; }
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
             },
 
-            // --- Analytical Workloads ---
+            // Analytical Workloads
             {
                 id: 'analytical-deep-graph',
                 conditions: (answers) => {
@@ -4044,33 +4006,20 @@ flowchart TB
                            answers[Q.GRAPH_DEPTH] === 'deep';
                 },
                 result: (answers) => {
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    
-                    if (isSQLConstraint) {
-                        return { 
-                            db: resolveComponents(answers, "Hybrid: RDBMS (Transactional) + Graph Database"),
-                            note: "Hybrid architecture recommended for deep graph analytics with strict ACID/SQL needs."
-                        };
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: "Hybrid: RDBMS + Graph Database" };
                     }
-                    return { db: resolveComponents(answers, "Graph Database") };
+                    return { db: "Graph Database" };
                 }
             },
             {
                 id: 'analytical-shallow-graph',
-                conditions: (answers) => {
-                     return answers[Q.WORKLOAD] === 'analytical' && 
-                           answers[Q.DATA_STRUCTURE] === 'graph';
-                },
+                conditions: (answers) => answers[Q.WORKLOAD] === 'analytical' && answers[Q.DATA_STRUCTURE] === 'graph',
                 result: (answers) => {
-                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                    
-                     if (isSQLConstraint) {
-                        return { 
-                            db: "Hybrid: RDBMS (Transactional) + MongoDB (Aggregation Pipeline)",
-                            note: "Hybrid architecture: RDBMS for transactional core, MongoDB for flexible analytical graph queries."
-                        };
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: resolveComponents(answers, 'hybrid') };
                     }
                     return { db: resolveComponents(answers, 'mongodb') };
                 }
@@ -4078,9 +4027,6 @@ flowchart TB
             {
                 id: 'analytical-warehouse',
                 conditions: (answers) => {
-                    // Warehouse usually implies massive scale/complexity which supersedes SQL constraints (usually leads to separate Warehouse tech anyway)
-                    // But if strictly SQL-first usage for everything...
-                    // Actually, if it's 'Warehouse' nuance, we should recommend a Warehouse.
                     return answers[Q.WORKLOAD] === 'analytical' && 
                            (answers[Q.ANALYTICAL_NUANCE] === 'warehouse' || answers[Q.TRAFFIC_PATTERN] === 'massive');
                 },
@@ -4088,128 +4034,99 @@ flowchart TB
             },
             {
                 id: 'analytical-realtime-onprem',
-                conditions: (answers) => {
-                    return answers[Q.WORKLOAD] === 'analytical' && 
-                           answers[Q.DEPLOYMENT] === 'onprem';
-                },
+                conditions: (answers) => answers[Q.WORKLOAD] === 'analytical' && answers[Q.DEPLOYMENT] === 'onprem',
                 result: (answers) => {
-                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                     
-                     if (isSQLConstraint) {
-                         return { db: "Hybrid: RDBMS (Transactional) + Data Warehouse / MongoDB (Analytics Nodes)" };
-                     }
-                    return { db: "MongoDB (Read-Only Nodes) scaled out for analytics or Data Warehouse" };
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: "Hybrid: RDBMS + MongoDB Enterprise (Analytics Nodes) / Data Warehouse" };
+                    }
+                    return { db: "MongoDB Enterprise (Analytics Nodes) or Data Warehouse" };
                 }
             },
             {
                 id: 'analytical-realtime-cloud',
-                conditions: (answers) => {
-                     return answers[Q.WORKLOAD] === 'analytical';
-                },
+                conditions: (answers) => answers[Q.WORKLOAD] === 'analytical' && answers[Q.DEPLOYMENT] !== 'onprem',
                 result: (answers) => {
-                     const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
-                     
-                     if (isSQLConstraint) {
-                         return { db: "Hybrid: RDBMS (Transactional) + MongoDB Atlas (Analytics Nodes) / Cloud Warehouse" };
-                     }
-                    return { db: "MongoDB Atlas (Analytics Nodes) or Data Warehouse" };
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: "Hybrid: RDBMS + MongoDB Atlas (Analytics Nodes) / Cloud Data Warehouse" };
+                    }
+                    return { db: "MongoDB Atlas (Analytics Nodes) or Cloud Data Warehouse" };
                 }
             },
 
-            // --- Transactional Graph Workloads ---
+            // Transactional Graph Workloads
             {
                 id: 'transactional-deep-graph',
-                conditions: (answers) => {
-                     return answers[Q.DATA_STRUCTURE] === 'graph' &&
-                           answers[Q.GRAPH_DEPTH] === 'deep';
-                },
+                conditions: (answers) => answers[Q.DATA_STRUCTURE] === 'graph' && answers[Q.GRAPH_DEPTH] === 'deep',
                 result: (answers) => {
-                    const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
                     
-                    if (isSQLConstraint) {
-                        return { 
-                            db: resolveComponents(answers, "Hybrid: RDBMS (Transactional) + Graph Database"),
-                            note: "Hybrid architecture recommended for deep graph transactions with strict ACID/SQL needs."
-                        };
+                    if (sqlConstraints.isStrong) {
+                        return { db: "Hybrid: RDBMS + Graph Database" };
                     }
-                    const deployment = answers[Q.DEPLOYMENT];
-                    const mongoPart = deployment === 'onprem' ? "MongoDB Enterprise (Operational)" : "MongoDB Atlas (Operational)";
-                    return { db: resolveComponents(answers, `${mongoPart} + Graph Database`) };
+                    const mongoPart = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                    return { db: `${mongoPart} + Graph Database` };
                 }
             },
             {
                 id: 'transactional-shallow-graph',
-                conditions: (answers) => {
-                   return answers[Q.DATA_STRUCTURE] === 'graph';
-                },
+                conditions: (answers) => answers[Q.DATA_STRUCTURE] === 'graph',
                 result: (answers) => {
-                   const isSQLConstraint = (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database') ||
-                                            (answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'rigid');
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
                     
-                   if (isSQLConstraint) {
-                        return { 
-                            db: "Hybrid: RDBMS (Transactional) + MongoDB ($graphLookup)",
-                            note: "Hybrid architecture: RDBMS for core transactions, MongoDB for graph capabilities."
-                        };
-                   }     
-                   return { db: "MongoDB (with $graphLookup)" };
+                    if (sqlConstraints.isStrong) {
+                        return { db: "Hybrid: RDBMS + MongoDB ($graphLookup)" };
+                    }
+                    const mongoDB = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                    return { db: `${mongoDB} (with $graphLookup)` };
                 }
             },
 
-            // --- SQL-First Team Paths ---
+            // SQL-First Team Paths
             {
                 id: 'sql-database-logic-large-scale',
-                conditions: { 
-                    [Q.TEAM_SKILL]: 'sqlfirst',
-                    [Q.BUSINESS_LOGIC]: 'database',
-                    [Q.TRAFFIC_PATTERN]: ['large', 'massive']
+                conditions: (answers) => {
+                    if (answers[Q.TEAM_SKILL] !== 'sqlfirst') return false;
+                    if (answers[Q.BUSINESS_LOGIC] !== 'database') return false;
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    return traffic === 'large' || traffic === 'massive';
                 },
                 result: (answers) => {
-                    return { 
-                        db: resolveComponents(answers, 'hybrid'),
-                        note: "Dual-database architecture: RDBMS for stored procedures/logic, MongoDB for scalable Vector and Full-Text Search."
-                    };
+                    const features = answers[Q.ADVANCED_FEATURES] || [];
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    
+                    if (features.includes('ai') || features.includes('search')) {
+                        return { db: resolveComponents(answers, 'hybrid') };
+                    }
+                    if (traffic === 'massive') {
+                        return { db: "Distributed SQL or RDBMS with sharding" };
+                    }
+                    return { db: "RDBMS (with read replicas)" };
                 }
             },
             {
                 id: 'sql-database-logic',
-                conditions: { 
-                    [Q.TEAM_SKILL]: 'sqlfirst',
-                    [Q.BUSINESS_LOGIC]: 'database'
-                },
+                conditions: (answers) => answers[Q.TEAM_SKILL] === 'sqlfirst' && answers[Q.BUSINESS_LOGIC] === 'database',
                 result: (answers) => {
-                    // SQL Logic, Small/Moderate Scale -> RDBMS
-                    const dbName = resolveComponents(answers, 'rdbms');
-                    
-                    // Add generic note about extensions if features are present?
-                    // "RDBMS + Vector Search Engine"
-                    
                     const features = answers[Q.ADVANCED_FEATURES] || [];
                     if (features.includes('ai') || features.includes('search')) {
-                         return { 
-                            db: resolveComponents(answers, 'rdbms'), // This will add + Vector Search Engine / + Search Engine
-                            note: "RDBMS with necessary search/vector extensions or separate engines."
-                        };
+                        return { db: resolveComponents(answers, 'rdbms') };
                     }
-                    
                     return { db: "RDBMS" };
                 }
             },
             {
                 id: 'sql-modernization',
                 conditions: (answers) => {
-                    // Check: migration = 'yes' AND heavy ACID AND rigid schema
-                    if (answers[Q.TEAM_SKILL] !== 'sqlfirst') return false;
-                    
-                    return answers[Q.MIGRATION_STATUS] === 'yes' && 
+                    return answers[Q.TEAM_SKILL] === 'sqlfirst' && 
+                           answers[Q.MIGRATION_STATUS] === 'yes' && 
                            answers[Q.ACID_NEEDS] === 'heavy' && 
                            answers[Q.NORMALIZATION] === 'rigid';
                 },
                 result: (answers) => {
-                    // Modernization -> Moving TO MongoDB from any RDBMS
                     const dbName = resolveComponents(answers, 'mongodb');
                     return { db: `${dbName} (with migration support)`, source: 'RDBMS' };
                 }
@@ -4223,29 +4140,17 @@ flowchart TB
                     [Q.TRAFFIC_PATTERN]: 'massive'
                 },
                 result: (answers) => {
-                    // Massive scale + Heavy ACID + Rigid Schema -> Traditional RDBMS won't work
-                    // Must recommend scalable alternatives with tiered architecture
                     const workload = answers[Q.WORKLOAD];
                     const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
                     
                     if (workload === 'analytical') {
-                    return { 
-                            db: "Data Warehouse / Lakehouse",
-                            note: "Petabyte-scale analytical workloads with strict SQL needs require specialized data warehouses (Snowflake, Databricks, BigQuery, etc.)."
-                        };
+                        return { db: "Data Warehouse / Lakehouse" };
                     }
-                    // Transactional at massive scale - MUST have tiered architecture
+                    
                     if (isCloud) {
-                        return { 
-                            db: "Distributed SQL OR MongoDB (Hot) + Online Archive (Cold) + Data Warehouse (Analytics)",
-                            note: "Petabyte-scale transactional workloads require tiered architecture. Options: (1) **Distributed SQL** (CockroachDB, TiDB, Spanner) for SQL compatibility, or (2) **MongoDB Tiered**: MongoDB Atlas for hot operational data + Online Archive for cold historical data (auto-tiered to S3) + Data Warehouse for analytics/reporting."
-                        };
-                    } else {
-                        return { 
-                            db: "Distributed SQL OR MongoDB (Hot) + Object Storage (Cold) + Data Warehouse (Analytics)",
-                            note: "Petabyte-scale transactional workloads require tiered architecture. Options: (1) **Distributed SQL** (CockroachDB, TiDB, Spanner) for SQL compatibility, or (2) **MongoDB Tiered**: MongoDB Enterprise for hot operational data + S3-compatible object storage for cold data + Data Warehouse for analytics/reporting."
-                        };
+                        return { db: "Distributed SQL OR MongoDB Atlas (Hot) + Online Archive (Cold) + Data Warehouse" };
                     }
+                    return { db: "Distributed SQL OR MongoDB Enterprise (Hot) + Object Storage (Cold) + Data Warehouse" };
                 }
             },
             {
@@ -4257,14 +4162,9 @@ flowchart TB
                     [Q.TRAFFIC_PATTERN]: 'large'
                 },
                 result: (answers) => {
-                    // Large scale (but not massive) -> RDBMS can work with scaling strategies
-                    // Present Option 1/Option 2 for fairness
                     const features = answers[Q.ADVANCED_FEATURES] || [];
                     if (features.includes('ai') || features.includes('search')) {
-                         return { 
-                            db: resolveComponents(answers, 'rdbms'), 
-                            note: "RDBMS with scaling strategies (read replicas, sharding). Consider MongoDB as modernization alternative."
-                        };
+                        return { db: resolveComponents(answers, 'rdbms') };
                     }
                     return { db: "RDBMS" };
                 }
@@ -4277,62 +4177,103 @@ flowchart TB
                     [Q.NORMALIZATION]: 'rigid'
                 },
                 result: (answers) => {
-                    // Small/Very-Small scale
                     const isNewApp = answers[Q.MIGRATION_STATUS] === 'no';
                      const features = answers[Q.ADVANCED_FEATURES] || [];
                     
-                    // For new applications, MongoDB is also a great option
                     if (isNewApp) {
-                        return { 
-                            db: "RDBMS or MongoDB",
-                            note: "For new applications at moderate scale, both RDBMS and MongoDB are excellent choices. RDBMS offers mature SQL tooling; MongoDB offers developer agility and future scalability without migration pain."
-                        };
+                        return { db: "RDBMS or MongoDB" };
                     }
-                    
-                    // Existing RDBMS app, not migrating
                     if (features.includes('ai') || features.includes('search')) {
-                         return { 
-                            db: resolveComponents(answers, 'rdbms'), 
-                            note: "RDBMS with necessary search/vector extensions or separate engines."
-                        };
+                        return { db: resolveComponents(answers, 'rdbms') };
                     }
-                    
                     return { db: "RDBMS" };
                 }
             },
             {
                 id: 'sql-moderate',
                 conditions: { [Q.TEAM_SKILL]: 'sqlfirst' },
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
+            },
+
+            // Use Case Specific Paths
+            {
+                id: 'saas-multitenant',
+                conditions: (answers) => answers[Q.USE_CASE] === 'saas',
                 result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    
+                    if (sqlConstraints.isStrong) {
+                        if (traffic === 'massive' || traffic === 'large') {
+                            return { db: resolveComponents(answers, 'hybrid') };
+                        }
+                        return { db: resolveComponents(answers, 'rdbms') };
+                    }
+                    
                    return { db: resolveComponents(answers, 'mongodb') };
                 }
             },
+            {
+                id: 'ecommerce',
+                conditions: (answers) => answers[Q.USE_CASE] === 'ecommerce',
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    const traffic = answers[Q.TRAFFIC_PATTERN];
+                    
+                    if (sqlConstraints.isStrong) {
+                        if (traffic === 'massive' || traffic === 'large') {
+                            return { db: resolveComponents(answers, 'hybrid') };
+                        }
+                        return { db: resolveComponents(answers, 'rdbms') };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
+            },
+            {
+                id: 'cms-content',
+                conditions: (answers) => answers[Q.USE_CASE] === 'cms',
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: resolveComponents(answers, 'hybrid') };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
+            },
+            {
+                id: 'custom-explore',
+                conditions: (answers) => answers[Q.USE_CASE] === 'custom',
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        return { db: resolveComponents(answers, 'rdbms') };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
+            },
 
-            // --- Code-First Team / Structure Paths ---
+            // Code-First Team / Structure Paths
             {
                 id: 'codefirst-document',
                 conditions: { [Q.DATA_STRUCTURE]: 'document' },
-                result: (answers) => {
-                    return { db: resolveComponents(answers, 'mongodb') };
-                }
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
             },
             {
                 id: 'codefirst-rigid',
                 conditions: { [Q.DATA_STRUCTURE]: 'rigid' },
                 result: (answers) => {
-                    // Code first rigid -> MongoDB
-                    return { db: resolveComponents(answers, 'mongodb') + " (with Schema Validation)" };
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    const base = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                    return { db: `${base} (with Schema Validation)` };
                 }
             },
 
-            // --- Default Fallback ---
+            // Default Fallback
             {
                 id: 'default',
-                conditions: {}, // Always matches
-                result: (answers) => {
-                    const isOnPrem = answers[Q.DEPLOYMENT] === 'onprem';
-                    return { db: isOnPrem ? "MongoDB" : "MongoDB Atlas" };
-                }
+                conditions: {},
+                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
             }
         ];
 
@@ -4876,6 +4817,31 @@ flowchart TB
                     reasoningPoints.push("Flexible JSON schema + Code-First team is the ideal fit for MongoDB.");
                 } else if (reason === 'codefirst-rigid') {
                     reasoningPoints.push("You can enforce strict schema validation in MongoDB while enjoying the developer experience of a document model.");
+                } else if (reason === 'saas-multitenant') {
+                    architecture = "Multi-Tenant SaaS Architecture";
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        reasoningPoints.push("B2B SaaS with SQL requirements: RDBMS provides row-level security and schema-per-tenant isolation patterns familiar to SQL teams.");
+                    } else {
+                        reasoningPoints.push("MongoDB supports flexible multi-tenancy patterns: shared collections with tenant field (cost-effective), database-per-tenant (logical isolation), or cluster-per-tenant (physical isolation for enterprise customers).");
+                    }
+                    features.push("Multi-Tenancy", "Tenant Isolation");
+                } else if (reason === 'ecommerce') {
+                    architecture = "E-Commerce Platform";
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.isStrong) {
+                        reasoningPoints.push("E-commerce with SQL requirements: RDBMS ensures strong ACID for order transactions and inventory management.");
+                    } else {
+                        reasoningPoints.push("MongoDB excels at e-commerce: flexible product catalogs, session management, personalization, and multi-document ACID transactions for order processing.");
+                    }
+                    features.push("Product Catalog", "Order Management", "Session Handling");
+                } else if (reason === 'cms-content') {
+                    architecture = "Content Management System";
+                    reasoningPoints.push("Content management is naturally document-oriented. MongoDB's flexible schema handles varied content types, rich media metadata, and hierarchical page structures without rigid table migrations.");
+                    features.push("Flexible Content Schema", "Media Metadata", "Hierarchical Data");
+                } else if (reason === 'custom-explore') {
+                    architecture = "Custom Solution";
+                    reasoningPoints.push("Based on your specific requirements, the recommendation considers your team's skills, scale needs, and feature requirements.");
                 }
 
             // --- ARCHITECTURE REFINEMENTS ---
