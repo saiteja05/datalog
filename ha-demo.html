@@ -18,9 +18,10 @@
             --node-arbiter: #9d4edd;
             --node-down: #ef476f;
             --node-recovering: #ffd166;
-            --heartbeat-color: rgba(0, 237, 100, 0.6);
-            --write-color: #ff6b6b;
-            --read-color: #4ecdc4;
+            --op-insert: #00ED64;
+            --op-update: #ffd166;
+            --op-delete: #ef476f;
+            --op-noop: #6c757d;
         }
 
         * {
@@ -42,7 +43,7 @@
             background: rgba(0, 30, 43, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0, 237, 100, 0.2);
-            padding: 20px 40px;
+            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -58,8 +59,8 @@
         }
 
         .logo-icon {
-            width: 40px;
-            height: 40px;
+            width: 36px;
+            height: 36px;
             background: var(--mongo-green);
             border-radius: 8px;
             display: flex;
@@ -67,11 +68,11 @@
             justify-content: center;
             font-weight: 700;
             color: var(--mongo-forest);
-            font-size: 1.2rem;
+            font-size: 1.1rem;
         }
 
         .logo-text {
-            font-size: 1.4rem;
+            font-size: 1.2rem;
             font-weight: 600;
         }
 
@@ -79,70 +80,20 @@
             color: var(--mongo-green);
         }
 
-        /* Main Layout */
-        .main-container {
-            display: grid;
-            grid-template-columns: 1fr 350px;
-            gap: 30px;
-            padding: 30px 40px;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        /* Cluster Visualization */
-        .cluster-container {
-            background: rgba(0, 30, 43, 0.6);
-            border-radius: 20px;
-            border: 1px solid rgba(0, 237, 100, 0.15);
-            padding: 30px;
-            position: relative;
-            min-height: 600px;
-        }
-
-        .cluster-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .cluster-title::before {
-            content: '';
-            width: 4px;
-            height: 24px;
-            background: var(--mongo-green);
-            border-radius: 2px;
-        }
-
         .cluster-status {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-left: auto;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             padding: 6px 14px;
             background: rgba(0, 237, 100, 0.1);
             border-radius: 20px;
             border: 1px solid rgba(0, 237, 100, 0.3);
         }
 
-        .cluster-status.healthy {
-            color: var(--mongo-green);
-        }
-
-        .cluster-status.degraded {
-            background: rgba(255, 209, 102, 0.1);
-            border-color: rgba(255, 209, 102, 0.3);
-            color: var(--node-recovering);
-        }
-
-        .cluster-status.critical {
-            background: rgba(239, 71, 111, 0.1);
-            border-color: rgba(239, 71, 111, 0.3);
-            color: var(--node-down);
-        }
+        .cluster-status.healthy { color: var(--mongo-green); }
+        .cluster-status.degraded { background: rgba(255, 209, 102, 0.1); border-color: rgba(255, 209, 102, 0.3); color: var(--node-recovering); }
+        .cluster-status.critical { background: rgba(239, 71, 111, 0.1); border-color: rgba(239, 71, 111, 0.3); color: var(--node-down); }
 
         .status-dot {
             width: 8px;
@@ -153,489 +104,448 @@
         }
 
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
         }
 
-        /* SVG Canvas for connections */
-        .connections-layer {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1;
-        }
-
-        /* Nodes Container */
-        .nodes-container {
-            position: relative;
-            height: 450px;
-            margin-top: 20px;
-            z-index: 2;
-        }
-
-        /* Node */
-        .node {
-            position: absolute;
-            width: 140px;
-            height: 160px;
-            background: var(--mongo-slate);
-            border-radius: 16px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .node:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .node.primary {
-            border-color: var(--node-primary);
-            box-shadow: 0 0 30px rgba(0, 237, 100, 0.2);
-        }
-
-        .node.secondary {
-            border-color: var(--node-secondary);
-            box-shadow: 0 0 30px rgba(0, 180, 216, 0.15);
-        }
-
-        .node.arbiter {
-            border-color: var(--node-arbiter);
-            box-shadow: 0 0 30px rgba(157, 78, 221, 0.15);
-        }
-
-        .node.down {
-            border-color: var(--node-down);
-            opacity: 0.6;
-            filter: grayscale(0.5);
-        }
-
-        .node.recovering {
-            border-color: var(--node-recovering);
-            animation: recoveringPulse 1.5s infinite;
-        }
-
-        @keyframes recoveringPulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 209, 102, 0.3); }
-            50% { box-shadow: 0 0 40px rgba(255, 209, 102, 0.5); }
-        }
-
-        .node.electing {
-            animation: electingGlow 0.5s infinite alternate;
-        }
-
-        @keyframes electingGlow {
-            from { box-shadow: 0 0 20px rgba(0, 237, 100, 0.3); }
-            to { box-shadow: 0 0 50px rgba(0, 237, 100, 0.8); }
-        }
-
-        .node-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-            position: relative;
-        }
-
-        .node.primary .node-icon { background: rgba(0, 237, 100, 0.15); }
-        .node.secondary .node-icon { background: rgba(0, 180, 216, 0.15); }
-        .node.arbiter .node-icon { background: rgba(157, 78, 221, 0.15); }
-        .node.down .node-icon { background: rgba(239, 71, 111, 0.15); }
-
-        .node-role {
-            font-size: 0.7rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-        }
-
-        .node.primary .node-role { background: var(--node-primary); color: var(--mongo-forest); }
-        .node.secondary .node-role { background: var(--node-secondary); color: var(--mongo-forest); }
-        .node.arbiter .node-role { background: var(--node-arbiter); color: white; }
-        .node.down .node-role { background: var(--node-down); color: white; }
-        .node.recovering .node-role { background: var(--node-recovering); color: var(--mongo-forest); }
-
-        .node-name {
-            font-size: 0.95rem;
-            font-weight: 500;
-            margin-bottom: 5px;
-        }
-
-        .node-port {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.5);
-            font-family: 'Source Code Pro', monospace;
-        }
-
-        .node-votes {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.4);
-            margin-top: 5px;
-        }
-
-        /* Kill Button on Node */
-        .node-kill {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            width: 24px;
-            height: 24px;
-            background: var(--node-down);
-            border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 0.8rem;
-            cursor: pointer;
-            opacity: 0;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .node:hover .node-kill {
-            opacity: 1;
-        }
-
-        .node-kill:hover {
-            transform: scale(1.2);
-        }
-
-        .node.down .node-kill {
-            background: var(--mongo-green);
-        }
-
-        /* Heartbeat Lines */
-        .heartbeat-line {
-            stroke: rgba(0, 237, 100, 0.3);
-            stroke-width: 2;
-            fill: none;
-            stroke-dasharray: 8 4;
-        }
-
-        .heartbeat-line.active {
-            stroke: var(--heartbeat-color);
-            animation: heartbeatFlow 1s linear infinite;
-        }
-
-        @keyframes heartbeatFlow {
-            from { stroke-dashoffset: 0; }
-            to { stroke-dashoffset: -24; }
-        }
-
-        .heartbeat-line.dead {
-            stroke: rgba(239, 71, 111, 0.3);
-            stroke-dasharray: 4 8;
-            animation: none;
-        }
-
-        /* Data Flow Particle */
-        .data-particle {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .data-particle.write {
-            background: var(--write-color);
-            box-shadow: 0 0 10px var(--write-color);
-        }
-
-        .data-particle.read {
-            background: var(--read-color);
-            box-shadow: 0 0 10px var(--read-color);
-        }
-
-        .data-particle.replication {
-            background: var(--mongo-green);
-            box-shadow: 0 0 10px var(--mongo-green);
-        }
-
-        /* Control Panel */
-        .control-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .panel-section {
-            background: rgba(0, 30, 43, 0.6);
-            border-radius: 16px;
-            border: 1px solid rgba(0, 237, 100, 0.15);
-            padding: 20px;
-        }
-
-        .panel-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--mongo-green);
-        }
-
-        /* Actions */
-        .action-btn {
-            width: 100%;
-            padding: 12px 16px;
-            border: none;
-            border-radius: 10px;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-
-        .action-btn:last-child {
-            margin-bottom: 0;
-        }
-
-        .action-btn.primary {
-            background: var(--mongo-green);
-            color: var(--mongo-forest);
-        }
-
-        .action-btn.primary:hover {
-            background: var(--mongo-dark-green);
-            transform: translateY(-2px);
-        }
-
-        .action-btn.secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .action-btn.secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .action-btn.danger {
-            background: rgba(239, 71, 111, 0.2);
-            color: var(--node-down);
-            border: 1px solid rgba(239, 71, 111, 0.3);
-        }
-
-        .action-btn.danger:hover {
-            background: rgba(239, 71, 111, 0.3);
-        }
-
-        .action-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none !important;
-        }
-
-        /* Write Concern Selector */
-        .write-concern-options {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .wc-option {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .wc-option:hover {
-            background: rgba(255, 255, 255, 0.1);
-        }
-
-        .wc-option.selected {
-            background: rgba(0, 237, 100, 0.1);
-            border-color: var(--mongo-green);
-        }
-
-        .wc-option input {
-            display: none;
-        }
-
-        .wc-radio {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .wc-option.selected .wc-radio {
-            border-color: var(--mongo-green);
-        }
-
-        .wc-option.selected .wc-radio::after {
-            content: '';
-            width: 8px;
-            height: 8px;
-            background: var(--mongo-green);
-            border-radius: 50%;
-        }
-
-        .wc-label {
-            flex: 1;
-        }
-
-        .wc-label strong {
-            display: block;
-            font-size: 0.9rem;
-        }
-
-        .wc-label span {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
-        }
-
-        /* Read Preference */
-        .read-pref-select {
-            width: 100%;
-            padding: 10px 12px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            color: white;
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
-
-        .read-pref-select option {
-            background: var(--mongo-slate);
-        }
-
-        /* Event Log */
-        .event-log {
-            max-height: 200px;
-            overflow-y: auto;
-            font-family: 'Source Code Pro', monospace;
-            font-size: 0.8rem;
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            padding: 10px;
-        }
-
-        .event-log::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .event-log::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        .event-log::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .log-entry {
-            padding: 4px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            display: flex;
-            gap: 8px;
-        }
-
-        .log-entry:last-child {
-            border-bottom: none;
-        }
-
-        .log-time {
-            color: rgba(255, 255, 255, 0.4);
-            flex-shrink: 0;
-        }
-
-        .log-msg {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        .log-msg.info { color: var(--node-secondary); }
-        .log-msg.success { color: var(--mongo-green); }
-        .log-msg.warning { color: var(--node-recovering); }
-        .log-msg.error { color: var(--node-down); }
-
-        /* Stats */
-        .stats-grid {
+        /* Main Layout */
+        .main-layout {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-rows: auto 1fr;
+            gap: 20px;
+            padding: 20px 30px;
+            max-width: 1800px;
+            margin: 0 auto;
         }
 
-        .stat-box {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 12px;
-            text-align: center;
+        /* Top Section - Controls and Actions */
+        .top-section {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: stretch;
         }
 
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
+        .control-card {
+            background: rgba(0, 30, 43, 0.7);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            padding: 15px;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .control-title {
+            font-size: 0.8rem;
+            font-weight: 600;
             color: var(--mongo-green);
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 10px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
-        /* Tooltip */
-        .tooltip {
-            position: fixed;
-            background: var(--mongo-slate);
-            border: 1px solid rgba(0, 237, 100, 0.3);
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 8px 14px;
+            border: none;
             border-radius: 8px;
-            padding: 12px 16px;
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 0.85rem;
-            max-width: 250px;
-            z-index: 1000;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
-        .tooltip.visible {
-            opacity: 1;
+        .action-btn.primary { background: var(--mongo-green); color: var(--mongo-forest); }
+        .action-btn.primary:hover { background: var(--mongo-dark-green); transform: translateY(-1px); }
+        .action-btn.secondary { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
+        .action-btn.secondary:hover { background: rgba(255, 255, 255, 0.15); }
+        .action-btn.danger { background: rgba(239, 71, 111, 0.2); color: var(--node-down); border: 1px solid rgba(239, 71, 111, 0.3); }
+        .action-btn.danger:hover { background: rgba(239, 71, 111, 0.3); }
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Write Concern Pills */
+        .wc-pills {
+            display: flex;
+            gap: 6px;
         }
 
-        .tooltip-title {
+        .wc-pill {
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .wc-pill:hover { background: rgba(255, 255, 255, 0.1); }
+        .wc-pill.selected { background: rgba(0, 237, 100, 0.15); border-color: var(--mongo-green); color: var(--mongo-green); }
+
+        /* Read Preference Select */
+        .read-pref-select {
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.85rem;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        .read-pref-select option { background: var(--mongo-slate); }
+
+        /* Nodes Grid */
+        .nodes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        /* Node Card with Oplog */
+        .node-card {
+            background: rgba(0, 30, 43, 0.7);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .node-card.primary { border-color: var(--node-primary); }
+        .node-card.secondary { border-color: var(--node-secondary); }
+        .node-card.down { border-color: var(--node-down); opacity: 0.7; }
+        .node-card.recovering { border-color: var(--node-recovering); }
+
+        .node-card.primary { box-shadow: 0 0 30px rgba(0, 237, 100, 0.15); }
+
+        .node-header {
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .node-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .node-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .node-card.primary .node-icon { background: rgba(0, 237, 100, 0.15); }
+        .node-card.secondary .node-icon { background: rgba(0, 180, 216, 0.15); }
+        .node-card.down .node-icon { background: rgba(239, 71, 111, 0.15); }
+
+        .node-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .node-details .port {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .node-role-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .node-card.primary .node-role-badge { background: var(--node-primary); color: var(--mongo-forest); }
+        .node-card.secondary .node-role-badge { background: var(--node-secondary); color: var(--mongo-forest); }
+        .node-card.down .node-role-badge { background: var(--node-down); color: white; }
+        .node-card.recovering .node-role-badge { background: var(--node-recovering); color: var(--mongo-forest); }
+
+        .node-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .node-btn {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .node-btn:hover { background: rgba(255, 255, 255, 0.2); }
+        .node-btn.kill { background: rgba(239, 71, 111, 0.2); color: var(--node-down); }
+        .node-btn.kill:hover { background: rgba(239, 71, 111, 0.4); }
+        .node-btn.start { background: rgba(0, 237, 100, 0.2); color: var(--mongo-green); }
+        .node-btn.start:hover { background: rgba(0, 237, 100, 0.4); }
+
+        /* Oplog Section */
+        .oplog-section {
+            padding: 15px 20px;
+        }
+
+        .oplog-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .oplog-title {
+            font-size: 0.85rem;
             font-weight: 600;
             color: var(--mongo-green);
-            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .oplog-title code {
+            background: rgba(0, 237, 100, 0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+        }
+
+        .oplog-stats {
+            display: flex;
+            gap: 12px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .oplog-stat {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .oplog-stat strong {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Replication Lag Indicator */
+        .replication-lag {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            margin-bottom: 12px;
+            font-size: 0.8rem;
+        }
+
+        .lag-bar {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .lag-fill {
+            height: 100%;
+            background: var(--mongo-green);
+            transition: width 0.3s;
+        }
+
+        .lag-fill.warning { background: var(--node-recovering); }
+        .lag-fill.critical { background: var(--node-down); }
+
+        .lag-value {
+            font-family: 'Source Code Pro', monospace;
+            min-width: 50px;
+            text-align: right;
+        }
+
+        /* Oplog Entries */
+        .oplog-entries {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            max-height: 280px;
+            overflow-y: auto;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+        }
+
+        .oplog-entries::-webkit-scrollbar { width: 6px; }
+        .oplog-entries::-webkit-scrollbar-track { background: transparent; }
+        .oplog-entries::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+
+        .oplog-entry {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s;
+        }
+
+        .oplog-entry:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .oplog-entry:last-child {
+            border-bottom: none;
+        }
+
+        .oplog-entry.new {
+            animation: flashNew 1s ease-out;
+        }
+
+        @keyframes flashNew {
+            0% { background: rgba(0, 237, 100, 0.3); }
+            100% { background: transparent; }
+        }
+
+        .oplog-entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+
+        .oplog-op {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .op-badge {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .op-badge.insert { background: var(--op-insert); color: var(--mongo-forest); }
+        .op-badge.update { background: var(--op-update); color: var(--mongo-forest); }
+        .op-badge.delete { background: var(--op-delete); color: white; }
+        .op-badge.noop { background: var(--op-noop); color: white; }
+        .op-badge.command { background: #9d4edd; color: white; }
+
+        .oplog-ns {
+            color: var(--node-secondary);
+        }
+
+        .oplog-ts {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+        }
+
+        .oplog-doc {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 10px;
+            border-radius: 6px;
+            color: rgba(255, 255, 255, 0.7);
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 0.7rem;
+            line-height: 1.4;
+        }
+
+        .oplog-doc .key { color: #ff79c6; }
+        .oplog-doc .string { color: #f1fa8c; }
+        .oplog-doc .number { color: #bd93f9; }
+        .oplog-doc .objectid { color: #8be9fd; }
+
+        /* Empty State */
+        .oplog-empty {
+            padding: 40px 20px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .oplog-empty-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            opacity: 0.5;
+        }
+
+        /* Event Log Panel */
+        .event-log-panel {
+            background: rgba(0, 30, 43, 0.7);
+            border-radius: 12px;
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .event-log-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--mongo-green);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .event-log {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+        }
+
+        .event-log::-webkit-scrollbar { height: 4px; }
+        .event-log::-webkit-scrollbar-track { background: transparent; }
+        .event-log::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
+
+        .log-entry {
+            flex-shrink: 0;
+            padding: 8px 12px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border-left: 3px solid rgba(255, 255, 255, 0.2);
+            max-width: 300px;
+        }
+
+        .log-entry.info { border-color: var(--node-secondary); }
+        .log-entry.success { border-color: var(--mongo-green); }
+        .log-entry.warning { border-color: var(--node-recovering); }
+        .log-entry.error { border-color: var(--node-down); }
+
+        .log-time {
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.7rem;
+            margin-bottom: 3px;
+        }
+
+        .log-msg {
+            color: rgba(255, 255, 255, 0.9);
         }
 
         /* Election Modal */
@@ -645,7 +555,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.7);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -676,22 +586,9 @@
             transform: scale(1);
         }
 
-        .modal-icon {
-            font-size: 3rem;
-            margin-bottom: 15px;
-        }
-
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-        }
-
-        .modal-text {
-            color: rgba(255, 255, 255, 0.7);
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
+        .modal-icon { font-size: 3rem; margin-bottom: 15px; }
+        .modal-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
+        .modal-text { color: rgba(255, 255, 255, 0.7); margin-bottom: 20px; line-height: 1.6; }
 
         .election-progress {
             height: 6px;
@@ -708,53 +605,34 @@
             transition: width 0.3s;
         }
 
-        /* Animations */
-        @keyframes slideIn {
-            from { transform: translateX(100px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
+        /* Replication Flow Visualization */
+        .replication-flow {
+            position: fixed;
+            pointer-events: none;
+            z-index: 50;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .animate-in {
-            animation: slideIn 0.5s ease-out;
+        .flow-particle {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--mongo-green);
+            box-shadow: 0 0 10px var(--mongo-green);
         }
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .main-container {
+            .nodes-grid {
                 grid-template-columns: 1fr;
-            }
-
-            .control-panel {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             }
         }
 
         @media (max-width: 768px) {
-            .header {
-                padding: 15px 20px;
-            }
-
-            .main-container {
-                padding: 20px;
-            }
-
-            .node {
-                width: 110px;
-                height: 130px;
-                padding: 10px;
-            }
-
-            .node-icon {
-                width: 40px;
-                height: 40px;
-                font-size: 1.2rem;
-            }
+            .header { padding: 10px 15px; }
+            .main-layout { padding: 15px; }
+            .top-section { flex-direction: column; }
+            .control-card { min-width: 100%; }
         }
     </style>
 </head>
@@ -764,121 +642,65 @@
             <div class="logo-icon">M</div>
             <div class="logo-text">MongoDB <span>HA Demo</span></div>
         </div>
-        <div style="display: flex; gap: 15px; align-items: center;">
-            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Interactive High Availability Demonstration</span>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <code style="background: rgba(0,237,100,0.1); padding: 4px 12px; border-radius: 6px; font-family: 'Source Code Pro', monospace; font-size: 0.85rem;">
+                rs0
+            </code>
+            <div class="cluster-status healthy" id="cluster-status">
+                <span class="status-dot"></span>
+                <span id="status-text">Healthy</span>
+            </div>
         </div>
     </header>
 
-    <main class="main-container">
-        <!-- Cluster Visualization -->
-        <div class="cluster-container">
-            <div class="cluster-title">
-                Replica Set: <code style="background: rgba(0,237,100,0.1); padding: 2px 8px; border-radius: 4px; font-family: 'Source Code Pro', monospace;">rs0</code>
-                <div class="cluster-status healthy" id="cluster-status">
-                    <span class="status-dot"></span>
-                    <span id="status-text">Healthy</span>
+    <main class="main-layout">
+        <!-- Top Controls -->
+        <div class="top-section">
+            <div class="control-card">
+                <div class="control-title">⚡ Operations</div>
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="simulateInsert()">➕ Insert</button>
+                    <button class="action-btn primary" onclick="simulateUpdate()">✏️ Update</button>
+                    <button class="action-btn primary" onclick="simulateDelete()">🗑️ Delete</button>
+                    <button class="action-btn secondary" onclick="simulateRead()">📖 Read</button>
                 </div>
             </div>
-
-            <svg class="connections-layer" id="connections-svg"></svg>
-
-            <div class="nodes-container" id="nodes-container">
-                <!-- Nodes will be rendered here -->
+            <div class="control-card">
+                <div class="control-title">📝 Write Concern</div>
+                <div class="wc-pills" id="wc-pills">
+                    <div class="wc-pill" data-value="1">w:1</div>
+                    <div class="wc-pill selected" data-value="majority">w:majority</div>
+                    <div class="wc-pill" data-value="3">w:3</div>
+                </div>
+            </div>
+            <div class="control-card">
+                <div class="control-title">📚 Read Preference</div>
+                <select class="read-pref-select" id="read-preference">
+                    <option value="primary">primary</option>
+                    <option value="primaryPreferred">primaryPreferred</option>
+                    <option value="secondary">secondary</option>
+                    <option value="secondaryPreferred" selected>secondaryPreferred</option>
+                    <option value="nearest">nearest</option>
+                </select>
+            </div>
+            <div class="control-card">
+                <div class="control-title">🎮 Cluster</div>
+                <div class="action-buttons">
+                    <button class="action-btn danger" onclick="killPrimary()">💥 Kill Primary</button>
+                    <button class="action-btn secondary" onclick="resetCluster()">🔄 Reset</button>
+                </div>
             </div>
         </div>
 
-        <!-- Control Panel -->
-        <div class="control-panel">
-            <!-- Actions -->
-            <div class="panel-section animate-in">
-                <div class="panel-title">⚡ Actions</div>
-                <button class="action-btn primary" onclick="simulateWrite()">
-                    ✏️ Simulate Write
-                </button>
-                <button class="action-btn secondary" onclick="simulateRead()">
-                    📖 Simulate Read
-                </button>
-                <button class="action-btn danger" onclick="killPrimary()">
-                    💥 Kill Primary
-                </button>
-                <button class="action-btn secondary" onclick="resetCluster()">
-                    🔄 Reset Cluster
-                </button>
-            </div>
+        <!-- Nodes Grid with Oplogs -->
+        <div class="nodes-grid" id="nodes-grid">
+            <!-- Nodes will be rendered here -->
+        </div>
 
-            <!-- Write Concern -->
-            <div class="panel-section animate-in" style="animation-delay: 0.1s;">
-                <div class="panel-title">📝 Write Concern</div>
-                <div class="write-concern-options" id="write-concern-options">
-                    <label class="wc-option" data-value="1">
-                        <input type="radio" name="writeConcern" value="1">
-                        <div class="wc-radio"></div>
-                        <div class="wc-label">
-                            <strong>w: 1</strong>
-                            <span>Acknowledged by primary only</span>
-                        </div>
-                    </label>
-                    <label class="wc-option selected" data-value="majority">
-                        <input type="radio" name="writeConcern" value="majority" checked>
-                        <div class="wc-radio"></div>
-                        <div class="wc-label">
-                            <strong>w: majority</strong>
-                            <span>Acknowledged by majority of nodes</span>
-                        </div>
-                    </label>
-                    <label class="wc-option" data-value="all">
-                        <input type="radio" name="writeConcern" value="all">
-                        <div class="wc-radio"></div>
-                        <div class="wc-label">
-                            <strong>w: all</strong>
-                            <span>Acknowledged by all data-bearing nodes</span>
-                        </div>
-                    </label>
-                </div>
-            </div>
-
-            <!-- Read Preference -->
-            <div class="panel-section animate-in" style="animation-delay: 0.2s;">
-                <div class="panel-title">📚 Read Preference</div>
-                <select class="read-pref-select" id="read-preference">
-                    <option value="primary">primary - Always read from primary</option>
-                    <option value="primaryPreferred">primaryPreferred - Primary, fallback to secondary</option>
-                    <option value="secondary">secondary - Always read from secondary</option>
-                    <option value="secondaryPreferred" selected>secondaryPreferred - Secondary, fallback to primary</option>
-                    <option value="nearest">nearest - Lowest latency node</option>
-                </select>
-            </div>
-
-            <!-- Stats -->
-            <div class="panel-section animate-in" style="animation-delay: 0.3s;">
-                <div class="panel-title">📊 Statistics</div>
-                <div class="stats-grid">
-                    <div class="stat-box">
-                        <div class="stat-value" id="stat-writes">0</div>
-                        <div class="stat-label">Writes</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="stat-reads">0</div>
-                        <div class="stat-label">Reads</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="stat-failovers">0</div>
-                        <div class="stat-label">Failovers</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="stat-value" id="stat-uptime">100%</div>
-                        <div class="stat-label">Uptime</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Event Log -->
-            <div class="panel-section animate-in" style="animation-delay: 0.4s;">
-                <div class="panel-title">📋 Event Log</div>
-                <div class="event-log" id="event-log">
-                    <!-- Log entries will be added here -->
-                </div>
-            </div>
+        <!-- Event Log -->
+        <div class="event-log-panel">
+            <div class="event-log-title">📋 Event Log</div>
+            <div class="event-log" id="event-log"></div>
         </div>
     </main>
 
@@ -887,281 +709,262 @@
         <div class="modal">
             <div class="modal-icon">🗳️</div>
             <div class="modal-title">Election in Progress</div>
-            <div class="modal-text" id="election-text">
-                Primary node is down. Initiating automatic failover...
-            </div>
+            <div class="modal-text" id="election-text">Primary node is down. Initiating automatic failover...</div>
             <div class="election-progress">
                 <div class="election-progress-bar" id="election-progress"></div>
             </div>
-            <div id="election-status" style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
-                Detecting failure...
-            </div>
+            <div id="election-status" style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Detecting failure...</div>
         </div>
     </div>
 
-    <!-- Tooltip -->
-    <div class="tooltip" id="tooltip">
-        <div class="tooltip-title"></div>
-        <div class="tooltip-content"></div>
-    </div>
-
     <script>
-        // Cluster State
+        // ============ STATE ============
         const state = {
             nodes: [
-                { id: 'node1', name: 'mongo-1', port: 27017, role: 'primary', status: 'healthy', votes: 1, priority: 2, x: 50, y: 50 },
-                { id: 'node2', name: 'mongo-2', port: 27018, role: 'secondary', status: 'healthy', votes: 1, priority: 1, x: 350, y: 50 },
-                { id: 'node3', name: 'mongo-3', port: 27019, role: 'secondary', status: 'healthy', votes: 1, priority: 1, x: 200, y: 280 }
+                { 
+                    id: 'node1', 
+                    name: 'mongo-1', 
+                    port: 27017, 
+                    role: 'primary', 
+                    status: 'healthy', 
+                    votes: 1, 
+                    priority: 2,
+                    oplog: [],
+                    oplogSize: 0,
+                    lastApplied: null
+                },
+                { 
+                    id: 'node2', 
+                    name: 'mongo-2', 
+                    port: 27018, 
+                    role: 'secondary', 
+                    status: 'healthy', 
+                    votes: 1, 
+                    priority: 1,
+                    oplog: [],
+                    oplogSize: 0,
+                    lastApplied: null,
+                    replicationLag: 0
+                },
+                { 
+                    id: 'node3', 
+                    name: 'mongo-3', 
+                    port: 27019, 
+                    role: 'secondary', 
+                    status: 'healthy', 
+                    votes: 1, 
+                    priority: 1,
+                    oplog: [],
+                    oplogSize: 0,
+                    lastApplied: null,
+                    replicationLag: 0
+                }
             ],
             writeConcern: 'majority',
             readPreference: 'secondaryPreferred',
-            stats: {
-                writes: 0,
-                reads: 0,
-                failovers: 0,
-                uptimeStart: Date.now(),
-                downtime: 0
-            },
+            oplogCounter: 0,
             isElecting: false,
-            heartbeatInterval: null
+            electionTerm: 1,
+            collections: {
+                'test.users': [],
+                'test.orders': [],
+                'test.products': []
+            }
         };
 
-        // DOM Elements
-        const nodesContainer = document.getElementById('nodes-container');
-        const connectionsSvg = document.getElementById('connections-svg');
-        const eventLog = document.getElementById('event-log');
-        const clusterStatus = document.getElementById('cluster-status');
-        const statusText = document.getElementById('status-text');
-
-        // Initialize
-        function init() {
-            renderNodes();
-            renderConnections();
-            setupWriteConcernHandlers();
-            setupReadPreferenceHandler();
-            startHeartbeat();
-            log('Replica set rs0 initialized with 3 nodes', 'success');
-            log('Primary: mongo-1:27017', 'info');
+        // ============ HELPERS ============
+        function generateObjectId() {
+            return [...Array(24)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
         }
 
-        // Render Nodes
-        function renderNodes() {
-            nodesContainer.innerHTML = '';
-            
-            state.nodes.forEach(node => {
-                const nodeEl = document.createElement('div');
-                nodeEl.className = `node ${node.role} ${node.status === 'down' ? 'down' : ''} ${node.status === 'recovering' ? 'recovering' : ''}`;
-                nodeEl.id = node.id;
-                nodeEl.style.left = `${node.x}px`;
-                nodeEl.style.top = `${node.y}px`;
-                
-                const icon = node.role === 'primary' ? '👑' : 
-                            node.role === 'arbiter' ? '⚖️' : '📋';
-                
-                const roleLabel = node.status === 'down' ? 'DOWN' :
-                                 node.status === 'recovering' ? 'RECOVERING' :
-                                 node.role.toUpperCase();
-
-                nodeEl.innerHTML = `
-                    <button class="node-kill" onclick="toggleNode('${node.id}', event)" title="${node.status === 'down' ? 'Restart' : 'Kill'} node">
-                        ${node.status === 'down' ? '▶' : '✕'}
-                    </button>
-                    <div class="node-icon">${icon}</div>
-                    <div class="node-role">${roleLabel}</div>
-                    <div class="node-name">${node.name}</div>
-                    <div class="node-port">:${node.port}</div>
-                    <div class="node-votes">votes: ${node.votes} | priority: ${node.priority}</div>
-                `;
-
-                nodeEl.addEventListener('mouseenter', (e) => showTooltip(e, node));
-                nodeEl.addEventListener('mouseleave', hideTooltip);
-
-                nodesContainer.appendChild(nodeEl);
-            });
+        function generateTimestamp() {
+            const now = Date.now();
+            return {
+                t: Math.floor(now / 1000),
+                i: state.oplogCounter++
+            };
         }
 
-        // Render Connections (Heartbeat Lines)
-        function renderConnections() {
-            const svg = connectionsSvg;
-            const rect = svg.getBoundingClientRect();
-            svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
-            
-            let lines = '';
-            const nodePositions = {};
-            
-            state.nodes.forEach(node => {
-                nodePositions[node.id] = {
-                    x: node.x + 70, // center of node
-                    y: node.y + 80 + 70 // offset for header + center
-                };
-            });
+        function formatTimestamp(ts) {
+            return `Timestamp(${ts.t}, ${ts.i})`;
+        }
 
-            // Draw lines between all nodes
-            for (let i = 0; i < state.nodes.length; i++) {
-                for (let j = i + 1; j < state.nodes.length; j++) {
-                    const node1 = state.nodes[i];
-                    const node2 = state.nodes[j];
-                    const pos1 = nodePositions[node1.id];
-                    const pos2 = nodePositions[node2.id];
-                    
-                    const isActive = node1.status !== 'down' && node2.status !== 'down';
-                    const lineClass = isActive ? 'heartbeat-line active' : 'heartbeat-line dead';
-                    
-                    lines += `<line class="${lineClass}" 
-                                x1="${pos1.x}" y1="${pos1.y}" 
-                                x2="${pos2.x}" y2="${pos2.y}" 
-                                data-from="${node1.id}" data-to="${node2.id}"/>`;
+        function formatDocument(doc, indent = 0) {
+            const spaces = '  '.repeat(indent);
+            let result = '{\n';
+            const entries = Object.entries(doc);
+            entries.forEach(([key, value], i) => {
+                const comma = i < entries.length - 1 ? ',' : '';
+                if (key === '_id' && typeof value === 'string' && value.length === 24) {
+                    result += `${spaces}  <span class="key">"${key}"</span>: <span class="objectid">ObjectId("${value}")</span>${comma}\n`;
+                } else if (typeof value === 'string') {
+                    result += `${spaces}  <span class="key">"${key}"</span>: <span class="string">"${value}"</span>${comma}\n`;
+                } else if (typeof value === 'number') {
+                    result += `${spaces}  <span class="key">"${key}"</span>: <span class="number">${value}</span>${comma}\n`;
+                } else if (typeof value === 'object' && value !== null) {
+                    result += `${spaces}  <span class="key">"${key}"</span>: ${formatDocument(value, indent + 1)}${comma}\n`;
+                } else {
+                    result += `${spaces}  <span class="key">"${key}"</span>: ${JSON.stringify(value)}${comma}\n`;
                 }
-            }
-            
-            svg.innerHTML = lines;
+            });
+            result += `${spaces}}`;
+            return result;
         }
 
-        // Toggle Node (Kill/Restart)
-        function toggleNode(nodeId, event) {
-            event.stopPropagation();
-            const node = state.nodes.find(n => n.id === nodeId);
+        function getRandomCollection() {
+            const collections = ['test.users', 'test.orders', 'test.products'];
+            return collections[Math.floor(Math.random() * collections.length)];
+        }
+
+        function getRandomName() {
+            const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
+            return names[Math.floor(Math.random() * names.length)];
+        }
+
+        // ============ OPLOG OPERATIONS ============
+        function createOplogEntry(op, ns, document, update = null) {
+            const ts = generateTimestamp();
+            const entry = {
+                ts: ts,
+                t: 1, // term
+                h: Math.floor(Math.random() * 1e18), // hash
+                v: 2, // version
+                op: op, // 'i' insert, 'u' update, 'd' delete, 'c' command, 'n' no-op
+                ns: ns,
+                ui: generateObjectId(), // UUID
+                wall: new Date().toISOString()
+            };
+
+            if (op === 'i') {
+                entry.o = document;
+            } else if (op === 'u') {
+                entry.o = update;
+                entry.o2 = { _id: document._id };
+            } else if (op === 'd') {
+                entry.o = { _id: document._id };
+            }
+
+            return entry;
+        }
+
+        function addToOplog(node, entry) {
+            node.oplog.unshift(entry);
+            node.oplogSize += JSON.stringify(entry).length;
+            node.lastApplied = entry.ts;
             
-            if (node.status === 'down') {
-                // Restart node
-                node.status = 'recovering';
-                log(`${node.name} is recovering...`, 'warning');
-                renderNodes();
-                renderConnections();
+            // Keep only last 20 entries for display
+            if (node.oplog.length > 20) {
+                node.oplog.pop();
+            }
+        }
+
+        function replicateToSecondaries(entry) {
+            const primary = state.nodes.find(n => n.role === 'primary');
+            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
+            
+            const writeConcernNum = state.writeConcern === 'majority' 
+                ? Math.ceil((state.nodes.filter(n => n.status === 'healthy').length) / 2)
+                : state.writeConcern === '3' ? 3 : 1;
+            
+            let acknowledged = 1; // Primary already has it
+            
+            secondaries.forEach((secondary, index) => {
+                // Simulate replication delay
+                const delay = 100 + Math.random() * 200 + (index * 50);
                 
                 setTimeout(() => {
-                    node.status = 'healthy';
-                    // If no primary exists and this node has highest priority, it becomes primary
-                    const hasPrimary = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
-                    if (!hasPrimary) {
-                        node.role = 'primary';
-                        log(`${node.name} elected as new PRIMARY`, 'success');
+                    if (secondary.status === 'healthy') {
+                        addToOplog(secondary, { ...entry });
+                        secondary.replicationLag = Math.max(0, secondary.replicationLag - 50);
+                        acknowledged++;
+                        
+                        renderNode(secondary);
+                        
+                        if (acknowledged >= writeConcernNum && writeConcernNum > 1) {
+                            log(`Write acknowledged (w:${state.writeConcern})`, 'success');
+                        }
                     }
-                    renderNodes();
-                    renderConnections();
-                    updateClusterStatus();
-                    log(`${node.name} is now healthy`, 'success');
-                }, 2000);
-            } else {
-                // Kill node
-                const wasPrimary = node.role === 'primary';
-                node.status = 'down';
-                node.role = 'secondary'; // Reset role
-                log(`${node.name} is DOWN`, 'error');
-                renderNodes();
-                renderConnections();
-                updateClusterStatus();
+                }, delay);
                 
-                if (wasPrimary) {
-                    triggerElection();
-                }
+                // Update lag
+                secondary.replicationLag += delay;
+            });
+            
+            if (writeConcernNum === 1) {
+                log(`Write acknowledged (w:1)`, 'success');
             }
         }
 
-        // Kill Primary
-        function killPrimary() {
+        // ============ SIMULATE OPERATIONS ============
+        function simulateInsert() {
             const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
-            if (primary) {
-                toggleNode(primary.id, { stopPropagation: () => {} });
-            } else {
-                log('No healthy primary to kill', 'warning');
-            }
-        }
-
-        // Trigger Election
-        function triggerElection() {
-            if (state.isElecting) return;
-            
-            state.isElecting = true;
-            state.stats.failovers++;
-            document.getElementById('stat-failovers').textContent = state.stats.failovers;
-            
-            const modal = document.getElementById('election-modal');
-            const progressBar = document.getElementById('election-progress');
-            const electionStatus = document.getElementById('election-status');
-            
-            modal.classList.add('visible');
-            
-            const steps = [
-                { progress: 20, text: 'Detecting primary failure...' },
-                { progress: 40, text: 'Initiating election protocol...' },
-                { progress: 60, text: 'Candidates voting...' },
-                { progress: 80, text: 'Counting votes...' },
-                { progress: 100, text: 'New primary elected!' }
-            ];
-
-            let stepIndex = 0;
-            const stepInterval = setInterval(() => {
-                if (stepIndex < steps.length) {
-                    progressBar.style.width = `${steps[stepIndex].progress}%`;
-                    electionStatus.textContent = steps[stepIndex].text;
-                    stepIndex++;
-                } else {
-                    clearInterval(stepInterval);
-                    
-                    // Find new primary (highest priority healthy node)
-                    const candidates = state.nodes
-                        .filter(n => n.status === 'healthy' && n.votes > 0)
-                        .sort((a, b) => b.priority - a.priority);
-                    
-                    if (candidates.length > 0) {
-                        candidates[0].role = 'primary';
-                        log(`${candidates[0].name} elected as new PRIMARY`, 'success');
-                    }
-                    
-                    setTimeout(() => {
-                        modal.classList.remove('visible');
-                        state.isElecting = false;
-                        renderNodes();
-                        renderConnections();
-                        updateClusterStatus();
-                        progressBar.style.width = '0%';
-                    }, 1000);
-                }
-            }, 600);
-        }
-
-        // Simulate Write
-        function simulateWrite() {
-            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
-            
             if (!primary) {
-                log('WRITE FAILED: No primary available', 'error');
+                log('INSERT FAILED: No primary available', 'error');
                 return;
             }
 
-            state.stats.writes++;
-            document.getElementById('stat-writes').textContent = state.stats.writes;
+            const ns = getRandomCollection();
+            const doc = {
+                _id: generateObjectId(),
+                name: getRandomName(),
+                email: `${getRandomName().toLowerCase()}@example.com`,
+                age: Math.floor(Math.random() * 50) + 20,
+                createdAt: new Date().toISOString()
+            };
 
-            // Animate write to primary
-            animateDataFlow('client', primary.id, 'write');
-            log(`Write to ${primary.name} (w:${state.writeConcern})`, 'info');
-
-            // Replicate to secondaries based on write concern
-            setTimeout(() => {
-                const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
-                
-                if (state.writeConcern === 'majority') {
-                    // Replicate to at least one secondary
-                    if (secondaries.length > 0) {
-                        animateDataFlow(primary.id, secondaries[0].id, 'replication');
-                        log(`Replicated to ${secondaries[0].name}`, 'success');
-                    }
-                } else if (state.writeConcern === 'all') {
-                    // Replicate to all secondaries
-                    secondaries.forEach((sec, i) => {
-                        setTimeout(() => {
-                            animateDataFlow(primary.id, sec.id, 'replication');
-                            log(`Replicated to ${sec.name}`, 'success');
-                        }, i * 200);
-                    });
-                } else {
-                    log('Write acknowledged by primary', 'success');
-                }
-            }, 300);
+            const entry = createOplogEntry('i', ns, doc);
+            addToOplog(primary, entry);
+            renderNode(primary);
+            
+            log(`INSERT into ${ns}`, 'info');
+            replicateToSecondaries(entry);
         }
 
-        // Simulate Read
+        function simulateUpdate() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (!primary) {
+                log('UPDATE FAILED: No primary available', 'error');
+                return;
+            }
+
+            const ns = getRandomCollection();
+            const doc = { _id: generateObjectId() };
+            const update = {
+                $v: 2,
+                diff: {
+                    u: { 
+                        updatedAt: new Date().toISOString(),
+                        score: Math.floor(Math.random() * 100)
+                    }
+                }
+            };
+
+            const entry = createOplogEntry('u', ns, doc, update);
+            addToOplog(primary, entry);
+            renderNode(primary);
+            
+            log(`UPDATE on ${ns}`, 'info');
+            replicateToSecondaries(entry);
+        }
+
+        function simulateDelete() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (!primary) {
+                log('DELETE FAILED: No primary available', 'error');
+                return;
+            }
+
+            const ns = getRandomCollection();
+            const doc = { _id: generateObjectId() };
+
+            const entry = createOplogEntry('d', ns, doc);
+            addToOplog(primary, entry);
+            renderNode(primary);
+            
+            log(`DELETE from ${ns}`, 'info');
+            replicateToSecondaries(entry);
+        }
+
         function simulateRead() {
             const readPref = state.readPreference;
             let targetNode = null;
@@ -1183,7 +986,6 @@
                     targetNode = secondaries[0] || primary;
                     break;
                 case 'nearest':
-                    // Simulate random "nearest"
                     const allHealthy = state.nodes.filter(n => n.status === 'healthy');
                     targetNode = allHealthy[Math.floor(Math.random() * allHealthy.length)];
                     break;
@@ -1194,181 +996,419 @@
                 return;
             }
 
-            state.stats.reads++;
-            document.getElementById('stat-reads').textContent = state.stats.reads;
-
-            animateDataFlow(targetNode.id, 'client', 'read');
-            log(`Read from ${targetNode.name} (${readPref})`, 'info');
+            log(`READ from ${targetNode.name} (${readPref})`, 'info');
+            
+            // Visual feedback
+            const nodeEl = document.getElementById(`node-${targetNode.id}`);
+            if (nodeEl) {
+                nodeEl.style.boxShadow = '0 0 30px rgba(78, 205, 196, 0.5)';
+                setTimeout(() => {
+                    nodeEl.style.boxShadow = '';
+                }, 500);
+            }
         }
 
-        // Animate Data Flow
-        function animateDataFlow(fromId, toId, type) {
-            const particle = document.createElement('div');
-            particle.className = `data-particle ${type}`;
-            document.body.appendChild(particle);
+        // ============ NODE CONTROL ============
+        
+        /**
+         * Calculate majority requirement for elections
+         * Majority = floor(n/2) + 1 where n = total voting members
+         */
+        function getMajorityRequired() {
+            const totalVotingMembers = state.nodes.filter(n => n.votes > 0).length;
+            return Math.floor(totalVotingMembers / 2) + 1;
+        }
 
-            let startX, startY, endX, endY;
+        /**
+         * Check if we have enough healthy voting members for a primary
+         */
+        function hasMajority() {
+            const healthyVotingMembers = state.nodes.filter(n => n.status === 'healthy' && n.votes > 0).length;
+            return healthyVotingMembers >= getMajorityRequired();
+        }
 
-            if (fromId === 'client') {
-                startX = 50;
-                startY = window.innerHeight / 2;
+        function toggleNode(nodeId) {
+            const node = state.nodes.find(n => n.id === nodeId);
+            
+            if (node.status === 'down') {
+                // Restart node
+                node.status = 'recovering';
+                log(`${node.name} is recovering...`, 'warning');
+                renderNode(node);
+                
+                setTimeout(() => {
+                    node.status = 'healthy';
+                    renderNode(node);
+                    updateClusterStatus();
+                    log(`${node.name} is now healthy`, 'success');
+                    
+                    // Check if we now have majority and no primary
+                    const hasPrimary = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+                    if (!hasPrimary && hasMajority()) {
+                        log(`Majority restored (${getMajorityRequired()}/${state.nodes.length} nodes required)`, 'info');
+                        triggerElection();
+                    } else if (!hasPrimary && !hasMajority()) {
+                        const healthy = state.nodes.filter(n => n.status === 'healthy').length;
+                        log(`Still no majority: ${healthy}/${getMajorityRequired()} nodes needed`, 'warning');
+                    }
+                }, 2000);
             } else {
-                const fromNode = state.nodes.find(n => n.id === fromId);
-                const fromEl = document.getElementById(fromId);
-                if (fromEl) {
-                    const rect = fromEl.getBoundingClientRect();
-                    startX = rect.left + rect.width / 2;
-                    startY = rect.top + rect.height / 2;
+                const wasPrimary = node.role === 'primary';
+                node.status = 'down';
+                node.role = 'secondary';
+                node.oplog = [];
+                log(`${node.name} is DOWN`, 'error');
+                renderNode(node);
+                updateClusterStatus();
+                
+                if (wasPrimary) {
+                    triggerElection();
+                }
+                
+                // Check if primary should step down due to lost majority
+                const currentPrimary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+                if (currentPrimary && !hasMajority()) {
+                    log(`${currentPrimary.name} stepping down: lost majority`, 'warning');
+                    currentPrimary.role = 'secondary';
+                    renderNode(currentPrimary);
+                    updateClusterStatus();
                 }
             }
+        }
 
-            if (toId === 'client') {
-                endX = 50;
-                endY = window.innerHeight / 2;
+        function killPrimary() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (primary) {
+                toggleNode(primary.id);
             } else {
-                const toNode = state.nodes.find(n => n.id === toId);
-                const toEl = document.getElementById(toId);
-                if (toEl) {
-                    const rect = toEl.getBoundingClientRect();
-                    endX = rect.left + rect.width / 2;
-                    endY = rect.top + rect.height / 2;
-                }
+                log('No healthy primary to kill', 'warning');
             }
+        }
 
-            particle.style.left = `${startX}px`;
-            particle.style.top = `${startY}px`;
+        function triggerElection() {
+            if (state.isElecting) return;
+            
+            const majorityRequired = getMajorityRequired();
+            const healthyVoters = state.nodes.filter(n => n.status === 'healthy' && n.votes > 0).length;
+            
+            state.isElecting = true;
+            const modal = document.getElementById('election-modal');
+            const progressBar = document.getElementById('election-progress');
+            const electionStatus = document.getElementById('election-status');
+            const electionText = document.getElementById('election-text');
+            const modalTitle = modal.querySelector('.modal-title');
+            const modalIcon = modal.querySelector('.modal-icon');
+            
+            modal.classList.add('visible');
+            
+            // Check if we have majority
+            if (healthyVoters < majorityRequired) {
+                // NO MAJORITY - Election cannot proceed
+                modalIcon.textContent = '⚠️';
+                modalTitle.textContent = 'Election Failed';
+                electionText.innerHTML = `
+                    <strong style="color: var(--node-down);">Cannot elect primary: No majority available</strong><br><br>
+                    Healthy voting members: <strong>${healthyVoters}</strong><br>
+                    Majority required: <strong>${majorityRequired}</strong> (n/2 + 1 where n=${state.nodes.length})<br><br>
+                    <span style="font-size: 0.85rem;">Bring at least ${majorityRequired - healthyVoters} more node(s) online to restore write availability.</span>
+                `;
+                progressBar.style.width = '100%';
+                progressBar.style.background = 'var(--node-down)';
+                electionStatus.textContent = 'Cluster is READ-ONLY until majority is restored';
+                
+                log(`Election FAILED: Only ${healthyVoters}/${majorityRequired} votes available`, 'error');
+                
+                setTimeout(() => {
+                    modal.classList.remove('visible');
+                    state.isElecting = false;
+                    progressBar.style.width = '0%';
+                    progressBar.style.background = 'var(--mongo-green)';
+                    modalIcon.textContent = '🗳️';
+                    modalTitle.textContent = 'Election in Progress';
+                }, 4000);
+                
+                return;
+            }
+            
+            // MAJORITY EXISTS - Proceed with election
+            electionText.textContent = `Primary node is down. Initiating automatic failover...`;
+            
+            const steps = [
+                { progress: 15, text: 'Detecting primary failure...' },
+                { progress: 30, text: 'Checking quorum...' },
+                { progress: 45, text: `Quorum confirmed: ${healthyVoters}/${majorityRequired} votes available` },
+                { progress: 60, text: 'Candidates requesting votes...' },
+                { progress: 75, text: 'Tallying votes...' },
+                { progress: 90, text: `Majority achieved (${majorityRequired} votes)` },
+                { progress: 100, text: 'New primary elected!' }
+            ];
 
-            // Animate
-            const duration = 500;
-            const startTime = performance.now();
-
-            function animate(currentTime) {
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-
-                const x = startX + (endX - startX) * progress;
-                const y = startY + (endY - startY) * progress;
-
-                particle.style.left = `${x}px`;
-                particle.style.top = `${y}px`;
-
-                if (progress < 1) {
-                    requestAnimationFrame(animate);
+            let stepIndex = 0;
+            const stepInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    progressBar.style.width = `${steps[stepIndex].progress}%`;
+                    electionStatus.textContent = steps[stepIndex].text;
+                    stepIndex++;
                 } else {
-                    particle.remove();
+                    clearInterval(stepInterval);
+                    
+                    const candidates = state.nodes
+                        .filter(n => n.status === 'healthy' && n.votes > 0)
+                        .sort((a, b) => b.priority - a.priority);
+                    
+                    if (candidates.length >= majorityRequired) {
+                        candidates[0].role = 'primary';
+                        
+                        // Add no-op entry to signify election
+                        const noopEntry = {
+                            ts: generateTimestamp(),
+                            t: state.electionTerm || 1,
+                            op: 'n',
+                            ns: '',
+                            wall: new Date().toISOString(),
+                            o: { msg: 'new primary', votes: healthyVoters, majority: majorityRequired }
+                        };
+                        state.electionTerm = (state.electionTerm || 1) + 1;
+                        addToOplog(candidates[0], noopEntry);
+                        
+                        log(`${candidates[0].name} elected as new PRIMARY (${healthyVoters} votes)`, 'success');
+                    }
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('visible');
+                        state.isElecting = false;
+                        renderAllNodes();
+                        updateClusterStatus();
+                        progressBar.style.width = '0%';
+                    }, 1000);
                 }
-            }
-
-            requestAnimationFrame(animate);
+            }, 500);
         }
 
-        // Reset Cluster
         function resetCluster() {
             state.nodes.forEach((node, i) => {
                 node.status = 'healthy';
                 node.role = i === 0 ? 'primary' : 'secondary';
+                node.oplog = [];
+                node.oplogSize = 0;
+                node.lastApplied = null;
+                node.replicationLag = 0;
             });
-            state.stats = {
-                writes: 0,
-                reads: 0,
-                failovers: 0,
-                uptimeStart: Date.now(),
-                downtime: 0
-            };
-            document.getElementById('stat-writes').textContent = '0';
-            document.getElementById('stat-reads').textContent = '0';
-            document.getElementById('stat-failovers').textContent = '0';
-            document.getElementById('stat-uptime').textContent = '100%';
-            eventLog.innerHTML = '';
+            state.oplogCounter = 0;
+            document.getElementById('event-log').innerHTML = '';
             
-            renderNodes();
-            renderConnections();
+            renderAllNodes();
             updateClusterStatus();
             log('Cluster reset to initial state', 'success');
         }
 
-        // Update Cluster Status
-        function updateClusterStatus() {
-            const healthyNodes = state.nodes.filter(n => n.status === 'healthy').length;
-            const hasPrimary = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+        // ============ RENDERING ============
+        function renderNode(node) {
+            const container = document.getElementById('nodes-grid');
+            let nodeEl = document.getElementById(`node-${node.id}`);
+            
+            const roleClass = node.status === 'down' ? 'down' : 
+                             node.status === 'recovering' ? 'recovering' : 
+                             node.role;
+            
+            const roleLabel = node.status === 'down' ? 'DOWN' :
+                             node.status === 'recovering' ? 'RECOVERING' :
+                             node.role.toUpperCase();
 
-            clusterStatus.classList.remove('healthy', 'degraded', 'critical');
+            const icon = node.role === 'primary' ? '👑' : '📋';
+            
+            // Replication lag display (only for secondaries)
+            let lagHtml = '';
+            if (node.role === 'secondary' && node.status === 'healthy') {
+                const lagClass = node.replicationLag > 500 ? 'critical' : node.replicationLag > 200 ? 'warning' : '';
+                const lagPercent = Math.min(100, (500 - node.replicationLag) / 5);
+                lagHtml = `
+                    <div class="replication-lag">
+                        <span>Sync:</span>
+                        <div class="lag-bar">
+                            <div class="lag-fill ${lagClass}" style="width: ${lagPercent}%"></div>
+                        </div>
+                        <span class="lag-value">${node.replicationLag}ms</span>
+                    </div>
+                `;
+            }
 
-            if (healthyNodes === state.nodes.length && hasPrimary) {
-                clusterStatus.classList.add('healthy');
-                statusText.textContent = 'Healthy';
-            } else if (hasPrimary && healthyNodes >= Math.ceil(state.nodes.length / 2)) {
-                clusterStatus.classList.add('degraded');
-                statusText.textContent = 'Degraded';
+            // Oplog entries
+            let oplogHtml = '';
+            if (node.oplog.length === 0) {
+                oplogHtml = `
+                    <div class="oplog-empty">
+                        <div class="oplog-empty-icon">📭</div>
+                        <div>No oplog entries yet</div>
+                        <div style="font-size: 0.7rem; margin-top: 5px;">Perform a write operation to see entries</div>
+                    </div>
+                `;
             } else {
-                clusterStatus.classList.add('critical');
-                statusText.textContent = 'Critical';
+                oplogHtml = node.oplog.map((entry, i) => {
+                    const opLabel = {
+                        'i': 'INSERT',
+                        'u': 'UPDATE',
+                        'd': 'DELETE',
+                        'c': 'CMD',
+                        'n': 'NOOP'
+                    }[entry.op] || entry.op;
+                    
+                    const opClass = {
+                        'i': 'insert',
+                        'u': 'update',
+                        'd': 'delete',
+                        'c': 'command',
+                        'n': 'noop'
+                    }[entry.op] || '';
+
+                    let docDisplay = '';
+                    if (entry.op === 'i') {
+                        docDisplay = formatDocument(entry.o);
+                    } else if (entry.op === 'u') {
+                        docDisplay = `<span class="key">filter:</span> ${formatDocument(entry.o2)}\n<span class="key">update:</span> ${formatDocument(entry.o)}`;
+                    } else if (entry.op === 'd') {
+                        docDisplay = formatDocument(entry.o);
+                    } else if (entry.op === 'n' && entry.o) {
+                        docDisplay = formatDocument(entry.o);
+                    }
+
+                    return `
+                        <div class="oplog-entry ${i === 0 ? 'new' : ''}">
+                            <div class="oplog-entry-header">
+                                <div class="oplog-op">
+                                    <span class="op-badge ${opClass}">${opLabel}</span>
+                                    <span class="oplog-ns">${entry.ns || 'system'}</span>
+                                </div>
+                                <span class="oplog-ts">${formatTimestamp(entry.ts)}</span>
+                            </div>
+                            ${docDisplay ? `<div class="oplog-doc">${docDisplay}</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            const html = `
+                <div class="node-header">
+                    <div class="node-info">
+                        <div class="node-icon">${icon}</div>
+                        <div class="node-details">
+                            <h3>${node.name}</h3>
+                            <span class="port">:${node.port}</span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span class="node-role-badge">${roleLabel}</span>
+                        <div class="node-actions">
+                            <button class="node-btn ${node.status === 'down' ? 'start' : 'kill'}" 
+                                    onclick="toggleNode('${node.id}')" 
+                                    title="${node.status === 'down' ? 'Start' : 'Kill'} node">
+                                ${node.status === 'down' ? '▶' : '✕'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="oplog-section">
+                    <div class="oplog-header">
+                        <div class="oplog-title">
+                            📜 <code>local.oplog.rs</code>
+                        </div>
+                        <div class="oplog-stats">
+                            <div class="oplog-stat">
+                                <span>Entries:</span>
+                                <strong>${node.oplog.length}</strong>
+                            </div>
+                            <div class="oplog-stat">
+                                <span>Size:</span>
+                                <strong>${(node.oplogSize / 1024).toFixed(1)}KB</strong>
+                            </div>
+                        </div>
+                    </div>
+                    ${lagHtml}
+                    <div class="oplog-entries">
+                        ${oplogHtml}
+                    </div>
+                </div>
+            `;
+
+            if (nodeEl) {
+                nodeEl.className = `node-card ${roleClass}`;
+                nodeEl.innerHTML = html;
+            } else {
+                nodeEl = document.createElement('div');
+                nodeEl.id = `node-${node.id}`;
+                nodeEl.className = `node-card ${roleClass}`;
+                nodeEl.innerHTML = html;
+                container.appendChild(nodeEl);
             }
         }
 
-        // Log Event
+        function renderAllNodes() {
+            state.nodes.forEach(node => renderNode(node));
+        }
+
+        function updateClusterStatus() {
+            const healthyNodes = state.nodes.filter(n => n.status === 'healthy').length;
+            const hasPrimaryNode = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+            const majorityExists = hasMajority();
+            const clusterStatus = document.getElementById('cluster-status');
+            const statusText = document.getElementById('status-text');
+
+            clusterStatus.classList.remove('healthy', 'degraded', 'critical');
+
+            if (healthyNodes === state.nodes.length && hasPrimaryNode) {
+                clusterStatus.classList.add('healthy');
+                statusText.textContent = 'Healthy';
+            } else if (hasPrimaryNode && majorityExists) {
+                clusterStatus.classList.add('degraded');
+                statusText.textContent = `Degraded (${healthyNodes}/${state.nodes.length})`;
+            } else if (!majorityExists) {
+                clusterStatus.classList.add('critical');
+                statusText.textContent = `No Majority (${healthyNodes}/${getMajorityRequired()} needed)`;
+            } else {
+                clusterStatus.classList.add('critical');
+                statusText.textContent = 'No Primary';
+            }
+        }
+
         function log(message, type = 'info') {
+            const eventLog = document.getElementById('event-log');
             const entry = document.createElement('div');
-            entry.className = 'log-entry';
+            entry.className = `log-entry ${type}`;
             
             const time = new Date().toLocaleTimeString('en-US', { 
                 hour12: false, 
                 hour: '2-digit', 
                 minute: '2-digit', 
-                second: '2-digit' 
+                second: '2-digit',
+                fractionalSecondDigits: 3
             });
             
             entry.innerHTML = `
-                <span class="log-time">${time}</span>
-                <span class="log-msg ${type}">${message}</span>
+                <div class="log-time">${time}</div>
+                <div class="log-msg">${message}</div>
             `;
             
             eventLog.insertBefore(entry, eventLog.firstChild);
             
-            // Keep only last 50 entries
-            while (eventLog.children.length > 50) {
+            // Keep only last 20 entries
+            while (eventLog.children.length > 20) {
                 eventLog.removeChild(eventLog.lastChild);
             }
         }
 
-        // Show Tooltip
-        function showTooltip(event, node) {
-            const tooltip = document.getElementById('tooltip');
-            const title = tooltip.querySelector('.tooltip-title');
-            const content = tooltip.querySelector('.tooltip-content');
-
-            title.textContent = `${node.name}:${node.port}`;
-            content.innerHTML = `
-                <strong>Role:</strong> ${node.role}<br>
-                <strong>Status:</strong> ${node.status}<br>
-                <strong>Votes:</strong> ${node.votes}<br>
-                <strong>Priority:</strong> ${node.priority}<br>
-                <em style="color: rgba(255,255,255,0.5); font-size: 0.8em;">Click ✕ to simulate failure</em>
-            `;
-
-            tooltip.style.left = `${event.clientX + 15}px`;
-            tooltip.style.top = `${event.clientY + 15}px`;
-            tooltip.classList.add('visible');
-        }
-
-        function hideTooltip() {
-            document.getElementById('tooltip').classList.remove('visible');
-        }
-
-        // Setup Write Concern Handlers
+        // ============ EVENT HANDLERS ============
         function setupWriteConcernHandlers() {
-            const options = document.querySelectorAll('.wc-option');
-            options.forEach(opt => {
-                opt.addEventListener('click', () => {
-                    options.forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    state.writeConcern = opt.dataset.value;
+            const pills = document.querySelectorAll('.wc-pill');
+            pills.forEach(pill => {
+                pill.addEventListener('click', () => {
+                    pills.forEach(p => p.classList.remove('selected'));
+                    pill.classList.add('selected');
+                    state.writeConcern = pill.dataset.value;
                     log(`Write concern set to w:${state.writeConcern}`, 'info');
                 });
             });
         }
 
-        // Setup Read Preference Handler
         function setupReadPreferenceHandler() {
             const select = document.getElementById('read-preference');
             select.addEventListener('change', () => {
@@ -1377,22 +1417,30 @@
             });
         }
 
-        // Start Heartbeat Animation
-        function startHeartbeat() {
-            // Heartbeat is CSS animated, but we update connections periodically
-            state.heartbeatInterval = setInterval(() => {
-                renderConnections();
-                
-                // Update uptime
-                const totalTime = Date.now() - state.stats.uptimeStart;
-                const uptime = Math.max(0, 100 - (state.stats.downtime / totalTime * 100));
-                document.getElementById('stat-uptime').textContent = `${uptime.toFixed(0)}%`;
-            }, 2000);
+        // ============ INIT ============
+        function init() {
+            renderAllNodes();
+            updateClusterStatus();
+            setupWriteConcernHandlers();
+            setupReadPreferenceHandler();
+            
+            log('Replica set rs0 initialized with 3 nodes', 'success');
+            log(`Majority required for election: ${getMajorityRequired()} of ${state.nodes.length} nodes`, 'info');
+            log('Primary: mongo-1:27017', 'info');
+            log('Ready to accept operations', 'info');
+            
+            // Periodic replication lag decay
+            setInterval(() => {
+                state.nodes.forEach(node => {
+                    if (node.role === 'secondary' && node.status === 'healthy' && node.replicationLag > 0) {
+                        node.replicationLag = Math.max(0, node.replicationLag - 20);
+                        renderNode(node);
+                    }
+                });
+            }, 500);
         }
 
-        // Initialize on load
         document.addEventListener('DOMContentLoaded', init);
     </script>
 </body>
 </html>
-
