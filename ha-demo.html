@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB High Availability Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mongo-green: #00ED64;
+            --mongo-dark-green: #00a854;
+            --mongo-forest: #001E2B;
+            --mongo-slate: #1C2D38;
+            --node-primary: #00ED64;
+            --node-secondary: #00b4d8;
+            --node-arbiter: #9d4edd;
+            --node-down: #ef476f;
+            --node-recovering: #ffd166;
+            --heartbeat-color: rgba(0, 237, 100, 0.6);
+            --write-color: #ff6b6b;
+            --read-color: #4ecdc4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, var(--mongo-forest) 0%, #002a3a 50%, var(--mongo-forest) 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(0, 30, 43, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 237, 100, 0.2);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--mongo-green);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--mongo-forest);
+            font-size: 1.2rem;
+        }
+
+        .logo-text {
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .logo-text span {
+            color: var(--mongo-green);
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            padding: 30px 40px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Cluster Visualization */
+        .cluster-container {
+            background: rgba(0, 30, 43, 0.6);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            padding: 30px;
+            position: relative;
+            min-height: 600px;
+        }
+
+        .cluster-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cluster-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--mongo-green);
+            border-radius: 2px;
+        }
+
+        .cluster-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+            font-size: 0.9rem;
+            padding: 6px 14px;
+            background: rgba(0, 237, 100, 0.1);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 237, 100, 0.3);
+        }
+
+        .cluster-status.healthy {
+            color: var(--mongo-green);
+        }
+
+        .cluster-status.degraded {
+            background: rgba(255, 209, 102, 0.1);
+            border-color: rgba(255, 209, 102, 0.3);
+            color: var(--node-recovering);
+        }
+
+        .cluster-status.critical {
+            background: rgba(239, 71, 111, 0.1);
+            border-color: rgba(239, 71, 111, 0.3);
+            color: var(--node-down);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* SVG Canvas for connections */
+        .connections-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Nodes Container */
+        .nodes-container {
+            position: relative;
+            height: 450px;
+            margin-top: 20px;
+            z-index: 2;
+        }
+
+        /* Node */
+        .node {
+            position: absolute;
+            width: 140px;
+            height: 160px;
+            background: var(--mongo-slate);
+            border-radius: 16px;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .node:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .node.primary {
+            border-color: var(--node-primary);
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.2);
+        }
+
+        .node.secondary {
+            border-color: var(--node-secondary);
+            box-shadow: 0 0 30px rgba(0, 180, 216, 0.15);
+        }
+
+        .node.arbiter {
+            border-color: var(--node-arbiter);
+            box-shadow: 0 0 30px rgba(157, 78, 221, 0.15);
+        }
+
+        .node.down {
+            border-color: var(--node-down);
+            opacity: 0.6;
+            filter: grayscale(0.5);
+        }
+
+        .node.recovering {
+            border-color: var(--node-recovering);
+            animation: recoveringPulse 1.5s infinite;
+        }
+
+        @keyframes recoveringPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 209, 102, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(255, 209, 102, 0.5); }
+        }
+
+        .node.electing {
+            animation: electingGlow 0.5s infinite alternate;
+        }
+
+        @keyframes electingGlow {
+            from { box-shadow: 0 0 20px rgba(0, 237, 100, 0.3); }
+            to { box-shadow: 0 0 50px rgba(0, 237, 100, 0.8); }
+        }
+
+        .node-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .node.primary .node-icon { background: rgba(0, 237, 100, 0.15); }
+        .node.secondary .node-icon { background: rgba(0, 180, 216, 0.15); }
+        .node.arbiter .node-icon { background: rgba(157, 78, 221, 0.15); }
+        .node.down .node-icon { background: rgba(239, 71, 111, 0.15); }
+
+        .node-role {
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .node.primary .node-role { background: var(--node-primary); color: var(--mongo-forest); }
+        .node.secondary .node-role { background: var(--node-secondary); color: var(--mongo-forest); }
+        .node.arbiter .node-role { background: var(--node-arbiter); color: white; }
+        .node.down .node-role { background: var(--node-down); color: white; }
+        .node.recovering .node-role { background: var(--node-recovering); color: var(--mongo-forest); }
+
+        .node-name {
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+
+        .node-port {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .node-votes {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
+        }
+
+        /* Kill Button on Node */
+        .node-kill {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: var(--node-down);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .node:hover .node-kill {
+            opacity: 1;
+        }
+
+        .node-kill:hover {
+            transform: scale(1.2);
+        }
+
+        .node.down .node-kill {
+            background: var(--mongo-green);
+        }
+
+        /* Heartbeat Lines */
+        .heartbeat-line {
+            stroke: rgba(0, 237, 100, 0.3);
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 8 4;
+        }
+
+        .heartbeat-line.active {
+            stroke: var(--heartbeat-color);
+            animation: heartbeatFlow 1s linear infinite;
+        }
+
+        @keyframes heartbeatFlow {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -24; }
+        }
+
+        .heartbeat-line.dead {
+            stroke: rgba(239, 71, 111, 0.3);
+            stroke-dasharray: 4 8;
+            animation: none;
+        }
+
+        /* Data Flow Particle */
+        .data-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .data-particle.write {
+            background: var(--write-color);
+            box-shadow: 0 0 10px var(--write-color);
+        }
+
+        .data-particle.read {
+            background: var(--read-color);
+            box-shadow: 0 0 10px var(--read-color);
+        }
+
+        .data-particle.replication {
+            background: var(--mongo-green);
+            box-shadow: 0 0 10px var(--mongo-green);
+        }
+
+        /* Control Panel */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .panel-section {
+            background: rgba(0, 30, 43, 0.6);
+            border-radius: 16px;
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--mongo-green);
+        }
+
+        /* Actions */
+        .action-btn {
+            width: 100%;
+            padding: 12px 16px;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .action-btn:last-child {
+            margin-bottom: 0;
+        }
+
+        .action-btn.primary {
+            background: var(--mongo-green);
+            color: var(--mongo-forest);
+        }
+
+        .action-btn.primary:hover {
+            background: var(--mongo-dark-green);
+            transform: translateY(-2px);
+        }
+
+        .action-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .action-btn.secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .action-btn.danger {
+            background: rgba(239, 71, 111, 0.2);
+            color: var(--node-down);
+            border: 1px solid rgba(239, 71, 111, 0.3);
+        }
+
+        .action-btn.danger:hover {
+            background: rgba(239, 71, 111, 0.3);
+        }
+
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Write Concern Selector */
+        .write-concern-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .wc-option {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .wc-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .wc-option.selected {
+            background: rgba(0, 237, 100, 0.1);
+            border-color: var(--mongo-green);
+        }
+
+        .wc-option input {
+            display: none;
+        }
+
+        .wc-radio {
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .wc-option.selected .wc-radio {
+            border-color: var(--mongo-green);
+        }
+
+        .wc-option.selected .wc-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--mongo-green);
+            border-radius: 50%;
+        }
+
+        .wc-label {
+            flex: 1;
+        }
+
+        .wc-label strong {
+            display: block;
+            font-size: 0.9rem;
+        }
+
+        .wc-label span {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Read Preference */
+        .read-pref-select {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+        }
+
+        .read-pref-select option {
+            background: var(--mongo-slate);
+        }
+
+        /* Event Log */
+        .event-log {
+            max-height: 200px;
+            overflow-y: auto;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.8rem;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .event-log::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .event-log::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .event-log::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .log-entry {
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            gap: 8px;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-time {
+            color: rgba(255, 255, 255, 0.4);
+            flex-shrink: 0;
+        }
+
+        .log-msg {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .log-msg.info { color: var(--node-secondary); }
+        .log-msg.success { color: var(--mongo-green); }
+        .log-msg.warning { color: var(--node-recovering); }
+        .log-msg.error { color: var(--node-down); }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--mongo-green);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: fixed;
+            background: var(--mongo-slate);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.85rem;
+            max-width: 250px;
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip-title {
+            font-weight: 600;
+            color: var(--mongo-green);
+            margin-bottom: 5px;
+        }
+
+        /* Election Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal {
+            background: var(--mongo-slate);
+            border-radius: 20px;
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            transform: scale(0.9);
+            transition: transform 0.3s;
+        }
+
+        .modal-overlay.visible .modal {
+            transform: scale(1);
+        }
+
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .modal-text {
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .election-progress {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+
+        .election-progress-bar {
+            height: 100%;
+            background: var(--mongo-green);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Animations */
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .animate-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        /* Responsive */
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+
+            .control-panel {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 15px 20px;
+            }
+
+            .main-container {
+                padding: 20px;
+            }
+
+            .node {
+                width: 110px;
+                height: 130px;
+                padding: 10px;
+            }
+
+            .node-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon">M</div>
+            <div class="logo-text">MongoDB <span>HA Demo</span></div>
+        </div>
+        <div style="display: flex; gap: 15px; align-items: center;">
+            <span style="font-size: 0.85rem; color: rgba(255,255,255,0.6);">Interactive High Availability Demonstration</span>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <!-- Cluster Visualization -->
+        <div class="cluster-container">
+            <div class="cluster-title">
+                Replica Set: <code style="background: rgba(0,237,100,0.1); padding: 2px 8px; border-radius: 4px; font-family: 'Source Code Pro', monospace;">rs0</code>
+                <div class="cluster-status healthy" id="cluster-status">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Healthy</span>
+                </div>
+            </div>
+
+            <svg class="connections-layer" id="connections-svg"></svg>
+
+            <div class="nodes-container" id="nodes-container">
+                <!-- Nodes will be rendered here -->
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <!-- Actions -->
+            <div class="panel-section animate-in">
+                <div class="panel-title">⚡ Actions</div>
+                <button class="action-btn primary" onclick="simulateWrite()">
+                    ✏️ Simulate Write
+                </button>
+                <button class="action-btn secondary" onclick="simulateRead()">
+                    📖 Simulate Read
+                </button>
+                <button class="action-btn danger" onclick="killPrimary()">
+                    💥 Kill Primary
+                </button>
+                <button class="action-btn secondary" onclick="resetCluster()">
+                    🔄 Reset Cluster
+                </button>
+            </div>
+
+            <!-- Write Concern -->
+            <div class="panel-section animate-in" style="animation-delay: 0.1s;">
+                <div class="panel-title">📝 Write Concern</div>
+                <div class="write-concern-options" id="write-concern-options">
+                    <label class="wc-option" data-value="1">
+                        <input type="radio" name="writeConcern" value="1">
+                        <div class="wc-radio"></div>
+                        <div class="wc-label">
+                            <strong>w: 1</strong>
+                            <span>Acknowledged by primary only</span>
+                        </div>
+                    </label>
+                    <label class="wc-option selected" data-value="majority">
+                        <input type="radio" name="writeConcern" value="majority" checked>
+                        <div class="wc-radio"></div>
+                        <div class="wc-label">
+                            <strong>w: majority</strong>
+                            <span>Acknowledged by majority of nodes</span>
+                        </div>
+                    </label>
+                    <label class="wc-option" data-value="all">
+                        <input type="radio" name="writeConcern" value="all">
+                        <div class="wc-radio"></div>
+                        <div class="wc-label">
+                            <strong>w: all</strong>
+                            <span>Acknowledged by all data-bearing nodes</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Read Preference -->
+            <div class="panel-section animate-in" style="animation-delay: 0.2s;">
+                <div class="panel-title">📚 Read Preference</div>
+                <select class="read-pref-select" id="read-preference">
+                    <option value="primary">primary - Always read from primary</option>
+                    <option value="primaryPreferred">primaryPreferred - Primary, fallback to secondary</option>
+                    <option value="secondary">secondary - Always read from secondary</option>
+                    <option value="secondaryPreferred" selected>secondaryPreferred - Secondary, fallback to primary</option>
+                    <option value="nearest">nearest - Lowest latency node</option>
+                </select>
+            </div>
+
+            <!-- Stats -->
+            <div class="panel-section animate-in" style="animation-delay: 0.3s;">
+                <div class="panel-title">📊 Statistics</div>
+                <div class="stats-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-writes">0</div>
+                        <div class="stat-label">Writes</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-reads">0</div>
+                        <div class="stat-label">Reads</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-failovers">0</div>
+                        <div class="stat-label">Failovers</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-uptime">100%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Event Log -->
+            <div class="panel-section animate-in" style="animation-delay: 0.4s;">
+                <div class="panel-title">📋 Event Log</div>
+                <div class="event-log" id="event-log">
+                    <!-- Log entries will be added here -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Election Modal -->
+    <div class="modal-overlay" id="election-modal">
+        <div class="modal">
+            <div class="modal-icon">🗳️</div>
+            <div class="modal-title">Election in Progress</div>
+            <div class="modal-text" id="election-text">
+                Primary node is down. Initiating automatic failover...
+            </div>
+            <div class="election-progress">
+                <div class="election-progress-bar" id="election-progress"></div>
+            </div>
+            <div id="election-status" style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">
+                Detecting failure...
+            </div>
+        </div>
+    </div>
+
+    <!-- Tooltip -->
+    <div class="tooltip" id="tooltip">
+        <div class="tooltip-title"></div>
+        <div class="tooltip-content"></div>
+    </div>
+
+    <script>
+        // Cluster State
+        const state = {
+            nodes: [
+                { id: 'node1', name: 'mongo-1', port: 27017, role: 'primary', status: 'healthy', votes: 1, priority: 2, x: 50, y: 50 },
+                { id: 'node2', name: 'mongo-2', port: 27018, role: 'secondary', status: 'healthy', votes: 1, priority: 1, x: 350, y: 50 },
+                { id: 'node3', name: 'mongo-3', port: 27019, role: 'secondary', status: 'healthy', votes: 1, priority: 1, x: 200, y: 280 }
+            ],
+            writeConcern: 'majority',
+            readPreference: 'secondaryPreferred',
+            stats: {
+                writes: 0,
+                reads: 0,
+                failovers: 0,
+                uptimeStart: Date.now(),
+                downtime: 0
+            },
+            isElecting: false,
+            heartbeatInterval: null
+        };
+
+        // DOM Elements
+        const nodesContainer = document.getElementById('nodes-container');
+        const connectionsSvg = document.getElementById('connections-svg');
+        const eventLog = document.getElementById('event-log');
+        const clusterStatus = document.getElementById('cluster-status');
+        const statusText = document.getElementById('status-text');
+
+        // Initialize
+        function init() {
+            renderNodes();
+            renderConnections();
+            setupWriteConcernHandlers();
+            setupReadPreferenceHandler();
+            startHeartbeat();
+            log('Replica set rs0 initialized with 3 nodes', 'success');
+            log('Primary: mongo-1:27017', 'info');
+        }
+
+        // Render Nodes
+        function renderNodes() {
+            nodesContainer.innerHTML = '';
+            
+            state.nodes.forEach(node => {
+                const nodeEl = document.createElement('div');
+                nodeEl.className = `node ${node.role} ${node.status === 'down' ? 'down' : ''} ${node.status === 'recovering' ? 'recovering' : ''}`;
+                nodeEl.id = node.id;
+                nodeEl.style.left = `${node.x}px`;
+                nodeEl.style.top = `${node.y}px`;
+                
+                const icon = node.role === 'primary' ? '👑' : 
+                            node.role === 'arbiter' ? '⚖️' : '📋';
+                
+                const roleLabel = node.status === 'down' ? 'DOWN' :
+                                 node.status === 'recovering' ? 'RECOVERING' :
+                                 node.role.toUpperCase();
+
+                nodeEl.innerHTML = `
+                    <button class="node-kill" onclick="toggleNode('${node.id}', event)" title="${node.status === 'down' ? 'Restart' : 'Kill'} node">
+                        ${node.status === 'down' ? '▶' : '✕'}
+                    </button>
+                    <div class="node-icon">${icon}</div>
+                    <div class="node-role">${roleLabel}</div>
+                    <div class="node-name">${node.name}</div>
+                    <div class="node-port">:${node.port}</div>
+                    <div class="node-votes">votes: ${node.votes} | priority: ${node.priority}</div>
+                `;
+
+                nodeEl.addEventListener('mouseenter', (e) => showTooltip(e, node));
+                nodeEl.addEventListener('mouseleave', hideTooltip);
+
+                nodesContainer.appendChild(nodeEl);
+            });
+        }
+
+        // Render Connections (Heartbeat Lines)
+        function renderConnections() {
+            const svg = connectionsSvg;
+            const rect = svg.getBoundingClientRect();
+            svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+            
+            let lines = '';
+            const nodePositions = {};
+            
+            state.nodes.forEach(node => {
+                nodePositions[node.id] = {
+                    x: node.x + 70, // center of node
+                    y: node.y + 80 + 70 // offset for header + center
+                };
+            });
+
+            // Draw lines between all nodes
+            for (let i = 0; i < state.nodes.length; i++) {
+                for (let j = i + 1; j < state.nodes.length; j++) {
+                    const node1 = state.nodes[i];
+                    const node2 = state.nodes[j];
+                    const pos1 = nodePositions[node1.id];
+                    const pos2 = nodePositions[node2.id];
+                    
+                    const isActive = node1.status !== 'down' && node2.status !== 'down';
+                    const lineClass = isActive ? 'heartbeat-line active' : 'heartbeat-line dead';
+                    
+                    lines += `<line class="${lineClass}" 
+                                x1="${pos1.x}" y1="${pos1.y}" 
+                                x2="${pos2.x}" y2="${pos2.y}" 
+                                data-from="${node1.id}" data-to="${node2.id}"/>`;
+                }
+            }
+            
+            svg.innerHTML = lines;
+        }
+
+        // Toggle Node (Kill/Restart)
+        function toggleNode(nodeId, event) {
+            event.stopPropagation();
+            const node = state.nodes.find(n => n.id === nodeId);
+            
+            if (node.status === 'down') {
+                // Restart node
+                node.status = 'recovering';
+                log(`${node.name} is recovering...`, 'warning');
+                renderNodes();
+                renderConnections();
+                
+                setTimeout(() => {
+                    node.status = 'healthy';
+                    // If no primary exists and this node has highest priority, it becomes primary
+                    const hasPrimary = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+                    if (!hasPrimary) {
+                        node.role = 'primary';
+                        log(`${node.name} elected as new PRIMARY`, 'success');
+                    }
+                    renderNodes();
+                    renderConnections();
+                    updateClusterStatus();
+                    log(`${node.name} is now healthy`, 'success');
+                }, 2000);
+            } else {
+                // Kill node
+                const wasPrimary = node.role === 'primary';
+                node.status = 'down';
+                node.role = 'secondary'; // Reset role
+                log(`${node.name} is DOWN`, 'error');
+                renderNodes();
+                renderConnections();
+                updateClusterStatus();
+                
+                if (wasPrimary) {
+                    triggerElection();
+                }
+            }
+        }
+
+        // Kill Primary
+        function killPrimary() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (primary) {
+                toggleNode(primary.id, { stopPropagation: () => {} });
+            } else {
+                log('No healthy primary to kill', 'warning');
+            }
+        }
+
+        // Trigger Election
+        function triggerElection() {
+            if (state.isElecting) return;
+            
+            state.isElecting = true;
+            state.stats.failovers++;
+            document.getElementById('stat-failovers').textContent = state.stats.failovers;
+            
+            const modal = document.getElementById('election-modal');
+            const progressBar = document.getElementById('election-progress');
+            const electionStatus = document.getElementById('election-status');
+            
+            modal.classList.add('visible');
+            
+            const steps = [
+                { progress: 20, text: 'Detecting primary failure...' },
+                { progress: 40, text: 'Initiating election protocol...' },
+                { progress: 60, text: 'Candidates voting...' },
+                { progress: 80, text: 'Counting votes...' },
+                { progress: 100, text: 'New primary elected!' }
+            ];
+
+            let stepIndex = 0;
+            const stepInterval = setInterval(() => {
+                if (stepIndex < steps.length) {
+                    progressBar.style.width = `${steps[stepIndex].progress}%`;
+                    electionStatus.textContent = steps[stepIndex].text;
+                    stepIndex++;
+                } else {
+                    clearInterval(stepInterval);
+                    
+                    // Find new primary (highest priority healthy node)
+                    const candidates = state.nodes
+                        .filter(n => n.status === 'healthy' && n.votes > 0)
+                        .sort((a, b) => b.priority - a.priority);
+                    
+                    if (candidates.length > 0) {
+                        candidates[0].role = 'primary';
+                        log(`${candidates[0].name} elected as new PRIMARY`, 'success');
+                    }
+                    
+                    setTimeout(() => {
+                        modal.classList.remove('visible');
+                        state.isElecting = false;
+                        renderNodes();
+                        renderConnections();
+                        updateClusterStatus();
+                        progressBar.style.width = '0%';
+                    }, 1000);
+                }
+            }, 600);
+        }
+
+        // Simulate Write
+        function simulateWrite() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            
+            if (!primary) {
+                log('WRITE FAILED: No primary available', 'error');
+                return;
+            }
+
+            state.stats.writes++;
+            document.getElementById('stat-writes').textContent = state.stats.writes;
+
+            // Animate write to primary
+            animateDataFlow('client', primary.id, 'write');
+            log(`Write to ${primary.name} (w:${state.writeConcern})`, 'info');
+
+            // Replicate to secondaries based on write concern
+            setTimeout(() => {
+                const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
+                
+                if (state.writeConcern === 'majority') {
+                    // Replicate to at least one secondary
+                    if (secondaries.length > 0) {
+                        animateDataFlow(primary.id, secondaries[0].id, 'replication');
+                        log(`Replicated to ${secondaries[0].name}`, 'success');
+                    }
+                } else if (state.writeConcern === 'all') {
+                    // Replicate to all secondaries
+                    secondaries.forEach((sec, i) => {
+                        setTimeout(() => {
+                            animateDataFlow(primary.id, sec.id, 'replication');
+                            log(`Replicated to ${sec.name}`, 'success');
+                        }, i * 200);
+                    });
+                } else {
+                    log('Write acknowledged by primary', 'success');
+                }
+            }, 300);
+        }
+
+        // Simulate Read
+        function simulateRead() {
+            const readPref = state.readPreference;
+            let targetNode = null;
+
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
+
+            switch (readPref) {
+                case 'primary':
+                    targetNode = primary;
+                    break;
+                case 'primaryPreferred':
+                    targetNode = primary || secondaries[0];
+                    break;
+                case 'secondary':
+                    targetNode = secondaries[0];
+                    break;
+                case 'secondaryPreferred':
+                    targetNode = secondaries[0] || primary;
+                    break;
+                case 'nearest':
+                    // Simulate random "nearest"
+                    const allHealthy = state.nodes.filter(n => n.status === 'healthy');
+                    targetNode = allHealthy[Math.floor(Math.random() * allHealthy.length)];
+                    break;
+            }
+
+            if (!targetNode) {
+                log(`READ FAILED: No node available for ${readPref}`, 'error');
+                return;
+            }
+
+            state.stats.reads++;
+            document.getElementById('stat-reads').textContent = state.stats.reads;
+
+            animateDataFlow(targetNode.id, 'client', 'read');
+            log(`Read from ${targetNode.name} (${readPref})`, 'info');
+        }
+
+        // Animate Data Flow
+        function animateDataFlow(fromId, toId, type) {
+            const particle = document.createElement('div');
+            particle.className = `data-particle ${type}`;
+            document.body.appendChild(particle);
+
+            let startX, startY, endX, endY;
+
+            if (fromId === 'client') {
+                startX = 50;
+                startY = window.innerHeight / 2;
+            } else {
+                const fromNode = state.nodes.find(n => n.id === fromId);
+                const fromEl = document.getElementById(fromId);
+                if (fromEl) {
+                    const rect = fromEl.getBoundingClientRect();
+                    startX = rect.left + rect.width / 2;
+                    startY = rect.top + rect.height / 2;
+                }
+            }
+
+            if (toId === 'client') {
+                endX = 50;
+                endY = window.innerHeight / 2;
+            } else {
+                const toNode = state.nodes.find(n => n.id === toId);
+                const toEl = document.getElementById(toId);
+                if (toEl) {
+                    const rect = toEl.getBoundingClientRect();
+                    endX = rect.left + rect.width / 2;
+                    endY = rect.top + rect.height / 2;
+                }
+            }
+
+            particle.style.left = `${startX}px`;
+            particle.style.top = `${startY}px`;
+
+            // Animate
+            const duration = 500;
+            const startTime = performance.now();
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+
+                const x = startX + (endX - startX) * progress;
+                const y = startY + (endY - startY) * progress;
+
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    particle.remove();
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Reset Cluster
+        function resetCluster() {
+            state.nodes.forEach((node, i) => {
+                node.status = 'healthy';
+                node.role = i === 0 ? 'primary' : 'secondary';
+            });
+            state.stats = {
+                writes: 0,
+                reads: 0,
+                failovers: 0,
+                uptimeStart: Date.now(),
+                downtime: 0
+            };
+            document.getElementById('stat-writes').textContent = '0';
+            document.getElementById('stat-reads').textContent = '0';
+            document.getElementById('stat-failovers').textContent = '0';
+            document.getElementById('stat-uptime').textContent = '100%';
+            eventLog.innerHTML = '';
+            
+            renderNodes();
+            renderConnections();
+            updateClusterStatus();
+            log('Cluster reset to initial state', 'success');
+        }
+
+        // Update Cluster Status
+        function updateClusterStatus() {
+            const healthyNodes = state.nodes.filter(n => n.status === 'healthy').length;
+            const hasPrimary = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+
+            clusterStatus.classList.remove('healthy', 'degraded', 'critical');
+
+            if (healthyNodes === state.nodes.length && hasPrimary) {
+                clusterStatus.classList.add('healthy');
+                statusText.textContent = 'Healthy';
+            } else if (hasPrimary && healthyNodes >= Math.ceil(state.nodes.length / 2)) {
+                clusterStatus.classList.add('degraded');
+                statusText.textContent = 'Degraded';
+            } else {
+                clusterStatus.classList.add('critical');
+                statusText.textContent = 'Critical';
+            }
+        }
+
+        // Log Event
+        function log(message, type = 'info') {
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            
+            const time = new Date().toLocaleTimeString('en-US', { 
+                hour12: false, 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit' 
+            });
+            
+            entry.innerHTML = `
+                <span class="log-time">${time}</span>
+                <span class="log-msg ${type}">${message}</span>
+            `;
+            
+            eventLog.insertBefore(entry, eventLog.firstChild);
+            
+            // Keep only last 50 entries
+            while (eventLog.children.length > 50) {
+                eventLog.removeChild(eventLog.lastChild);
+            }
+        }
+
+        // Show Tooltip
+        function showTooltip(event, node) {
+            const tooltip = document.getElementById('tooltip');
+            const title = tooltip.querySelector('.tooltip-title');
+            const content = tooltip.querySelector('.tooltip-content');
+
+            title.textContent = `${node.name}:${node.port}`;
+            content.innerHTML = `
+                <strong>Role:</strong> ${node.role}<br>
+                <strong>Status:</strong> ${node.status}<br>
+                <strong>Votes:</strong> ${node.votes}<br>
+                <strong>Priority:</strong> ${node.priority}<br>
+                <em style="color: rgba(255,255,255,0.5); font-size: 0.8em;">Click ✕ to simulate failure</em>
+            `;
+
+            tooltip.style.left = `${event.clientX + 15}px`;
+            tooltip.style.top = `${event.clientY + 15}px`;
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('visible');
+        }
+
+        // Setup Write Concern Handlers
+        function setupWriteConcernHandlers() {
+            const options = document.querySelectorAll('.wc-option');
+            options.forEach(opt => {
+                opt.addEventListener('click', () => {
+                    options.forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    state.writeConcern = opt.dataset.value;
+                    log(`Write concern set to w:${state.writeConcern}`, 'info');
+                });
+            });
+        }
+
+        // Setup Read Preference Handler
+        function setupReadPreferenceHandler() {
+            const select = document.getElementById('read-preference');
+            select.addEventListener('change', () => {
+                state.readPreference = select.value;
+                log(`Read preference set to ${state.readPreference}`, 'info');
+            });
+        }
+
+        // Start Heartbeat Animation
+        function startHeartbeat() {
+            // Heartbeat is CSS animated, but we update connections periodically
+            state.heartbeatInterval = setInterval(() => {
+                renderConnections();
+                
+                // Update uptime
+                const totalTime = Date.now() - state.stats.uptimeStart;
+                const uptime = Math.max(0, 100 - (state.stats.downtime / totalTime * 100));
+                document.getElementById('stat-uptime').textContent = `${uptime.toFixed(0)}%`;
+            }, 2000);
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
+
