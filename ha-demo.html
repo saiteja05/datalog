@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MongoDB High Availability Demo</title>
+    <title>MongoDB High Availability Demo - Regional Failover</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -15,20 +15,17 @@
             --mongo-slate: #1C2D38;
             --node-primary: #00ED64;
             --node-secondary: #00b4d8;
-            --node-arbiter: #9d4edd;
             --node-down: #ef476f;
             --node-recovering: #ffd166;
             --op-insert: #00ED64;
             --op-update: #ffd166;
             --op-delete: #ef476f;
-            --op-noop: #6c757d;
+            --region-a: #00b4d8;
+            --region-b: #9d4edd;
+            --region-c: #ff6b6b;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             font-family: 'Space Grotesk', sans-serif;
@@ -43,7 +40,7 @@
             background: rgba(0, 30, 43, 0.95);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid rgba(0, 237, 100, 0.2);
-            padding: 15px 30px;
+            padding: 12px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -55,39 +52,43 @@
         .logo {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .logo-icon {
-            width: 36px;
-            height: 36px;
+            width: 32px;
+            height: 32px;
             background: var(--mongo-green);
-            border-radius: 8px;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 700;
             color: var(--mongo-forest);
-            font-size: 1.1rem;
+            font-size: 1rem;
         }
 
         .logo-text {
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: 600;
         }
 
-        .logo-text span {
-            color: var(--mongo-green);
+        .logo-text span { color: var(--mongo-green); }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .cluster-status {
             display: flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            padding: 6px 14px;
+            gap: 6px;
+            font-size: 0.8rem;
+            padding: 5px 12px;
             background: rgba(0, 237, 100, 0.1);
-            border-radius: 20px;
+            border-radius: 15px;
             border: 1px solid rgba(0, 237, 100, 0.3);
         }
 
@@ -96,94 +97,176 @@
         .cluster-status.critical { background: rgba(239, 71, 111, 0.1); border-color: rgba(239, 71, 111, 0.3); color: var(--node-down); }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: currentColor;
             animation: pulse 2s infinite;
         }
 
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
         /* Main Layout */
         .main-layout {
-            display: grid;
-            grid-template-rows: auto 1fr;
-            gap: 20px;
-            padding: 20px 30px;
-            max-width: 1800px;
+            padding: 20px 25px;
+            max-width: 1900px;
             margin: 0 auto;
         }
 
-        /* Top Section - Controls and Actions */
-        .top-section {
+        /* Cluster Selector */
+        .cluster-selector {
             display: flex;
-            gap: 15px;
+            gap: 10px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
-            align-items: stretch;
         }
 
-        .control-card {
-            background: rgba(0, 30, 43, 0.7);
-            border-radius: 12px;
-            border: 1px solid rgba(0, 237, 100, 0.15);
-            padding: 15px;
+        .cluster-option {
             flex: 1;
-            min-width: 200px;
+            min-width: 280px;
+            padding: 15px 20px;
+            background: rgba(0, 30, 43, 0.7);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
         }
 
-        .control-title {
-            font-size: 0.8rem;
+        .cluster-option:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .cluster-option.selected {
+            border-color: var(--mongo-green);
+            background: rgba(0, 237, 100, 0.05);
+        }
+
+        .cluster-option-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .cluster-option-title {
             font-weight: 600;
-            color: var(--mongo-green);
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 0.95rem;
         }
 
-        .action-buttons {
+        .cluster-option-badge {
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .cluster-option-badge.single { background: rgba(255, 255, 255, 0.1); }
+        .cluster-option-badge.multi { background: rgba(0, 237, 100, 0.2); color: var(--mongo-green); }
+
+        .cluster-option-desc {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 10px;
+        }
+
+        .cluster-option-regions {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
         }
 
+        .region-chip {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .region-chip.region-a { background: rgba(0, 180, 216, 0.2); color: var(--region-a); }
+        .region-chip.region-b { background: rgba(157, 78, 221, 0.2); color: var(--region-b); }
+        .region-chip.region-c { background: rgba(255, 107, 107, 0.2); color: var(--region-c); }
+
+        /* Top Controls */
+        .top-section {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .control-card {
+            background: rgba(0, 30, 43, 0.7);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            padding: 12px 15px;
+        }
+
+        .control-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--mongo-green);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .action-buttons { display: flex; gap: 6px; flex-wrap: wrap; }
+
         .action-btn {
-            padding: 8px 14px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 8px;
+            border-radius: 6px;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
         }
 
         .action-btn.primary { background: var(--mongo-green); color: var(--mongo-forest); }
-        .action-btn.primary:hover { background: var(--mongo-dark-green); transform: translateY(-1px); }
+        .action-btn.primary:hover { background: var(--mongo-dark-green); }
         .action-btn.secondary { background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); }
         .action-btn.secondary:hover { background: rgba(255, 255, 255, 0.15); }
         .action-btn.danger { background: rgba(239, 71, 111, 0.2); color: var(--node-down); border: 1px solid rgba(239, 71, 111, 0.3); }
         .action-btn.danger:hover { background: rgba(239, 71, 111, 0.3); }
         .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        /* Write Concern Pills */
-        .wc-pills {
+        /* Region Failure Buttons */
+        .region-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
             display: flex;
-            gap: 6px;
+            align-items: center;
+            gap: 5px;
         }
 
+        .region-btn.region-a { background: rgba(0, 180, 216, 0.2); color: var(--region-a); border: 1px solid var(--region-a); }
+        .region-btn.region-b { background: rgba(157, 78, 221, 0.2); color: var(--region-b); border: 1px solid var(--region-b); }
+        .region-btn.region-c { background: rgba(255, 107, 107, 0.2); color: var(--region-c); border: 1px solid var(--region-c); }
+        .region-btn:hover { filter: brightness(1.2); }
+        .region-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        .wc-pills { display: flex; gap: 5px; }
+
         .wc-pill {
-            padding: 6px 12px;
+            padding: 5px 10px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 20px;
-            font-size: 0.8rem;
+            border-radius: 15px;
+            font-size: 0.75rem;
             cursor: pointer;
             transition: all 0.2s;
         }
@@ -191,92 +274,142 @@
         .wc-pill:hover { background: rgba(255, 255, 255, 0.1); }
         .wc-pill.selected { background: rgba(0, 237, 100, 0.15); border-color: var(--mongo-green); color: var(--mongo-green); }
 
-        /* Read Preference Select */
         .read-pref-select {
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
+            border-radius: 6px;
             color: white;
             font-family: 'Space Grotesk', sans-serif;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             cursor: pointer;
-            min-width: 180px;
         }
 
         .read-pref-select option { background: var(--mongo-slate); }
 
-        /* Nodes Grid */
-        .nodes-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
+        /* Regions Container */
+        .regions-container {
+            display: flex;
             gap: 20px;
+            flex-wrap: wrap;
         }
 
-        /* Node Card with Oplog */
-        .node-card {
-            background: rgba(0, 30, 43, 0.7);
+        .region-panel {
+            flex: 1;
+            min-width: 350px;
+            background: rgba(0, 30, 43, 0.5);
             border-radius: 16px;
             border: 2px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .region-panel.region-a { border-color: rgba(0, 180, 216, 0.3); }
+        .region-panel.region-b { border-color: rgba(157, 78, 221, 0.3); }
+        .region-panel.region-c { border-color: rgba(255, 107, 107, 0.3); }
+
+        .region-panel.down { opacity: 0.5; border-style: dashed; }
+
+        .region-header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .region-panel.region-a .region-header { background: rgba(0, 180, 216, 0.1); }
+        .region-panel.region-b .region-header { background: rgba(157, 78, 221, 0.1); }
+        .region-panel.region-c .region-header { background: rgba(255, 107, 107, 0.1); }
+
+        .region-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .region-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+        }
+
+        .region-panel.region-a .region-icon { background: rgba(0, 180, 216, 0.2); }
+        .region-panel.region-b .region-icon { background: rgba(157, 78, 221, 0.2); }
+        .region-panel.region-c .region-icon { background: rgba(255, 107, 107, 0.2); }
+
+        .region-status {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            background: rgba(0, 237, 100, 0.2);
+            color: var(--mongo-green);
+        }
+
+        .region-status.down {
+            background: rgba(239, 71, 111, 0.2);
+            color: var(--node-down);
+        }
+
+        .region-nodes {
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Node Card */
+        .node-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             overflow: hidden;
             transition: all 0.3s;
         }
 
-        .node-card.primary { border-color: var(--node-primary); }
+        .node-card.primary { border-color: var(--node-primary); box-shadow: 0 0 15px rgba(0, 237, 100, 0.15); }
         .node-card.secondary { border-color: var(--node-secondary); }
-        .node-card.down { border-color: var(--node-down); opacity: 0.7; }
+        .node-card.down { border-color: var(--node-down); opacity: 0.6; }
         .node-card.recovering { border-color: var(--node-recovering); }
 
-        .node-card.primary { box-shadow: 0 0 30px rgba(0, 237, 100, 0.15); }
-
         .node-header {
-            padding: 15px 20px;
+            padding: 10px 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             background: rgba(0, 0, 0, 0.2);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .node-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .node-info { display: flex; align-items: center; gap: 10px; }
 
         .node-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
+            font-size: 1rem;
         }
 
         .node-card.primary .node-icon { background: rgba(0, 237, 100, 0.15); }
         .node-card.secondary .node-icon { background: rgba(0, 180, 216, 0.15); }
         .node-card.down .node-icon { background: rgba(239, 71, 111, 0.15); }
 
-        .node-details h3 {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 2px;
-        }
-
-        .node-details .port {
-            font-family: 'Source Code Pro', monospace;
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.5);
-        }
+        .node-details h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 1px; }
+        .node-details .port { font-family: 'Source Code Pro', monospace; font-size: 0.7rem; color: rgba(255, 255, 255, 0.5); }
 
         .node-role-badge {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .node-card.primary .node-role-badge { background: var(--node-primary); color: var(--mongo-forest); }
@@ -284,166 +417,98 @@
         .node-card.down .node-role-badge { background: var(--node-down); color: white; }
         .node-card.recovering .node-role-badge { background: var(--node-recovering); color: var(--mongo-forest); }
 
-        .node-actions {
-            display: flex;
-            gap: 8px;
-        }
-
         .node-btn {
-            width: 30px;
-            height: 30px;
+            width: 24px;
+            height: 24px;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             background: rgba(255, 255, 255, 0.1);
             color: white;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
+            font-size: 0.7rem;
             transition: all 0.2s;
         }
 
         .node-btn:hover { background: rgba(255, 255, 255, 0.2); }
         .node-btn.kill { background: rgba(239, 71, 111, 0.2); color: var(--node-down); }
-        .node-btn.kill:hover { background: rgba(239, 71, 111, 0.4); }
         .node-btn.start { background: rgba(0, 237, 100, 0.2); color: var(--mongo-green); }
-        .node-btn.start:hover { background: rgba(0, 237, 100, 0.4); }
 
         /* Oplog Section */
-        .oplog-section {
-            padding: 15px 20px;
-        }
+        .oplog-section { padding: 10px 12px; }
 
         .oplog-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
 
         .oplog-title {
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 600;
             color: var(--mongo-green);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
         }
 
         .oplog-title code {
             background: rgba(0, 237, 100, 0.1);
-            padding: 2px 8px;
+            padding: 2px 6px;
             border-radius: 4px;
             font-family: 'Source Code Pro', monospace;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
         }
 
-        .oplog-stats {
-            display: flex;
-            gap: 12px;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.5);
-        }
+        .oplog-stats { font-size: 0.65rem; color: rgba(255, 255, 255, 0.5); }
 
-        .oplog-stat {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .oplog-stat strong {
-            color: rgba(255, 255, 255, 0.8);
-        }
-
-        /* Replication Lag Indicator */
         .replication-lag {
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 8px 12px;
+            gap: 6px;
+            padding: 6px 8px;
             background: rgba(0, 0, 0, 0.2);
-            border-radius: 8px;
-            margin-bottom: 12px;
-            font-size: 0.8rem;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 0.7rem;
         }
 
-        .lag-bar {
-            flex: 1;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .lag-fill {
-            height: 100%;
-            background: var(--mongo-green);
-            transition: width 0.3s;
-        }
-
+        .lag-bar { flex: 1; height: 3px; background: rgba(255, 255, 255, 0.1); border-radius: 2px; overflow: hidden; }
+        .lag-fill { height: 100%; background: var(--mongo-green); transition: width 0.3s; }
         .lag-fill.warning { background: var(--node-recovering); }
         .lag-fill.critical { background: var(--node-down); }
+        .lag-value { font-family: 'Source Code Pro', monospace; min-width: 40px; text-align: right; }
 
-        .lag-value {
-            font-family: 'Source Code Pro', monospace;
-            min-width: 50px;
-            text-align: right;
-        }
-
-        /* Oplog Entries */
         .oplog-entries {
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            max-height: 280px;
+            border-radius: 6px;
+            max-height: 150px;
             overflow-y: auto;
             font-family: 'Source Code Pro', monospace;
-            font-size: 0.75rem;
+            font-size: 0.65rem;
         }
 
-        .oplog-entries::-webkit-scrollbar { width: 6px; }
-        .oplog-entries::-webkit-scrollbar-track { background: transparent; }
-        .oplog-entries::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 3px; }
+        .oplog-entries::-webkit-scrollbar { width: 4px; }
+        .oplog-entries::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
 
         .oplog-entry {
-            padding: 10px 12px;
+            padding: 6px 8px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background 0.2s;
         }
 
-        .oplog-entry:hover {
-            background: rgba(255, 255, 255, 0.03);
-        }
+        .oplog-entry.new { animation: flashNew 1s ease-out; }
+        @keyframes flashNew { 0% { background: rgba(0, 237, 100, 0.3); } 100% { background: transparent; } }
 
-        .oplog-entry:last-child {
-            border-bottom: none;
-        }
-
-        .oplog-entry.new {
-            animation: flashNew 1s ease-out;
-        }
-
-        @keyframes flashNew {
-            0% { background: rgba(0, 237, 100, 0.3); }
-            100% { background: transparent; }
-        }
-
-        .oplog-entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-
-        .oplog-op {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
+        .oplog-entry-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .oplog-op { display: flex; align-items: center; gap: 6px; }
 
         .op-badge {
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.65rem;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 0.55rem;
             font-weight: 600;
             text-transform: uppercase;
         }
@@ -451,86 +516,61 @@
         .op-badge.insert { background: var(--op-insert); color: var(--mongo-forest); }
         .op-badge.update { background: var(--op-update); color: var(--mongo-forest); }
         .op-badge.delete { background: var(--op-delete); color: white; }
-        .op-badge.noop { background: var(--op-noop); color: white; }
-        .op-badge.command { background: #9d4edd; color: white; }
+        .op-badge.noop { background: #6c757d; color: white; }
 
-        .oplog-ns {
-            color: var(--node-secondary);
-        }
-
-        .oplog-ts {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.7rem;
-        }
+        .oplog-ns { color: var(--node-secondary); font-size: 0.6rem; }
+        .oplog-ts { color: rgba(255, 255, 255, 0.3); font-size: 0.55rem; }
 
         .oplog-doc {
             background: rgba(0, 0, 0, 0.3);
-            padding: 8px 10px;
-            border-radius: 6px;
-            color: rgba(255, 255, 255, 0.7);
-            white-space: pre-wrap;
-            word-break: break-all;
-            font-size: 0.7rem;
-            line-height: 1.4;
+            padding: 4px 6px;
+            border-radius: 4px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.6rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        .oplog-doc .key { color: #ff79c6; }
-        .oplog-doc .string { color: #f1fa8c; }
-        .oplog-doc .number { color: #bd93f9; }
-        .oplog-doc .objectid { color: #8be9fd; }
-
-        /* Empty State */
         .oplog-empty {
-            padding: 40px 20px;
+            padding: 20px;
             text-align: center;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(255, 255, 255, 0.3);
+            font-size: 0.7rem;
         }
 
-        .oplog-empty-icon {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            opacity: 0.5;
-        }
-
-        /* Event Log Panel */
+        /* Event Log */
         .event-log-panel {
             background: rgba(0, 30, 43, 0.7);
-            border-radius: 12px;
+            border-radius: 10px;
             border: 1px solid rgba(0, 237, 100, 0.15);
-            padding: 15px;
+            padding: 12px;
             margin-top: 20px;
         }
 
         .event-log-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: var(--mongo-green);
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            margin-bottom: 8px;
         }
 
         .event-log {
             display: flex;
-            gap: 8px;
+            gap: 6px;
             overflow-x: auto;
             padding-bottom: 5px;
             font-family: 'Source Code Pro', monospace;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
         }
-
-        .event-log::-webkit-scrollbar { height: 4px; }
-        .event-log::-webkit-scrollbar-track { background: transparent; }
-        .event-log::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 2px; }
 
         .log-entry {
             flex-shrink: 0;
-            padding: 8px 12px;
+            padding: 6px 10px;
             background: rgba(0, 0, 0, 0.3);
-            border-radius: 8px;
-            border-left: 3px solid rgba(255, 255, 255, 0.2);
-            max-width: 300px;
+            border-radius: 6px;
+            border-left: 2px solid rgba(255, 255, 255, 0.2);
+            max-width: 280px;
         }
 
         .log-entry.info { border-color: var(--node-secondary); }
@@ -538,17 +578,10 @@
         .log-entry.warning { border-color: var(--node-recovering); }
         .log-entry.error { border-color: var(--node-down); }
 
-        .log-time {
-            color: rgba(255, 255, 255, 0.4);
-            font-size: 0.7rem;
-            margin-bottom: 3px;
-        }
+        .log-time { color: rgba(255, 255, 255, 0.4); font-size: 0.6rem; margin-bottom: 2px; }
+        .log-msg { color: rgba(255, 255, 255, 0.9); }
 
-        .log-msg {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        /* Election Modal */
+        /* Modal */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -565,37 +598,31 @@
             transition: all 0.3s;
         }
 
-        .modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-        }
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
 
         .modal {
             background: var(--mongo-slate);
-            border-radius: 20px;
+            border-radius: 16px;
             border: 1px solid rgba(0, 237, 100, 0.3);
-            padding: 30px;
-            max-width: 500px;
+            padding: 25px;
+            max-width: 450px;
             width: 90%;
             text-align: center;
             transform: scale(0.9);
             transition: transform 0.3s;
         }
 
-        .modal-overlay.visible .modal {
-            transform: scale(1);
-        }
-
-        .modal-icon { font-size: 3rem; margin-bottom: 15px; }
-        .modal-title { font-size: 1.5rem; font-weight: 600; margin-bottom: 10px; }
-        .modal-text { color: rgba(255, 255, 255, 0.7); margin-bottom: 20px; line-height: 1.6; }
+        .modal-overlay.visible .modal { transform: scale(1); }
+        .modal-icon { font-size: 2.5rem; margin-bottom: 12px; }
+        .modal-title { font-size: 1.2rem; font-weight: 600; margin-bottom: 8px; }
+        .modal-text { color: rgba(255, 255, 255, 0.7); margin-bottom: 15px; line-height: 1.5; font-size: 0.9rem; }
 
         .election-progress {
-            height: 6px;
+            height: 5px;
             background: rgba(255, 255, 255, 0.1);
             border-radius: 3px;
             overflow: hidden;
-            margin: 20px 0;
+            margin: 15px 0;
         }
 
         .election-progress-bar {
@@ -605,34 +632,492 @@
             transition: width 0.3s;
         }
 
+        #election-status { font-size: 0.85rem; color: rgba(255, 255, 255, 0.6); }
+
+        /* Info Panel */
+        .info-panel {
+            background: rgba(0, 237, 100, 0.05);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .info-icon { font-size: 1.5rem; }
+        .info-content { flex: 1; }
+        .info-title { font-weight: 600; font-size: 0.9rem; margin-bottom: 3px; }
+        .info-desc { font-size: 0.8rem; color: rgba(255, 255, 255, 0.7); }
+
         /* Replication Flow Visualization */
-        .replication-flow {
+        .replication-overlay {
             position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             pointer-events: none;
             z-index: 50;
         }
 
         .flow-particle {
             position: absolute;
-            width: 8px;
-            height: 8px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
+            pointer-events: none;
+            z-index: 51;
+        }
+
+        .flow-particle.write {
+            background: #ff6b6b;
+            box-shadow: 0 0 15px #ff6b6b, 0 0 30px #ff6b6b;
+        }
+
+        .flow-particle.replication {
             background: var(--mongo-green);
-            box-shadow: 0 0 10px var(--mongo-green);
+            box-shadow: 0 0 15px var(--mongo-green), 0 0 30px var(--mongo-green);
+        }
+
+        .flow-particle.ack {
+            background: #ffd166;
+            box-shadow: 0 0 15px #ffd166;
+        }
+
+        .flow-particle.read {
+            background: #4ECDC4;
+            box-shadow: 0 0 15px #4ECDC4, 0 0 30px #4ECDC4;
+        }
+
+        .node-card.reading {
+            animation: readingPulse 0.4s ease-in-out 2;
+        }
+
+        @keyframes readingPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+
+        /* Node highlight states */
+        .node-card.receiving {
+            animation: receiveFlash 0.5s ease-out;
+        }
+
+        .node-card.acknowledged {
+            position: relative;
+        }
+
+        .node-card.acknowledged::after {
+            content: '✓';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: var(--mongo-green);
+            color: var(--mongo-forest);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            animation: ackPop 0.3s ease-out;
+            z-index: 10;
+        }
+
+        @keyframes receiveFlash {
+            0% { box-shadow: 0 0 30px rgba(255, 107, 107, 0.8); }
+            100% { box-shadow: none; }
+        }
+
+        @keyframes ackPop {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        /* Write Flow Status Panel */
+        .write-flow-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: rgba(0, 30, 43, 0.95);
+            border: 2px solid var(--mongo-green);
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 100;
+            display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .write-flow-panel.visible {
+            display: block;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .write-flow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .write-flow-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .write-flow-wc {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background: rgba(0, 237, 100, 0.2);
+            border-radius: 10px;
+            color: var(--mongo-green);
+        }
+
+        .write-flow-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .write-flow-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 0.8rem;
+            opacity: 0.4;
+            transition: all 0.3s;
+        }
+
+        .write-flow-step.active {
+            opacity: 1;
+            background: rgba(0, 237, 100, 0.1);
+            border-left: 3px solid var(--mongo-green);
+        }
+
+        .write-flow-step.complete {
+            opacity: 1;
+        }
+
+        .write-flow-step.complete .step-icon {
+            color: var(--mongo-green);
+        }
+
+        .step-icon {
+            font-size: 1rem;
+            width: 24px;
+            text-align: center;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-label {
+            font-weight: 500;
+        }
+
+        .step-detail {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            margin-top: 2px;
+        }
+
+        .step-nodes {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .step-node-badge {
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .step-node-badge.primary {
+            background: rgba(0, 237, 100, 0.2);
+            color: var(--mongo-green);
+        }
+
+        .step-node-badge.acked {
+            background: rgba(0, 237, 100, 0.3);
+            color: var(--mongo-green);
+        }
+
+        .step-node-badge.pending {
+            background: rgba(255, 209, 102, 0.2);
+            color: var(--node-recovering);
+        }
+
+        .step-node-badge.majority-reached {
+            background: rgba(0, 237, 100, 0.5);
+            color: white;
+            font-weight: 600;
+            animation: majorityPulse 0.5s ease-out;
+        }
+
+        @keyframes majorityPulse {
+            0% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .majority-indicator {
+            display: inline-block;
+            padding: 2px 6px;
+            background: rgba(0, 237, 100, 0.2);
+            border: 1px solid var(--mongo-green);
+            border-radius: 4px;
+            font-size: 0.65rem;
+            color: var(--mongo-green);
+            margin-left: 5px;
+        }
+
+        .write-flow-result {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .write-flow-result.success {
+            display: block;
+            background: rgba(0, 237, 100, 0.15);
+            color: var(--mongo-green);
+            border: 1px solid var(--mongo-green);
+        }
+
+        .write-flow-result.failed {
+            display: block;
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--node-down);
+            border: 1px solid var(--node-down);
+        }
+
+        /* Read Flow Status Panel */
+        .read-flow-panel {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 380px;
+            background: rgba(0, 30, 43, 0.95);
+            border: 2px solid #4ECDC4;
+            border-radius: 12px;
+            padding: 15px;
+            z-index: 100;
+            display: none;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        .read-flow-panel.visible {
+            display: block;
+        }
+
+        .read-flow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .read-flow-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .read-flow-pref {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 10px;
+            color: #4ECDC4;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .read-flow-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .read-flow-nodes {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .read-node-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .read-node-row.eligible {
+            background: rgba(78, 205, 196, 0.1);
+            border: 1px solid rgba(78, 205, 196, 0.3);
+        }
+
+        .read-node-row.selected {
+            background: rgba(78, 205, 196, 0.25);
+            border: 2px solid #4ECDC4;
+            animation: readPulse 0.5s ease-out;
+        }
+
+        .read-node-row.not-eligible {
+            opacity: 0.4;
+        }
+
+        @keyframes readPulse {
+            0% { transform: scale(1.02); box-shadow: 0 0 20px rgba(78, 205, 196, 0.5); }
+            100% { transform: scale(1); box-shadow: none; }
+        }
+
+        .read-node-icon {
+            font-size: 1.2rem;
+        }
+
+        .read-node-info {
+            flex: 1;
+        }
+
+        .read-node-name {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .read-node-meta {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .read-node-status {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+
+        .read-node-status.primary {
+            background: rgba(255, 209, 102, 0.2);
+            color: #FFD166;
+        }
+
+        .read-node-status.secondary {
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ECDC4;
+        }
+
+        .read-node-status.down {
+            background: rgba(239, 71, 111, 0.2);
+            color: #EF476F;
+        }
+
+        .read-flow-selection {
+            padding: 12px;
+            background: rgba(78, 205, 196, 0.1);
+            border-radius: 8px;
+            border: 1px dashed rgba(78, 205, 196, 0.3);
+        }
+
+        .read-selection-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .read-selection-target {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .read-selection-arrow {
+            font-size: 1.5rem;
+            color: #4ECDC4;
+            animation: arrowBounce 0.8s ease-in-out infinite;
+        }
+
+        @keyframes arrowBounce {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(5px); }
+        }
+
+        .read-selection-node {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(78, 205, 196, 0.2);
+            border-radius: 8px;
+            border: 1px solid #4ECDC4;
+        }
+
+        .read-selection-reason {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.6);
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        .read-flow-result {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .read-flow-result.success {
+            display: block;
+            background: rgba(78, 205, 196, 0.15);
+            color: #4ECDC4;
+            border: 1px solid #4ECDC4;
+        }
+
+        .read-flow-result.failed {
+            display: block;
+            background: rgba(239, 71, 111, 0.15);
+            color: var(--node-down);
+            border: 1px solid var(--node-down);
         }
 
         /* Responsive */
         @media (max-width: 1200px) {
-            .nodes-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .header { padding: 10px 15px; }
-            .main-layout { padding: 15px; }
-            .top-section { flex-direction: column; }
-            .control-card { min-width: 100%; }
+            .regions-container { flex-direction: column; }
+            .region-panel { min-width: 100%; }
+            .write-flow-panel { width: 280px; right: 10px; bottom: 10px; }
+            .read-flow-panel { width: 320px; left: 10px; bottom: 10px; }
         }
     </style>
 </head>
@@ -642,10 +1127,8 @@
             <div class="logo-icon">M</div>
             <div class="logo-text">MongoDB <span>HA Demo</span></div>
         </div>
-        <div style="display: flex; align-items: center; gap: 15px;">
-            <code style="background: rgba(0,237,100,0.1); padding: 4px 12px; border-radius: 6px; font-family: 'Source Code Pro', monospace; font-size: 0.85rem;">
-                rs0
-            </code>
+        <div class="header-controls">
+            <code style="background: rgba(0,237,100,0.1); padding: 3px 10px; border-radius: 5px; font-family: 'Source Code Pro', monospace; font-size: 0.8rem;">rs0</code>
             <div class="cluster-status healthy" id="cluster-status">
                 <span class="status-dot"></span>
                 <span id="status-text">Healthy</span>
@@ -654,6 +1137,52 @@
     </header>
 
     <main class="main-layout">
+        <!-- Cluster Configuration Selector -->
+        <div class="cluster-selector" id="cluster-selector">
+            <div class="cluster-option selected" data-config="single-region">
+                <div class="cluster-option-header">
+                    <span class="cluster-option-title">Single Region</span>
+                    <span class="cluster-option-badge single">3 Nodes</span>
+                </div>
+                <div class="cluster-option-desc">All nodes in one region. Simple but no regional redundancy.</div>
+                <div class="cluster-option-regions">
+                    <span class="region-chip region-a">🌍 Region A: 3 nodes</span>
+                </div>
+            </div>
+            <div class="cluster-option" data-config="two-region">
+                <div class="cluster-option-header">
+                    <span class="cluster-option-title">Two Regions</span>
+                    <span class="cluster-option-badge multi">3 Nodes</span>
+                </div>
+                <div class="cluster-option-desc">2+1 split. Region A failure = no majority.</div>
+                <div class="cluster-option-regions">
+                    <span class="region-chip region-a">🌍 Region A: 2 nodes</span>
+                    <span class="region-chip region-b">🌎 Region B: 1 node</span>
+                </div>
+            </div>
+            <div class="cluster-option" data-config="three-region">
+                <div class="cluster-option-header">
+                    <span class="cluster-option-title">Three Regions</span>
+                    <span class="cluster-option-badge multi">5 Nodes</span>
+                </div>
+                <div class="cluster-option-desc">2+2+1 split. Survives any single region failure!</div>
+                <div class="cluster-option-regions">
+                    <span class="region-chip region-a">🌍 Region A: 2 nodes</span>
+                    <span class="region-chip region-b">🌎 Region B: 2 nodes</span>
+                    <span class="region-chip region-c">🌏 Region C: 1 node</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Panel -->
+        <div class="info-panel" id="info-panel">
+            <div class="info-icon">💡</div>
+            <div class="info-content">
+                <div class="info-title">Single Region Configuration</div>
+                <div class="info-desc">All 3 nodes in one region. If the region fails, the entire cluster goes down. Majority required: 2 nodes.</div>
+            </div>
+        </div>
+
         <!-- Top Controls -->
         <div class="top-section">
             <div class="control-card">
@@ -661,16 +1190,21 @@
                 <div class="action-buttons">
                     <button class="action-btn primary" onclick="simulateInsert()">➕ Insert</button>
                     <button class="action-btn primary" onclick="simulateUpdate()">✏️ Update</button>
-                    <button class="action-btn primary" onclick="simulateDelete()">🗑️ Delete</button>
                     <button class="action-btn secondary" onclick="simulateRead()">📖 Read</button>
+                </div>
+            </div>
+            <div class="control-card">
+                <div class="control-title">🌍 Region Failure</div>
+                <div class="action-buttons" id="region-buttons">
+                    <!-- Dynamically populated -->
                 </div>
             </div>
             <div class="control-card">
                 <div class="control-title">📝 Write Concern</div>
                 <div class="wc-pills" id="wc-pills">
-                    <div class="wc-pill" data-value="1">w:1</div>
-                    <div class="wc-pill selected" data-value="majority">w:majority</div>
-                    <div class="wc-pill" data-value="3">w:3</div>
+                    <div class="wc-pill" data-value="1" title="Primary only">w:1</div>
+                    <div class="wc-pill selected" data-value="majority" title="n/2+1 nodes">w:majority</div>
+                    <div class="wc-pill" data-value="all" title="All nodes">w:all</div>
                 </div>
             </div>
             <div class="control-card">
@@ -692,9 +1226,9 @@
             </div>
         </div>
 
-        <!-- Nodes Grid with Oplogs -->
-        <div class="nodes-grid" id="nodes-grid">
-            <!-- Nodes will be rendered here -->
+        <!-- Regions Container -->
+        <div class="regions-container" id="regions-container">
+            <!-- Dynamically populated -->
         </div>
 
         <!-- Event Log -->
@@ -703,6 +1237,38 @@
             <div class="event-log" id="event-log"></div>
         </div>
     </main>
+
+    <!-- Replication Flow Overlay -->
+    <div class="replication-overlay" id="replication-overlay"></div>
+
+    <!-- Write Flow Status Panel -->
+    <div class="write-flow-panel" id="write-flow-panel">
+        <div class="write-flow-header">
+            <div class="write-flow-title">✏️ Write Operation</div>
+            <div class="write-flow-wc" id="flow-wc">w:majority</div>
+        </div>
+        <div class="write-flow-steps" id="write-flow-steps">
+            <!-- Steps populated dynamically -->
+        </div>
+        <div class="write-flow-result" id="write-flow-result"></div>
+    </div>
+
+    <!-- Read Flow Status Panel -->
+    <div class="read-flow-panel" id="read-flow-panel">
+        <div class="read-flow-header">
+            <div class="read-flow-title">📖 Read Operation</div>
+            <div class="read-flow-pref" id="flow-read-pref">secondaryPreferred</div>
+        </div>
+        <div class="read-flow-content">
+            <div class="read-flow-nodes" id="read-flow-nodes">
+                <!-- Available nodes populated dynamically -->
+            </div>
+            <div class="read-flow-selection" id="read-flow-selection">
+                <!-- Selected node shown here -->
+            </div>
+        </div>
+        <div class="read-flow-result" id="read-flow-result"></div>
+    </div>
 
     <!-- Election Modal -->
     <div class="modal-overlay" id="election-modal">
@@ -713,63 +1279,68 @@
             <div class="election-progress">
                 <div class="election-progress-bar" id="election-progress"></div>
             </div>
-            <div id="election-status" style="color: rgba(255,255,255,0.6); font-size: 0.9rem;">Detecting failure...</div>
+            <div id="election-status">Detecting failure...</div>
         </div>
     </div>
 
     <script>
+        // ============ CLUSTER CONFIGURATIONS ============
+        const CLUSTER_CONFIGS = {
+            'single-region': {
+                name: 'Single Region',
+                description: 'All 3 nodes in one region. If the region fails, entire cluster is down. w:majority = 2 nodes (3/2+1).',
+                regions: [
+                    { id: 'region-a', name: 'Region A', location: 'US-East', icon: '🌍', nodes: 3 }
+                ],
+                nodes: [
+                    { id: 'node1', name: 'mongo-1', port: 27017, region: 'region-a', votes: 1, priority: 2 },
+                    { id: 'node2', name: 'mongo-2', port: 27018, region: 'region-a', votes: 1, priority: 1 },
+                    { id: 'node3', name: 'mongo-3', port: 27019, region: 'region-a', votes: 1, priority: 1 }
+                ]
+            },
+            'two-region': {
+                name: 'Two Regions (2+1)',
+                description: '2 nodes in Region A, 1 in Region B. w:majority = 2 nodes (3/2+1). Region A down = 1 node left (no majority!). Region B down = 2 nodes left (survives).',
+                regions: [
+                    { id: 'region-a', name: 'Region A', location: 'US-East', icon: '🌍', nodes: 2 },
+                    { id: 'region-b', name: 'Region B', location: 'EU-West', icon: '🌎', nodes: 1 }
+                ],
+                nodes: [
+                    { id: 'node1', name: 'mongo-1', port: 27017, region: 'region-a', votes: 1, priority: 2 },
+                    { id: 'node2', name: 'mongo-2', port: 27018, region: 'region-a', votes: 1, priority: 1 },
+                    { id: 'node3', name: 'mongo-3', port: 27019, region: 'region-b', votes: 1, priority: 1 }
+                ]
+            },
+            'three-region': {
+                name: 'Three Regions (2+2+1)',
+                description: '2 nodes each in A & B, 1 in C. w:majority = 3 nodes (5/2+1). Any single region fails → 3+ nodes remain → cluster survives!',
+                regions: [
+                    { id: 'region-a', name: 'Region A', location: 'US-East', icon: '🌍', nodes: 2 },
+                    { id: 'region-b', name: 'Region B', location: 'EU-West', icon: '🌎', nodes: 2 },
+                    { id: 'region-c', name: 'Region C', location: 'Asia-Pacific', icon: '🌏', nodes: 1 }
+                ],
+                nodes: [
+                    { id: 'node1', name: 'mongo-1', port: 27017, region: 'region-a', votes: 1, priority: 3 },
+                    { id: 'node2', name: 'mongo-2', port: 27018, region: 'region-a', votes: 1, priority: 2 },
+                    { id: 'node3', name: 'mongo-3', port: 27019, region: 'region-b', votes: 1, priority: 2 },
+                    { id: 'node4', name: 'mongo-4', port: 27020, region: 'region-b', votes: 1, priority: 1 },
+                    { id: 'node5', name: 'mongo-5', port: 27021, region: 'region-c', votes: 1, priority: 1 }
+                ]
+            }
+        };
+
         // ============ STATE ============
         const state = {
-            nodes: [
-                { 
-                    id: 'node1', 
-                    name: 'mongo-1', 
-                    port: 27017, 
-                    role: 'primary', 
-                    status: 'healthy', 
-                    votes: 1, 
-                    priority: 2,
-                    oplog: [],
-                    oplogSize: 0,
-                    lastApplied: null
-                },
-                { 
-                    id: 'node2', 
-                    name: 'mongo-2', 
-                    port: 27018, 
-                    role: 'secondary', 
-                    status: 'healthy', 
-                    votes: 1, 
-                    priority: 1,
-                    oplog: [],
-                    oplogSize: 0,
-                    lastApplied: null,
-                    replicationLag: 0
-                },
-                { 
-                    id: 'node3', 
-                    name: 'mongo-3', 
-                    port: 27019, 
-                    role: 'secondary', 
-                    status: 'healthy', 
-                    votes: 1, 
-                    priority: 1,
-                    oplog: [],
-                    oplogSize: 0,
-                    lastApplied: null,
-                    replicationLag: 0
-                }
-            ],
+            currentConfig: 'single-region',
+            nodes: [],
+            regions: [],
+            regionStatus: {},
             writeConcern: 'majority',
             readPreference: 'secondaryPreferred',
             oplogCounter: 0,
             isElecting: false,
             electionTerm: 1,
-            collections: {
-                'test.users': [],
-                'test.orders': [],
-                'test.products': []
-            }
+            writeAcknowledged: false
         };
 
         // ============ HELPERS ============
@@ -778,260 +1349,152 @@
         }
 
         function generateTimestamp() {
-            const now = Date.now();
-            return {
-                t: Math.floor(now / 1000),
-                i: state.oplogCounter++
-            };
+            return { t: Math.floor(Date.now() / 1000), i: state.oplogCounter++ };
         }
 
         function formatTimestamp(ts) {
             return `Timestamp(${ts.t}, ${ts.i})`;
         }
 
-        function formatDocument(doc, indent = 0) {
-            const spaces = '  '.repeat(indent);
-            let result = '{\n';
-            const entries = Object.entries(doc);
-            entries.forEach(([key, value], i) => {
-                const comma = i < entries.length - 1 ? ',' : '';
-                if (key === '_id' && typeof value === 'string' && value.length === 24) {
-                    result += `${spaces}  <span class="key">"${key}"</span>: <span class="objectid">ObjectId("${value}")</span>${comma}\n`;
-                } else if (typeof value === 'string') {
-                    result += `${spaces}  <span class="key">"${key}"</span>: <span class="string">"${value}"</span>${comma}\n`;
-                } else if (typeof value === 'number') {
-                    result += `${spaces}  <span class="key">"${key}"</span>: <span class="number">${value}</span>${comma}\n`;
-                } else if (typeof value === 'object' && value !== null) {
-                    result += `${spaces}  <span class="key">"${key}"</span>: ${formatDocument(value, indent + 1)}${comma}\n`;
-                } else {
-                    result += `${spaces}  <span class="key">"${key}"</span>: ${JSON.stringify(value)}${comma}\n`;
-                }
-            });
-            result += `${spaces}}`;
-            return result;
-        }
-
-        function getRandomCollection() {
-            const collections = ['test.users', 'test.orders', 'test.products'];
-            return collections[Math.floor(Math.random() * collections.length)];
-        }
-
-        function getRandomName() {
-            const names = ['Alice', 'Bob', 'Charlie', 'Diana', 'Eve', 'Frank', 'Grace', 'Henry'];
-            return names[Math.floor(Math.random() * names.length)];
-        }
-
-        // ============ OPLOG OPERATIONS ============
-        function createOplogEntry(op, ns, document, update = null) {
-            const ts = generateTimestamp();
-            const entry = {
-                ts: ts,
-                t: 1, // term
-                h: Math.floor(Math.random() * 1e18), // hash
-                v: 2, // version
-                op: op, // 'i' insert, 'u' update, 'd' delete, 'c' command, 'n' no-op
-                ns: ns,
-                ui: generateObjectId(), // UUID
-                wall: new Date().toISOString()
-            };
-
-            if (op === 'i') {
-                entry.o = document;
-            } else if (op === 'u') {
-                entry.o = update;
-                entry.o2 = { _id: document._id };
-            } else if (op === 'd') {
-                entry.o = { _id: document._id };
-            }
-
-            return entry;
-        }
-
-        function addToOplog(node, entry) {
-            node.oplog.unshift(entry);
-            node.oplogSize += JSON.stringify(entry).length;
-            node.lastApplied = entry.ts;
-            
-            // Keep only last 20 entries for display
-            if (node.oplog.length > 20) {
-                node.oplog.pop();
-            }
-        }
-
-        function replicateToSecondaries(entry) {
-            const primary = state.nodes.find(n => n.role === 'primary');
-            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
-            
-            const writeConcernNum = state.writeConcern === 'majority' 
-                ? Math.ceil((state.nodes.filter(n => n.status === 'healthy').length) / 2)
-                : state.writeConcern === '3' ? 3 : 1;
-            
-            let acknowledged = 1; // Primary already has it
-            
-            secondaries.forEach((secondary, index) => {
-                // Simulate replication delay
-                const delay = 100 + Math.random() * 200 + (index * 50);
-                
-                setTimeout(() => {
-                    if (secondary.status === 'healthy') {
-                        addToOplog(secondary, { ...entry });
-                        secondary.replicationLag = Math.max(0, secondary.replicationLag - 50);
-                        acknowledged++;
-                        
-                        renderNode(secondary);
-                        
-                        if (acknowledged >= writeConcernNum && writeConcernNum > 1) {
-                            log(`Write acknowledged (w:${state.writeConcern})`, 'success');
-                        }
-                    }
-                }, delay);
-                
-                // Update lag
-                secondary.replicationLag += delay;
-            });
-            
-            if (writeConcernNum === 1) {
-                log(`Write acknowledged (w:1)`, 'success');
-            }
-        }
-
-        // ============ SIMULATE OPERATIONS ============
-        function simulateInsert() {
-            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
-            if (!primary) {
-                log('INSERT FAILED: No primary available', 'error');
-                return;
-            }
-
-            const ns = getRandomCollection();
-            const doc = {
-                _id: generateObjectId(),
-                name: getRandomName(),
-                email: `${getRandomName().toLowerCase()}@example.com`,
-                age: Math.floor(Math.random() * 50) + 20,
-                createdAt: new Date().toISOString()
-            };
-
-            const entry = createOplogEntry('i', ns, doc);
-            addToOplog(primary, entry);
-            renderNode(primary);
-            
-            log(`INSERT into ${ns}`, 'info');
-            replicateToSecondaries(entry);
-        }
-
-        function simulateUpdate() {
-            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
-            if (!primary) {
-                log('UPDATE FAILED: No primary available', 'error');
-                return;
-            }
-
-            const ns = getRandomCollection();
-            const doc = { _id: generateObjectId() };
-            const update = {
-                $v: 2,
-                diff: {
-                    u: { 
-                        updatedAt: new Date().toISOString(),
-                        score: Math.floor(Math.random() * 100)
-                    }
-                }
-            };
-
-            const entry = createOplogEntry('u', ns, doc, update);
-            addToOplog(primary, entry);
-            renderNode(primary);
-            
-            log(`UPDATE on ${ns}`, 'info');
-            replicateToSecondaries(entry);
-        }
-
-        function simulateDelete() {
-            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
-            if (!primary) {
-                log('DELETE FAILED: No primary available', 'error');
-                return;
-            }
-
-            const ns = getRandomCollection();
-            const doc = { _id: generateObjectId() };
-
-            const entry = createOplogEntry('d', ns, doc);
-            addToOplog(primary, entry);
-            renderNode(primary);
-            
-            log(`DELETE from ${ns}`, 'info');
-            replicateToSecondaries(entry);
-        }
-
-        function simulateRead() {
-            const readPref = state.readPreference;
-            let targetNode = null;
-
-            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
-            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
-
-            switch (readPref) {
-                case 'primary':
-                    targetNode = primary;
-                    break;
-                case 'primaryPreferred':
-                    targetNode = primary || secondaries[0];
-                    break;
-                case 'secondary':
-                    targetNode = secondaries[0];
-                    break;
-                case 'secondaryPreferred':
-                    targetNode = secondaries[0] || primary;
-                    break;
-                case 'nearest':
-                    const allHealthy = state.nodes.filter(n => n.status === 'healthy');
-                    targetNode = allHealthy[Math.floor(Math.random() * allHealthy.length)];
-                    break;
-            }
-
-            if (!targetNode) {
-                log(`READ FAILED: No node available for ${readPref}`, 'error');
-                return;
-            }
-
-            log(`READ from ${targetNode.name} (${readPref})`, 'info');
-            
-            // Visual feedback
-            const nodeEl = document.getElementById(`node-${targetNode.id}`);
-            if (nodeEl) {
-                nodeEl.style.boxShadow = '0 0 30px rgba(78, 205, 196, 0.5)';
-                setTimeout(() => {
-                    nodeEl.style.boxShadow = '';
-                }, 500);
-            }
-        }
-
-        // ============ NODE CONTROL ============
-        
-        /**
-         * Calculate majority requirement for elections
-         * Majority = floor(n/2) + 1 where n = total voting members
-         */
         function getMajorityRequired() {
             const totalVotingMembers = state.nodes.filter(n => n.votes > 0).length;
             return Math.floor(totalVotingMembers / 2) + 1;
         }
 
-        /**
-         * Check if we have enough healthy voting members for a primary
-         */
         function hasMajority() {
             const healthyVotingMembers = state.nodes.filter(n => n.status === 'healthy' && n.votes > 0).length;
             return healthyVotingMembers >= getMajorityRequired();
         }
 
+        function getRandomCollection() {
+            return ['test.users', 'test.orders', 'test.products'][Math.floor(Math.random() * 3)];
+        }
+
+        // ============ CLUSTER MANAGEMENT ============
+        function loadConfig(configId) {
+            const config = CLUSTER_CONFIGS[configId];
+            state.currentConfig = configId;
+            state.regions = config.regions.map(r => ({ ...r, status: 'healthy' }));
+            state.nodes = config.nodes.map(n => ({
+                ...n,
+                role: n.priority === Math.max(...config.nodes.map(x => x.priority)) ? 'primary' : 'secondary',
+                status: 'healthy',
+                oplog: [],
+                oplogSize: 0,
+                lastApplied: null,
+                replicationLag: 0
+            }));
+            state.regionStatus = {};
+            state.regions.forEach(r => state.regionStatus[r.id] = 'healthy');
+            state.oplogCounter = 0;
+            state.electionTerm = 1;
+
+            updateInfoPanel(config);
+            renderRegionButtons();
+            renderAllRegions();
+            updateClusterStatus();
+            
+            document.getElementById('event-log').innerHTML = '';
+            log(`Loaded configuration: ${config.name}`, 'success');
+            log(`Nodes: ${state.nodes.length}, Majority required: ${getMajorityRequired()}`, 'info');
+        }
+
+        function updateInfoPanel(config) {
+            const panel = document.getElementById('info-panel');
+            panel.innerHTML = `
+                <div class="info-icon">💡</div>
+                <div class="info-content">
+                    <div class="info-title">${config.name} Configuration</div>
+                    <div class="info-desc">${config.description}</div>
+                </div>
+            `;
+        }
+
+        function renderRegionButtons() {
+            const container = document.getElementById('region-buttons');
+            container.innerHTML = state.regions.map(r => {
+                const regionClass = r.id.replace('region-', 'region-');
+                const isDown = state.regionStatus[r.id] === 'down';
+                return `
+                    <button class="region-btn ${regionClass}" 
+                            onclick="toggleRegion('${r.id}')"
+                            ${isDown ? '' : ''}>
+                        ${isDown ? '✓ Restore' : '💥 Kill'} ${r.name}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        // ============ REGION CONTROL ============
+        function toggleRegion(regionId) {
+            const isDown = state.regionStatus[regionId] === 'down';
+            
+            if (isDown) {
+                // Restore region
+                state.regionStatus[regionId] = 'healthy';
+                const regionNodes = state.nodes.filter(n => n.region === regionId);
+                
+                regionNodes.forEach(node => {
+                    node.status = 'recovering';
+                });
+                
+                log(`${state.regions.find(r => r.id === regionId).name} coming back online...`, 'warning');
+                renderAllRegions();
+                renderRegionButtons();
+                
+                setTimeout(() => {
+                    regionNodes.forEach(node => {
+                        node.status = 'healthy';
+                    });
+                    
+                    log(`${state.regions.find(r => r.id === regionId).name} restored`, 'success');
+                    
+                    const hasPrimaryNode = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+                    if (!hasPrimaryNode && hasMajority()) {
+                        log(`Majority restored: ${getMajorityRequired()}/${state.nodes.length} nodes available`, 'info');
+                        triggerElection();
+                    }
+                    
+                    renderAllRegions();
+                    updateClusterStatus();
+                }, 2000);
+            } else {
+                // Kill region
+                state.regionStatus[regionId] = 'down';
+                const regionNodes = state.nodes.filter(n => n.region === regionId);
+                const hadPrimary = regionNodes.some(n => n.role === 'primary');
+                
+                regionNodes.forEach(node => {
+                    node.status = 'down';
+                    node.role = 'secondary';
+                    node.oplog = [];
+                });
+                
+                log(`⚠️ ${state.regions.find(r => r.id === regionId).name} FAILED (${regionNodes.length} nodes down)`, 'error');
+                renderAllRegions();
+                renderRegionButtons();
+                updateClusterStatus();
+                
+                // Check if current primary lost majority
+                const currentPrimary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+                if (currentPrimary && !hasMajority()) {
+                    log(`${currentPrimary.name} stepping down: lost majority`, 'warning');
+                    currentPrimary.role = 'secondary';
+                    renderAllRegions();
+                    updateClusterStatus();
+                }
+                
+                if (hadPrimary || (currentPrimary && !hasMajority())) {
+                    triggerElection();
+                }
+            }
+        }
+
+        // ============ NODE CONTROL ============
         function toggleNode(nodeId) {
             const node = state.nodes.find(n => n.id === nodeId);
             
             if (node.status === 'down') {
-                // Restart node
                 node.status = 'recovering';
                 log(`${node.name} is recovering...`, 'warning');
                 renderNode(node);
@@ -1042,14 +1505,10 @@
                     updateClusterStatus();
                     log(`${node.name} is now healthy`, 'success');
                     
-                    // Check if we now have majority and no primary
-                    const hasPrimary = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
-                    if (!hasPrimary && hasMajority()) {
-                        log(`Majority restored (${getMajorityRequired()}/${state.nodes.length} nodes required)`, 'info');
+                    const hasPrimaryNode = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+                    if (!hasPrimaryNode && hasMajority()) {
+                        log(`Majority restored: ${getMajorityRequired()} nodes available`, 'info');
                         triggerElection();
-                    } else if (!hasPrimary && !hasMajority()) {
-                        const healthy = state.nodes.filter(n => n.status === 'healthy').length;
-                        log(`Still no majority: ${healthy}/${getMajorityRequired()} nodes needed`, 'warning');
                     }
                 }, 2000);
             } else {
@@ -1065,7 +1524,6 @@
                     triggerElection();
                 }
                 
-                // Check if primary should step down due to lost majority
                 const currentPrimary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
                 if (currentPrimary && !hasMajority()) {
                     log(`${currentPrimary.name} stepping down: lost majority`, 'warning');
@@ -1085,6 +1543,7 @@
             }
         }
 
+        // ============ ELECTION ============
         function triggerElection() {
             if (state.isElecting) return;
             
@@ -1101,22 +1560,20 @@
             
             modal.classList.add('visible');
             
-            // Check if we have majority
             if (healthyVoters < majorityRequired) {
-                // NO MAJORITY - Election cannot proceed
                 modalIcon.textContent = '⚠️';
                 modalTitle.textContent = 'Election Failed';
                 electionText.innerHTML = `
-                    <strong style="color: var(--node-down);">Cannot elect primary: No majority available</strong><br><br>
-                    Healthy voting members: <strong>${healthyVoters}</strong><br>
-                    Majority required: <strong>${majorityRequired}</strong> (n/2 + 1 where n=${state.nodes.length})<br><br>
-                    <span style="font-size: 0.85rem;">Bring at least ${majorityRequired - healthyVoters} more node(s) online to restore write availability.</span>
+                    <strong style="color: var(--node-down);">Cannot elect primary: No majority!</strong><br><br>
+                    Healthy nodes: <strong>${healthyVoters}</strong><br>
+                    Majority required: <strong>${majorityRequired}</strong> (n/2+1 where n=${state.nodes.length})<br><br>
+                    <span style="font-size: 0.8rem;">⚠️ Cluster is READ-ONLY. Restore ${majorityRequired - healthyVoters} more node(s).</span>
                 `;
                 progressBar.style.width = '100%';
                 progressBar.style.background = 'var(--node-down)';
-                electionStatus.textContent = 'Cluster is READ-ONLY until majority is restored';
+                electionStatus.textContent = 'Writes blocked until majority is restored';
                 
-                log(`Election FAILED: Only ${healthyVoters}/${majorityRequired} votes available`, 'error');
+                log(`Election FAILED: ${healthyVoters}/${majorityRequired} votes (no majority)`, 'error');
                 
                 setTimeout(() => {
                     modal.classList.remove('visible');
@@ -1126,20 +1583,17 @@
                     modalIcon.textContent = '🗳️';
                     modalTitle.textContent = 'Election in Progress';
                 }, 4000);
-                
                 return;
             }
             
-            // MAJORITY EXISTS - Proceed with election
-            electionText.textContent = `Primary node is down. Initiating automatic failover...`;
+            electionText.textContent = 'Primary node is down. Initiating automatic failover...';
             
             const steps = [
                 { progress: 15, text: 'Detecting primary failure...' },
-                { progress: 30, text: 'Checking quorum...' },
-                { progress: 45, text: `Quorum confirmed: ${healthyVoters}/${majorityRequired} votes available` },
-                { progress: 60, text: 'Candidates requesting votes...' },
-                { progress: 75, text: 'Tallying votes...' },
-                { progress: 90, text: `Majority achieved (${majorityRequired} votes)` },
+                { progress: 30, text: 'Checking quorum across regions...' },
+                { progress: 50, text: `Quorum OK: ${healthyVoters}/${majorityRequired} votes` },
+                { progress: 70, text: 'Candidates voting...' },
+                { progress: 90, text: `Majority achieved!` },
                 { progress: 100, text: 'New primary elected!' }
             ];
 
@@ -1159,119 +1613,640 @@
                     if (candidates.length >= majorityRequired) {
                         candidates[0].role = 'primary';
                         
-                        // Add no-op entry to signify election
                         const noopEntry = {
                             ts: generateTimestamp(),
-                            t: state.electionTerm || 1,
+                            t: state.electionTerm++,
                             op: 'n',
                             ns: '',
                             wall: new Date().toISOString(),
-                            o: { msg: 'new primary', votes: healthyVoters, majority: majorityRequired }
+                            o: { msg: 'new primary', term: state.electionTerm, votes: healthyVoters }
                         };
-                        state.electionTerm = (state.electionTerm || 1) + 1;
                         addToOplog(candidates[0], noopEntry);
                         
-                        log(`${candidates[0].name} elected as new PRIMARY (${healthyVoters} votes)`, 'success');
+                        const region = state.regions.find(r => r.id === candidates[0].region);
+                        log(`${candidates[0].name} elected PRIMARY (${region.name})`, 'success');
                     }
                     
                     setTimeout(() => {
                         modal.classList.remove('visible');
                         state.isElecting = false;
-                        renderAllNodes();
+                        renderAllRegions();
                         updateClusterStatus();
                         progressBar.style.width = '0%';
                     }, 1000);
                 }
-            }, 500);
+            }, 400);
+        }
+
+        // ============ OPLOG ============
+        function createOplogEntry(op, ns, document, update = null) {
+            const ts = generateTimestamp();
+            const entry = {
+                ts: ts,
+                t: state.electionTerm,
+                op: op,
+                ns: ns,
+                wall: new Date().toISOString()
+            };
+
+            if (op === 'i') entry.o = document;
+            else if (op === 'u') { entry.o = update; entry.o2 = { _id: document._id }; }
+            else if (op === 'd') entry.o = { _id: document._id };
+
+            return entry;
+        }
+
+        function addToOplog(node, entry) {
+            node.oplog.unshift(entry);
+            node.oplogSize += 100;
+            node.lastApplied = entry.ts;
+            if (node.oplog.length > 10) node.oplog.pop();
+        }
+
+        // ============ VISUAL WRITE FLOW ============
+        function showWriteFlowPanel(operation) {
+            const panel = document.getElementById('write-flow-panel');
+            const wcLabel = document.getElementById('flow-wc');
+            const stepsContainer = document.getElementById('write-flow-steps');
+            const resultEl = document.getElementById('write-flow-result');
+            
+            wcLabel.textContent = `w:${state.writeConcern}`;
+            resultEl.className = 'write-flow-result';
+            resultEl.style.display = 'none';
+            
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
+            const totalVotingMembers = state.nodes.filter(n => n.votes > 0).length;
+            const majorityNeeded = Math.floor(totalVotingMembers / 2) + 1; // n/2+1
+            const wcRequired = state.writeConcern === 'majority' ? majorityNeeded 
+                             : state.writeConcern === '1' ? 1 
+                             : totalVotingMembers;
+            
+            stepsContainer.innerHTML = `
+                <div class="write-flow-step" id="step-1">
+                    <span class="step-icon">📝</span>
+                    <div class="step-content">
+                        <div class="step-label">Client sends ${operation}</div>
+                        <div class="step-detail">Operation: ${operation.toUpperCase()}</div>
+                    </div>
+                </div>
+                <div class="write-flow-step" id="step-2">
+                    <span class="step-icon">👑</span>
+                    <div class="step-content">
+                        <div class="step-label">Write to Primary</div>
+                        <div class="step-detail">Target: ${primary ? primary.name : 'N/A'}</div>
+                        <div class="step-nodes">
+                            ${primary ? `<span class="step-node-badge primary">${primary.name} ✓</span>` : '<span class="step-node-badge">No primary</span>'}
+                        </div>
+                    </div>
+                </div>
+                <div class="write-flow-step" id="step-3">
+                    <span class="step-icon">📋</span>
+                    <div class="step-content">
+                        <div class="step-label">Write to Oplog</div>
+                        <div class="step-detail">local.oplog.rs on primary</div>
+                    </div>
+                </div>
+                <div class="write-flow-step" id="step-4">
+                    <span class="step-icon">🔄</span>
+                    <div class="step-content">
+                        <div class="step-label">Replicate to Secondaries</div>
+                        <div class="step-detail">${secondaries.length} secondary node(s) tailing oplog</div>
+                        <div class="step-nodes" id="replication-nodes">
+                            ${secondaries.map(s => `<span class="step-node-badge pending" id="badge-${s.id}">${s.name}</span>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="write-flow-step" id="step-5">
+                    <span class="step-icon">✅</span>
+                    <div class="step-content">
+                        <div class="step-label">Wait for Acknowledgment</div>
+                        <div class="step-detail">w:${state.writeConcern} = ${state.writeConcern === 'majority' ? majorityNeeded + ' nodes (n/2+1 where n=' + totalVotingMembers + ')' : state.writeConcern === '1' ? 'primary only' : 'all ' + totalVotingMembers + ' nodes'}</div>
+                        <div class="step-nodes" id="ack-count">
+                            <span class="step-node-badge">0 / ${wcRequired}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            panel.classList.add('visible');
+        }
+
+        function updateFlowStep(stepNum, active = false, complete = false) {
+            const step = document.getElementById(`step-${stepNum}`);
+            if (step) {
+                step.classList.remove('active', 'complete');
+                if (active) step.classList.add('active');
+                if (complete) step.classList.add('complete');
+            }
+        }
+
+        function updateReplicationBadge(nodeId, acked = false) {
+            const badge = document.getElementById(`badge-${nodeId}`);
+            if (badge) {
+                badge.classList.remove('pending');
+                badge.classList.add('acked');
+                badge.textContent = badge.textContent.split(' ')[0] + ' ✓';
+            }
+        }
+
+        function updateAckCount(count, required) {
+            const ackEl = document.getElementById('ack-count');
+            if (ackEl) {
+                const isComplete = count >= required;
+                let statusText = '';
+                let badgeClass = 'pending';
+                
+                if (isComplete) {
+                    badgeClass = 'majority-reached';
+                    if (state.writeConcern === '1') {
+                        statusText = '✓ PRIMARY ACK';
+                    } else if (state.writeConcern === 'majority') {
+                        statusText = '✓ MAJORITY!';
+                    } else {
+                        statusText = '✓ ALL NODES!';
+                    }
+                }
+                
+                ackEl.innerHTML = `
+                    <span class="step-node-badge ${badgeClass}">
+                        ${count} / ${required} ${statusText}
+                    </span>
+                `;
+            }
+        }
+
+        function showWriteResult(success, message) {
+            const resultEl = document.getElementById('write-flow-result');
+            resultEl.textContent = message;
+            resultEl.className = `write-flow-result ${success ? 'success' : 'failed'}`;
+            resultEl.style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('write-flow-panel').classList.remove('visible');
+            }, 2000);
+        }
+
+        function animateParticle(fromEl, toEl, type, duration = 400) {
+            return new Promise(resolve => {
+                const overlay = document.getElementById('replication-overlay');
+                const particle = document.createElement('div');
+                particle.className = `flow-particle ${type}`;
+                overlay.appendChild(particle);
+
+                const fromRect = fromEl.getBoundingClientRect();
+                const toRect = toEl.getBoundingClientRect();
+                
+                const startX = fromRect.left + fromRect.width / 2;
+                const startY = fromRect.top + fromRect.height / 2;
+                const endX = toRect.left + toRect.width / 2;
+                const endY = toRect.top + toRect.height / 2;
+
+                particle.style.left = `${startX}px`;
+                particle.style.top = `${startY}px`;
+
+                const startTime = performance.now();
+
+                function animate(currentTime) {
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing
+                    const eased = 1 - Math.pow(1 - progress, 3);
+
+                    particle.style.left = `${startX + (endX - startX) * eased}px`;
+                    particle.style.top = `${startY + (endY - startY) * eased}px`;
+
+                    if (progress < 1) {
+                        requestAnimationFrame(animate);
+                    } else {
+                        particle.remove();
+                        resolve();
+                    }
+                }
+
+                requestAnimationFrame(animate);
+            });
+        }
+
+        function highlightNode(nodeId, type) {
+            const nodeEl = document.getElementById(`node-${nodeId}`);
+            if (nodeEl) {
+                nodeEl.classList.add(type);
+                setTimeout(() => nodeEl.classList.remove(type), 1500);
+            }
+        }
+
+        async function executeWriteWithVisualization(operation, entry) {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (!primary) {
+                log(`${operation.toUpperCase()} FAILED: No primary`, 'error');
+                return;
+            }
+
+            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
+            const totalVotingMembers = state.nodes.filter(n => n.votes > 0).length;
+            const majorityNeeded = Math.floor(totalVotingMembers / 2) + 1; // n/2+1
+            const healthyCount = 1 + secondaries.length;
+            const wcRequired = state.writeConcern === 'majority' ? majorityNeeded 
+                             : state.writeConcern === '1' ? 1 
+                             : totalVotingMembers; // w:all = all voting members
+
+            showWriteFlowPanel(operation);
+            let ackCount = 0;
+
+            // Step 1: Client sends write
+            updateFlowStep(1, true);
+            await new Promise(r => setTimeout(r, 300));
+            updateFlowStep(1, false, true);
+
+            // Step 2: Write to primary
+            updateFlowStep(2, true);
+            const primaryEl = document.getElementById(`node-${primary.id}`);
+            
+            // Animate write particle to primary
+            const writeSourceEl = document.querySelector('.write-flow-panel');
+            if (primaryEl && writeSourceEl) {
+                await animateParticle(writeSourceEl, primaryEl, 'write', 350);
+            }
+            
+            highlightNode(primary.id, 'receiving');
+            addToOplog(primary, entry);
+            renderNode(primary);
+            ackCount++;
+            updateFlowStep(2, false, true);
+            
+            // Step 3: Write to oplog
+            updateFlowStep(3, true);
+            await new Promise(r => setTimeout(r, 200));
+            highlightNode(primary.id, 'acknowledged');
+            updateFlowStep(3, false, true);
+
+            // Step 4: Replicate to secondaries
+            updateFlowStep(4, true);
+            updateAckCount(ackCount, wcRequired);
+
+            // Check if w:1 - we're done after primary (no need to wait for secondaries)
+            if (state.writeConcern === '1') {
+                // Skip replication wait, mark complete immediately
+                updateFlowStep(4, false, true);
+                updateFlowStep(5, true);
+                await new Promise(r => setTimeout(r, 200));
+                updateFlowStep(5, false, true);
+                
+                log(`${operation.toUpperCase()} acknowledged (w:1 = 1 ack needed, primary only)`, 'success');
+                showWriteResult(true, `✓ Acknowledged: 1/${totalVotingMembers} (primary only, fire-and-forget)`);
+                
+                // Still replicate in background (fire-and-forget)
+                log(`Replicating to ${secondaries.length} secondaries in background...`, 'info');
+                secondaries.forEach((secondary, index) => {
+                    setTimeout(async () => {
+                        if (secondary.status === 'healthy') {
+                            const secondaryEl = document.getElementById(`node-${secondary.id}`);
+                            if (primaryEl && secondaryEl) {
+                                await animateParticle(primaryEl, secondaryEl, 'replication', 300);
+                            }
+                            highlightNode(secondary.id, 'receiving');
+                            addToOplog(secondary, { ...entry });
+                            renderNode(secondary);
+                            updateReplicationBadge(secondary.id, true);
+                        }
+                    }, 100 + index * 100);
+                });
+                return;
+            }
+
+            // Replicate to secondaries with visual
+            // Track when majority is reached for immediate acknowledgment
+            let majorityReached = false;
+            
+            secondaries.forEach((secondary, index) => {
+                const delay = 100 + index * 100;
+                
+                setTimeout(async () => {
+                    if (secondary.status !== 'healthy') return;
+                    
+                    const secondaryEl = document.getElementById(`node-${secondary.id}`);
+                    if (primaryEl && secondaryEl) {
+                        await animateParticle(primaryEl, secondaryEl, 'replication', 300);
+                    }
+                    
+                    highlightNode(secondary.id, 'receiving');
+                    addToOplog(secondary, { ...entry });
+                    secondary.replicationLag = Math.max(0, secondary.replicationLag - 30);
+                    renderNode(secondary);
+                    
+                    updateReplicationBadge(secondary.id, true);
+                    ackCount++;
+                    updateAckCount(ackCount, wcRequired);
+                    
+                    // Check if we've hit write concern - show success IMMEDIATELY
+                    if (ackCount >= wcRequired && !majorityReached) {
+                        majorityReached = true;
+                        
+                        updateFlowStep(4, false, true);
+                        updateFlowStep(5, true);
+                        highlightNode(secondary.id, 'acknowledged');
+                        
+                        // Show success immediately when write concern is satisfied
+                        setTimeout(() => {
+                            updateFlowStep(5, false, true);
+                            
+                            if (state.writeConcern === 'majority') {
+                                log(`${operation.toUpperCase()} acknowledged (w:majority = ${wcRequired} acks needed, n/2+1 where n=${totalVotingMembers})`, 'success');
+                                showWriteResult(true, `✓ Acknowledged: ${wcRequired}/${totalVotingMembers} nodes (majority = n/2+1)`);
+                            } else {
+                                // w:all
+                                log(`${operation.toUpperCase()} acknowledged (w:all = ${wcRequired} acks, all ${totalVotingMembers} nodes)`, 'success');
+                                showWriteResult(true, `✓ Acknowledged: ${wcRequired}/${totalVotingMembers} nodes (all nodes)`);
+                            }
+                        }, 300);
+                    }
+                }, delay);
+            });
+            
+            // For w:all, we need to wait for all nodes
+            if (state.writeConcern === 'all') {
+                const totalDelay = 100 + (secondaries.length - 1) * 100 + 500;
+                await new Promise(r => setTimeout(r, totalDelay));
+            }
+            
+            state.writeAcknowledged = false;
+        }
+
+        // ============ SIMULATE OPERATIONS ============
+        async function simulateInsert() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (!primary) { 
+                log('INSERT FAILED: No primary', 'error'); 
+                return; 
+            }
+
+            const ns = getRandomCollection();
+            const doc = { _id: generateObjectId(), name: 'User_' + Math.floor(Math.random() * 1000) };
+            const entry = createOplogEntry('i', ns, doc);
+            
+            log(`INSERT → ${ns}`, 'info');
+            await executeWriteWithVisualization('insert', entry);
+        }
+
+        async function simulateUpdate() {
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            if (!primary) { 
+                log('UPDATE FAILED: No primary', 'error'); 
+                return; 
+            }
+
+            const ns = getRandomCollection();
+            const entry = createOplogEntry('u', ns, { _id: generateObjectId() }, { $set: { updated: Date.now() } });
+            
+            log(`UPDATE → ${ns}`, 'info');
+            await executeWriteWithVisualization('update', entry);
+        }
+
+        async function simulateRead() {
+            const readPref = state.readPreference;
+            let targetNode = null;
+            let selectionReason = '';
+
+            const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
+            const secondaries = state.nodes.filter(n => n.role === 'secondary' && n.status === 'healthy');
+            const allHealthy = state.nodes.filter(n => n.status === 'healthy');
+
+            switch (readPref) {
+                case 'primary':
+                    targetNode = primary;
+                    selectionReason = 'Only reads from primary node';
+                    break;
+                case 'primaryPreferred':
+                    if (primary) {
+                        targetNode = primary;
+                        selectionReason = 'Primary available, using primary';
+                    } else {
+                        targetNode = secondaries[0];
+                        selectionReason = 'Primary unavailable, falling back to secondary';
+                    }
+                    break;
+                case 'secondary':
+                    targetNode = secondaries[0];
+                    selectionReason = 'Only reads from secondary nodes';
+                    break;
+                case 'secondaryPreferred':
+                    if (secondaries.length > 0) {
+                        targetNode = secondaries[0];
+                        selectionReason = 'Secondary available, using secondary';
+                    } else {
+                        targetNode = primary;
+                        selectionReason = 'No secondaries available, falling back to primary';
+                    }
+                    break;
+                case 'nearest':
+                    targetNode = allHealthy[Math.floor(Math.random() * allHealthy.length)];
+                    selectionReason = 'Selected node with lowest network latency';
+                    break;
+            }
+
+            // Show read flow panel
+            showReadFlowPanel(readPref, targetNode, selectionReason);
+
+            if (!targetNode) {
+                log(`READ FAILED: No eligible node for readPreference: ${readPref}`, 'error');
+                showReadResult(false, `✗ No eligible node for ${readPref}`);
+                return;
+            }
+
+            // Animate selection after a brief delay
+            await new Promise(r => setTimeout(r, 300));
+            highlightReadNode(targetNode.id);
+            
+            // Animate read particle from client to node
+            const nodeEl = document.getElementById(`node-${targetNode.id}`);
+            const panelEl = document.getElementById('read-flow-panel');
+            if (nodeEl && panelEl) {
+                await animateParticle(panelEl, nodeEl, 'read', 400);
+            }
+            
+            // Visual feedback on node
+            if (nodeEl) {
+                nodeEl.style.boxShadow = '0 0 25px rgba(78, 205, 196, 0.6)';
+                nodeEl.classList.add('reading');
+                setTimeout(() => { 
+                    nodeEl.style.boxShadow = ''; 
+                    nodeEl.classList.remove('reading');
+                }, 800);
+            }
+
+            const region = state.regions.find(r => r.id === targetNode.region);
+            log(`READ ← ${targetNode.name} (${region.name}) [${readPref}]`, 'success');
+            showReadResult(true, `✓ Read from ${targetNode.name} (${targetNode.role})`);
+        }
+
+        function showReadFlowPanel(readPref, targetNode, reason) {
+            const panel = document.getElementById('read-flow-panel');
+            const prefLabel = document.getElementById('flow-read-pref');
+            const nodesContainer = document.getElementById('read-flow-nodes');
+            const selectionContainer = document.getElementById('read-flow-selection');
+            const resultEl = document.getElementById('read-flow-result');
+            
+            prefLabel.textContent = readPref;
+            resultEl.className = 'read-flow-result';
+            resultEl.style.display = 'none';
+            
+            // Build nodes list showing eligibility
+            const nodeRows = state.nodes.map(node => {
+                const region = state.regions.find(r => r.id === node.region);
+                const isHealthy = node.status === 'healthy';
+                const isPrimary = node.role === 'primary';
+                const isSecondary = node.role === 'secondary';
+                
+                let eligible = false;
+                let eligibleReason = '';
+                
+                if (!isHealthy) {
+                    eligibleReason = 'Node is down';
+                } else {
+                    switch (readPref) {
+                        case 'primary':
+                            eligible = isPrimary;
+                            eligibleReason = isPrimary ? 'Primary node' : 'Not primary';
+                            break;
+                        case 'primaryPreferred':
+                            eligible = true;
+                            eligibleReason = isPrimary ? 'Preferred (primary)' : 'Fallback option';
+                            break;
+                        case 'secondary':
+                            eligible = isSecondary;
+                            eligibleReason = isSecondary ? 'Secondary node' : 'Not secondary';
+                            break;
+                        case 'secondaryPreferred':
+                            eligible = true;
+                            eligibleReason = isSecondary ? 'Preferred (secondary)' : 'Fallback option';
+                            break;
+                        case 'nearest':
+                            eligible = true;
+                            eligibleReason = 'Any healthy node';
+                            break;
+                    }
+                }
+                
+                const isSelected = targetNode && node.id === targetNode.id;
+                const statusClass = !isHealthy ? 'down' : (isPrimary ? 'primary' : 'secondary');
+                const rowClass = !isHealthy ? 'not-eligible' : (isSelected ? 'selected' : (eligible ? 'eligible' : 'not-eligible'));
+                
+                return `
+                    <div class="read-node-row ${rowClass}" id="read-row-${node.id}">
+                        <div class="read-node-icon">${!isHealthy ? '💀' : (isPrimary ? '👑' : '📚')}</div>
+                        <div class="read-node-info">
+                            <div class="read-node-name">${node.name}</div>
+                            <div class="read-node-meta">${region.name} • ${eligibleReason}</div>
+                        </div>
+                        <div class="read-node-status ${statusClass}">${!isHealthy ? 'DOWN' : node.role.toUpperCase()}</div>
+                    </div>
+                `;
+            }).join('');
+            
+            nodesContainer.innerHTML = nodeRows;
+            
+            // Build selection display
+            if (targetNode) {
+                const targetRegion = state.regions.find(r => r.id === targetNode.region);
+                selectionContainer.innerHTML = `
+                    <div class="read-selection-label">Selected Target</div>
+                    <div class="read-selection-target">
+                        <span class="read-selection-arrow">→</span>
+                        <div class="read-selection-node">
+                            <span>${targetNode.role === 'primary' ? '👑' : '📚'}</span>
+                            <span><strong>${targetNode.name}</strong> (${targetRegion.name})</span>
+                        </div>
+                    </div>
+                    <div class="read-selection-reason">${reason}</div>
+                `;
+            } else {
+                selectionContainer.innerHTML = `
+                    <div class="read-selection-label">No Eligible Node</div>
+                    <div class="read-selection-reason" style="color: #EF476F;">
+                        No nodes match the ${readPref} read preference
+                    </div>
+                `;
+            }
+            
+            panel.classList.add('visible');
+        }
+
+        function highlightReadNode(nodeId) {
+            // Update the row in the panel
+            const row = document.getElementById(`read-row-${nodeId}`);
+            if (row) {
+                row.classList.add('selected');
+            }
+        }
+
+        function showReadResult(success, message) {
+            const resultEl = document.getElementById('read-flow-result');
+            resultEl.textContent = message;
+            resultEl.className = `read-flow-result ${success ? 'success' : 'failed'}`;
+            resultEl.style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('read-flow-panel').classList.remove('visible');
+            }, 2000);
         }
 
         function resetCluster() {
-            state.nodes.forEach((node, i) => {
-                node.status = 'healthy';
-                node.role = i === 0 ? 'primary' : 'secondary';
-                node.oplog = [];
-                node.oplogSize = 0;
-                node.lastApplied = null;
-                node.replicationLag = 0;
-            });
-            state.oplogCounter = 0;
-            document.getElementById('event-log').innerHTML = '';
-            
-            renderAllNodes();
-            updateClusterStatus();
-            log('Cluster reset to initial state', 'success');
+            loadConfig(state.currentConfig);
         }
 
         // ============ RENDERING ============
-        function renderNode(node) {
-            const container = document.getElementById('nodes-grid');
-            let nodeEl = document.getElementById(`node-${node.id}`);
-            
-            const roleClass = node.status === 'down' ? 'down' : 
-                             node.status === 'recovering' ? 'recovering' : 
-                             node.role;
-            
-            const roleLabel = node.status === 'down' ? 'DOWN' :
-                             node.status === 'recovering' ? 'RECOVERING' :
-                             node.role.toUpperCase();
+        function renderAllRegions() {
+            const container = document.getElementById('regions-container');
+            container.innerHTML = state.regions.map(region => {
+                const regionNodes = state.nodes.filter(n => n.region === region.id);
+                const isDown = state.regionStatus[region.id] === 'down';
+                const regionClass = region.id.replace('region-', 'region-');
+                
+                return `
+                    <div class="region-panel ${regionClass} ${isDown ? 'down' : ''}">
+                        <div class="region-header">
+                            <div class="region-title">
+                                <div class="region-icon">${region.icon}</div>
+                                <div>
+                                    <div>${region.name}</div>
+                                    <div style="font-size: 0.7rem; color: rgba(255,255,255,0.5);">${region.location}</div>
+                                </div>
+                            </div>
+                            <span class="region-status ${isDown ? 'down' : ''}">${isDown ? '❌ DOWN' : '✓ Online'}</span>
+                        </div>
+                        <div class="region-nodes" id="region-${region.id}-nodes">
+                            ${regionNodes.map(node => renderNodeHTML(node)).join('')}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
 
+        function renderNodeHTML(node) {
+            const roleClass = node.status === 'down' ? 'down' : node.status === 'recovering' ? 'recovering' : node.role;
+            const roleLabel = node.status === 'down' ? 'DOWN' : node.status === 'recovering' ? 'RECOVERING' : node.role.toUpperCase();
             const icon = node.role === 'primary' ? '👑' : '📋';
-            
-            // Replication lag display (only for secondaries)
+
             let lagHtml = '';
             if (node.role === 'secondary' && node.status === 'healthy') {
-                const lagClass = node.replicationLag > 500 ? 'critical' : node.replicationLag > 200 ? 'warning' : '';
-                const lagPercent = Math.min(100, (500 - node.replicationLag) / 5);
+                const lagClass = node.replicationLag > 300 ? 'critical' : node.replicationLag > 150 ? 'warning' : '';
+                const lagPercent = Math.min(100, (400 - node.replicationLag) / 4);
                 lagHtml = `
                     <div class="replication-lag">
                         <span>Sync:</span>
-                        <div class="lag-bar">
-                            <div class="lag-fill ${lagClass}" style="width: ${lagPercent}%"></div>
-                        </div>
+                        <div class="lag-bar"><div class="lag-fill ${lagClass}" style="width: ${lagPercent}%"></div></div>
                         <span class="lag-value">${node.replicationLag}ms</span>
                     </div>
                 `;
             }
 
-            // Oplog entries
-            let oplogHtml = '';
-            if (node.oplog.length === 0) {
-                oplogHtml = `
-                    <div class="oplog-empty">
-                        <div class="oplog-empty-icon">📭</div>
-                        <div>No oplog entries yet</div>
-                        <div style="font-size: 0.7rem; margin-top: 5px;">Perform a write operation to see entries</div>
-                    </div>
-                `;
-            } else {
-                oplogHtml = node.oplog.map((entry, i) => {
-                    const opLabel = {
-                        'i': 'INSERT',
-                        'u': 'UPDATE',
-                        'd': 'DELETE',
-                        'c': 'CMD',
-                        'n': 'NOOP'
-                    }[entry.op] || entry.op;
-                    
-                    const opClass = {
-                        'i': 'insert',
-                        'u': 'update',
-                        'd': 'delete',
-                        'c': 'command',
-                        'n': 'noop'
-                    }[entry.op] || '';
-
-                    let docDisplay = '';
-                    if (entry.op === 'i') {
-                        docDisplay = formatDocument(entry.o);
-                    } else if (entry.op === 'u') {
-                        docDisplay = `<span class="key">filter:</span> ${formatDocument(entry.o2)}\n<span class="key">update:</span> ${formatDocument(entry.o)}`;
-                    } else if (entry.op === 'd') {
-                        docDisplay = formatDocument(entry.o);
-                    } else if (entry.op === 'n' && entry.o) {
-                        docDisplay = formatDocument(entry.o);
-                    }
-
+            let oplogHtml = '<div class="oplog-empty">No oplog entries</div>';
+            if (node.oplog.length > 0) {
+                oplogHtml = node.oplog.slice(0, 5).map((entry, i) => {
+                    const opClass = { 'i': 'insert', 'u': 'update', 'd': 'delete', 'n': 'noop' }[entry.op] || '';
+                    const opLabel = { 'i': 'INS', 'u': 'UPD', 'd': 'DEL', 'n': 'NOOP' }[entry.op] || entry.op;
                     return `
                         <div class="oplog-entry ${i === 0 ? 'new' : ''}">
                             <div class="oplog-entry-header">
@@ -1279,71 +2254,47 @@
                                     <span class="op-badge ${opClass}">${opLabel}</span>
                                     <span class="oplog-ns">${entry.ns || 'system'}</span>
                                 </div>
-                                <span class="oplog-ts">${formatTimestamp(entry.ts)}</span>
+                                <span class="oplog-ts">t:${entry.ts.i}</span>
                             </div>
-                            ${docDisplay ? `<div class="oplog-doc">${docDisplay}</div>` : ''}
                         </div>
                     `;
                 }).join('');
             }
 
-            const html = `
-                <div class="node-header">
-                    <div class="node-info">
-                        <div class="node-icon">${icon}</div>
-                        <div class="node-details">
-                            <h3>${node.name}</h3>
-                            <span class="port">:${node.port}</span>
+            return `
+                <div class="node-card ${roleClass}" id="node-${node.id}">
+                    <div class="node-header">
+                        <div class="node-info">
+                            <div class="node-icon">${icon}</div>
+                            <div class="node-details">
+                                <h4>${node.name}</h4>
+                                <span class="port">:${node.port}</span>
+                            </div>
                         </div>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <span class="node-role-badge">${roleLabel}</span>
-                        <div class="node-actions">
-                            <button class="node-btn ${node.status === 'down' ? 'start' : 'kill'}" 
-                                    onclick="toggleNode('${node.id}')" 
-                                    title="${node.status === 'down' ? 'Start' : 'Kill'} node">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="node-role-badge">${roleLabel}</span>
+                            <button class="node-btn ${node.status === 'down' ? 'start' : 'kill'}" onclick="toggleNode('${node.id}')">
                                 ${node.status === 'down' ? '▶' : '✕'}
                             </button>
                         </div>
                     </div>
-                </div>
-                <div class="oplog-section">
-                    <div class="oplog-header">
-                        <div class="oplog-title">
-                            📜 <code>local.oplog.rs</code>
+                    <div class="oplog-section">
+                        <div class="oplog-header">
+                            <div class="oplog-title">📜 <code>oplog.rs</code></div>
+                            <div class="oplog-stats">${node.oplog.length} entries</div>
                         </div>
-                        <div class="oplog-stats">
-                            <div class="oplog-stat">
-                                <span>Entries:</span>
-                                <strong>${node.oplog.length}</strong>
-                            </div>
-                            <div class="oplog-stat">
-                                <span>Size:</span>
-                                <strong>${(node.oplogSize / 1024).toFixed(1)}KB</strong>
-                            </div>
-                        </div>
-                    </div>
-                    ${lagHtml}
-                    <div class="oplog-entries">
-                        ${oplogHtml}
+                        ${lagHtml}
+                        <div class="oplog-entries">${oplogHtml}</div>
                     </div>
                 </div>
             `;
-
-            if (nodeEl) {
-                nodeEl.className = `node-card ${roleClass}`;
-                nodeEl.innerHTML = html;
-            } else {
-                nodeEl = document.createElement('div');
-                nodeEl.id = `node-${node.id}`;
-                nodeEl.className = `node-card ${roleClass}`;
-                nodeEl.innerHTML = html;
-                container.appendChild(nodeEl);
-            }
         }
 
-        function renderAllNodes() {
-            state.nodes.forEach(node => renderNode(node));
+        function renderNode(node) {
+            const nodeEl = document.getElementById(`node-${node.id}`);
+            if (nodeEl) {
+                nodeEl.outerHTML = renderNodeHTML(node);
+            }
         }
 
         function updateClusterStatus() {
@@ -1361,12 +2312,9 @@
             } else if (hasPrimaryNode && majorityExists) {
                 clusterStatus.classList.add('degraded');
                 statusText.textContent = `Degraded (${healthyNodes}/${state.nodes.length})`;
-            } else if (!majorityExists) {
-                clusterStatus.classList.add('critical');
-                statusText.textContent = `No Majority (${healthyNodes}/${getMajorityRequired()} needed)`;
             } else {
                 clusterStatus.classList.add('critical');
-                statusText.textContent = 'No Primary';
+                statusText.textContent = majorityExists ? 'No Primary' : `No Majority (${healthyNodes}/${getMajorityRequired()})`;
             }
         }
 
@@ -1374,37 +2322,30 @@
             const eventLog = document.getElementById('event-log');
             const entry = document.createElement('div');
             entry.className = `log-entry ${type}`;
-            
-            const time = new Date().toLocaleTimeString('en-US', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit', 
-                second: '2-digit',
-                fractionalSecondDigits: 3
-            });
-            
-            entry.innerHTML = `
-                <div class="log-time">${time}</div>
-                <div class="log-msg">${message}</div>
-            `;
-            
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            entry.innerHTML = `<div class="log-time">${time}</div><div class="log-msg">${message}</div>`;
             eventLog.insertBefore(entry, eventLog.firstChild);
-            
-            // Keep only last 20 entries
-            while (eventLog.children.length > 20) {
-                eventLog.removeChild(eventLog.lastChild);
-            }
+            while (eventLog.children.length > 15) eventLog.removeChild(eventLog.lastChild);
         }
 
         // ============ EVENT HANDLERS ============
+        function setupClusterSelector() {
+            document.querySelectorAll('.cluster-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    document.querySelectorAll('.cluster-option').forEach(o => o.classList.remove('selected'));
+                    opt.classList.add('selected');
+                    loadConfig(opt.dataset.config);
+                });
+            });
+        }
+
         function setupWriteConcernHandlers() {
-            const pills = document.querySelectorAll('.wc-pill');
-            pills.forEach(pill => {
+            document.querySelectorAll('.wc-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    pills.forEach(p => p.classList.remove('selected'));
+                    document.querySelectorAll('.wc-pill').forEach(p => p.classList.remove('selected'));
                     pill.classList.add('selected');
                     state.writeConcern = pill.dataset.value;
-                    log(`Write concern set to w:${state.writeConcern}`, 'info');
+                    log(`Write concern: w:${state.writeConcern}`, 'info');
                 });
             });
         }
@@ -1413,28 +2354,21 @@
             const select = document.getElementById('read-preference');
             select.addEventListener('change', () => {
                 state.readPreference = select.value;
-                log(`Read preference set to ${state.readPreference}`, 'info');
+                log(`Read preference: ${state.readPreference}`, 'info');
             });
         }
 
         // ============ INIT ============
         function init() {
-            renderAllNodes();
-            updateClusterStatus();
+            setupClusterSelector();
             setupWriteConcernHandlers();
             setupReadPreferenceHandler();
+            loadConfig('single-region');
             
-            log('Replica set rs0 initialized with 3 nodes', 'success');
-            log(`Majority required for election: ${getMajorityRequired()} of ${state.nodes.length} nodes`, 'info');
-            log('Primary: mongo-1:27017', 'info');
-            log('Ready to accept operations', 'info');
-            
-            // Periodic replication lag decay
             setInterval(() => {
                 state.nodes.forEach(node => {
                     if (node.role === 'secondary' && node.status === 'healthy' && node.replicationLag > 0) {
-                        node.replicationLag = Math.max(0, node.replicationLag - 20);
-                        renderNode(node);
+                        node.replicationLag = Math.max(0, node.replicationLag - 15);
                     }
                 });
             }, 500);
