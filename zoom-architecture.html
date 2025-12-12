@@ -1432,31 +1432,31 @@
                 <div class="control-card">
                     <div class="control-title">📝 Write Concern</div>
                     <div class="wc-pills" id="current-wc-pills">
-                        <div class="wc-pill selected" data-value="1">w:1</div>
-                        <div class="wc-pill" data-value="majority">w:majority</div>
-                        <div class="wc-pill" data-value="all">w:all</div>
+                        <div class="wc-pill selected" data-value="1" onclick="setCurrentWriteConcern('1', this)">w:1</div>
+                        <div class="wc-pill" data-value="majority" onclick="setCurrentWriteConcern('majority', this)">w:majority</div>
+                        <div class="wc-pill" data-value="all" onclick="setCurrentWriteConcern('all', this)">w:all</div>
                     </div>
                 </div>
-            <div class="control-card">
-                <div class="control-title">🇺🇸 Region Failure</div>
-                <div class="action-buttons" id="current-region-buttons">
-                    <button class="region-btn virginia" onclick="currentToggleRegion('virginia')">💥 Kill Virginia</button>
-                    <button class="region-btn ohio" onclick="currentToggleRegion('ohio')">💥 Kill Ohio</button>
+                <div class="control-card">
+                    <div class="control-title">🇺🇸 Region Failure</div>
+                    <div class="action-buttons" id="current-region-buttons">
+                        <button class="region-btn virginia" onclick="currentToggleRegion('virginia')">💥 Kill Virginia</button>
+                        <button class="region-btn ohio" onclick="currentToggleRegion('ohio')">💥 Kill Ohio</button>
+                    </div>
                 </div>
-            </div>
-            <div class="control-card">
-                <div class="control-title">💥 DSP Failure</div>
-                <div class="action-buttons">
-                    <button class="action-btn danger" id="dsp-toggle-btn" onclick="toggleDSP()">💥 Break DSP Sync</button>
+                <div class="control-card">
+                    <div class="control-title">💥 DSP Failure</div>
+                    <div class="action-buttons">
+                        <button class="action-btn danger" id="dsp-toggle-btn" onclick="toggleDSP()">💥 Break DSP Sync</button>
+                    </div>
                 </div>
-            </div>
-            <div class="control-card">
-                <div class="control-title">ℹ️ Failover Mode</div>
-                <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); padding: 6px 0;">
-                    App failover is <strong style="color: var(--mongo-green);">AUTOMATIC</strong><br>
-                    <span style="color: rgba(255,255,255,0.4);">Region failure → Apps auto-activate in surviving region</span>
+                <div class="control-card">
+                    <div class="control-title">ℹ️ Failover Mode</div>
+                    <div style="font-size: 0.75rem; color: rgba(255,255,255,0.6); padding: 6px 0;">
+                        App failover is <strong style="color: var(--mongo-green);">AUTOMATIC</strong><br>
+                        <span style="color: rgba(255,255,255,0.4);">Region failure → Apps auto-activate in surviving region</span>
+                    </div>
                 </div>
-            </div>
                 <div class="control-card">
                     <div class="control-title">🎮 Cluster</div>
                     <div class="action-buttons">
@@ -4236,6 +4236,21 @@
         }
 
         // ============ EVENT HANDLERS ============
+        // Current State write concern handler (called via onclick)
+        function setCurrentWriteConcern(value, element) {
+            document.querySelectorAll('#current-wc-pills .wc-pill').forEach(p => p.classList.remove('selected'));
+            element.classList.add('selected');
+            currentState.writeConcern = value;
+            
+            // Update the connection badges
+            const wcVa = document.getElementById('current-wc-va');
+            const wcOh = document.getElementById('current-wc-oh');
+            if (wcVa) wcVa.textContent = `w:${currentState.writeConcern}`;
+            if (wcOh) wcOh.textContent = `w:${currentState.writeConcern}`;
+            
+            currentLog(`Write concern: w:${currentState.writeConcern}`, 'info');
+        }
+
         function setupWriteConcernHandlers() {
             // Future State write concern pills
             document.querySelectorAll('#wc-pills .wc-pill').forEach(pill => {
@@ -4244,23 +4259,6 @@
                     pill.classList.add('selected');
                     state.writeConcern = pill.dataset.value;
                     log(`Write concern: w:${state.writeConcern}`, 'info');
-                });
-            });
-            
-            // Current State write concern pills
-            document.querySelectorAll('#current-wc-pills .wc-pill').forEach(pill => {
-                pill.addEventListener('click', () => {
-                    document.querySelectorAll('#current-wc-pills .wc-pill').forEach(p => p.classList.remove('selected'));
-                    pill.classList.add('selected');
-                    currentState.writeConcern = pill.dataset.value;
-                    
-                    // Update the connection badges
-                    const wcVa = document.getElementById('current-wc-va');
-                    const wcOh = document.getElementById('current-wc-oh');
-                    if (wcVa) wcVa.textContent = `w:${currentState.writeConcern}`;
-                    if (wcOh) wcOh.textContent = `w:${currentState.writeConcern}`;
-                    
-                    currentLog(`Write concern: w:${currentState.writeConcern}`, 'info');
                 });
             });
             
