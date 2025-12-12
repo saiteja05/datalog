@@ -4089,18 +4089,90 @@
                 setTimeout(() => primaryEl.classList.remove('receiving'), 500);
             }
             primary.oplogCount++;
-            targetRS.nodes.filter(n => n.role !== 'primary' && n.status === 'healthy').forEach(n => n.oplogCount++);
             renderCurrentState();
             
-            await sleep(300);
+            await sleep(200);
             
-            // Log based on write concern
+            // Get healthy secondaries (non-hidden)
+            const secondaries = targetRS.nodes.filter(n => n.role !== 'primary' && n.status === 'healthy' && !n.hidden);
+            let ackCount = 1; // Primary already acknowledged
+            
+            // w:1 - Acknowledge immediately, replicate in background
             if (currentState.writeConcern === '1') {
                 currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:1 = primary only)`, 'success');
-            } else if (currentState.writeConcern === 'majority') {
-                currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:majority = ${majorityNeeded}/${votingNodes.length} nodes)`, 'success');
-            } else {
-                currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:all = ${votingNodes.length}/${votingNodes.length} nodes)`, 'success');
+                
+                // Background replication (fire-and-forget)
+                if (secondaries.length > 0) {
+                    currentLog(`Replicating to ${secondaries.length} secondaries in background...`, 'info');
+                    secondaries.forEach((sec, i) => {
+                        setTimeout(async () => {
+                            const secEl = document.getElementById(`current-node-${sec.id}`);
+                            if (primaryEl && secEl) {
+                                await animateParticle(primaryEl, secEl, 'replication', 300);
+                            }
+                            if (secEl) {
+                                secEl.classList.add('receiving');
+                                setTimeout(() => secEl.classList.remove('receiving'), 500);
+                            }
+                            sec.oplogCount++;
+                            renderCurrentState();
+                        }, 200 + i * 150);
+                    });
+                }
+            } 
+            // w:majority or w:all - Wait for replication acknowledgment
+            else {
+                let acksNeeded = wcRequired;
+                let acksReceived = 1; // Primary
+                
+                currentLog(`Replicating to secondaries (need ${acksNeeded} acks)...`, 'info');
+                
+                for (let i = 0; i < secondaries.length; i++) {
+                    const sec = secondaries[i];
+                    await sleep(150);
+                    
+                    const secEl = document.getElementById(`current-node-${sec.id}`);
+                    if (primaryEl && secEl) {
+                        await animateParticle(primaryEl, secEl, 'replication', 250);
+                    }
+                    if (secEl) {
+                        secEl.classList.add('receiving');
+                        setTimeout(() => secEl.classList.remove('receiving'), 500);
+                    }
+                    sec.oplogCount++;
+                    acksReceived++;
+                    renderCurrentState();
+                    
+                    // Check if write concern is satisfied
+                    if (acksReceived >= acksNeeded && currentState.writeConcern === 'majority') {
+                        await sleep(100);
+                        currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:majority = ${acksNeeded}/${votingNodes.length} nodes)`, 'success');
+                        
+                        // Continue replicating to remaining secondaries in background
+                        const remaining = secondaries.slice(i + 1);
+                        remaining.forEach((r, j) => {
+                            setTimeout(async () => {
+                                const rEl = document.getElementById(`current-node-${r.id}`);
+                                if (primaryEl && rEl) {
+                                    await animateParticle(primaryEl, rEl, 'replication', 300);
+                                }
+                                if (rEl) {
+                                    rEl.classList.add('receiving');
+                                    setTimeout(() => rEl.classList.remove('receiving'), 500);
+                                }
+                                r.oplogCount++;
+                                renderCurrentState();
+                            }, 100 + j * 150);
+                        });
+                        break;
+                    }
+                }
+                
+                // w:all - acknowledge after all secondaries
+                if (currentState.writeConcern === 'all') {
+                    await sleep(100);
+                    currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:all = ${votingNodes.length}/${votingNodes.length} nodes)`, 'success');
+                }
             }
             
             // DSP two-way sync (async, with lag)
