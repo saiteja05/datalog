@@ -1686,6 +1686,19 @@
                              : state.writeConcern === '1' ? 1 
                              : totalVotingMembers;
             
+            // Determine step 4 content based on write concern
+            let step4Label, step4Detail;
+            if (state.writeConcern === '1') {
+                step4Label = 'Background Replication';
+                step4Detail = `${secondaries.length} secondaries (fire-and-forget, not waited)`;
+            } else if (state.writeConcern === 'majority') {
+                step4Label = 'Replicate to Secondaries';
+                step4Detail = `Need ${majorityNeeded - 1} more acks (majority = ${majorityNeeded} total)`;
+            } else {
+                step4Label = 'Replicate to ALL Secondaries';
+                step4Detail = `Need all ${secondaries.length} secondaries to ack`;
+            }
+            
             stepsContainer.innerHTML = `
                 <div class="write-flow-step" id="step-1">
                     <span class="step-icon">📝</span>
@@ -1712,10 +1725,10 @@
                     </div>
                 </div>
                 <div class="write-flow-step" id="step-4">
-                    <span class="step-icon">🔄</span>
+                    <span class="step-icon">${state.writeConcern === '1' ? '💨' : '🔄'}</span>
                     <div class="step-content">
-                        <div class="step-label">Replicate to Secondaries</div>
-                        <div class="step-detail">${secondaries.length} secondary node(s) tailing oplog</div>
+                        <div class="step-label">${step4Label}</div>
+                        <div class="step-detail">${step4Detail}</div>
                         <div class="step-nodes" id="replication-nodes">
                             ${secondaries.map(s => `<span class="step-node-badge pending" id="badge-${s.id}">${s.name}</span>`).join('')}
                         </div>
@@ -1725,7 +1738,7 @@
                     <span class="step-icon">✅</span>
                     <div class="step-content">
                         <div class="step-label">Wait for Acknowledgment</div>
-                        <div class="step-detail">w:${state.writeConcern} = ${state.writeConcern === 'majority' ? majorityNeeded + ' nodes (n/2+1 where n=' + totalVotingMembers + ')' : state.writeConcern === '1' ? 'primary only' : 'all ' + totalVotingMembers + ' nodes'}</div>
+                        <div class="step-detail">w:${state.writeConcern} = ${state.writeConcern === 'majority' ? majorityNeeded + ' nodes (n/2+1 where n=' + totalVotingMembers + ')' : state.writeConcern === '1' ? 'primary only (instant)' : 'all ' + totalVotingMembers + ' nodes'}</div>
                         <div class="step-nodes" id="ack-count">
                             <span class="step-node-badge">0 / ${wcRequired}</span>
                         </div>
