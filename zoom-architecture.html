@@ -1429,6 +1429,14 @@
                         <option value="nearest">nearest</option>
                     </select>
                 </div>
+                <div class="control-card">
+                    <div class="control-title">📝 Write Concern</div>
+                    <div class="wc-pills" id="current-wc-pills">
+                        <div class="wc-pill selected" data-value="1">w:1</div>
+                        <div class="wc-pill" data-value="majority">w:majority</div>
+                        <div class="wc-pill" data-value="all">w:all</div>
+                    </div>
+                </div>
             <div class="control-card">
                 <div class="control-title">🇺🇸 Region Failure</div>
                 <div class="action-buttons" id="current-region-buttons">
@@ -1458,6 +1466,12 @@
                 </div>
             </div>
 
+            <div style="text-align: center; margin-bottom: 12px; font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+                <span style="background: rgba(239,71,111,0.1); padding: 4px 12px; border-radius: 12px; border: 1px dashed rgba(239,71,111,0.3);">
+                    👆 <strong>Tip:</strong> Click on any node to simulate failure/recovery
+                </span>
+            </div>
+
             <div class="architecture-layout">
                 <!-- Application Layer -->
                 <div class="app-layer" id="app-layer">
@@ -1481,7 +1495,7 @@
                     
                     <div class="app-connection" id="va-connection">
                         <span class="app-arrow to-va">→</span>
-                        <span class="write-concern-badge">w:1</span>
+                        <span class="write-concern-badge" id="current-wc-va">w:1</span>
                         <div style="font-size: 0.65rem; color: rgba(255,255,255,0.4);">to Virginia RS</div>
                     </div>
                     
@@ -1492,7 +1506,7 @@
                     
                     <div class="app-connection" id="oh-connection">
                         <span class="app-arrow to-oh">←</span>
-                        <span class="write-concern-badge">w:1</span>
+                        <span class="write-concern-badge" id="current-wc-oh">w:1</span>
                         <div style="font-size: 0.65rem; color: rgba(255,255,255,0.4);">to Ohio RS</div>
                     </div>
                     
@@ -1625,6 +1639,7 @@
                         <strong>California:</strong> Priority 0 nodes (DR only, can't become primary) • 
                         <strong>Config Servers:</strong> CSRS replica set stores cluster metadata • 
                         Virginia ↔ Ohio: ~10ms, East ↔ West: ~70ms. w:majority = 3 nodes per shard.
+                        <span style="opacity: 0.7; margin-left: 8px;">• 👆 Click nodes to simulate failure/recovery</span>
                     </div>
                 </div>
             </div>
@@ -2042,6 +2057,7 @@
         const currentState = {
             dspActive: true,
             dspLag: 30,
+            writeConcern: '1', // Default w:1 for current state (typical legacy config)
             regionStatus: { virginia: 'healthy', ohio: 'healthy' },
             // App hosting: VA region hosts (vaMain + ohFailover), OH region hosts (ohMain + vaFailover)
             appStatus: {
@@ -2878,6 +2894,26 @@
             const majorityNeeded = getMajorityRequired(targetShard);
             const wcRequired = state.writeConcern === 'majority' ? majorityNeeded : 
                               state.writeConcern === '1' ? 1 : targetShard.nodes.length;
+
+            // w:all check - if ANY node in the shard is down, write will timeout
+            if (state.writeConcern === 'all') {
+                const downNodes = targetShard.nodes.filter(n => n.status !== 'healthy');
+                if (downNodes.length > 0) {
+                    const downNames = downNodes.map(n => n.name.split('-').slice(-2).join('-')).join(', ');
+                    log(`${operation.toUpperCase()} TIMEOUT: w:all requires all ${targetShard.nodes.length} nodes on ${targetShard.name}`, 'error');
+                    log(`⏳ Waiting indefinitely for: ${downNames}`, 'error');
+                    log(`💡 Reduce write concern or restore nodes to proceed`, 'warning');
+                    
+                    showWriteFlowPanel(operation, targetShard, primary, secondaries, wcRequired);
+                    updateFlowStep(1, true);
+                    await sleep(300);
+                    updateFlowStep(1, false, true);
+                    updateFlowStep(2, true);
+                    await sleep(500);
+                    showWriteResult(false, `✗ TIMEOUT: Waiting for ${downNames} (w:all needs all ${targetShard.nodes.length} nodes)`);
+                    return;
+                }
+            }
 
             const appEl = document.getElementById(appElId);
 
@@ -4013,7 +4049,32 @@
                 return;
             }
             
-            currentLog(`${operation.toUpperCase()} → ${targetRSName} RS`, 'info');
+            // Calculate write concern requirements
+            const votingNodes = targetRS.nodes.filter(n => !n.hidden);
+            const healthyVoting = votingNodes.filter(n => n.status === 'healthy').length;
+            const majorityNeeded = Math.floor(votingNodes.length / 2) + 1;
+            const wcRequired = currentState.writeConcern === 'majority' ? majorityNeeded : 
+                              currentState.writeConcern === '1' ? 1 : votingNodes.length;
+            
+            // w:all check - if ANY voting node is down, write will timeout
+            if (currentState.writeConcern === 'all') {
+                const downNodes = votingNodes.filter(n => n.status !== 'healthy');
+                if (downNodes.length > 0) {
+                    const downNames = downNodes.map(n => n.name).join(', ');
+                    currentLog(`${operation.toUpperCase()} TIMEOUT: w:all requires all ${votingNodes.length} nodes in ${targetRSName} RS`, 'error');
+                    currentLog(`⏳ Waiting indefinitely for: ${downNames}`, 'error');
+                    currentLog(`💡 Reduce write concern or restore nodes to proceed`, 'warning');
+                    return;
+                }
+            }
+            
+            // w:majority check - need majority of voting nodes
+            if (currentState.writeConcern === 'majority' && healthyVoting < majorityNeeded) {
+                currentLog(`${operation.toUpperCase()} FAILED: w:majority requires ${majorityNeeded} nodes, only ${healthyVoting} healthy`, 'error');
+                return;
+            }
+            
+            currentLog(`${operation.toUpperCase()} → ${targetRSName} RS (w:${currentState.writeConcern})`, 'info');
             
             // Animate: App → Primary
             const appEl = document.getElementById(appElId);
@@ -4032,7 +4093,15 @@
             renderCurrentState();
             
             await sleep(300);
-            currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:1)`, 'success');
+            
+            // Log based on write concern
+            if (currentState.writeConcern === '1') {
+                currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:1 = primary only)`, 'success');
+            } else if (currentState.writeConcern === 'majority') {
+                currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:majority = ${majorityNeeded}/${votingNodes.length} nodes)`, 'success');
+            } else {
+                currentLog(`${operation.toUpperCase()} acknowledged by ${targetRSName} RS (w:all = ${votingNodes.length}/${votingNodes.length} nodes)`, 'success');
+            }
             
             // DSP two-way sync (async, with lag)
             const otherDown = otherRS.nodes.every(n => n.status === 'down');
@@ -4168,13 +4237,30 @@
 
         // ============ EVENT HANDLERS ============
         function setupWriteConcernHandlers() {
-            // Write concern pills
-            document.querySelectorAll('.wc-pill').forEach(pill => {
+            // Future State write concern pills
+            document.querySelectorAll('#wc-pills .wc-pill').forEach(pill => {
                 pill.addEventListener('click', () => {
-                    document.querySelectorAll('.wc-pill').forEach(p => p.classList.remove('selected'));
+                    document.querySelectorAll('#wc-pills .wc-pill').forEach(p => p.classList.remove('selected'));
                     pill.classList.add('selected');
                     state.writeConcern = pill.dataset.value;
                     log(`Write concern: w:${state.writeConcern}`, 'info');
+                });
+            });
+            
+            // Current State write concern pills
+            document.querySelectorAll('#current-wc-pills .wc-pill').forEach(pill => {
+                pill.addEventListener('click', () => {
+                    document.querySelectorAll('#current-wc-pills .wc-pill').forEach(p => p.classList.remove('selected'));
+                    pill.classList.add('selected');
+                    currentState.writeConcern = pill.dataset.value;
+                    
+                    // Update the connection badges
+                    const wcVa = document.getElementById('current-wc-va');
+                    const wcOh = document.getElementById('current-wc-oh');
+                    if (wcVa) wcVa.textContent = `w:${currentState.writeConcern}`;
+                    if (wcOh) wcOh.textContent = `w:${currentState.writeConcern}`;
+                    
+                    currentLog(`Write concern: w:${currentState.writeConcern}`, 'info');
                 });
             });
             

@@ -377,6 +377,15 @@
         .node-card.secondary { border-color: var(--node-secondary); }
         .node-card.down { border-color: var(--node-down); opacity: 0.6; }
         .node-card.recovering { border-color: var(--node-recovering); }
+        .node-card.syncing { 
+            border-color: #00b4d8; 
+            animation: syncPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes syncPulse {
+            0%, 100% { box-shadow: 0 0 5px rgba(0, 180, 216, 0.3); }
+            50% { box-shadow: 0 0 15px rgba(0, 180, 216, 0.6); }
+        }
 
         .node-header {
             padding: 12px 14px;
@@ -417,6 +426,7 @@
         .node-card.secondary .node-role-badge { background: var(--node-secondary); color: var(--mongo-forest); }
         .node-card.down .node-role-badge { background: var(--node-down); color: white; }
         .node-card.recovering .node-role-badge { background: var(--node-recovering); color: var(--mongo-forest); }
+        .node-card.syncing .node-role-badge { background: #00b4d8; color: var(--mongo-forest); }
 
         .node-btn {
             width: 28px;
@@ -1187,6 +1197,11 @@
                 <div class="info-desc">All 3 nodes in Virginia (~1ms latency). If the region fails, the entire cluster goes down. Majority required: 2 nodes.</div>
             </div>
         </div>
+        <div style="text-align: center; margin-bottom: 16px; font-size: 0.8rem; color: rgba(255,255,255,0.5);">
+            <span style="background: rgba(0,237,100,0.1); padding: 4px 12px; border-radius: 12px; border: 1px dashed rgba(0,237,100,0.3);">
+                👆 <strong>Tip:</strong> Click on any node to simulate failure/recovery
+            </span>
+        </div>
 
         <!-- Top Controls -->
         <div class="top-section">
@@ -1367,8 +1382,9 @@
         }
 
         function hasMajority() {
-            const healthyVotingMembers = state.nodes.filter(n => n.status === 'healthy' && n.votes > 0).length;
-            return healthyVotingMembers >= getMajorityRequired();
+            // Syncing nodes can vote in elections, so count them too
+            const availableVoters = state.nodes.filter(n => (n.status === 'healthy' || n.status === 'syncing') && n.votes > 0).length;
+            return availableVoters >= getMajorityRequired();
         }
 
         function getRandomCollection() {
@@ -1410,7 +1426,7 @@
                 <div class="info-icon">💡</div>
                 <div class="info-content">
                     <div class="info-title">${config.name} Configuration</div>
-                    <div class="info-desc">${config.description}</div>
+                    <div class="info-desc">${config.description} <span style="opacity: 0.7;">• Click nodes to simulate failure/recovery</span></div>
                 </div>
             `;
         }
@@ -1500,22 +1516,32 @@
             const node = state.nodes.find(n => n.id === nodeId);
             
             if (node.status === 'down') {
+                // Phase 1: Recovering (starting up)
                 node.status = 'recovering';
                 log(`${node.name} is recovering...`, 'warning');
                 renderNode(node);
                 
+                // Phase 2: Syncing (catching up with oplog)
                 setTimeout(() => {
-                    node.status = 'healthy';
+                    node.status = 'syncing';
+                    log(`${node.name} syncing oplog...`, 'info');
                     renderNode(node);
-                    updateClusterStatus();
-                    log(`${node.name} is now healthy`, 'success');
                     
-                    const hasPrimaryNode = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
-                    if (!hasPrimaryNode && hasMajority()) {
-                        log(`Majority restored: ${getMajorityRequired()} nodes available`, 'info');
-                        triggerElection();
-                    }
-                }, 2000);
+                    // Phase 3: Healthy (fully synced)
+                    const syncTime = 3000 + Math.random() * 2000; // 3-5 seconds
+                    setTimeout(() => {
+                        node.status = 'healthy';
+                        renderNode(node);
+                        updateClusterStatus();
+                        log(`${node.name} is now healthy (oplog synced)`, 'success');
+                        
+                        const hasPrimaryNode = state.nodes.some(n => n.role === 'primary' && n.status === 'healthy');
+                        if (!hasPrimaryNode && hasMajority()) {
+                            log(`Majority restored: ${getMajorityRequired()} nodes available`, 'info');
+                            triggerElection();
+                        }
+                    }, syncTime);
+                }, 1500);
             } else {
                 const wasPrimary = node.role === 'primary';
                 node.status = 'down';
@@ -1553,7 +1579,10 @@
             if (state.isElecting) return;
             
             const majorityRequired = getMajorityRequired();
-            const healthyVoters = state.nodes.filter(n => n.status === 'healthy' && n.votes > 0).length;
+            // Syncing nodes can vote but cannot become primary
+            const availableVoters = state.nodes.filter(n => (n.status === 'healthy' || n.status === 'syncing') && n.votes > 0).length;
+            // Only fully healthy nodes can become primary
+            const eligibleCandidates = state.nodes.filter(n => n.status === 'healthy' && n.votes > 0);
             
             state.isElecting = true;
             const modal = document.getElementById('election-modal');
@@ -1565,20 +1594,20 @@
             
             modal.classList.add('visible');
             
-            if (healthyVoters < majorityRequired) {
+            if (availableVoters < majorityRequired) {
                 modalIcon.textContent = '⚠️';
                 modalTitle.textContent = 'Election Failed';
                 electionText.innerHTML = `
                     <strong style="color: var(--node-down);">Cannot elect primary: No majority!</strong><br><br>
-                    Healthy nodes: <strong>${healthyVoters}</strong><br>
+                    Available voters: <strong>${availableVoters}</strong><br>
                     Majority required: <strong>${majorityRequired}</strong> (n/2+1 where n=${state.nodes.length})<br><br>
-                    <span style="font-size: 0.8rem;">⚠️ Cluster is READ-ONLY. Restore ${majorityRequired - healthyVoters} more node(s).</span>
+                    <span style="font-size: 0.8rem;">⚠️ Cluster is READ-ONLY. Restore ${majorityRequired - availableVoters} more node(s).</span>
                 `;
                 progressBar.style.width = '100%';
                 progressBar.style.background = 'var(--node-down)';
                 electionStatus.textContent = 'Writes blocked until majority is restored';
                 
-                log(`Election FAILED: ${healthyVoters}/${majorityRequired} votes (no majority)`, 'error');
+                log(`Election FAILED: ${availableVoters}/${majorityRequired} votes (no majority)`, 'error');
                 
                 setTimeout(() => {
                     modal.classList.remove('visible');
@@ -1591,12 +1620,39 @@
                 return;
             }
             
+            // Check if any healthy node can become primary
+            if (eligibleCandidates.length === 0) {
+                modalIcon.textContent = '⚠️';
+                modalTitle.textContent = 'Election Failed';
+                electionText.innerHTML = `
+                    <strong style="color: var(--node-down);">No eligible candidates!</strong><br><br>
+                    Available voters: <strong>${availableVoters}</strong> (majority OK)<br>
+                    Eligible candidates: <strong>0</strong> (all syncing)<br><br>
+                    <span style="font-size: 0.8rem;">⏳ Waiting for nodes to finish syncing...</span>
+                `;
+                progressBar.style.width = '100%';
+                progressBar.style.background = '#00b4d8';
+                electionStatus.textContent = 'Syncing nodes cannot become primary';
+                
+                log(`Election WAITING: nodes still syncing`, 'warning');
+                
+                setTimeout(() => {
+                    modal.classList.remove('visible');
+                    state.isElecting = false;
+                    progressBar.style.width = '0%';
+                    progressBar.style.background = 'var(--mongo-green)';
+                    modalIcon.textContent = '🗳️';
+                    modalTitle.textContent = 'Election in Progress';
+                }, 3000);
+                return;
+            }
+            
             electionText.textContent = 'Primary node is down. Initiating automatic failover...';
             
             const steps = [
                 { progress: 15, text: 'Detecting primary failure...' },
                 { progress: 30, text: 'Checking quorum across regions...' },
-                { progress: 50, text: `Quorum OK: ${healthyVoters}/${majorityRequired} votes` },
+                { progress: 50, text: `Quorum OK: ${availableVoters}/${majorityRequired} votes` },
                 { progress: 70, text: 'Candidates voting...' },
                 { progress: 90, text: `Majority achieved!` },
                 { progress: 100, text: 'New primary elected!' }
@@ -1615,7 +1671,7 @@
                         .filter(n => n.status === 'healthy' && n.votes > 0)
                         .sort((a, b) => b.priority - a.priority);
                     
-                    if (candidates.length >= majorityRequired) {
+                    if (candidates.length > 0) {
                         candidates[0].role = 'primary';
                         
                         const noopEntry = {
@@ -1624,7 +1680,7 @@
                             op: 'n',
                             ns: '',
                             wall: new Date().toISOString(),
-                            o: { msg: 'new primary', term: state.electionTerm, votes: healthyVoters }
+                            o: { msg: 'new primary', term: state.electionTerm, votes: availableVoters }
                         };
                         addToOplog(candidates[0], noopEntry);
                         
@@ -1869,6 +1925,26 @@
             const wcRequired = state.writeConcern === 'majority' ? majorityNeeded 
                              : state.writeConcern === '1' ? 1 
                              : totalVotingMembers; // w:all = all voting members
+
+            // w:all check - if ANY voting node is down, write will timeout
+            if (state.writeConcern === 'all') {
+                const downNodes = state.nodes.filter(n => n.votes > 0 && n.status !== 'healthy');
+                if (downNodes.length > 0) {
+                    const downNames = downNodes.map(n => n.name).join(', ');
+                    log(`${operation.toUpperCase()} TIMEOUT: w:all requires all ${totalVotingMembers} nodes`, 'error');
+                    log(`⏳ Waiting indefinitely for: ${downNames}`, 'error');
+                    log(`💡 Reduce write concern or restore nodes to proceed`, 'warning');
+                    
+                    showWriteFlowPanel(operation);
+                    updateFlowStep(1, true);
+                    await new Promise(r => setTimeout(r, 300));
+                    updateFlowStep(1, false, true);
+                    updateFlowStep(2, true);
+                    await new Promise(r => setTimeout(r, 500));
+                    showWriteResult(false, `✗ TIMEOUT: Waiting for ${downNames} (w:all needs all ${totalVotingMembers} nodes)`);
+                    return;
+                }
+            }
 
             showWriteFlowPanel(operation);
             let ackCount = 0;
@@ -2243,8 +2319,12 @@
         }
 
         function renderNodeHTML(node) {
-            const roleClass = node.status === 'down' ? 'down' : node.status === 'recovering' ? 'recovering' : node.role;
-            const roleLabel = node.status === 'down' ? 'DOWN' : node.status === 'recovering' ? 'RECOVERING' : node.role.toUpperCase();
+            const roleClass = node.status === 'down' ? 'down' : 
+                             node.status === 'recovering' ? 'recovering' : 
+                             node.status === 'syncing' ? 'syncing' : node.role;
+            const roleLabel = node.status === 'down' ? 'DOWN' : 
+                             node.status === 'recovering' ? 'RECOVERING' : 
+                             node.status === 'syncing' ? '🔄 SYNCING' : node.role.toUpperCase();
             const icon = node.role === 'primary' ? '👑' : '📋';
 
             let lagHtml = '';
