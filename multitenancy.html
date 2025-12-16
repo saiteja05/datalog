@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Multi-Tenancy Strategies - Interactive Demo</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0e14;
+            --bg-card: #131920;
+            --bg-card-alt: #1a2230;
+            --border: #2a3545;
+            --text-primary: #e6edf3;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-green: #00ed64;
+            --accent-green-dim: rgba(0, 237, 100, 0.15);
+            --accent-blue: #3b82f6;
+            --accent-blue-dim: rgba(59, 130, 246, 0.15);
+            --accent-purple: #a855f7;
+            --accent-purple-dim: rgba(168, 85, 247, 0.15);
+            --accent-orange: #f97316;
+            --accent-orange-dim: rgba(249, 115, 22, 0.15);
+            --accent-cyan: #06b6d4;
+            --accent-cyan-dim: rgba(6, 182, 212, 0.15);
+            --accent-pink: #ec4899;
+            --accent-pink-dim: rgba(236, 72, 153, 0.15);
+            --accent-red: #ef4444;
+            --accent-red-dim: rgba(239, 68, 68, 0.15);
+            --accent-yellow: #eab308;
+            --accent-yellow-dim: rgba(234, 179, 8, 0.15);
+            --accent-teal: #14b8a6;
+            --accent-teal-dim: rgba(20, 184, 166, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 237, 100, 0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 50%, rgba(59, 130, 246, 0.06), transparent),
+                radial-gradient(ellipse 60% 40% at 0% 80%, rgba(168, 85, 247, 0.06), transparent);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1500px;
+            margin: 0 auto;
+            padding: 1.5rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .logo {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .logo svg {
+            width: 36px;
+            height: 36px;
+        }
+
+        .logo-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.4rem;
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        /* Strategy Tabs */
+        .strategy-tabs {
+            display: flex;
+            justify-content: center;
+            gap: 0.4rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .strategy-tab {
+            padding: 0.6rem 1rem;
+            border: 2px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .strategy-tab:hover {
+            border-color: var(--accent-green);
+            color: var(--text-primary);
+        }
+
+        .strategy-tab.active {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .strategy-tab.sharding {
+            border-color: var(--accent-teal);
+        }
+
+        .strategy-tab.sharding.active {
+            border-color: var(--accent-teal);
+            background: var(--accent-teal-dim);
+            color: var(--accent-teal);
+        }
+
+        .tab-badge {
+            background: var(--accent-teal);
+            color: var(--bg-dark);
+            font-size: 0.55rem;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            margin-left: 0.4rem;
+            font-weight: 700;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 1000px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Control Panel */
+        .control-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem;
+            height: fit-content;
+            position: sticky;
+            top: 1rem;
+        }
+
+        .panel-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tenant-selector {
+            margin-bottom: 1rem;
+        }
+
+        .tenant-selector label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tenant-buttons {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .tenant-btn {
+            flex: 1;
+            padding: 0.5rem;
+            border: 2px solid var(--border);
+            background: var(--bg-card-alt);
+            color: var(--text-secondary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tenant-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .tenant-btn.active {
+            color: white;
+        }
+
+        .tenant-btn[data-tenant="A"].active {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-dim);
+            color: var(--accent-blue);
+        }
+
+        .tenant-btn[data-tenant="B"].active {
+            border-color: var(--accent-purple);
+            background: var(--accent-purple-dim);
+            color: var(--accent-purple);
+        }
+
+        .tenant-btn[data-tenant="C"].active {
+            border-color: var(--accent-orange);
+            background: var(--accent-orange-dim);
+            color: var(--accent-orange);
+        }
+
+        /* Region selector for zone sharding */
+        .region-info {
+            background: var(--bg-card-alt);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+            font-size: 0.7rem;
+        }
+
+        .region-info .region-label {
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .region-info .region-value {
+            color: var(--accent-teal);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        /* Operations */
+        .operations {
+            margin-bottom: 1rem;
+        }
+
+        .operations label {
+            display: block;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .op-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+        }
+
+        .op-btn {
+            padding: 0.6rem;
+            border: 2px solid var(--border);
+            background: var(--bg-card-alt);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.3rem;
+        }
+
+        .op-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .op-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .op-btn.insert { border-color: var(--accent-green); color: var(--accent-green); }
+        .op-btn.insert:hover:not(:disabled) { background: var(--accent-green-dim); }
+
+        .op-btn.read { border-color: var(--accent-blue); color: var(--accent-blue); }
+        .op-btn.read:hover:not(:disabled) { background: var(--accent-blue-dim); }
+
+        .op-btn.update { border-color: var(--accent-yellow); color: var(--accent-yellow); }
+        .op-btn.update:hover:not(:disabled) { background: var(--accent-yellow-dim); }
+
+        .op-btn.delete { border-color: var(--accent-red); color: var(--accent-red); }
+        .op-btn.delete:hover:not(:disabled) { background: var(--accent-red-dim); }
+
+        /* Activity Log */
+        .activity-log {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .log-entry {
+            padding: 0.4rem 0.6rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .log-time {
+            color: var(--text-muted);
+            margin-right: 0.4rem;
+        }
+
+        .log-op {
+            font-weight: 600;
+            margin-right: 0.4rem;
+        }
+
+        .log-op.insert { color: var(--accent-green); }
+        .log-op.read { color: var(--accent-blue); }
+        .log-op.update { color: var(--accent-yellow); }
+        .log-op.delete { color: var(--accent-red); }
+
+        .log-msg {
+            color: var(--text-secondary);
+        }
+
+        /* Visualization Area */
+        .viz-area {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            position: relative;
+            overflow: hidden;
+            min-height: 520px;
+        }
+
+        .viz-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .viz-title .badge {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+            padding: 0.15rem 0.5rem;
+            border-radius: 10px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .viz-title .badge.sharding {
+            background: var(--accent-teal-dim);
+            color: var(--accent-teal);
+        }
+
+        /* Architecture Visualization */
+        .architecture-viz {
+            position: relative;
+            width: 100%;
+            height: 440px;
+        }
+
+        /* App Layer */
+        .app-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 1.5rem;
+        }
+
+        .app-box {
+            background: var(--bg-card-alt);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .app-box.active {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 20px rgba(6, 182, 212, 0.3);
+        }
+
+        .app-icon {
+            font-size: 1.3rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .app-label {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        /* Data Packet */
+        .data-packet {
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background: var(--accent-green);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 0 20px var(--accent-green);
+            opacity: 0;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        .data-packet.insert { background: var(--accent-green); box-shadow: 0 0 20px var(--accent-green); }
+        .data-packet.read { background: var(--accent-blue); box-shadow: 0 0 20px var(--accent-blue); }
+        .data-packet.update { background: var(--accent-yellow); box-shadow: 0 0 20px var(--accent-yellow); }
+        .data-packet.delete { background: var(--accent-red); box-shadow: 0 0 20px var(--accent-red); }
+
+        /* Router Layer */
+        .router-layer {
+            position: absolute;
+            top: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .router-box {
+            background: linear-gradient(135deg, var(--bg-card-alt), var(--bg-dark));
+            border: 2px solid var(--accent-cyan);
+            border-radius: 10px;
+            padding: 0.75rem 1.5rem;
+            text-align: center;
+        }
+
+        .router-box.sharding {
+            border-color: var(--accent-teal);
+        }
+
+        .router-box.processing {
+            animation: pulse 0.5s ease infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(6, 182, 212, 0.3); }
+            50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.6); }
+        }
+
+        .router-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .router-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+        }
+
+        .router-box.sharding .router-name {
+            color: var(--accent-teal);
+        }
+
+        /* Shard/Zone Layer */
+        .shard-layer {
+            position: absolute;
+            top: 180px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .shard-box {
+            background: var(--bg-card-alt);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            min-width: 140px;
+            transition: all 0.3s ease;
+        }
+
+        .shard-box.active {
+            transform: scale(1.02);
+        }
+
+        .shard-box.zone-us {
+            border-color: var(--accent-blue);
+        }
+
+        .shard-box.zone-us.active {
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+        }
+
+        .shard-box.zone-eu {
+            border-color: var(--accent-purple);
+        }
+
+        .shard-box.zone-eu.active {
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+        }
+
+        .shard-box.zone-apac {
+            border-color: var(--accent-orange);
+        }
+
+        .shard-box.zone-apac.active {
+            box-shadow: 0 0 20px rgba(249, 115, 22, 0.4);
+        }
+
+        .shard-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .shard-icon {
+            font-size: 1rem;
+        }
+
+        .shard-name {
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .zone-tag {
+            font-size: 0.55rem;
+            padding: 0.1rem 0.3rem;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .zone-tag.us { background: var(--accent-blue-dim); color: var(--accent-blue); }
+        .zone-tag.eu { background: var(--accent-purple-dim); color: var(--accent-purple); }
+        .zone-tag.apac { background: var(--accent-orange-dim); color: var(--accent-orange); }
+
+        .range-tag {
+            font-size: 0.55rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Database Layer */
+        .db-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .db-box {
+            background: var(--bg-card-alt);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            min-width: 160px;
+            max-width: 200px;
+            transition: all 0.3s ease;
+        }
+
+        .db-box.active {
+            transform: scale(1.02);
+        }
+
+        .db-box.tenant-a.active { border-color: var(--accent-blue); box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        .db-box.tenant-b.active { border-color: var(--accent-purple); box-shadow: 0 0 20px rgba(168, 85, 247, 0.3); }
+        .db-box.tenant-c.active { border-color: var(--accent-orange); box-shadow: 0 0 20px rgba(249, 115, 22, 0.3); }
+        .db-box.shared.active { border-color: var(--accent-green); box-shadow: 0 0 20px rgba(0, 237, 100, 0.3); }
+
+        .db-header {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .db-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .db-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--accent-green);
+        }
+
+        .collection-box {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 0.4rem;
+            margin-bottom: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            transition: all 0.3s ease;
+        }
+
+        .collection-box:last-child {
+            margin-bottom: 0;
+        }
+
+        .collection-box.highlight {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+        }
+
+        .collection-box.highlight-blue {
+            border-color: var(--accent-blue);
+            background: var(--accent-blue-dim);
+        }
+
+        .collection-box.highlight-yellow {
+            border-color: var(--accent-yellow);
+            background: var(--accent-yellow-dim);
+        }
+
+        .collection-box.highlight-red {
+            border-color: var(--accent-red);
+            background: var(--accent-red-dim);
+        }
+
+        .col-name {
+            color: var(--text-primary);
+            margin-bottom: 0.2rem;
+            font-weight: 500;
+            font-size: 0.6rem;
+        }
+
+        .doc-count {
+            color: var(--text-muted);
+            font-size: 0.55rem;
+        }
+
+        .doc-list {
+            margin-top: 0.4rem;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+
+        .doc-item {
+            padding: 0.2rem 0;
+            color: var(--text-muted);
+            font-size: 0.55rem;
+            border-top: 1px dashed var(--border);
+        }
+
+        .doc-item:first-child {
+            border-top: none;
+        }
+
+        .doc-item.new {
+            animation: newDoc 0.5s ease;
+            color: var(--accent-green);
+        }
+
+        .doc-item.deleted {
+            animation: deleteDoc 0.5s ease forwards;
+        }
+
+        @keyframes newDoc {
+            from { background: var(--accent-green-dim); transform: translateX(-10px); }
+            to { background: transparent; transform: translateX(0); }
+        }
+
+        @keyframes deleteDoc {
+            to { opacity: 0; height: 0; padding: 0; }
+        }
+
+        .doc-key { color: var(--accent-cyan); }
+        .doc-value { color: var(--accent-orange); }
+        .doc-tenant { color: var(--accent-purple); }
+
+        /* Strategy Info */
+        .strategy-info {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .info-card {
+            background: var(--bg-card-alt);
+            border-radius: 8px;
+            padding: 0.75rem;
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .info-card.warning {
+            border-left-color: var(--accent-orange);
+        }
+
+        .info-card.sharding {
+            border-left-color: var(--accent-teal);
+        }
+
+        .info-card h4 {
+            font-size: 0.8rem;
+            color: var(--text-primary);
+            margin-bottom: 0.4rem;
+        }
+
+        .info-card p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Toast Notification */
+        .toast {
+            position: fixed;
+            bottom: 1.5rem;
+            right: 1.5rem;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
+        .toast-icon {
+            font-size: 1.25rem;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 0.15rem;
+        }
+
+        .toast-msg {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .toast.success { border-left: 3px solid var(--accent-green); }
+        .toast.info { border-left: 3px solid var(--accent-blue); }
+        .toast.warning { border-left: 3px solid var(--accent-yellow); }
+        .toast.error { border-left: 3px solid var(--accent-red); }
+
+        /* Code Display */
+        .code-display {
+            background: #0d1117;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 0.75rem;
+        }
+
+        .code-header {
+            background: var(--bg-card-alt);
+            padding: 0.4rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .code-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .code-dot.red { background: #ff5f56; }
+        .code-dot.yellow { background: #ffbd2e; }
+        .code-dot.green { background: #27ca40; }
+
+        .code-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-left: 0.4rem;
+        }
+
+        .code-body {
+            padding: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            overflow-x: auto;
+        }
+
+        .code-body .comment { color: #6e7681; }
+        .code-body .keyword { color: #ff7b72; }
+        .code-body .string { color: #a5d6ff; }
+        .code-body .function { color: #d2a8ff; }
+        .code-body .variable { color: #ffa657; }
+        .code-body .property { color: #79c0ff; }
+
+        /* Comparison Table */
+        .comparison-section {
+            margin-top: 1.5rem;
+        }
+
+        .comparison-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: var(--bg-card);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.6rem 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .comparison-table th {
+            background: var(--bg-card-alt);
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.7rem;
+        }
+
+        .comparison-table th.sharding {
+            color: var(--accent-teal);
+        }
+
+        .comparison-table td {
+            color: var(--text-secondary);
+        }
+
+        .comparison-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .comparison-table tbody tr:hover {
+            background: rgba(0, 237, 100, 0.03);
+        }
+
+        .rating {
+            display: flex;
+            gap: 2px;
+        }
+
+        .rating-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--border);
+        }
+
+        .rating-dot.filled { background: var(--accent-green); }
+        .rating-dot.medium { background: var(--accent-orange); }
+        .rating-dot.teal { background: var(--accent-teal); }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo">
+                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M32 4C16.536 4 4 16.536 4 32s12.536 28 28 28 28-12.536 28-28S47.464 4 32 4z" fill="#00684a"/>
+                    <path d="M32.8 14.2c-.2-1.3-2-1.3-2.2 0l-1.2 8.3c-.3 1.8-1.8 3.2-3.6 3.4l-8.3 1c-1.3.2-1.3 2 0 2.2l8.3 1c1.8.2 3.3 1.6 3.6 3.4l1.2 8.3c.2 1.3 2 1.3 2.2 0l1.2-8.3c.3-1.8 1.8-3.2 3.6-3.4l8.3-1c1.3-.2 1.3-2 0-2.2l-8.3-1c-1.8-.2-3.3-1.6-3.6-3.4l-1.2-8.3z" fill="#00ed64"/>
+                    <circle cx="32" cy="32" r="3" fill="#fff"/>
+                </svg>
+                <span class="logo-text">MongoDB</span>
+            </div>
+            <h1>Multi-Tenancy Strategies</h1>
+            <p class="subtitle">Interactive visualization of data flow patterns</p>
+        </header>
+
+        <!-- Strategy Tabs -->
+        <div class="strategy-tabs">
+            <button class="strategy-tab active" data-strategy="database">🗄️ Database/Tenant</button>
+            <button class="strategy-tab" data-strategy="collection">📁 Collection/Tenant</button>
+            <button class="strategy-tab" data-strategy="shared">🔗 Shared Collection</button>
+            <button class="strategy-tab" data-strategy="hybrid">⚡ Hybrid</button>
+            <button class="strategy-tab sharding" data-strategy="zone">🌍 Zone Sharding<span class="tab-badge">SCALE</span></button>
+            <button class="strategy-tab sharding" data-strategy="range">📊 Range Sharding<span class="tab-badge">SCALE</span></button>
+        </div>
+
+        <div class="main-layout">
+            <!-- Control Panel -->
+            <div class="control-panel">
+                <div class="panel-title">🎮 Control Panel</div>
+
+                <div class="tenant-selector">
+                    <label>Select Tenant</label>
+                    <div class="tenant-buttons">
+                        <button class="tenant-btn active" data-tenant="A">🏢 A</button>
+                        <button class="tenant-btn" data-tenant="B">🏬 B</button>
+                        <button class="tenant-btn" data-tenant="C">🏭 C</button>
+                    </div>
+                    <div class="region-info" id="region-info" style="display: none;">
+                        <div class="region-label">Assigned Region:</div>
+                        <div class="region-value" id="region-value">🇺🇸 US-EAST</div>
+                    </div>
+                </div>
+
+                <div class="operations">
+                    <label>Perform Operation</label>
+                    <div class="op-grid">
+                        <button class="op-btn insert" data-op="insert">➕ INSERT</button>
+                        <button class="op-btn read" data-op="read">📖 READ</button>
+                        <button class="op-btn update" data-op="update">✏️ UPDATE</button>
+                        <button class="op-btn delete" data-op="delete">🗑️ DELETE</button>
+                    </div>
+                </div>
+
+                <div class="operations">
+                    <label>Activity Log</label>
+                </div>
+                <div class="activity-log" id="activity-log">
+                    <div class="log-entry">
+                        <span class="log-time">--:--:--</span>
+                        <span class="log-msg">Ready. Select tenant & operation.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Area -->
+            <div class="viz-area">
+                <div class="viz-title">
+                    <span id="strategy-title">Database per Tenant</span>
+                    <span class="badge" id="strategy-badge">ISOLATED</span>
+                </div>
+
+                <div class="architecture-viz" id="architecture">
+                    <!-- Content injected by JS -->
+                </div>
+
+                <!-- Data Packets -->
+                <div class="data-packet" id="packet-down">📄</div>
+                <div class="data-packet" id="packet-up">📄</div>
+            </div>
+        </div>
+
+        <!-- Strategy Info -->
+        <div class="strategy-info">
+            <div class="info-grid" id="info-grid">
+                <!-- Content injected by JS -->
+            </div>
+
+            <div class="code-display">
+                <div class="code-header">
+                    <span class="code-dot red"></span>
+                    <span class="code-dot yellow"></span>
+                    <span class="code-dot green"></span>
+                    <span class="code-title" id="code-title">connection.js</span>
+                </div>
+                <div class="code-body" id="code-body">
+                    <!-- Code injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="comparison-section">
+            <h2 class="comparison-title">📊 Strategy Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Aspect</th>
+                        <th>DB/Tenant</th>
+                        <th>Collection/Tenant</th>
+                        <th>Shared</th>
+                        <th class="sharding">Zone Sharding</th>
+                        <th class="sharding">Range Sharding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Data Isolation</strong></td>
+                        <td><div class="rating"><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot filled"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot"></span><span class="rating-dot"></span><span class="rating-dot"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot"></span></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Horizontal Scale</strong></td>
+                        <td><div class="rating"><span class="rating-dot medium"></span><span class="rating-dot medium"></span><span class="rating-dot"></span><span class="rating-dot"></span><span class="rating-dot"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot"></span><span class="rating-dot"></span><span class="rating-dot"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot filled"></span><span class="rating-dot"></span><span class="rating-dot"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span></div></td>
+                        <td><div class="rating"><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span><span class="rating-dot teal"></span></div></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Data Locality</strong></td>
+                        <td>Per DB</td>
+                        <td>Per Collection</td>
+                        <td>Mixed</td>
+                        <td>🌍 By Region</td>
+                        <td>📊 By Range</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Compliance/GDPR</strong></td>
+                        <td>Manual</td>
+                        <td>Manual</td>
+                        <td>Complex</td>
+                        <td>✅ Built-in</td>
+                        <td>Possible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Best For</strong></td>
+                        <td>Enterprise</td>
+                        <td>Mid-Market</td>
+                        <td>Consumer</td>
+                        <td>Global SaaS</td>
+                        <td>Large Tenants</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast">
+        <span class="toast-icon">✅</span>
+        <div class="toast-content">
+            <div class="toast-title">Success</div>
+            <div class="toast-msg">Operation completed</div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentStrategy = 'database';
+        let currentTenant = 'A';
+        let isAnimating = false;
+
+        // Tenant data
+        const tenantData = {
+            A: { users: [{ _id: 'u1', name: 'Alice' }, { _id: 'u2', name: 'Adam' }], orders: [{ _id: 'o1', total: 299 }] },
+            B: { users: [{ _id: 'u1', name: 'Bob' }, { _id: 'u2', name: 'Beth' }], orders: [{ _id: 'o1', total: 199 }] },
+            C: { users: [{ _id: 'u1', name: 'Carol' }], orders: [{ _id: 'o1', total: 99 }, { _id: 'o2', total: 149 }] }
+        };
+
+        // Tenant zones for zone sharding
+        const tenantZones = {
+            A: { zone: 'US', region: '🇺🇸 US-EAST', shard: 'shard-us' },
+            B: { zone: 'EU', region: '🇪🇺 EU-WEST', shard: 'shard-eu' },
+            C: { zone: 'APAC', region: '🇯🇵 APAC-TOKYO', shard: 'shard-apac' }
+        };
+
+        // Tenant ranges for range sharding
+        const tenantRanges = {
+            A: { range: 'A-I', shard: 'shard-1' },
+            B: { range: 'J-R', shard: 'shard-2' },
+            C: { range: 'S-Z', shard: 'shard-3' }
+        };
+
+        // Strategy configurations
+        const strategies = {
+            database: {
+                title: 'Database per Tenant',
+                badge: 'ISOLATED',
+                badgeClass: '',
+                info: [
+                    { title: '✓ Complete Isolation', text: 'Each tenant has their own database. Maximum security.', cls: '' },
+                    { title: '✓ Easy Backup/Restore', text: 'Backup individual tenant data independently.', cls: '' },
+                    { title: '⚠ Resource Overhead', text: 'Higher memory and connection overhead.', cls: 'warning' }
+                ],
+                code: `<span class="comment">// Database per Tenant</span>
+<span class="keyword">async function</span> <span class="function">getDB</span>(<span class="variable">tenantId</span>) {
+  <span class="keyword">return</span> <span class="variable">client</span>.<span class="function">db</span>(<span class="string">\`tenant_\${tenantId}_db\`</span>);
+}
+
+<span class="keyword">const</span> <span class="variable">db</span> = <span class="keyword">await</span> <span class="function">getDB</span>(<span class="string">'A'</span>);
+<span class="keyword">await</span> <span class="variable">db</span>.<span class="function">collection</span>(<span class="string">'users'</span>).<span class="function">insertOne</span>(<span class="variable">doc</span>);`
+            },
+            collection: {
+                title: 'Collection per Tenant',
+                badge: 'PARTITIONED',
+                badgeClass: '',
+                info: [
+                    { title: '✓ Good Balance', text: 'Isolation without database overhead.', cls: '' },
+                    { title: '✓ Per-Tenant Indexes', text: 'Optimized indexes per tenant.', cls: '' },
+                    { title: '⚠ Namespace Limits', text: '~10K collections on shared clusters.', cls: 'warning' }
+                ],
+                code: `<span class="comment">// Collection per Tenant</span>
+<span class="keyword">function</span> <span class="function">getCollection</span>(<span class="variable">name</span>, <span class="variable">tenantId</span>) {
+  <span class="keyword">return</span> <span class="variable">db</span>.<span class="function">collection</span>(<span class="string">\`\${name}_tenant_\${tenantId}\`</span>);
+}
+
+<span class="keyword">const</span> <span class="variable">users</span> = <span class="function">getCollection</span>(<span class="string">'users'</span>, <span class="string">'A'</span>);
+<span class="keyword">await</span> <span class="variable">users</span>.<span class="function">insertOne</span>(<span class="variable">doc</span>);`
+            },
+            shared: {
+                title: 'Shared Collection',
+                badge: 'SHARED',
+                badgeClass: '',
+                info: [
+                    { title: '✓ Most Efficient', text: 'Single collection, minimal overhead.', cls: '' },
+                    { title: '✓ Unlimited Scale', text: 'No limits on tenant count.', cls: '' },
+                    { title: '⚠ Filter Required', text: 'Must include tenant_id in EVERY query!', cls: 'warning' }
+                ],
+                code: `<span class="comment">// Shared Collection - ALWAYS filter by tenant_id!</span>
+<span class="variable">db</span>.<span class="property">users</span>.<span class="function">createIndex</span>({ <span class="property">tenant_id</span>: <span class="value">1</span> });
+
+<span class="comment">// Safe query wrapper</span>
+<span class="keyword">await</span> <span class="variable">db</span>.<span class="function">collection</span>(<span class="string">'users'</span>).<span class="function">find</span>({
+  <span class="property">tenant_id</span>: <span class="string">'A'</span>,  <span class="comment">// REQUIRED!</span>
+  <span class="property">status</span>: <span class="string">'active'</span>
+});`
+            },
+            hybrid: {
+                title: 'Hybrid Approach',
+                badge: 'TIERED',
+                badgeClass: '',
+                info: [
+                    { title: '✓ Best of All', text: 'Enterprise→DB, Pro→Collection, Free→Shared.', cls: '' },
+                    { title: '✓ Flexible Upgrades', text: 'Tenants can upgrade tiers.', cls: '' },
+                    { title: '⚠ Complex', text: 'Multiple code paths to maintain.', cls: 'warning' }
+                ],
+                code: `<span class="comment">// Hybrid - Route by tier</span>
+<span class="keyword">async function</span> <span class="function">getCollection</span>(<span class="variable">tenant</span>, <span class="variable">name</span>) {
+  <span class="keyword">switch</span> (<span class="variable">tenant</span>.<span class="property">tier</span>) {
+    <span class="keyword">case</span> <span class="string">'enterprise'</span>: <span class="keyword">return</span> <span class="variable">client</span>.<span class="function">db</span>(<span class="string">\`ent_\${tenant.id}\`</span>).<span class="function">collection</span>(<span class="variable">name</span>);
+    <span class="keyword">case</span> <span class="string">'pro'</span>: <span class="keyword">return</span> <span class="variable">db</span>.<span class="function">collection</span>(<span class="string">\`\${name}_\${tenant.id}\`</span>);
+    <span class="keyword">default</span>: <span class="keyword">return</span> <span class="keyword">new</span> <span class="function">TenantCollection</span>(<span class="variable">name</span>, <span class="variable">tenant</span>.<span class="property">id</span>);
+  }
+}`
+            },
+            zone: {
+                title: 'Zone Sharding',
+                badge: 'GEO-DISTRIBUTED',
+                badgeClass: 'sharding',
+                info: [
+                    { title: '🌍 Data Residency', text: 'Keep tenant data in specific geographic regions for GDPR/compliance.', cls: 'sharding' },
+                    { title: '⚡ Low Latency', text: 'Data stored close to users. Reads served from local zone.', cls: 'sharding' },
+                    { title: '📈 Horizontal Scale', text: 'Add shards per region as you grow.', cls: 'sharding' },
+                    { title: '⚠ Zone Config', text: 'Requires careful zone range setup.', cls: 'warning' }
+                ],
+                code: `<span class="comment">// Zone Sharding Setup</span>
+<span class="comment">// 1. Enable sharding on collection</span>
+sh.<span class="function">shardCollection</span>(<span class="string">"mydb.users"</span>, { <span class="property">tenant_id</span>: <span class="value">1</span> });
+
+<span class="comment">// 2. Add zones for geographic regions</span>
+sh.<span class="function">addShardToZone</span>(<span class="string">"shard-us"</span>, <span class="string">"US"</span>);
+sh.<span class="function">addShardToZone</span>(<span class="string">"shard-eu"</span>, <span class="string">"EU"</span>);
+sh.<span class="function">addShardToZone</span>(<span class="string">"shard-apac"</span>, <span class="string">"APAC"</span>);
+
+<span class="comment">// 3. Assign tenant ranges to zones</span>
+sh.<span class="function">updateZoneKeyRange</span>(<span class="string">"mydb.users"</span>,
+  { <span class="property">tenant_id</span>: <span class="string">"tenant_A"</span> },
+  { <span class="property">tenant_id</span>: <span class="string">"tenant_A~"</span> },
+  <span class="string">"US"</span>  <span class="comment">// Tenant A data stays in US</span>
+);`
+            },
+            range: {
+                title: 'Range Sharding',
+                badge: 'RANGE-PARTITIONED',
+                badgeClass: 'sharding',
+                info: [
+                    { title: '📊 Data Co-location', text: 'All tenant data on same shard for efficient queries.', cls: 'sharding' },
+                    { title: '⚡ Query Performance', text: 'Targeted queries go to single shard. No scatter-gather.', cls: 'sharding' },
+                    { title: '📈 Predictable Scaling', text: 'Add shards and rebalance tenant ranges.', cls: 'sharding' },
+                    { title: '⚠ Hot Spots', text: 'Large tenants may need dedicated shard ranges.', cls: 'warning' }
+                ],
+                code: `<span class="comment">// Range Sharding by tenant_id</span>
+<span class="comment">// 1. Enable sharding with range key</span>
+sh.<span class="function">shardCollection</span>(<span class="string">"mydb.users"</span>, { <span class="property">tenant_id</span>: <span class="value">1</span> });
+
+<span class="comment">// 2. Pre-split at tenant boundaries</span>
+sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span>, { <span class="property">tenant_id</span>: <span class="string">"tenant_J"</span> });
+sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span>, { <span class="property">tenant_id</span>: <span class="string">"tenant_S"</span> });
+
+<span class="comment">// Queries route to single shard</span>
+<span class="variable">db</span>.<span class="property">users</span>.<span class="function">find</span>({ <span class="property">tenant_id</span>: <span class="string">"tenant_A"</span> });
+<span class="comment">// → Routes directly to shard-1 (A-I range)</span>`
+            }
+        };
+
+        // Tenant colors
+        const tenantColors = {
+            A: { primary: '#3b82f6', dim: 'rgba(59, 130, 246, 0.15)' },
+            B: { primary: '#a855f7', dim: 'rgba(168, 85, 247, 0.15)' },
+            C: { primary: '#f97316', dim: 'rgba(249, 115, 22, 0.15)' }
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            renderArchitecture();
+            renderInfo();
+            setupEventListeners();
+            updateRegionInfo();
+        });
+
+        function setupEventListeners() {
+            document.querySelectorAll('.strategy-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    if (isAnimating) return;
+                    document.querySelectorAll('.strategy-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentStrategy = tab.dataset.strategy;
+                    renderArchitecture();
+                    renderInfo();
+                    updateRegionInfo();
+                });
+            });
+
+            document.querySelectorAll('.tenant-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (isAnimating) return;
+                    document.querySelectorAll('.tenant-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTenant = btn.dataset.tenant;
+                    updateRegionInfo();
+                });
+            });
+
+            document.querySelectorAll('.op-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    if (isAnimating) return;
+                    performOperation(btn.dataset.op);
+                });
+            });
+        }
+
+        function updateRegionInfo() {
+            const regionInfo = document.getElementById('region-info');
+            const regionValue = document.getElementById('region-value');
+            
+            if (currentStrategy === 'zone') {
+                regionInfo.style.display = 'block';
+                regionValue.textContent = tenantZones[currentTenant].region;
+            } else if (currentStrategy === 'range') {
+                regionInfo.style.display = 'block';
+                regionValue.textContent = `📊 Range: ${tenantRanges[currentTenant].range}`;
+            } else {
+                regionInfo.style.display = 'none';
+            }
+        }
+
+        function renderArchitecture() {
+            const container = document.getElementById('architecture');
+            const strategy = strategies[currentStrategy];
+            
+            document.getElementById('strategy-title').textContent = strategy.title;
+            const badge = document.getElementById('strategy-badge');
+            badge.textContent = strategy.badge;
+            badge.className = `badge ${strategy.badgeClass}`;
+
+            let html = '';
+
+            // App Layer
+            html += `
+                <div class="app-layer">
+                    <div class="app-box" id="app-box">
+                        <div class="app-icon">💻</div>
+                        <div class="app-label">Application</div>
+                    </div>
+                </div>
+            `;
+
+            // Router Layer
+            const routerClass = (currentStrategy === 'zone' || currentStrategy === 'range') ? 'sharding' : '';
+            const routerLabel = (currentStrategy === 'zone' || currentStrategy === 'range') ? 'MONGOS ROUTER' : 'TENANT ROUTER';
+            html += `
+                <div class="router-layer">
+                    <div class="router-box ${routerClass}" id="router-box">
+                        <div class="router-label">${routerLabel}</div>
+                        <div class="router-name" id="router-status">Waiting...</div>
+                    </div>
+                </div>
+            `;
+
+            // Database/Shard Layer
+            if (currentStrategy === 'zone') {
+                html += renderZoneSharding();
+            } else if (currentStrategy === 'range') {
+                html += renderRangeSharding();
+            } else {
+                html += '<div class="db-layer">';
+                if (currentStrategy === 'database') {
+                    ['A', 'B', 'C'].forEach(t => {
+                        html += renderDatabaseBox(t, `tenant_${t.toLowerCase()}_db`, `tenant-${t.toLowerCase()}`);
+                    });
+                } else if (currentStrategy === 'collection') {
+                    html += renderCollectionStrategy();
+                } else if (currentStrategy === 'shared') {
+                    html += renderSharedStrategy();
+                } else if (currentStrategy === 'hybrid') {
+                    html += renderHybridStrategy();
+                }
+                html += '</div>';
+            }
+
+            container.innerHTML = html;
+        }
+
+        function renderZoneSharding() {
+            return `
+                <div class="db-layer" style="flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                        <div class="shard-box zone-us" id="shard-us">
+                            <div class="shard-header">
+                                <span class="shard-icon">🇺🇸</span>
+                                <span class="shard-name">shard-us</span>
+                                <span class="zone-tag us">US Zone</span>
+                            </div>
+                            <div class="collection-box" id="col-users-us">
+                                <div class="col-name">📄 users (tenant A)</div>
+                                <div class="doc-count">${tenantData.A.users.length} docs</div>
+                                <div class="doc-list" id="docs-users-us">
+                                    ${tenantData.A.users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shard-box zone-eu" id="shard-eu">
+                            <div class="shard-header">
+                                <span class="shard-icon">🇪🇺</span>
+                                <span class="shard-name">shard-eu</span>
+                                <span class="zone-tag eu">EU Zone</span>
+                            </div>
+                            <div class="collection-box" id="col-users-eu">
+                                <div class="col-name">📄 users (tenant B)</div>
+                                <div class="doc-count">${tenantData.B.users.length} docs</div>
+                                <div class="doc-list" id="docs-users-eu">
+                                    ${tenantData.B.users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shard-box zone-apac" id="shard-apac">
+                            <div class="shard-header">
+                                <span class="shard-icon">🇯🇵</span>
+                                <span class="shard-name">shard-apac</span>
+                                <span class="zone-tag apac">APAC Zone</span>
+                            </div>
+                            <div class="collection-box" id="col-users-apac">
+                                <div class="col-name">📄 users (tenant C)</div>
+                                <div class="doc-count">${tenantData.C.users.length} docs</div>
+                                <div class="doc-list" id="docs-users-apac">
+                                    ${tenantData.C.users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 0.65rem; color: var(--text-muted);">
+                        🔒 Data residency enforced: EU data stays in EU, US data in US, APAC data in APAC
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderRangeSharding() {
+            return `
+                <div class="db-layer" style="flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+                        <div class="shard-box zone-us" id="shard-1">
+                            <div class="shard-header">
+                                <span class="shard-icon">📦</span>
+                                <span class="shard-name">shard-1</span>
+                                <span class="range-tag">tenant_id: A-I</span>
+                            </div>
+                            <div class="collection-box" id="col-users-s1">
+                                <div class="col-name">📄 users</div>
+                                <div class="doc-count">${tenantData.A.users.length} docs</div>
+                                <div class="doc-list" id="docs-users-s1">
+                                    ${tenantData.A.users.map(u => `<div class="doc-item">{ <span class="doc-tenant">tenant</span>: <span class="doc-value">"A"</span>, <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shard-box zone-eu" id="shard-2">
+                            <div class="shard-header">
+                                <span class="shard-icon">📦</span>
+                                <span class="shard-name">shard-2</span>
+                                <span class="range-tag">tenant_id: J-R</span>
+                            </div>
+                            <div class="collection-box" id="col-users-s2">
+                                <div class="col-name">📄 users</div>
+                                <div class="doc-count">${tenantData.B.users.length} docs</div>
+                                <div class="doc-list" id="docs-users-s2">
+                                    ${tenantData.B.users.map(u => `<div class="doc-item">{ <span class="doc-tenant">tenant</span>: <span class="doc-value">"B"</span>, <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shard-box zone-apac" id="shard-3">
+                            <div class="shard-header">
+                                <span class="shard-icon">📦</span>
+                                <span class="shard-name">shard-3</span>
+                                <span class="range-tag">tenant_id: S-Z</span>
+                            </div>
+                            <div class="collection-box" id="col-users-s3">
+                                <div class="col-name">📄 users</div>
+                                <div class="doc-count">${tenantData.C.users.length} docs</div>
+                                <div class="doc-list" id="docs-users-s3">
+                                    ${tenantData.C.users.map(u => `<div class="doc-item">{ <span class="doc-tenant">tenant</span>: <span class="doc-value">"C"</span>, <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; font-size: 0.65rem; color: var(--text-muted);">
+                        📊 Queries with tenant_id route to single shard - no scatter-gather!
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderDatabaseBox(tenant, dbName, boxClass) {
+            return `
+                <div class="db-box ${boxClass}" id="db-${tenant}">
+                    <div class="db-header">
+                        <svg class="db-icon" viewBox="0 0 24 24" fill="${tenantColors[tenant].primary}"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        <span class="db-name" style="color: ${tenantColors[tenant].primary}">${dbName}</span>
+                    </div>
+                    <div class="collection-box" id="col-users-${tenant}">
+                        <div class="col-name">📄 users</div>
+                        <div class="doc-count">${tenantData[tenant].users.length} docs</div>
+                        <div class="doc-list" id="docs-users-${tenant}">
+                            ${tenantData[tenant].users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderCollectionStrategy() {
+            return `
+                <div class="db-box shared" id="db-shared">
+                    <div class="db-header">
+                        <svg class="db-icon" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        <span class="db-name">saas_app_db</span>
+                    </div>
+                    ${['A', 'B', 'C'].map(t => `
+                        <div class="collection-box" id="col-users-${t}" style="border-left: 2px solid ${tenantColors[t].primary}">
+                            <div class="col-name">📄 users_tenant_${t.toLowerCase()}</div>
+                            <div class="doc-count">${tenantData[t].users.length} docs</div>
+                            <div class="doc-list" id="docs-users-${t}">
+                                ${tenantData[t].users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function renderSharedStrategy() {
+            return `
+                <div class="db-box shared" id="db-shared" style="min-width: 240px;">
+                    <div class="db-header">
+                        <svg class="db-icon" viewBox="0 0 24 24" fill="var(--accent-green)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        <span class="db-name">saas_app_db</span>
+                    </div>
+                    <div class="collection-box" id="col-users-shared">
+                        <div class="col-name">📄 users <span style="color: var(--accent-green); font-size: 0.5rem;">IDX: tenant_id</span></div>
+                        <div class="doc-count">${Object.values(tenantData).reduce((s, t) => s + t.users.length, 0)} docs</div>
+                        <div class="doc-list" id="docs-users-shared">
+                            ${['A', 'B', 'C'].flatMap(t => tenantData[t].users.map(u => `<div class="doc-item" data-tenant="${t}">{ <span class="doc-tenant">tenant</span>: <span class="doc-value">"${t}"</span>, <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`)).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderHybridStrategy() {
+            return `
+                <div class="db-box tenant-a" id="db-A">
+                    <div class="db-header">
+                        <svg class="db-icon" viewBox="0 0 24 24" fill="${tenantColors.A.primary}"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        <span class="db-name" style="color: ${tenantColors.A.primary}">enterprise_A</span>
+                    </div>
+                    <div style="font-size: 0.55rem; color: var(--text-muted); margin-bottom: 0.3rem;">👑 ENTERPRISE</div>
+                    <div class="collection-box" id="col-users-A">
+                        <div class="col-name">📄 users</div>
+                        <div class="doc-list" id="docs-users-A">
+                            ${tenantData.A.users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="db-box tenant-b" id="db-B">
+                    <div class="db-header">
+                        <svg class="db-icon" viewBox="0 0 24 24" fill="${tenantColors.B.primary}"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        <span class="db-name" style="color: ${tenantColors.B.primary}">pro_tenants</span>
+                    </div>
+                    <div style="font-size: 0.55rem; color: var(--text-muted); margin-bottom: 0.3rem;">⭐ PRO</div>
+                    <div class="collection-box" id="col-users-B" style="border-left: 2px solid ${tenantColors.B.primary}">
+                        <div class="col-name">📄 users_B</div>
+                        <div class="doc-list" id="docs-users-B">
+                            ${tenantData.B.users.map(u => `<div class="doc-item">{ <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+                <div class="db-box tenant-c" id="db-C">
+                    <div class="db-header">
+                        <svg class="db-icon" viewBox="0 0 24 24" fill="${tenantColors.C.primary}"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/></svg>
+                        <span class="db-name" style="color: ${tenantColors.C.primary}">free_tier</span>
+                    </div>
+                    <div style="font-size: 0.55rem; color: var(--text-muted); margin-bottom: 0.3rem;">🆓 FREE</div>
+                    <div class="collection-box" id="col-users-C">
+                        <div class="col-name">📄 users (shared)</div>
+                        <div class="doc-list" id="docs-users-C">
+                            ${tenantData.C.users.map(u => `<div class="doc-item">{ <span class="doc-tenant">tenant</span>: <span class="doc-value">"C"</span>, <span class="doc-key">name</span>: <span class="doc-value">"${u.name}"</span> }</div>`).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderInfo() {
+            const strategy = strategies[currentStrategy];
+            document.getElementById('info-grid').innerHTML = strategy.info.map(item => `
+                <div class="info-card ${item.cls}">
+                    <h4>${item.title}</h4>
+                    <p>${item.text}</p>
+                </div>
+            `).join('');
+            document.getElementById('code-title').textContent = `${currentStrategy}-strategy.js`;
+            document.getElementById('code-body').innerHTML = strategy.code;
+        }
+
+        async function performOperation(op) {
+            if (isAnimating) return;
+            isAnimating = true;
+
+            const opBtns = document.querySelectorAll('.op-btn');
+            opBtns.forEach(btn => btn.disabled = true);
+
+            const appBox = document.getElementById('app-box');
+            const routerBox = document.getElementById('router-box');
+            const routerStatus = document.getElementById('router-status');
+            const packetDown = document.getElementById('packet-down');
+            const packetUp = document.getElementById('packet-up');
+
+            const opIcons = { insert: '📄', read: '🔍', update: '✏️', delete: '🗑️' };
+            packetDown.textContent = opIcons[op];
+            packetUp.textContent = op === 'read' ? '📦' : '✅';
+            packetDown.className = `data-packet ${op}`;
+            packetUp.className = `data-packet ${op === 'read' ? 'read' : 'insert'}`;
+
+            addLog(op, `${op.toUpperCase()} for Tenant ${currentTenant}`);
+
+            appBox.classList.add('active');
+            await sleep(250);
+            await animatePacket(packetDown, appBox, routerBox, 350);
+
+            routerBox.classList.add('processing');
+            
+            let targetDbId, targetColId, targetDocsId;
+            
+            if (currentStrategy === 'zone') {
+                const zone = tenantZones[currentTenant];
+                routerStatus.textContent = `→ ${zone.region}`;
+                const shardMap = { A: 'us', B: 'eu', C: 'apac' };
+                targetDbId = `shard-${shardMap[currentTenant]}`;
+                targetColId = `col-users-${shardMap[currentTenant]}`;
+                targetDocsId = `docs-users-${shardMap[currentTenant]}`;
+                addLog(op, `Zone routing → ${zone.shard}`);
+            } else if (currentStrategy === 'range') {
+                const range = tenantRanges[currentTenant];
+                routerStatus.textContent = `→ ${range.range} range`;
+                const shardMap = { A: 's1', B: 's2', C: 's3' };
+                targetDbId = `shard-${shardMap[currentTenant].replace('s', '')}`;
+                targetColId = `col-users-${shardMap[currentTenant]}`;
+                targetDocsId = `docs-users-${shardMap[currentTenant]}`;
+                addLog(op, `Range routing → ${range.shard}`);
+            } else if (currentStrategy === 'database') {
+                targetDbId = `db-${currentTenant}`;
+                targetColId = `col-users-${currentTenant}`;
+                targetDocsId = `docs-users-${currentTenant}`;
+                routerStatus.textContent = `→ tenant_${currentTenant.toLowerCase()}_db`;
+            } else if (currentStrategy === 'collection') {
+                targetDbId = 'db-shared';
+                targetColId = `col-users-${currentTenant}`;
+                targetDocsId = `docs-users-${currentTenant}`;
+                routerStatus.textContent = `→ users_tenant_${currentTenant.toLowerCase()}`;
+            } else if (currentStrategy === 'shared') {
+                targetDbId = 'db-shared';
+                targetColId = 'col-users-shared';
+                targetDocsId = 'docs-users-shared';
+                routerStatus.textContent = `→ users {tenant: "${currentTenant}"}`;
+            } else if (currentStrategy === 'hybrid') {
+                targetDbId = `db-${currentTenant}`;
+                targetColId = `col-users-${currentTenant}`;
+                targetDocsId = `docs-users-${currentTenant}`;
+                const tiers = { A: 'Enterprise DB', B: 'Pro Col', C: 'Free Shared' };
+                routerStatus.textContent = `→ ${tiers[currentTenant]}`;
+            }
+
+            await sleep(400);
+
+            const targetDb = document.getElementById(targetDbId);
+            const targetCol = document.getElementById(targetColId);
+            
+            await animatePacket(packetDown, routerBox, targetDb, 350);
+            
+            targetDb.classList.add('active');
+            const highlightClass = { insert: 'highlight', read: 'highlight-blue', update: 'highlight-yellow', delete: 'highlight-red' }[op];
+            targetCol.classList.add(highlightClass);
+            await sleep(250);
+
+            const docsContainer = document.getElementById(targetDocsId);
+            
+            if (op === 'insert') {
+                const newId = 'u' + Math.floor(Math.random() * 900 + 100);
+                tenantData[currentTenant].users.push({ _id: newId, name: 'NewUser' });
+                
+                let docHtml;
+                if (currentStrategy === 'shared' || currentStrategy === 'range' || (currentStrategy === 'hybrid' && currentTenant === 'C')) {
+                    docHtml = `<div class="doc-item new" data-tenant="${currentTenant}">{ <span class="doc-tenant">tenant</span>: <span class="doc-value">"${currentTenant}"</span>, <span class="doc-key">name</span>: <span class="doc-value">"NewUser"</span> }</div>`;
+                } else {
+                    docHtml = `<div class="doc-item new">{ <span class="doc-key">name</span>: <span class="doc-value">"NewUser"</span> }</div>`;
+                }
+                docsContainer.insertAdjacentHTML('beforeend', docHtml);
+                addLog(op, `Inserted doc ${newId}`);
+            } else if (op === 'read') {
+                if (currentStrategy === 'shared') {
+                    docsContainer.querySelectorAll('.doc-item').forEach(item => {
+                        if (item.dataset.tenant === currentTenant) item.style.background = tenantColors[currentTenant].dim;
+                    });
+                } else {
+                    docsContainer.querySelectorAll('.doc-item').forEach(item => {
+                        item.style.background = tenantColors[currentTenant].dim;
+                    });
+                }
+                addLog(op, `Read ${tenantData[currentTenant].users.length} docs`);
+            } else if (op === 'update') {
+                const firstDoc = docsContainer.querySelector('.doc-item');
+                if (firstDoc) firstDoc.style.background = 'var(--accent-yellow-dim)';
+                addLog(op, `Updated 1 doc`);
+            } else if (op === 'delete') {
+                let lastDoc;
+                if (currentStrategy === 'shared') {
+                    const tenantDocs = [...docsContainer.querySelectorAll('.doc-item')].filter(d => d.dataset.tenant === currentTenant);
+                    lastDoc = tenantDocs[tenantDocs.length - 1];
+                } else {
+                    lastDoc = docsContainer.querySelector('.doc-item:last-child');
+                }
+                
+                if (lastDoc && tenantData[currentTenant].users.length > 1) {
+                    lastDoc.classList.add('deleted');
+                    tenantData[currentTenant].users.pop();
+                    await sleep(400);
+                    lastDoc.remove();
+                    addLog(op, `Deleted 1 doc`);
+                } else {
+                    addLog(op, `Min 1 doc required`);
+                }
+            }
+
+            await sleep(350);
+            await animatePacket(packetUp, targetDb, routerBox, 300);
+            routerBox.classList.remove('processing');
+            routerStatus.textContent = 'Complete ✓';
+            await animatePacket(packetUp, routerBox, appBox, 300);
+
+            showToast(op, currentTenant);
+
+            await sleep(400);
+            appBox.classList.remove('active');
+            targetDb.classList.remove('active');
+            targetCol.classList.remove(highlightClass);
+            routerStatus.textContent = 'Waiting...';
+            docsContainer.querySelectorAll('.doc-item').forEach(item => item.style.background = '');
+
+            opBtns.forEach(btn => btn.disabled = false);
+            isAnimating = false;
+        }
+
+        async function animatePacket(packet, from, to, duration) {
+            const fromRect = from.getBoundingClientRect();
+            const toRect = to.getBoundingClientRect();
+            const containerRect = document.getElementById('architecture').getBoundingClientRect();
+
+            const startX = fromRect.left + fromRect.width / 2 - containerRect.left - 18;
+            const startY = fromRect.top + fromRect.height / 2 - containerRect.top - 18;
+            const endX = toRect.left + toRect.width / 2 - containerRect.left - 18;
+            const endY = toRect.top + toRect.height / 2 - containerRect.top - 18;
+
+            packet.style.left = startX + 'px';
+            packet.style.top = startY + 'px';
+            packet.style.opacity = '1';
+            packet.style.transition = `all ${duration}ms ease-in-out`;
+
+            await sleep(30);
+            packet.style.left = endX + 'px';
+            packet.style.top = endY + 'px';
+
+            await sleep(duration);
+            packet.style.opacity = '0';
+        }
+
+        function addLog(op, message) {
+            const log = document.getElementById('activity-log');
+            const time = new Date().toLocaleTimeString();
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">${time}</span><span class="log-op ${op}">[${op.toUpperCase()}]</span><span class="log-msg">${message}</span>`;
+            log.insertBefore(entry, log.firstChild);
+            while (log.children.length > 15) log.removeChild(log.lastChild);
+        }
+
+        function showToast(op, tenant) {
+            const toast = document.getElementById('toast');
+            const icons = { insert: '✅', read: '📖', update: '✏️', delete: '🗑️' };
+            const titles = { insert: 'Insert Complete', read: 'Read Complete', update: 'Update Complete', delete: 'Delete Complete' };
+            const classes = { insert: 'success', read: 'info', update: 'warning', delete: 'error' };
+            
+            toast.querySelector('.toast-icon').textContent = icons[op];
+            toast.querySelector('.toast-title').textContent = titles[op];
+            toast.querySelector('.toast-msg').textContent = `Tenant ${tenant} - ${currentStrategy === 'zone' ? tenantZones[tenant].region : currentStrategy === 'range' ? tenantRanges[tenant].range : ''}`;
+            toast.className = `toast ${classes[op]} show`;
+            
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
