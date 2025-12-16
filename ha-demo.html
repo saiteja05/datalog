@@ -1503,12 +1503,196 @@
             100% { transform: scale(1); }
         }
 
+        /* Statistics Dashboard */
+        .stats-dashboard {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .stat-card {
+            background: rgba(0, 30, 43, 0.7);
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            border-radius: 10px;
+            padding: 12px 16px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--mongo-green);
+            font-family: 'Source Code Pro', monospace;
+        }
+        .stat-value.warning { color: var(--op-update); }
+        .stat-value.error { color: var(--node-down); }
+        .stat-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* Connection String Panel */
+        .conn-string-panel {
+            background: rgba(0, 30, 43, 0.8);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 15px;
+        }
+        .conn-string-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--mongo-green);
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .conn-string-code {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.75rem;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 12px;
+            border-radius: 6px;
+            overflow-x: auto;
+            white-space: nowrap;
+            color: #4ECDC4;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+        .conn-string-code:hover {
+            background: rgba(0, 0, 0, 0.5);
+        }
+        .conn-string-code::after {
+            content: '📋 Click to copy';
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.4);
+            font-family: 'Space Grotesk', sans-serif;
+        }
+        .conn-string-code.copied::after {
+            content: '✓ Copied!';
+            color: var(--mongo-green);
+        }
+
+        /* Read Concern Selector */
+        .read-concern-select {
+            padding: 8px 12px;
+            border-radius: 8px;
+            background: rgba(0, 30, 43, 0.9);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            color: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        /* Keyboard Shortcuts Help */
+        .shortcuts-help {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 30, 43, 0.95);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            border-radius: 12px;
+            padding: 14px 18px;
+            font-size: 0.75rem;
+            z-index: 50;
+            max-width: 200px;
+            transition: all 0.3s;
+            opacity: 0.7;
+        }
+        .shortcuts-help:hover { opacity: 1; }
+        .shortcuts-title {
+            font-weight: 600;
+            color: var(--mongo-green);
+            margin-bottom: 8px;
+            font-size: 0.8rem;
+        }
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 4px 0;
+            color: rgba(255,255,255,0.7);
+        }
+        .shortcut-key {
+            background: rgba(255,255,255,0.1);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Source Code Pro', monospace;
+            font-weight: 600;
+        }
+
+        /* Auto Demo Button */
+        .auto-demo-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #9d4edd 0%, #7b2cbf 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+        .auto-demo-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(157, 78, 221, 0.4);
+        }
+        .auto-demo-btn.running {
+            background: linear-gradient(135deg, #ef476f 0%, #d62839 100%);
+        }
+        .auto-demo-btn .demo-icon {
+            font-size: 1.1rem;
+        }
+
+        /* Demo Narration */
+        .demo-narration {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 30, 43, 0.95);
+            border: 2px solid var(--mongo-green);
+            border-radius: 12px;
+            padding: 16px 24px;
+            max-width: 500px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            animation: narrateIn 0.3s ease-out;
+        }
+        .demo-narration.visible { display: block; }
+        .demo-narration-text {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .demo-narration-step {
+            font-size: 0.75rem;
+            color: var(--mongo-green);
+            margin-top: 8px;
+        }
+        @keyframes narrateIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .shards-container { flex-direction: column; }
             .shard-panel { min-width: 100%; }
             .write-flow-panel { width: 320px; right: 10px; bottom: 10px; }
             .read-flow-panel { width: 340px; left: 10px; bottom: 10px; }
+            .shortcuts-help { display: none; }
         }
     </style>
 </head>
@@ -1669,11 +1853,58 @@
                 </select>
             </div>
             <div class="control-card">
+                <div class="control-title">📖 Read Concern</div>
+                <select class="read-concern-select" id="read-concern">
+                    <option value="local" selected>local</option>
+                    <option value="majority">majority</option>
+                    <option value="linearizable">linearizable</option>
+                </select>
+            </div>
+            <div class="control-card">
                 <div class="control-title">🎮 Cluster</div>
                 <div class="action-buttons">
                     <button class="action-btn danger" onclick="killRandomPrimary()">💥 Kill Primary</button>
                     <button class="action-btn secondary" onclick="resetCluster()">🔄 Reset</button>
                 </div>
+            </div>
+            <div class="control-card">
+                <div class="control-title">🎬 Demo</div>
+                <button class="auto-demo-btn" id="auto-demo-btn" onclick="toggleAutoDemo()">
+                    <span class="demo-icon">▶️</span>
+                    <span id="demo-btn-text">Auto Demo</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Statistics Dashboard -->
+        <div class="stats-dashboard" id="stats-dashboard">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-writes">0</div>
+                <div class="stat-label">Writes</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-reads">0</div>
+                <div class="stat-label">Reads</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-failed">0</div>
+                <div class="stat-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-elections">0</div>
+                <div class="stat-label">Elections</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-avg-latency">0<span style="font-size: 0.8rem;">ms</span></div>
+                <div class="stat-label">Avg Latency</div>
+            </div>
+        </div>
+
+        <!-- Connection String Panel -->
+        <div class="conn-string-panel" id="conn-string-panel">
+            <div class="conn-string-title">🔗 Connection String</div>
+            <div class="conn-string-code" id="conn-string" onclick="copyConnectionString()">
+                mongodb+srv://&lt;username&gt;:&lt;password&gt;@rs0-single.mongodb.net/?retryWrites=true&w=majority&readConcernLevel=local&readPreference=secondaryPreferred
             </div>
         </div>
 
@@ -1935,10 +2166,30 @@
             // Common
             writeConcern: 'majority',
             readPreference: 'secondaryPreferred',
+            readConcern: 'local',
             oplogCounter: 0,
             isElecting: {},
             electionTerm: 1,
-            writeAcknowledged: false
+            writeAcknowledged: false,
+            // Statistics
+            stats: {
+                writes: 0,
+                reads: 0,
+                failed: 0,
+                elections: 0,
+                latencies: [],
+                avgLatency: 0
+            },
+            // Auto Demo
+            demoRunning: false,
+            demoStep: 0
+        };
+        
+        // Latency map (in ms) between regions
+        const LATENCY_MAP = {
+            'region-1': { 'region-1': 1, 'region-2': 10, 'region-3': 70 },
+            'region-2': { 'region-1': 10, 'region-2': 1, 'region-3': 70 },
+            'region-3': { 'region-1': 70, 'region-2': 70, 'region-3': 1 }
         };
 
         // ============ HELPERS ============
@@ -2087,6 +2338,8 @@
             renderRegionButtons();
             updateClusterStatus();
             document.getElementById('event-log').innerHTML = '';
+            resetStats();
+            updateConnectionString();
         }
 
         function updateInfoPanel(config) {
@@ -2428,12 +2681,14 @@
                     newPrimary.role = 'primary';
                     const region = getRegionInfo(newPrimary.region);
                     log(`${shard.name}: ${newPrimary.name} elected PRIMARY (${region.name}, p:${newPrimary.priority})`, 'success');
+                    updateStats('election');
                     
                     setTimeout(() => {
                         modal.classList.remove('visible');
                         state.isElecting[shard.id] = false;
                         renderCluster();
                         updateClusterStatus();
+                        updateConnectionString();
                         progressBar.style.width = '0%';
                     }, 800);
                 }
@@ -2778,6 +3033,7 @@
             // w:1 - done
             if (state.writeConcern === '1') {
                 log(`${operation.toUpperCase()} acknowledged (w:1 = primary only)`, 'success');
+                updateStats('write', 5);
                 updateFlowStep(4, false, true);
                 updateFlowStep(5, false, true);
                 showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:1)`);
@@ -2837,6 +3093,7 @@
                     }
                     const wcName = state.writeConcern === 'majority' ? 'majority' : 'all';
                     log(`${operation.toUpperCase()} acknowledged (w:${wcName} = ${wcRequired} acks)`, 'success');
+                    updateStats('write', 10 + ackCount * 5);
                     showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:${wcName})`);
                 }
                 
@@ -2936,10 +3193,12 @@
             updateFlowStep(4, true);
             
             if (state.writeConcern === '1') {
+                const latency = isCrossRegion ? getLatency(activeMongos.region, primary.region) : 5;
                 log(`${operation.toUpperCase()} acknowledged (w:1 = primary only)`, 'success');
+                updateStats('write', latency);
                 updateFlowStep(4, false, true);
                 updateFlowStep(5, false, true);
-                showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:1)`);
+                showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:1) [${latency}ms]`);
                 
                 // Background replication (fire-and-forget)
                 secondaries.forEach((sec, i) => {
@@ -2987,6 +3246,7 @@
                 
                 if (ackCount >= wcRequired && !majorityReached) {
                     majorityReached = true;
+                    const latency = 10 + ackCount * 5;
                     updateFlowStep(4, false, true);
                     updateFlowStep(5, false, true);
                     if (secEl) {
@@ -2995,7 +3255,8 @@
                     }
                     const wcName = state.writeConcern === 'majority' ? 'majority' : 'all';
                     log(`${operation.toUpperCase()} acknowledged (w:${wcName} = ${wcRequired} acks)`, 'success');
-                    showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:${wcName})`);
+                    updateStats('write', latency);
+                    showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:${wcName}) [${latency}ms]`);
                 }
                 
                 await sleep(100);
@@ -3076,6 +3337,7 @@
             }
             
             log(`READ ← ${targetNode.name} complete`, 'success');
+            updateStats('read', 15);
             
             // Hide read flow panel after delay
             setTimeout(() => {
@@ -3233,7 +3495,9 @@
                 await animateParticle(nodeEl, mongosEl, 'read', 350);
             }
             
-            log(`READ ← ${targetShard.name}/${targetNode.name} complete`, 'success');
+            const readLatency = isCrossRegion ? getLatency(activeMongos.region, targetNode.region) + 10 : 10;
+            log(`READ ← ${targetShard.name}/${targetNode.name} complete [${readLatency}ms]`, 'success');
+            updateStats('read', readLatency);
             
             // Hide read flow panel after delay
             setTimeout(() => {
@@ -3449,6 +3713,7 @@
                     newPrimary.role = 'primary';
                     const region = getRegionInfo(newPrimary.region);
                     log(`rs0: ${newPrimary.name} elected PRIMARY (${region.name}, p:${newPrimary.priority})`, 'success');
+                    updateStats('election');
                     
                     setTimeout(() => {
                         modal.classList.remove('visible');
@@ -3458,6 +3723,7 @@
                         modalTitle.textContent = 'Election in Progress';
                         renderReplicaSet();
                         updateClusterStatus();
+                        updateConnectionString();
                     }, 1500);
                 }
             }, 500);
@@ -3752,17 +4018,248 @@
             });
         }
 
+        function setupReadConcernHandler() {
+            const select = document.getElementById('read-concern');
+            select.addEventListener('change', () => {
+                state.readConcern = select.value;
+                log(`Read concern: ${state.readConcern}`, 'info');
+                updateConnectionString();
+            });
+        }
+
+        // ============ STATISTICS ============
+        function updateStats(type, latency = 0) {
+            if (type === 'write') state.stats.writes++;
+            else if (type === 'read') state.stats.reads++;
+            else if (type === 'failed') state.stats.failed++;
+            else if (type === 'election') state.stats.elections++;
+            
+            if (latency > 0) {
+                state.stats.latencies.push(latency);
+                if (state.stats.latencies.length > 50) state.stats.latencies.shift();
+                state.stats.avgLatency = Math.round(
+                    state.stats.latencies.reduce((a, b) => a + b, 0) / state.stats.latencies.length
+                );
+            }
+            
+            renderStats();
+        }
+
+        function renderStats() {
+            document.getElementById('stat-writes').textContent = state.stats.writes;
+            document.getElementById('stat-reads').textContent = state.stats.reads;
+            const failedEl = document.getElementById('stat-failed');
+            failedEl.textContent = state.stats.failed;
+            failedEl.className = state.stats.failed > 0 ? 'stat-value error' : 'stat-value';
+            document.getElementById('stat-elections').textContent = state.stats.elections;
+            document.getElementById('stat-avg-latency').innerHTML = 
+                `${state.stats.avgLatency}<span style="font-size: 0.8rem;">ms</span>`;
+        }
+
+        function resetStats() {
+            state.stats = { writes: 0, reads: 0, failed: 0, elections: 0, latencies: [], avgLatency: 0 };
+            renderStats();
+        }
+
+        // ============ LATENCY SIMULATION ============
+        function getLatency(fromRegion, toRegion) {
+            const from = fromRegion || 'region-1';
+            const to = toRegion || 'region-1';
+            return LATENCY_MAP[from]?.[to] || LATENCY_MAP['region-1']['region-1'] || 1;
+        }
+
+        async function simulateLatency(fromRegion, toRegion) {
+            const latency = getLatency(fromRegion, toRegion);
+            await sleep(latency);
+            return latency;
+        }
+
+        // ============ CONNECTION STRING ============
+        function updateConnectionString() {
+            const connEl = document.getElementById('conn-string');
+            if (!connEl) return;
+            
+            let connString = '';
+            const wc = state.writeConcern;
+            const rc = state.readConcern;
+            const rp = state.readPreference;
+            
+            // Use mongodb+srv:// format (DNS SRV connection string)
+            const clusterName = state.isSharded ? 'sharded-cluster' : 'rs0';
+            const config = CLUSTER_CONFIGS[state.currentConfig];
+            const regionCount = config?.regions?.length || 1;
+            const regionSuffix = regionCount === 1 ? 'single' : regionCount === 2 ? 'multi' : 'global';
+            
+            connString = `mongodb+srv://<username>:<password>@${clusterName}-${regionSuffix}.mongodb.net/?retryWrites=true&w=${wc}&readConcernLevel=${rc}&readPreference=${rp}`;
+            
+            connEl.textContent = connString;
+        }
+
+        function copyConnectionString() {
+            const connEl = document.getElementById('conn-string');
+            const text = connEl.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                connEl.classList.add('copied');
+                setTimeout(() => connEl.classList.remove('copied'), 2000);
+                log('Connection string copied to clipboard!', 'success');
+            }).catch(() => {
+                log('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        // ============ KEYBOARD SHORTCUTS ============
+        function setupKeyboardShortcuts() {
+            document.addEventListener('keydown', (e) => {
+                // Don't trigger if typing in an input
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+                
+                const key = e.key.toLowerCase();
+                switch (key) {
+                    case 'i': simulateInsert(); break;
+                    case 'u': simulateUpdate(); break;
+                    case 'r': simulateRead(); break;
+                    case 'k': killRandomPrimary(); break;
+                    case 'x': resetCluster(); break;
+                    case 'd': toggleAutoDemo(); break;
+                    case 't': toggleTopology(); break;
+                    case '1': selectConfig(0); break;
+                    case '2': selectConfig(1); break;
+                    case '3': selectConfig(2); break;
+                }
+            });
+        }
+
+        function toggleTopology() {
+            const btns = document.querySelectorAll('.topology-btn');
+            const currentIsRS = document.querySelector('.topology-btn.selected').dataset.type === 'replica-set';
+            const newType = currentIsRS ? 'sharded' : 'replica-set';
+            btns.forEach(b => b.classList.toggle('selected', b.dataset.type === newType));
+            
+            // Update visible options
+            document.querySelectorAll('.cluster-option').forEach(opt => {
+                const isMatch = opt.dataset.type === newType;
+                opt.style.display = isMatch ? '' : 'none';
+            });
+            
+            // Select first option of new type
+            const firstOption = document.querySelector(`.cluster-option[data-type="${newType}"]`);
+            if (firstOption) {
+                document.querySelectorAll('.cluster-option').forEach(o => o.classList.remove('selected'));
+                firstOption.classList.add('selected');
+                loadConfig(firstOption.dataset.config);
+            }
+        }
+
+        function selectConfig(index) {
+            const currentType = document.querySelector('.topology-btn.selected').dataset.type;
+            const options = Array.from(document.querySelectorAll(`.cluster-option[data-type="${currentType}"]`));
+            if (options[index]) {
+                document.querySelectorAll('.cluster-option').forEach(o => o.classList.remove('selected'));
+                options[index].classList.add('selected');
+                loadConfig(options[index].dataset.config);
+            }
+        }
+
+        // ============ AUTO DEMO ============
+        const DEMO_STEPS = [
+            { narration: '👋 Welcome to the MongoDB High Availability Demo!', action: null, duration: 2500 },
+            { narration: '📝 First, let\'s perform a write operation...', action: () => simulateInsert(), duration: 2000 },
+            { narration: '📖 Now let\'s read from the cluster...', action: () => simulateRead(), duration: 2000 },
+            { narration: '💥 Simulating a PRIMARY node failure...', action: () => killRandomPrimary(), duration: 3500 },
+            { narration: '🗳️ MongoDB is electing a new primary...', action: null, duration: 2500 },
+            { narration: '✅ Cluster recovered! Let\'s try another write...', action: () => simulateInsert(), duration: 2500 },
+            { narration: '📊 Notice how the statistics track all operations!', action: null, duration: 2500 },
+            { narration: '🔄 Resetting the cluster for more experiments...', action: () => resetCluster(), duration: 2000 },
+            { narration: '🎉 Demo complete! Try the keyboard shortcuts (I, U, R, K) to explore more.', action: null, duration: 3000 }
+        ];
+
+        function toggleAutoDemo() {
+            if (state.demoRunning) {
+                stopAutoDemo();
+            } else {
+                startAutoDemo();
+            }
+        }
+
+        async function startAutoDemo() {
+            state.demoRunning = true;
+            state.demoStep = 0;
+            
+            const btn = document.getElementById('auto-demo-btn');
+            const btnText = document.getElementById('demo-btn-text');
+            btn.classList.add('running');
+            btnText.textContent = 'Stop Demo';
+            btn.querySelector('.demo-icon').textContent = '⏹️';
+            
+            const narration = document.getElementById('demo-narration');
+            narration.classList.add('visible');
+            
+            resetStats();
+            
+            for (let i = 0; i < DEMO_STEPS.length && state.demoRunning; i++) {
+                state.demoStep = i;
+                const step = DEMO_STEPS[i];
+                
+                document.getElementById('narration-text').textContent = step.narration;
+                document.getElementById('narration-step').textContent = `Step ${i + 1} of ${DEMO_STEPS.length}`;
+                
+                if (step.action) {
+                    await sleep(500);
+                    await step.action();
+                }
+                
+                await sleep(step.duration);
+            }
+            
+            stopAutoDemo();
+        }
+
+        function stopAutoDemo() {
+            state.demoRunning = false;
+            state.demoStep = 0;
+            
+            const btn = document.getElementById('auto-demo-btn');
+            const btnText = document.getElementById('demo-btn-text');
+            btn.classList.remove('running');
+            btnText.textContent = 'Auto Demo';
+            btn.querySelector('.demo-icon').textContent = '▶️';
+            
+            document.getElementById('demo-narration').classList.remove('visible');
+        }
+
         // ============ INIT ============
         function init() {
             setupTopologyToggle();
             setupClusterSelector();
             setupWriteConcernHandlers();
             setupReadPreferenceHandler();
+            setupReadConcernHandler();
             setupShardedDropdownHandlers();
+            setupKeyboardShortcuts();
             loadConfig('rs-single-region');
+            renderStats();
+            updateConnectionString();
         }
 
         document.addEventListener('DOMContentLoaded', init);
     </script>
+
+    <!-- Keyboard Shortcuts Help -->
+    <div class="shortcuts-help" id="shortcuts-help">
+        <div class="shortcuts-title">⌨️ Keyboard Shortcuts</div>
+        <div class="shortcut-row"><span>Insert</span><span class="shortcut-key">I</span></div>
+        <div class="shortcut-row"><span>Update</span><span class="shortcut-key">U</span></div>
+        <div class="shortcut-row"><span>Read</span><span class="shortcut-key">R</span></div>
+        <div class="shortcut-row"><span>Kill Primary</span><span class="shortcut-key">K</span></div>
+        <div class="shortcut-row"><span>Reset</span><span class="shortcut-key">X</span></div>
+        <div class="shortcut-row"><span>Auto Demo</span><span class="shortcut-key">D</span></div>
+        <div class="shortcut-row"><span>Toggle RS/Shard</span><span class="shortcut-key">T</span></div>
+    </div>
+
+    <!-- Demo Narration Overlay -->
+    <div class="demo-narration" id="demo-narration">
+        <div class="demo-narration-text" id="narration-text">Welcome to the MongoDB HA Demo!</div>
+        <div class="demo-narration-step" id="narration-step">Step 1 of 8</div>
+    </div>
 </body>
 </html>
