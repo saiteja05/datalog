@@ -1968,7 +1968,8 @@
             
             <div class="noisy-subtitle">
                 💡 <strong>What is Noisy Neighbor?</strong> When one tenant consumes excessive resources (CPU, I/O, connections), 
-                it can degrade performance for other tenants. This simulation shows how your chosen isolation strategy handles this scenario.
+                it can degrade performance for other tenants. <strong>Key insight:</strong> Logical isolation (separate DBs/collections) 
+                does NOT prevent this—only <strong>hardware isolation via sharding</strong> truly separates tenants onto different physical servers.
             </div>
 
             <!-- Tenant Cards -->
@@ -2165,12 +2166,12 @@
         const strategies = {
             database: {
                 title: 'Database per Tenant',
-                badge: 'ISOLATED',
+                badge: 'LOGICAL ISOLATION',
                 badgeClass: '',
                 info: [
-                    { title: '✓ Complete Isolation', text: 'Each tenant has their own database. Maximum security.', cls: '' },
+                    { title: '✓ Data Isolation', text: 'Each tenant has their own database. Maximum data security.', cls: '' },
                     { title: '✓ Easy Backup/Restore', text: 'Backup individual tenant data independently.', cls: '' },
-                    { title: '⚠ Resource Overhead', text: 'Higher memory and connection overhead.', cls: 'warning' }
+                    { title: '⚠ Shared Hardware', text: 'Still shares CPU, RAM, disk I/O. Noisy neighbors affect all.', cls: 'warning' }
                 ],
                 code: `<span class="comment">// Database per Tenant</span>
 <span class="keyword">async function</span> <span class="function">getDB</span>(<span class="variable">tenantId</span>) {
@@ -2182,12 +2183,12 @@
             },
             collection: {
                 title: 'Collection per Tenant',
-                badge: 'PARTITIONED',
+                badge: 'LOGICAL ISOLATION',
                 badgeClass: '',
                 info: [
-                    { title: '✓ Good Balance', text: 'Isolation without database overhead.', cls: '' },
+                    { title: '✓ Good Balance', text: 'Data isolation without database overhead.', cls: '' },
                     { title: '✓ Per-Tenant Indexes', text: 'Optimized indexes per tenant.', cls: '' },
-                    { title: '⚠ Namespace Limits', text: '~10K collections on shared clusters.', cls: 'warning' }
+                    { title: '⚠ Shared Hardware', text: 'Same server = shared CPU/RAM/disk. Noisy neighbors affect all.', cls: 'warning' }
                 ],
                 code: `<span class="comment">// Collection per Tenant</span>
 <span class="keyword">function</span> <span class="function">getCollection</span>(<span class="variable">name</span>, <span class="variable">tenantId</span>) {
@@ -2220,9 +2221,9 @@
                 badge: 'TIERED',
                 badgeClass: '',
                 info: [
-                    { title: '✓ Best of All', text: 'Enterprise→DB, Pro→Collection, Free→Shared.', cls: '' },
+                    { title: '✓ Tiered Data Isolation', text: 'Enterprise→DB, Pro→Collection, Free→Shared.', cls: '' },
                     { title: '✓ Flexible Upgrades', text: 'Tenants can upgrade tiers.', cls: '' },
-                    { title: '⚠ Complex', text: 'Multiple code paths to maintain.', cls: 'warning' }
+                    { title: '⚠ Shared Hardware', text: 'All tiers still share same server. Noisy neighbors affect all.', cls: 'warning' }
                 ],
                 code: `<span class="comment">// Hybrid - Route by tier</span>
 <span class="keyword">async function</span> <span class="function">getCollection</span>(<span class="variable">tenant</span>, <span class="variable">name</span>) {
@@ -2235,12 +2236,12 @@
             },
             zone: {
                 title: 'Zone Sharding',
-                badge: 'GEO-DISTRIBUTED',
+                badge: 'HARDWARE ISOLATED',
                 badgeClass: 'sharding',
                 info: [
+                    { title: '🖥️ TRUE Isolation', text: 'Different shards = different physical servers. No noisy neighbor impact!', cls: 'sharding' },
                     { title: '🌍 Data Residency', text: 'Keep tenant data in specific geographic regions for GDPR/compliance.', cls: 'sharding' },
                     { title: '⚡ Low Latency', text: 'Data stored close to users. Reads served from local zone.', cls: 'sharding' },
-                    { title: '📈 Horizontal Scale', text: 'Add shards per region as you grow.', cls: 'sharding' },
                     { title: '⚠ Zone Config', text: 'Requires careful zone range setup.', cls: 'warning' }
                 ],
                 code: `<span class="comment">// Zone Sharding Setup</span>
@@ -2261,12 +2262,12 @@ sh.<span class="function">updateZoneKeyRange</span>(<span class="string">"mydb.u
             },
             range: {
                 title: 'Range Sharding',
-                badge: 'RANGE-PARTITIONED',
+                badge: 'HARDWARE ISOLATED',
                 badgeClass: 'sharding',
                 info: [
+                    { title: '🖥️ Hardware Isolation', text: 'Different shards = different servers. Tenants on separate hardware.', cls: 'sharding' },
                     { title: '📊 Data Co-location', text: 'All tenant data on same shard for efficient queries.', cls: 'sharding' },
-                    { title: '⚡ Query Performance', text: 'Targeted queries go to single shard. No scatter-gather.', cls: 'sharding' },
-                    { title: '📈 Predictable Scaling', text: 'Add shards and rebalance tenant ranges.', cls: 'sharding' },
+                    { title: '🔧 Noisy Neighbor Fix', text: 'Split ranges to move noisy tenants to dedicated shards!', cls: 'sharding' },
                     { title: '⚠ Hot Spots', text: 'Large tenants may need dedicated shard ranges.', cls: 'warning' }
                 ],
                 code: `<span class="comment">// Range Sharding by tenant_id</span>
@@ -2395,13 +2396,15 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
         };
 
         // Security levels per strategy (5 = max isolation)
+        // Note: This is DATA isolation (logical), not HARDWARE isolation
+        // For hardware isolation, only sharding helps
         const securityLevels = {
-            database: 5,
-            collection: 4,
-            shared: 2,
-            hybrid: 4,
-            zone: 5,
-            range: 4
+            database: 5,    // Best logical data isolation
+            collection: 4,  // Good logical data isolation
+            shared: 2,      // Minimal logical isolation
+            hybrid: 4,      // Tiered logical isolation
+            zone: 5,        // Best - logical + hardware isolation
+            range: 4        // Good - logical + hardware isolation
         };
 
         // Connection pool config per strategy
@@ -3087,66 +3090,68 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
         // based on the current isolation strategy.
 
         // Configuration for each strategy's isolation behavior
+        // KEY INSIGHT: Without sharding, ALL strategies run on SHARED HARDWARE
+        // Only sharding provides true physical/hardware isolation
         const noisyNeighborConfig = {
             database: {
-                isolationLevel: 'high',
-                isolationPercent: 100,
-                tenantALatency: 45,      // Noisy tenant's latency under load
-                tenantBLatency: 2,       // Other tenants unaffected
-                tenantCLatency: 2,
-                impactLevel: 'none',
+                isolationLevel: 'low',
+                isolationPercent: 35,
+                tenantALatency: 85,      // Noisy tenant's latency under load
+                tenantBLatency: 45,      // Other tenants ALSO affected - shared hardware!
+                tenantCLatency: 40,
+                impactLevel: 'severe',
                 resourceUsage: 95,
-                explanation: 'With separate databases per tenant, each tenant has completely isolated resources (connections, memory, I/O). Tenant A\'s heavy load only affects their own database instance. Tenants B and C continue operating normally on their dedicated databases.'
+                explanation: '⚠️ SHARED HARDWARE: Even with separate databases, all tenants share the same physical server. CPU, RAM, disk I/O, and network are all shared resources. Tenant A\'s heavy load saturates the disk I/O and consumes CPU cycles, causing ALL tenants to experience degraded performance. Logical isolation ≠ hardware isolation.'
             },
             collection: {
-                isolationLevel: 'high',
-                isolationPercent: 90,
-                tenantALatency: 50,
-                tenantBLatency: 3,
-                tenantCLatency: 3,
-                impactLevel: 'minimal',
-                resourceUsage: 85,
-                explanation: 'Collections share the same database but have separate namespaces and can have dedicated indexes. Some database-level resources (connections, WiredTiger cache) are shared, causing minimal impact to other tenants during extreme load.'
+                isolationLevel: 'low',
+                isolationPercent: 30,
+                tenantALatency: 90,
+                tenantBLatency: 50,
+                tenantCLatency: 48,
+                impactLevel: 'severe',
+                resourceUsage: 96,
+                explanation: '⚠️ SHARED HARDWARE: Collections share the same database AND the same physical server. WiredTiger cache, connection pool, CPU, disk I/O—all shared. Tenant A\'s bulk operations fill the cache, evicting other tenants\' hot data. Everyone suffers.'
             },
             shared: {
                 isolationLevel: 'low',
-                isolationPercent: 30,
-                tenantALatency: 80,
-                tenantBLatency: 35,
-                tenantCLatency: 40,
+                isolationPercent: 20,
+                tenantALatency: 95,
+                tenantBLatency: 60,
+                tenantCLatency: 55,
                 impactLevel: 'severe',
                 resourceUsage: 98,
-                explanation: '⚠️ CRITICAL: All tenants share the same collection and compete for the same resources. Tenant A\'s heavy queries lock documents, consume connection pool slots, and fill the cache—directly degrading performance for ALL other tenants. This is the "noisy neighbor" anti-pattern.'
+                explanation: '⚠️ WORST CASE - SHARED EVERYTHING: Same collection, same indexes, same hardware. Tenant A\'s heavy queries cause document-level locks, fill the cache, saturate connections, AND consume all hardware resources. This is the maximum noisy neighbor impact. No isolation at any level.'
             },
             hybrid: {
-                isolationLevel: 'medium',
-                isolationPercent: 75,
-                tenantALatency: 45,
-                tenantBLatency: 8,
-                tenantCLatency: 25,
-                impactLevel: 'varies',
-                resourceUsage: 80,
-                explanation: 'Impact varies by tier: Enterprise tenants (A) are isolated in their own DB. Pro tenants (B) share some resources. Free tenants (C) on shared collection experience more impact. Tier-based isolation provides graduated protection.'
+                isolationLevel: 'low',
+                isolationPercent: 32,
+                tenantALatency: 85,
+                tenantBLatency: 48,
+                tenantCLatency: 52,
+                impactLevel: 'severe',
+                resourceUsage: 94,
+                explanation: '⚠️ SHARED HARDWARE: Despite tier-based logical separation, all tiers still run on the same physical server. Enterprise DB, Pro collections, and Free shared collection all compete for the same CPU, RAM, and disk. Logical tiers don\'t prevent hardware contention.'
             },
             zone: {
                 isolationLevel: 'high',
-                isolationPercent: 95,
-                tenantALatency: 40,
+                isolationPercent: 98,
+                tenantALatency: 65,
                 tenantBLatency: 2,
                 tenantCLatency: 2,
                 impactLevel: 'none',
                 resourceUsage: 90,
-                explanation: 'Zone sharding physically separates tenant data onto different shards (servers). Tenant A in US zone cannot impact Tenant B in EU zone or Tenant C in APAC zone—they\'re on completely different hardware. Geographic isolation = resource isolation.'
+                explanation: '✅ HARDWARE ISOLATION: Zone sharding places each tenant\'s data on DIFFERENT PHYSICAL SERVERS in different regions. Tenant A (US shard) literally cannot impact Tenant B (EU shard) or Tenant C (APAC shard)—they\'re on completely separate machines with their own CPU, RAM, and disks. This is TRUE isolation.'
             },
             range: {
-                isolationLevel: 'high',
-                isolationPercent: 85,
-                tenantALatency: 42,
-                tenantBLatency: 3,
-                tenantCLatency: 3,
+                isolationLevel: 'medium',
+                isolationPercent: 75,
+                tenantALatency: 70,
+                tenantBLatency: 8,
+                tenantCLatency: 6,
                 impactLevel: 'minimal',
-                resourceUsage: 88,
-                explanation: 'Range sharding distributes tenants across shards by tenant_id ranges. Each shard handles its own tenants independently. mongos router directs queries to specific shards, so Tenant A\'s load on shard-1 doesn\'t affect Tenants B and C on other shards.'
+                resourceUsage: 85,
+                explanation: '✅ HARDWARE ISOLATION (with option to improve): Range sharding distributes tenants across different physical shards. Tenant A on shard-1 mostly doesn\'t affect B and C on other shards. If a tenant becomes too noisy, you can SPLIT THEIR RANGE to move them to a dedicated shard, achieving full isolation.'
             }
         };
 
@@ -3229,19 +3234,19 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
             // Update strategy name
             document.getElementById('noisy-strategy-name').textContent = strategies[currentStrategy].title;
             
-            // Update isolation badge
+            // Update isolation badge - distinguish hardware vs logical isolation
             const badge = document.getElementById('noisy-isolation-badge');
             badge.className = 'noisy-isolation-badge';
             
             if (config.isolationLevel === 'high') {
                 badge.classList.add('high');
-                badge.innerHTML = '🛡️ HIGH ISOLATION';
+                badge.innerHTML = '🖥️ HARDWARE ISOLATED';
             } else if (config.isolationLevel === 'medium') {
                 badge.classList.add('medium');
-                badge.innerHTML = '⚠️ MEDIUM ISOLATION';
+                badge.innerHTML = '🖥️ PARTIAL HW ISOLATION';
             } else {
                 badge.classList.add('low');
-                badge.innerHTML = '❌ LOW ISOLATION';
+                badge.innerHTML = '⚠️ SHARED HARDWARE';
             }
             
             // Update explanation text
