@@ -2366,7 +2366,7 @@
 
     <!-- Main Content -->
     <div class="container">
-        
+
         <!-- ====== PART I: FUNDAMENTALS ====== -->
         <div class="master-section-header fundamentals">
             <div class="master-section-badge fundamentals">Part I</div>
@@ -2381,6 +2381,26 @@
                 <h2 class="section-title">What are Time Series Collections?</h2>
             </div>
             
+            <!-- WHY: The Problem -->
+            <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, transparent 100%); border: 1px solid var(--accent-green);">
+                <h4 style="color: var(--accent-green); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>🎯</span> Why This Matters
+                </h4>
+                <p style="color: var(--text-secondary); margin-bottom: 12px;">
+                    <strong>The Problem:</strong> Time series data (IoT sensors, metrics, logs) generates massive volumes - often millions of documents per day. 
+                    Regular MongoDB collections store each document separately, leading to:
+                </p>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <span style="background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem;">❌ 10x more storage than needed</span>
+                    <span style="background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem;">❌ Slow range queries</span>
+                    <span style="background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); padding: 6px 12px; border-radius: 6px; font-size: 0.8rem;">❌ Index bloat</span>
+                </div>
+                <p style="color: var(--text-secondary); margin-top: 12px;">
+                    <strong>The Solution:</strong> Time Series collections automatically bucket, compress, and optimize this data - giving you <span style="color: var(--accent-green);">90%+ storage savings</span> and <span style="color: var(--accent-green);">10x faster queries</span> with zero application changes.
+                </p>
+            </div>
+            
+            <!-- WHAT: Core Features -->
             <div class="intro-grid">
                 <div class="card intro-card">
                     <div class="intro-icon">⏱️</div>
@@ -2496,7 +2516,7 @@
             <h2 class="master-section-title">Core Concepts</h2>
             <p class="master-section-desc">How buckets, granularity, data flow, and compression work together</p>
         </div>
-
+        
         <!-- Section 3: Bucket Structure -->
         <section class="section" id="bucket-structure">
             <div class="section-header">
@@ -2504,6 +2524,19 @@
                 <h2 class="section-title">Inside a Bucket Document</h2>
             </div>
             
+            <!-- WHY: Understanding Buckets -->
+            <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, transparent 100%); border: 1px solid var(--accent-purple);">
+                <h4 style="color: var(--accent-purple); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>🎯</span> Why This Matters
+                </h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Buckets are the secret sauce.</strong> Instead of storing 1 million individual documents, MongoDB groups them into ~1,000 buckets. 
+                    Each bucket holds documents with the <span style="color: var(--accent-cyan);">same metadata</span> within a <span style="color: var(--accent-cyan);">time window</span>. 
+                    This means: fewer documents to scan, better compression, and indexes that are 1000x smaller. Understanding bucket structure helps you choose the right granularity and metadata fields.
+                </p>
+            </div>
+            
+            <!-- DEMO: Visual Flow -->
             <div class="card flow-container">
                 <div class="flow-stage">
                     <div class="flow-box">
@@ -2605,10 +2638,103 @@
             </div>
         </section>
 
+        <!-- Section 4: Granularity Deep Dive -->
+        <section class="section" id="granularity">
+            <div class="section-header">
+                <div class="section-number">04</div>
+                <h2 class="section-title">Granularity Deep Dive</h2>
+            </div>
+            
+            <div class="card">
+                <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <span style="font-size: 2rem;">⚠️</span>
+                        <h3 style="color: #ef4444;">Common Misconception!</h3>
+                    </div>
+                    <p style="font-size: 1rem; color: var(--text-primary);">
+                        <strong>"seconds" granularity does NOT mean buckets close every second!</strong>
+                    </p>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">
+                        Granularity controls the <strong>bucket time span</strong> and <strong>timestamp rounding</strong>, not how often buckets close.
+                    </p>
+                </div>
+                
+                <h4 style="color: var(--accent-cyan); margin-bottom: 20px;">📏 What Granularity Actually Controls</h4>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px;">
+                    <div style="background: var(--bg-tertiary); border: 2px solid var(--accent-green); border-radius: 16px; padding: 24px; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;">⏱️</div>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent-green); margin-bottom: 4px;">seconds</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 16px 0;">1 HOUR</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Bucket Time Span</div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Best for: &gt;1 doc/sec</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border: 2px solid var(--accent-cyan); border-radius: 16px; padding: 24px; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;">⏱️</div>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px;">minutes</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 16px 0;">24 HOURS</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Bucket Time Span</div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Best for: 1 doc/min</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border: 2px solid var(--accent-purple); border-radius: 16px; padding: 24px; text-align: center;">
+                        <div style="font-size: 1.5rem; margin-bottom: 8px;">⏱️</div>
+                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent-purple); margin-bottom: 4px;">hours</div>
+                        <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 16px 0;">30 DAYS</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Bucket Time Span</div>
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Best for: &lt;1 doc/hour</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h4 style="color: var(--accent-orange); margin-bottom: 20px;">🔄 When Do Buckets Actually Close?</h4>
+                
+                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 24px;">
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">A bucket closes when <strong>ANY</strong> of these conditions is met:</p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
+                        <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2.5rem; margin-bottom: 8px;">📊</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-green);">~1000</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Documents reached</div>
+                        </div>
+                        <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2.5rem; margin-bottom: 8px;">💾</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);">~125 KB</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Size limit reached</div>
+                        </div>
+                        <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border-color);">
+                            <div style="font-size: 2.5rem; margin-bottom: 8px;">⏰</div>
+                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-purple);">Time Span</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Exceeded (1h/24h/30d)</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, transparent 100%); border-radius: 12px; border: 1px solid var(--accent-green);">
+                        <h5 style="color: var(--accent-green); margin-bottom: 12px;">📝 Example: "seconds" granularity with 10 docs/second</h5>
+                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
+                                <span style="color: var(--text-secondary);">Bucket fills in:</span>
+                                <span style="color: var(--accent-cyan);">1000 docs ÷ 10 docs/sec = </span>
+                                <span style="color: var(--accent-green); font-weight: 700;">~100 seconds</span>
+                            </div>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">NOT every second! The bucket stays open until it fills up or hits the 1-hour time boundary.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Section 3: Bucket Internal Structure -->
         <section class="section" id="data-flow">
             <div class="section-header">
-                <div class="section-number">03</div>
+                <div class="section-number">05</div>
                 <h2 class="section-title">Inside a Bucket Document</h2>
             </div>
             
@@ -2736,10 +2862,23 @@
         <!-- Section 4: Compression Deep Dive -->
         <section class="section" id="compression">
             <div class="section-header">
-                <div class="section-number">04</div>
+                <div class="section-number">06</div>
                 <h2 class="section-title">Compression Magic: Delta Encoding</h2>
             </div>
             
+            <!-- WHY: Cost Savings -->
+            <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, transparent 100%); border: 1px solid var(--accent-green);">
+                <h4 style="color: var(--accent-green); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>💰</span> Why This Matters
+                </h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Compression directly impacts your costs.</strong> At scale, storing 1TB of raw sensor data might cost $100/month. 
+                    With 90% compression, that drops to $10/month. Time series collections achieve this automatically through delta encoding - 
+                    no application changes needed. Understanding how it works helps you design schemas that compress even better.
+                </p>
+            </div>
+            
+            <!-- DEMO: Delta Encoding -->
             <div class="card">
                 <p style="color: var(--text-secondary); margin-bottom: 32px;">
                     Time series data is highly compressible because consecutive values are often similar. MongoDB uses <strong>delta encoding</strong> to store only the differences between values:
@@ -2855,11 +2994,11 @@
             <h2 class="master-section-title">Internal Architecture</h2>
             <p class="master-section-desc">Deep dive into how MongoDB manages buckets, memory, and storage</p>
         </div>
-
+        
         <!-- Section 5: Internal Architecture -->
         <section class="section" id="architecture">
             <div class="section-header">
-                <div class="section-number">05</div>
+                <div class="section-number">07</div>
                 <h2 class="section-title">Internal Architecture</h2>
             </div>
             
@@ -2916,10 +3055,23 @@
         <!-- Section 6: Bucket Lifecycle & Memory Management -->
         <section class="section" id="memory">
             <div class="section-header">
-                <div class="section-number">06</div>
+                <div class="section-number">08</div>
                 <h2 class="section-title">Bucket Lifecycle & Memory Management</h2>
             </div>
             
+            <!-- WHY: Performance Tuning -->
+            <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, transparent 100%); border: 1px solid var(--accent-purple);">
+                <h4 style="color: var(--accent-purple); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡</span> Why This Matters
+                </h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Memory management directly affects write performance.</strong> MongoDB keeps "open" buckets in RAM for fast inserts. 
+                    If you have too many unique metadata combinations, you'll exhaust the bucket catalog and trigger constant disk I/O. 
+                    Understanding the lifecycle helps you design metadata fields that don't explode your memory usage.
+                </p>
+            </div>
+            
+            <!-- DEMO: Bucket Catalog -->
             <div class="card">
                 <h3 style="margin-bottom: 24px; color: var(--accent-purple);">🧠 The Bucket Catalog</h3>
                 <p style="color: var(--text-secondary); margin-bottom: 24px;">
@@ -3112,10 +3264,177 @@
             </div>
         </section>
 
+        <!-- Section 8: WiredTiger Integration -->
+        <section class="section" id="wiredtiger">
+            <div class="section-header">
+                <div class="section-number">09</div>
+                <h2 class="section-title">WiredTiger Storage Integration</h2>
+            </div>
+            
+            <div class="card">
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                    When a bucket is closed, it flows through MongoDB's WiredTiger storage engine. Here's the complete journey from memory to disk:
+                </p>
+                
+                <div class="wiredtiger-flow">
+                    <div class="wt-component">
+                        <div class="wt-icon">📝</div>
+                        <div class="wt-name">Bucket (Memory)</div>
+                        <div class="wt-desc">Raw columnar data in RAM</div>
+                    </div>
+                    <div class="wt-arrow">→</div>
+                    <div class="wt-component">
+                        <div class="wt-icon">🗜️</div>
+                        <div class="wt-name">Delta Encoder</div>
+                        <div class="wt-desc">Compute deltas for timestamps</div>
+                    </div>
+                    <div class="wt-arrow">→</div>
+                    <div class="wt-component">
+                        <div class="wt-icon">📊</div>
+                        <div class="wt-name">RLE Compressor</div>
+                        <div class="wt-desc">Run-length encoding</div>
+                    </div>
+                    <div class="wt-arrow">→</div>
+                    <div class="wt-component">
+                        <div class="wt-icon">🔧</div>
+                        <div class="wt-name">BSON Serializer</div>
+                        <div class="wt-desc">Convert to BSON format</div>
+                    </div>
+                    <div class="wt-arrow">→</div>
+                    <div class="wt-component">
+                        <div class="wt-icon">📋</div>
+                        <div class="wt-name">WiredTiger</div>
+                        <div class="wt-desc">Block compression (zstd)</div>
+                    </div>
+                    <div class="wt-arrow">→</div>
+                    <div class="wt-component">
+                        <div class="wt-icon">💾</div>
+                        <div class="wt-name">Disk</div>
+                        <div class="wt-desc">Persistent storage</div>
+                    </div>
+                </div>
+                
+                <h4 style="margin: 32px 0 16px; color: var(--text-primary);">Compression Pipeline Breakdown</h4>
+                <div class="compression-stages">
+                    <div class="compression-stage">
+                        <div class="stage-icon">📦</div>
+                        <div class="stage-name">Raw Data</div>
+                        <div class="stage-size">1000 KB</div>
+                        <div class="stage-desc">Uncompressed columnar arrays</div>
+                    </div>
+                    <div class="compression-stage">
+                        <div class="stage-icon">Δ</div>
+                        <div class="stage-name">Delta Encoded</div>
+                        <div class="stage-size">350 KB</div>
+                        <div class="stage-desc">-65% for sequential data</div>
+                    </div>
+                    <div class="compression-stage">
+                        <div class="stage-icon">🔁</div>
+                        <div class="stage-name">RLE Applied</div>
+                        <div class="stage-size">180 KB</div>
+                        <div class="stage-desc">-50% for repeated values</div>
+                    </div>
+                    <div class="compression-stage">
+                        <div class="stage-icon">✓</div>
+                        <div class="stage-name">Final (zstd)</div>
+                        <div class="stage-size">90 KB</div>
+                        <div class="stage-desc">-50% block compression</div>
+                    </div>
+                </div>
+                
+                <div class="info-box" style="margin-top: 24px;">
+                    <div class="info-icon">🎯</div>
+                    <div class="info-content">
+                        <h4>Total Compression: 91% Reduction</h4>
+                        <p>From 1000 KB down to 90 KB. This is why time series collections are so storage-efficient! The combination of columnar storage + delta encoding + RLE + block compression creates massive savings.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== PART IV: OPERATIONS ====== -->
+        <div class="master-section-header operations">
+            <div class="master-section-badge operations">Part IV</div>
+            <h2 class="master-section-title">Operations</h2>
+            <p class="master-section-desc">Creating collections, querying data, indexes, and aggregations</p>
+        </div>
+        
+        <!-- Section 9: Creating a Time Series Collection -->
+        <section class="section" id="creating">
+            <div class="section-header">
+                <div class="section-number">10</div>
+                <h2 class="section-title">Creating a Time Series Collection</h2>
+            </div>
+            
+            <div class="card">
+                <div class="code-block">
+                    <div class="code-header">
+                        <div class="code-dot red"></div>
+                        <div class="code-dot yellow"></div>
+                        <div class="code-dot green"></div>
+                        <span class="code-title">MongoDB Shell</span>
+                    </div>
+                    <pre class="code-content"><span class="comment">// Create a time series collection</span>
+<span class="property">db</span>.<span class="keyword">createCollection</span>(<span class="string">"sensorData"</span>, {
+    <span class="property">timeseries</span>: {
+        <span class="property">timeField</span>: <span class="string">"timestamp"</span>,        <span class="comment">// Required: field containing timestamp</span>
+        <span class="property">metaField</span>: <span class="string">"metadata"</span>,        <span class="comment">// Optional: field for grouping</span>
+        <span class="property">granularity</span>: <span class="string">"minutes"</span>       <span class="comment">// "seconds" | "minutes" | "hours"</span>
+    },
+    <span class="property">expireAfterSeconds</span>: <span class="value">86400 * 30</span>   <span class="comment">// Optional: auto-delete after 30 days</span>
+});
+
+<span class="comment">// Insert a document</span>
+<span class="property">db</span>.<span class="property">sensorData</span>.<span class="keyword">insertOne</span>({
+    <span class="property">timestamp</span>: <span class="keyword">new</span> <span class="keyword">Date</span>(),
+    <span class="property">metadata</span>: {
+        <span class="property">sensorId</span>: <span class="string">"sensor_001"</span>,
+        <span class="property">location</span>: <span class="string">"building_A"</span>
+    },
+    <span class="property">temperature</span>: <span class="value">23.5</span>,
+    <span class="property">humidity</span>: <span class="value">45.2</span>,
+    <span class="property">pressure</span>: <span class="value">1013.25</span>
+});</pre>
+                </div>
+                
+                <h4 style="margin: 32px 0 16px; color: var(--text-primary);">Granularity Options</h4>
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Granularity</th>
+                            <th>Bucket Time Span</th>
+                            <th>Best For</th>
+                            <th>Max Docs/Bucket</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="highlight-cell">seconds</td>
+                            <td>1 hour</td>
+                            <td>High-frequency data (100+ docs/min)</td>
+                            <td>~1000</td>
+                        </tr>
+                        <tr>
+                            <td class="highlight-cell">minutes</td>
+                            <td>24 hours</td>
+                            <td>Medium frequency (1-100 docs/min)</td>
+                            <td>~1000</td>
+                        </tr>
+                        <tr>
+                            <td class="highlight-cell">hours</td>
+                            <td>30 days</td>
+                            <td>Low frequency (&lt;1 doc/min)</td>
+                            <td>~1000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
         <!-- Section 7: Write & Query Path -->
         <section class="section" id="write-query">
             <div class="section-header">
-                <div class="section-number">07</div>
+                <div class="section-number">11</div>
                 <h2 class="section-title">Write & Query Paths</h2>
             </div>
             
@@ -3286,378 +3605,27 @@
             </div>
         </section>
 
-        <!-- Section 8: WiredTiger Integration -->
-        <section class="section" id="wiredtiger">
-            <div class="section-header">
-                <div class="section-number">08</div>
-                <h2 class="section-title">WiredTiger Storage Integration</h2>
-            </div>
-            
-            <div class="card">
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                    When a bucket is closed, it flows through MongoDB's WiredTiger storage engine. Here's the complete journey from memory to disk:
-                </p>
-                
-                <div class="wiredtiger-flow">
-                    <div class="wt-component">
-                        <div class="wt-icon">📝</div>
-                        <div class="wt-name">Bucket (Memory)</div>
-                        <div class="wt-desc">Raw columnar data in RAM</div>
-                    </div>
-                    <div class="wt-arrow">→</div>
-                    <div class="wt-component">
-                        <div class="wt-icon">🗜️</div>
-                        <div class="wt-name">Delta Encoder</div>
-                        <div class="wt-desc">Compute deltas for timestamps</div>
-                    </div>
-                    <div class="wt-arrow">→</div>
-                    <div class="wt-component">
-                        <div class="wt-icon">📊</div>
-                        <div class="wt-name">RLE Compressor</div>
-                        <div class="wt-desc">Run-length encoding</div>
-                    </div>
-                    <div class="wt-arrow">→</div>
-                    <div class="wt-component">
-                        <div class="wt-icon">🔧</div>
-                        <div class="wt-name">BSON Serializer</div>
-                        <div class="wt-desc">Convert to BSON format</div>
-                    </div>
-                    <div class="wt-arrow">→</div>
-                    <div class="wt-component">
-                        <div class="wt-icon">📋</div>
-                        <div class="wt-name">WiredTiger</div>
-                        <div class="wt-desc">Block compression (zstd)</div>
-                    </div>
-                    <div class="wt-arrow">→</div>
-                    <div class="wt-component">
-                        <div class="wt-icon">💾</div>
-                        <div class="wt-name">Disk</div>
-                        <div class="wt-desc">Persistent storage</div>
-                    </div>
-                </div>
-                
-                <h4 style="margin: 32px 0 16px; color: var(--text-primary);">Compression Pipeline Breakdown</h4>
-                <div class="compression-stages">
-                    <div class="compression-stage">
-                        <div class="stage-icon">📦</div>
-                        <div class="stage-name">Raw Data</div>
-                        <div class="stage-size">1000 KB</div>
-                        <div class="stage-desc">Uncompressed columnar arrays</div>
-                    </div>
-                    <div class="compression-stage">
-                        <div class="stage-icon">Δ</div>
-                        <div class="stage-name">Delta Encoded</div>
-                        <div class="stage-size">350 KB</div>
-                        <div class="stage-desc">-65% for sequential data</div>
-                    </div>
-                    <div class="compression-stage">
-                        <div class="stage-icon">🔁</div>
-                        <div class="stage-name">RLE Applied</div>
-                        <div class="stage-size">180 KB</div>
-                        <div class="stage-desc">-50% for repeated values</div>
-                    </div>
-                    <div class="compression-stage">
-                        <div class="stage-icon">✓</div>
-                        <div class="stage-name">Final (zstd)</div>
-                        <div class="stage-size">90 KB</div>
-                        <div class="stage-desc">-50% block compression</div>
-                    </div>
-                </div>
-                
-                <div class="info-box" style="margin-top: 24px;">
-                    <div class="info-icon">🎯</div>
-                    <div class="info-content">
-                        <h4>Total Compression: 91% Reduction</h4>
-                        <p>From 1000 KB down to 90 KB. This is why time series collections are so storage-efficient! The combination of columnar storage + delta encoding + RLE + block compression creates massive savings.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== PART IV: OPERATIONS ====== -->
-        <div class="master-section-header operations">
-            <div class="master-section-badge operations">Part IV</div>
-            <h2 class="master-section-title">Operations</h2>
-            <p class="master-section-desc">Creating collections, querying data, indexes, and aggregations</p>
-        </div>
-
-        <!-- Section 9: Creating a Time Series Collection -->
-        <section class="section" id="creating">
-            <div class="section-header">
-                <div class="section-number">09</div>
-                <h2 class="section-title">Creating a Time Series Collection</h2>
-            </div>
-            
-            <div class="card">
-                <div class="code-block">
-                    <div class="code-header">
-                        <div class="code-dot red"></div>
-                        <div class="code-dot yellow"></div>
-                        <div class="code-dot green"></div>
-                        <span class="code-title">MongoDB Shell</span>
-                    </div>
-                    <pre class="code-content"><span class="comment">// Create a time series collection</span>
-<span class="property">db</span>.<span class="keyword">createCollection</span>(<span class="string">"sensorData"</span>, {
-    <span class="property">timeseries</span>: {
-        <span class="property">timeField</span>: <span class="string">"timestamp"</span>,        <span class="comment">// Required: field containing timestamp</span>
-        <span class="property">metaField</span>: <span class="string">"metadata"</span>,        <span class="comment">// Optional: field for grouping</span>
-        <span class="property">granularity</span>: <span class="string">"minutes"</span>       <span class="comment">// "seconds" | "minutes" | "hours"</span>
-    },
-    <span class="property">expireAfterSeconds</span>: <span class="value">86400 * 30</span>   <span class="comment">// Optional: auto-delete after 30 days</span>
-});
-
-<span class="comment">// Insert a document</span>
-<span class="property">db</span>.<span class="property">sensorData</span>.<span class="keyword">insertOne</span>({
-    <span class="property">timestamp</span>: <span class="keyword">new</span> <span class="keyword">Date</span>(),
-    <span class="property">metadata</span>: {
-        <span class="property">sensorId</span>: <span class="string">"sensor_001"</span>,
-        <span class="property">location</span>: <span class="string">"building_A"</span>
-    },
-    <span class="property">temperature</span>: <span class="value">23.5</span>,
-    <span class="property">humidity</span>: <span class="value">45.2</span>,
-    <span class="property">pressure</span>: <span class="value">1013.25</span>
-});</pre>
-                </div>
-                
-                <h4 style="margin: 32px 0 16px; color: var(--text-primary);">Granularity Options</h4>
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Granularity</th>
-                            <th>Bucket Time Span</th>
-                            <th>Best For</th>
-                            <th>Max Docs/Bucket</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="highlight-cell">seconds</td>
-                            <td>1 hour</td>
-                            <td>High-frequency data (100+ docs/min)</td>
-                            <td>~1000</td>
-                        </tr>
-                        <tr>
-                            <td class="highlight-cell">minutes</td>
-                            <td>24 hours</td>
-                            <td>Medium frequency (1-100 docs/min)</td>
-                            <td>~1000</td>
-                        </tr>
-                        <tr>
-                            <td class="highlight-cell">hours</td>
-                            <td>30 days</td>
-                            <td>Low frequency (&lt;1 doc/min)</td>
-                            <td>~1000</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Section 10: Regular vs Time Series -->
-        <section class="section" id="vs-regular">
-            <div class="section-header">
-                <div class="section-number">10</div>
-                <h2 class="section-title">Regular Collection vs Time Series</h2>
-            </div>
-            
-            <div class="card">
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Aspect</th>
-                            <th>Regular Collection</th>
-                            <th>Time Series Collection</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Document Storage</td>
-                            <td class="dim-cell">One document = one BSON document</td>
-                            <td class="highlight-cell">Many documents = one bucket document</td>
-                        </tr>
-                        <tr>
-                            <td>Field Storage</td>
-                            <td class="dim-cell">Row-oriented (all fields together)</td>
-                            <td class="highlight-cell">Column-oriented (fields stored separately)</td>
-                        </tr>
-                        <tr>
-                            <td>Compression</td>
-                            <td class="dim-cell">Block-level only (WiredTiger)</td>
-                            <td class="highlight-cell">Delta + RLE + Block compression</td>
-                        </tr>
-                        <tr>
-                            <td>Index Entries</td>
-                            <td class="dim-cell">One per document</td>
-                            <td class="highlight-cell">One per bucket (~1000x fewer)</td>
-                        </tr>
-                        <tr>
-                            <td>Time Range Queries</td>
-                            <td class="dim-cell">Scans matching documents</td>
-                            <td class="highlight-cell">Bucket pruning + clustered access</td>
-                        </tr>
-                        <tr>
-                            <td>Write Pattern</td>
-                            <td class="dim-cell">Individual inserts</td>
-                            <td class="highlight-cell">Batched into bucket updates</td>
-                        </tr>
-                        <tr>
-                            <td>Storage for 1M docs</td>
-                            <td class="dim-cell">~500 MB</td>
-                            <td class="highlight-cell">~50 MB (90% savings)</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- ====== PART VI: TOOLS & REFERENCE ====== -->
-        <div class="master-section-header tools">
-            <div class="master-section-badge tools">Part VI</div>
-            <h2 class="master-section-title">Tools & Reference</h2>
-            <p class="master-section-desc">Best practices, calculators, and interactive demos</p>
-        </div>
-
-        <!-- Section 11: Best Practices -->
-        <section class="section" id="best-practices">
-            <div class="section-header">
-                <div class="section-number">11</div>
-                <h2 class="section-title">Best Practices</h2>
-            </div>
-            
-            <div class="intro-grid">
-                <div class="card intro-card">
-                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(0, 237, 100, 0.2) 0%, rgba(0, 237, 100, 0.05) 100%);">✅</div>
-                    <h3>Choose Right Granularity</h3>
-                    <p>Match granularity to your data frequency. Higher frequency = finer granularity for optimal bucketing.</p>
-                </div>
-                <div class="card intro-card">
-                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%);">✅</div>
-                    <h3>Use MetaField Wisely</h3>
-                    <p>Group related measurements together. High-cardinality metadata creates more buckets = less compression.</p>
-                </div>
-                <div class="card intro-card">
-                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%);">✅</div>
-                    <h3>Insert In Order</h3>
-                    <p>Insert documents in time order when possible. Out-of-order inserts may create additional buckets.</p>
-                </div>
-                <div class="card intro-card">
-                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.05) 100%);">✅</div>
-                    <h3>Add Secondary Indexes</h3>
-                    <p>Create indexes on metaField sub-fields if you query by those values frequently.</p>
-                </div>
-                <div class="card intro-card">
-                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.05) 100%);">✅</div>
-                    <h3>Use TTL for Cleanup</h3>
-                    <p>Set expireAfterSeconds to automatically remove old data and keep storage costs down.</p>
-                </div>
-                <div class="card intro-card">
-                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(34, 211, 238, 0.05) 100%);">✅</div>
-                    <h3>Query Time Ranges</h3>
-                    <p>Always include time range filters in queries to benefit from bucket pruning optimization.</p>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 4: Granularity Deep Dive -->
-        <section class="section" id="granularity">
-            <div class="section-header">
-                <div class="section-number">04</div>
-                <h2 class="section-title">Granularity Deep Dive</h2>
-            </div>
-            
-            <div class="card">
-                <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                        <span style="font-size: 2rem;">⚠️</span>
-                        <h3 style="color: #ef4444;">Common Misconception!</h3>
-                    </div>
-                    <p style="font-size: 1rem; color: var(--text-primary);">
-                        <strong>"seconds" granularity does NOT mean buckets close every second!</strong>
-                    </p>
-                    <p style="font-size: 0.9rem; color: var(--text-secondary); margin-top: 8px;">
-                        Granularity controls the <strong>bucket time span</strong> and <strong>timestamp rounding</strong>, not how often buckets close.
-                    </p>
-                </div>
-                
-                <h4 style="color: var(--accent-cyan); margin-bottom: 20px;">📏 What Granularity Actually Controls</h4>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 32px;">
-                    <div style="background: var(--bg-tertiary); border: 2px solid var(--accent-green); border-radius: 16px; padding: 24px; text-align: center;">
-                        <div style="font-size: 1.5rem; margin-bottom: 8px;">⏱️</div>
-                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent-green); margin-bottom: 4px;">seconds</div>
-                        <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 16px 0;">1 HOUR</div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Bucket Time Span</div>
-                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">Best for: &gt;1 doc/sec</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--bg-tertiary); border: 2px solid var(--accent-cyan); border-radius: 16px; padding: 24px; text-align: center;">
-                        <div style="font-size: 1.5rem; margin-bottom: 8px;">⏱️</div>
-                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent-cyan); margin-bottom: 4px;">minutes</div>
-                        <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 16px 0;">24 HOURS</div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Bucket Time Span</div>
-                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">Best for: 1 doc/min</div>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--bg-tertiary); border: 2px solid var(--accent-purple); border-radius: 16px; padding: 24px; text-align: center;">
-                        <div style="font-size: 1.5rem; margin-bottom: 8px;">⏱️</div>
-                        <div style="font-family: 'JetBrains Mono', monospace; font-size: 1.3rem; font-weight: 700; color: var(--accent-purple); margin-bottom: 4px;">hours</div>
-                        <div style="font-size: 2rem; font-weight: 800; color: var(--text-primary); margin: 16px 0;">30 DAYS</div>
-                        <div style="font-size: 0.85rem; color: var(--text-secondary);">Bucket Time Span</div>
-                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border-color);">
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">Best for: &lt;1 doc/hour</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <h4 style="color: var(--accent-orange); margin-bottom: 20px;">🔄 When Do Buckets Actually Close?</h4>
-                
-                <div style="background: var(--bg-secondary); border-radius: 16px; padding: 24px;">
-                    <p style="color: var(--text-secondary); margin-bottom: 20px;">A bucket closes when <strong>ANY</strong> of these conditions is met:</p>
-                    
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
-                        <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border-color);">
-                            <div style="font-size: 2.5rem; margin-bottom: 8px;">📊</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-green);">~1000</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Documents reached</div>
-                        </div>
-                        <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border-color);">
-                            <div style="font-size: 2.5rem; margin-bottom: 8px;">💾</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-cyan);">~125 KB</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Size limit reached</div>
-                        </div>
-                        <div style="background: var(--bg-tertiary); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid var(--border-color);">
-                            <div style="font-size: 2.5rem; margin-bottom: 8px;">⏰</div>
-                            <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent-purple);">Time Span</div>
-                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Exceeded (1h/24h/30d)</div>
-                        </div>
-                    </div>
-                    
-                    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, transparent 100%); border-radius: 12px; border: 1px solid var(--accent-green);">
-                        <h5 style="color: var(--accent-green); margin-bottom: 12px;">📝 Example: "seconds" granularity with 10 docs/second</h5>
-                        <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">
-                                <span style="color: var(--text-secondary);">Bucket fills in:</span>
-                                <span style="color: var(--accent-cyan);">1000 docs ÷ 10 docs/sec = </span>
-                                <span style="color: var(--accent-green); font-weight: 700;">~100 seconds</span>
-                            </div>
-                        </div>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px;">NOT every second! The bucket stays open until it fills up or hits the 1-hour time boundary.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Section 13: Query Execution & Bucket Pruning -->
         <section class="section" id="query-pruning">
             <div class="section-header">
-                <div class="section-number">13</div>
+                <div class="section-number">12</div>
                 <h2 class="section-title">Query Execution & Bucket Pruning</h2>
             </div>
             
+            <!-- WHY: Query Speed -->
+            <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, transparent 100%); border: 1px solid var(--accent-green);">
+                <h4 style="color: var(--accent-green); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>⚡</span> Why This Matters
+                </h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Bucket pruning is why time series queries are fast.</strong> When you query "last 24 hours", MongoDB doesn't scan all your data. 
+                    Each bucket has <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">control.min</code> and <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">control.max</code> 
+                    fields that let MongoDB skip entire buckets that can't possibly contain matching documents. 
+                    A year of data might have 8,760 buckets, but a "last hour" query only touches 1-2 buckets.
+                </p>
+            </div>
+            
+            <!-- DEMO: Query Flow -->
             <div class="card">
                 <h4 style="color: var(--accent-cyan); margin-bottom: 20px;">🔍 Step-by-Step: How a Read Query Executes</h4>
                 
@@ -3839,230 +3807,26 @@
             </div>
         </section>
 
-        <!-- Section 14: Time Series Aggregations -->
-        <section class="section" id="aggregations">
-            <div class="section-header">
-                <div class="section-number">14</div>
-                <h2 class="section-title">Time Series Aggregations</h2>
-            </div>
-            
-            <div class="card">
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                    MongoDB provides powerful aggregation stages designed specifically for time series analysis:
-                </p>
-                
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-green)'" onmouseout="this.style.borderColor='var(--border-color)'">
-                        <div style="font-size: 2rem; margin-bottom: 12px;">📅</div>
-                        <h4 style="color: var(--accent-green); margin-bottom: 8px;">$densify</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Fill gaps in time series data by generating documents for missing time intervals.</p>
-                        <div class="code-block" style="margin: 0;">
-                            <pre class="code-content" style="font-size: 0.7rem; padding: 12px;">{ $densify: {
-  field: "timestamp",
-  range: {
-    step: 1,
-    unit: "hour",
-    bounds: "full"
-  }
-}}</pre>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-cyan)'" onmouseout="this.style.borderColor='var(--border-color)'">
-                        <div style="font-size: 2rem; margin-bottom: 12px;">🔄</div>
-                        <h4 style="color: var(--accent-cyan); margin-bottom: 8px;">$fill</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Fill null values using linear interpolation or last observed value (LOCF).</p>
-                        <div class="code-block" style="margin: 0;">
-                            <pre class="code-content" style="font-size: 0.7rem; padding: 12px;">{ $fill: {
-  sortBy: { timestamp: 1 },
-  output: {
-    temperature: {
-      method: "linear"
-    }
-  }
-}}</pre>
-                        </div>
-                    </div>
-                    
-                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-purple)'" onmouseout="this.style.borderColor='var(--border-color)'">
-                        <div style="font-size: 2rem; margin-bottom: 12px;">📊</div>
-                        <h4 style="color: var(--accent-purple); margin-bottom: 8px;">$setWindowFields</h4>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Compute moving averages, running totals, and rankings over time windows.</p>
-                        <div class="code-block" style="margin: 0;">
-                            <pre class="code-content" style="font-size: 0.7rem; padding: 12px;">{ $setWindowFields: {
-  sortBy: { timestamp: 1 },
-  output: {
-    movingAvg: {
-      $avg: "$temp",
-      window: { range: [-1, 0], unit: "hour" }
-    }
-  }
-}}</pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 15: Storage Calculator -->
-        <section class="section" id="calculator">
-            <div class="section-header">
-                <div class="section-number">15</div>
-                <h2 class="section-title">Storage Savings Calculator</h2>
-            </div>
-            
-            <div class="card">
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                    Estimate your storage savings by switching to time series collections:
-                </p>
-                
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-                    <div>
-                        <h4 style="color: var(--accent-cyan); margin-bottom: 20px;">📝 Input Your Data Profile</h4>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Documents per day:</label>
-                            <input type="number" id="docsPerDay" value="1000000" oninput="calculateStorage()" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Average document size (bytes):</label>
-                            <input type="number" id="docSize" value="200" oninput="calculateStorage()" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Retention period (days):</label>
-                            <input type="number" id="retention" value="365" oninput="calculateStorage()" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
-                        </div>
-                        
-                        <div style="margin-bottom: 16px;">
-                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Compression ratio (adjust based on data):</label>
-                            <input type="range" id="compressionSlider" min="50" max="95" value="85" oninput="calculateStorage()" style="width: 100%;">
-                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
-                                <span>50%</span>
-                                <span id="compressionValue">85%</span>
-                                <span>95%</span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div>
-                        <h4 style="color: var(--accent-green); margin-bottom: 20px;">📊 Storage Comparison</h4>
-                        
-                        <div style="background: var(--bg-secondary); border-radius: 12px; padding: 24px; margin-bottom: 20px;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                <span style="color: var(--text-secondary);">Regular Collection:</span>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: var(--accent-orange);" id="regularSize">73.0 GB</span>
-                            </div>
-                            <div style="height: 24px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden; margin-bottom: 24px;">
-                                <div style="height: 100%; background: var(--accent-orange); width: 100%;"></div>
-                            </div>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-                                <span style="color: var(--text-secondary);">Time Series Collection:</span>
-                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: var(--accent-green);" id="tsSize">11.0 GB</span>
-                            </div>
-                            <div style="height: 24px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden;">
-                                <div id="tsBar" style="height: 100%; background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); width: 15%; transition: width 0.5s ease;"></div>
-                            </div>
-                        </div>
-                        
-                        <div style="background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, rgba(0, 237, 100, 0.02) 100%); border: 1px solid var(--accent-green); border-radius: 12px; padding: 24px; text-align: center;">
-                            <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-green);" id="storageSavedCalc">62.0 GB</div>
-                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Storage Saved</div>
-                            <div style="font-size: 0.8rem; color: var(--accent-cyan); margin-top: 8px;" id="compressionPercent">85% compression</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ====== PART V: COMPARISONS ====== -->
-        <div class="master-section-header comparisons">
-            <div class="master-section-badge comparisons">Part V</div>
-            <h2 class="master-section-title">Comparisons & Trade-offs</h2>
-            <p class="master-section-desc">Understanding when to use time series collections and their limitations</p>
-        </div>
-
-        <!-- Section 17: Limitations & Gotchas -->
-        <section class="section" id="limitations">
-            <div class="section-header">
-                <div class="section-number">17</div>
-                <h2 class="section-title">Limitations & Gotchas</h2>
-            </div>
-            
-            <div class="card">
-                <p style="color: var(--text-secondary); margin-bottom: 24px;">
-                    Time series collections have some restrictions to be aware of. Understanding these helps you design better schemas:
-                </p>
-                
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
-                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 1.5rem;">🚫</span>
-                            <h4 style="color: #ef4444;">Cannot Modify timeField</h4>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Once inserted, the timestamp field cannot be updated. You must delete and re-insert to change it.</p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 1.5rem;">🚫</span>
-                            <h4 style="color: #ef4444;">Cannot Modify metaField</h4>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">The metadata field is immutable after insertion. Plan your metadata structure carefully upfront.</p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 1.5rem;">🚫</span>
-                            <h4 style="color: #ef4444;">No Transactions</h4>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Time series collections don't support multi-document transactions. Use for append-only workloads.</p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 1.5rem;">🚫</span>
-                            <h4 style="color: #ef4444;">No Change Streams (Pre-6.0)</h4>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Change streams weren't supported until MongoDB 6.0. Now available with some limitations.</p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.02) 100%); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 1.5rem;">⚠️</span>
-                            <h4 style="color: var(--accent-orange);">Deletes are Expensive</h4>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Individual deletes must decompress buckets. Use TTL instead for automatic expiration.</p>
-                    </div>
-                    
-                    <div style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.02) 100%); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 20px;">
-                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-                            <span style="font-size: 1.5rem;">⚠️</span>
-                            <h4 style="color: var(--accent-orange);">Schema Changes Limited</h4>
-                        </div>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Can't change granularity or field mappings after creation. Plan schema carefully.</p>
-                    </div>
-                </div>
-                
-                <div class="info-box" style="margin-top: 24px; border-color: var(--accent-green);">
-                    <div class="info-icon">✅</div>
-                    <div class="info-content">
-                        <h4 style="color: var(--accent-green);">Pro Tip: Design for Append-Only</h4>
-                        <p>Time series collections work best for append-only, immutable data. If you need frequent updates, consider a regular collection with appropriate indexes.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
         <!-- Section 18: Secondary Indexes -->
         <section class="section" id="indexes">
             <div class="section-header">
-                <div class="section-number">18</div>
+                <div class="section-number">13</div>
                 <h2 class="section-title">Secondary Indexes on Time Series</h2>
             </div>
             
+            <!-- WHY: Query Performance -->
+            <div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, transparent 100%); border: 1px solid var(--accent-cyan);">
+                <h4 style="color: var(--accent-cyan); margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <span>🔍</span> Why This Matters
+                </h4>
+                <p style="color: var(--text-secondary);">
+                    <strong>Indexes on time series collections are 1000x smaller</strong> than on regular collections because they index <em>buckets</em>, not individual documents. 
+                    A collection with 10 million documents might have only 10,000 buckets - so your index has 10,000 entries instead of 10 million. 
+                    But they work differently: indexes are created on the internal <code style="background: var(--bg-tertiary); padding: 2px 6px; border-radius: 4px;">system.buckets.*</code> collection, and query planning uses bucket metadata for pruning.
+                </p>
+            </div>
+            
+            <!-- DETAILS: How Indexes Work -->
             <div class="card">
                 <p style="color: var(--text-secondary); margin-bottom: 24px;">
                     Time series collections support secondary indexes, but they work differently than regular collections:
@@ -4453,10 +4217,407 @@ db.sensors.createIndex({ <span class="string">"temperature"</span>: <span class=
             </div>
         </section>
 
+        <!-- Section 14: Time Series Aggregations -->
+        <section class="section" id="aggregations">
+            <div class="section-header">
+                <div class="section-number">14</div>
+                <h2 class="section-title">Time Series Aggregations</h2>
+            </div>
+            
+            <div class="card">
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                    MongoDB provides powerful aggregation stages designed specifically for time series analysis:
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-green)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <div style="font-size: 2rem; margin-bottom: 12px;">📅</div>
+                        <h4 style="color: var(--accent-green); margin-bottom: 8px;">$densify</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Fill gaps in time series data by generating documents for missing time intervals.</p>
+                        <div class="code-block" style="margin: 0;">
+                            <pre class="code-content" style="font-size: 0.7rem; padding: 12px;">{ $densify: {
+  field: "timestamp",
+  range: {
+    step: 1,
+    unit: "hour",
+    bounds: "full"
+  }
+}}</pre>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-cyan)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <div style="font-size: 2rem; margin-bottom: 12px;">🔄</div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: 8px;">$fill</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Fill null values using linear interpolation or last observed value (LOCF).</p>
+                        <div class="code-block" style="margin: 0;">
+                            <pre class="code-content" style="font-size: 0.7rem; padding: 12px;">{ $fill: {
+  sortBy: { timestamp: 1 },
+  output: {
+    temperature: {
+      method: "linear"
+    }
+  }
+}}</pre>
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px; transition: all 0.3s ease;" onmouseover="this.style.borderColor='var(--accent-purple)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        <div style="font-size: 2rem; margin-bottom: 12px;">📊</div>
+                        <h4 style="color: var(--accent-purple); margin-bottom: 8px;">$setWindowFields</h4>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px;">Compute moving averages, running totals, and rankings over time windows.</p>
+                        <div class="code-block" style="margin: 0;">
+                            <pre class="code-content" style="font-size: 0.7rem; padding: 12px;">{ $setWindowFields: {
+  sortBy: { timestamp: 1 },
+  output: {
+    movingAvg: {
+      $avg: "$temp",
+      window: { range: [-1, 0], unit: "hour" }
+    }
+  }
+}}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== PART V: COMPARISONS ====== -->
+        <div class="master-section-header comparisons">
+            <div class="master-section-badge comparisons">Part V</div>
+            <h2 class="master-section-title">Comparisons & Trade-offs</h2>
+            <p class="master-section-desc">Understanding when to use time series collections and their limitations</p>
+        </div>
+        
+        <!-- Section 10: Regular vs Time Series -->
+        <section class="section" id="vs-regular">
+            <div class="section-header">
+                <div class="section-number">15</div>
+                <h2 class="section-title">Regular Collection vs Time Series</h2>
+            </div>
+            
+            <div class="card">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Aspect</th>
+                            <th>Regular Collection</th>
+                            <th>Time Series Collection</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Document Storage</td>
+                            <td class="dim-cell">One document = one BSON document</td>
+                            <td class="highlight-cell">Many documents = one bucket document</td>
+                        </tr>
+                        <tr>
+                            <td>Field Storage</td>
+                            <td class="dim-cell">Row-oriented (all fields together)</td>
+                            <td class="highlight-cell">Column-oriented (fields stored separately)</td>
+                        </tr>
+                        <tr>
+                            <td>Compression</td>
+                            <td class="dim-cell">Block-level only (WiredTiger)</td>
+                            <td class="highlight-cell">Delta + RLE + Block compression</td>
+                        </tr>
+                        <tr>
+                            <td>Index Entries</td>
+                            <td class="dim-cell">One per document</td>
+                            <td class="highlight-cell">One per bucket (~1000x fewer)</td>
+                        </tr>
+                        <tr>
+                            <td>Time Range Queries</td>
+                            <td class="dim-cell">Scans matching documents</td>
+                            <td class="highlight-cell">Bucket pruning + clustered access</td>
+                        </tr>
+                        <tr>
+                            <td>Write Pattern</td>
+                            <td class="dim-cell">Individual inserts</td>
+                            <td class="highlight-cell">Batched into bucket updates</td>
+                        </tr>
+                        <tr>
+                            <td>Storage for 1M docs</td>
+                            <td class="dim-cell">~500 MB</td>
+                            <td class="highlight-cell">~50 MB (90% savings)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 20: Comparison with Other TSDB -->
+        <section class="section" id="vs-tsdb">
+            <div class="section-header">
+                <div class="section-number">16</div>
+                <h2 class="section-title">MongoDB vs Other Time Series Databases</h2>
+            </div>
+            
+            <div class="card">
+                <table class="comparison-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th style="text-align: center;">
+                                <span style="color: var(--accent-green);">MongoDB</span>
+                            </th>
+                            <th style="text-align: center;">InfluxDB</th>
+                            <th style="text-align: center;">TimescaleDB</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Data Model</td>
+                            <td class="highlight-cell" style="text-align: center;">Document (BSON)</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Line Protocol</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Relational (SQL)</td>
+                        </tr>
+                        <tr>
+                            <td>Query Language</td>
+                            <td class="highlight-cell" style="text-align: center;">MQL + Aggregation</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Flux / InfluxQL</td>
+                            <td style="text-align: center; color: var(--text-secondary);">SQL</td>
+                        </tr>
+                        <tr>
+                            <td>Schema Flexibility</td>
+                            <td class="highlight-cell" style="text-align: center;">⭐⭐⭐⭐⭐</td>
+                            <td style="text-align: center; color: var(--text-secondary);">⭐⭐⭐</td>
+                            <td style="text-align: center; color: var(--text-secondary);">⭐⭐</td>
+                        </tr>
+                        <tr>
+                            <td>Joins & Relations</td>
+                            <td class="highlight-cell" style="text-align: center;">$lookup, embedding</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Limited</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Full SQL joins</td>
+                        </tr>
+                        <tr>
+                            <td>Ecosystem</td>
+                            <td class="highlight-cell" style="text-align: center;">Atlas, Charts, Search</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Telegraf, Grafana</td>
+                            <td style="text-align: center; color: var(--text-secondary);">PostgreSQL ecosystem</td>
+                        </tr>
+                        <tr>
+                            <td>Best For</td>
+                            <td class="highlight-cell" style="text-align: center;">Mixed workloads</td>
+                            <td style="text-align: center; color: var(--text-secondary);">Pure metrics</td>
+                            <td style="text-align: center; color: var(--text-secondary);">SQL shops</td>
+                        </tr>
+                        <tr>
+                            <td>Compression</td>
+                            <td class="highlight-cell" style="text-align: center;">~90%</td>
+                            <td style="text-align: center; color: var(--text-secondary);">~95%</td>
+                            <td style="text-align: center; color: var(--text-secondary);">~85%</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="info-box" style="margin-top: 24px; border-color: var(--accent-green);">
+                    <div class="info-icon">🎯</div>
+                    <div class="info-content">
+                        <h4 style="color: var(--accent-green);">MongoDB's Unique Advantage</h4>
+                        <p>MongoDB lets you store time series data alongside your operational data in one database. No need for a separate TSDB + complex ETL pipelines. Combine sensor readings with device metadata, user profiles, and application state in unified queries.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 17: Limitations & Gotchas -->
+        <section class="section" id="limitations">
+            <div class="section-header">
+                <div class="section-number">17</div>
+                <h2 class="section-title">Limitations & Gotchas</h2>
+            </div>
+            
+            <div class="card">
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                    Time series collections have some restrictions to be aware of. Understanding these helps you design better schemas:
+                </p>
+                
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px;">
+                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">🚫</span>
+                            <h4 style="color: #ef4444;">Cannot Modify timeField</h4>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Once inserted, the timestamp field cannot be updated. You must delete and re-insert to change it.</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">🚫</span>
+                            <h4 style="color: #ef4444;">Cannot Modify metaField</h4>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">The metadata field is immutable after insertion. Plan your metadata structure carefully upfront.</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">🚫</span>
+                            <h4 style="color: #ef4444;">No Transactions</h4>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Time series collections don't support multi-document transactions. Use for append-only workloads.</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(239, 68, 68, 0.02) 100%); border: 1px solid #ef4444; border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">🚫</span>
+                            <h4 style="color: #ef4444;">No Change Streams (Pre-6.0)</h4>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Change streams weren't supported until MongoDB 6.0. Now available with some limitations.</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.02) 100%); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">⚠️</span>
+                            <h4 style="color: var(--accent-orange);">Deletes are Expensive</h4>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Individual deletes must decompress buckets. Use TTL instead for automatic expiration.</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(249, 115, 22, 0.02) 100%); border: 1px solid var(--accent-orange); border-radius: 12px; padding: 20px;">
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">⚠️</span>
+                            <h4 style="color: var(--accent-orange);">Schema Changes Limited</h4>
+                        </div>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);">Can't change granularity or field mappings after creation. Plan schema carefully.</p>
+                    </div>
+                </div>
+                
+                <div class="info-box" style="margin-top: 24px; border-color: var(--accent-green);">
+                    <div class="info-icon">✅</div>
+                    <div class="info-content">
+                        <h4 style="color: var(--accent-green);">Pro Tip: Design for Append-Only</h4>
+                        <p>Time series collections work best for append-only, immutable data. If you need frequent updates, consider a regular collection with appropriate indexes.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== PART VI: TOOLS & REFERENCE ====== -->
+        <div class="master-section-header tools">
+            <div class="master-section-badge tools">Part VI</div>
+            <h2 class="master-section-title">Tools & Reference</h2>
+            <p class="master-section-desc">Best practices, calculators, and interactive demos</p>
+        </div>
+        
+        <!-- Section 11: Best Practices -->
+        <section class="section" id="best-practices">
+            <div class="section-header">
+                <div class="section-number">18</div>
+                <h2 class="section-title">Best Practices</h2>
+            </div>
+            
+            <div class="intro-grid">
+                <div class="card intro-card">
+                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(0, 237, 100, 0.2) 0%, rgba(0, 237, 100, 0.05) 100%);">✅</div>
+                    <h3>Choose Right Granularity</h3>
+                    <p>Match granularity to your data frequency. Higher frequency = finer granularity for optimal bucketing.</p>
+                </div>
+                <div class="card intro-card">
+                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(59, 130, 246, 0.05) 100%);">✅</div>
+                    <h3>Use MetaField Wisely</h3>
+                    <p>Group related measurements together. High-cardinality metadata creates more buckets = less compression.</p>
+                </div>
+                <div class="card intro-card">
+                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(168, 85, 247, 0.05) 100%);">✅</div>
+                    <h3>Insert In Order</h3>
+                    <p>Insert documents in time order when possible. Out-of-order inserts may create additional buckets.</p>
+                </div>
+                <div class="card intro-card">
+                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(249, 115, 22, 0.2) 0%, rgba(249, 115, 22, 0.05) 100%);">✅</div>
+                    <h3>Add Secondary Indexes</h3>
+                    <p>Create indexes on metaField sub-fields if you query by those values frequently.</p>
+                </div>
+                <div class="card intro-card">
+                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.2) 0%, rgba(236, 72, 153, 0.05) 100%);">✅</div>
+                    <h3>Use TTL for Cleanup</h3>
+                    <p>Set expireAfterSeconds to automatically remove old data and keep storage costs down.</p>
+                </div>
+                <div class="card intro-card">
+                    <div class="intro-icon" style="background: linear-gradient(135deg, rgba(34, 211, 238, 0.2) 0%, rgba(34, 211, 238, 0.05) 100%);">✅</div>
+                    <h3>Query Time Ranges</h3>
+                    <p>Always include time range filters in queries to benefit from bucket pruning optimization.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 15: Storage Calculator -->
+        <section class="section" id="calculator">
+            <div class="section-header">
+                <div class="section-number">19</div>
+                <h2 class="section-title">Storage Savings Calculator</h2>
+            </div>
+            
+            <div class="card">
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                    Estimate your storage savings by switching to time series collections:
+                </p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
+                    <div>
+                        <h4 style="color: var(--accent-cyan); margin-bottom: 20px;">📝 Input Your Data Profile</h4>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Documents per day:</label>
+                            <input type="number" id="docsPerDay" value="1000000" oninput="calculateStorage()" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Average document size (bytes):</label>
+                            <input type="number" id="docSize" value="200" oninput="calculateStorage()" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Retention period (days):</label>
+                            <input type="number" id="retention" value="365" oninput="calculateStorage()" style="width: 100%; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: 'JetBrains Mono', monospace;">
+                        </div>
+                        
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 0.85rem; color: var(--text-secondary); display: block; margin-bottom: 8px;">Compression ratio (adjust based on data):</label>
+                            <input type="range" id="compressionSlider" min="50" max="95" value="85" oninput="calculateStorage()" style="width: 100%;">
+                            <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                                <span>50%</span>
+                                <span id="compressionValue">85%</span>
+                                <span>95%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="color: var(--accent-green); margin-bottom: 20px;">📊 Storage Comparison</h4>
+                        
+                        <div style="background: var(--bg-secondary); border-radius: 12px; padding: 24px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span style="color: var(--text-secondary);">Regular Collection:</span>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: var(--accent-orange);" id="regularSize">73.0 GB</span>
+                            </div>
+                            <div style="height: 24px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden; margin-bottom: 24px;">
+                                <div style="height: 100%; background: var(--accent-orange); width: 100%;"></div>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span style="color: var(--text-secondary);">Time Series Collection:</span>
+                                <span style="font-family: 'JetBrains Mono', monospace; font-size: 1.5rem; color: var(--accent-green);" id="tsSize">11.0 GB</span>
+                            </div>
+                            <div style="height: 24px; background: var(--bg-tertiary); border-radius: 6px; overflow: hidden;">
+                                <div id="tsBar" style="height: 100%; background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan)); width: 15%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: linear-gradient(135deg, rgba(0, 237, 100, 0.1) 0%, rgba(0, 237, 100, 0.02) 100%); border: 1px solid var(--accent-green); border-radius: 12px; padding: 24px; text-align: center;">
+                            <div style="font-size: 2.5rem; font-weight: 800; color: var(--accent-green);" id="storageSavedCalc">62.0 GB</div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary);">Storage Saved</div>
+                            <div style="font-size: 0.8rem; color: var(--accent-cyan); margin-top: 8px;" id="compressionPercent">85% compression</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Section 19: Version History -->
         <section class="section" id="versions">
             <div class="section-header">
-                <div class="section-number">19</div>
+                <div class="section-number">20</div>
                 <h2 class="section-title">Version History & Evolution</h2>
             </div>
             
@@ -4525,81 +4686,6 @@ db.sensors.createIndex({ <span class="string">"temperature"</span>: <span class=
                                 <li>🚀 Improved compression algorithms</li>
                             </ul>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Section 20: Comparison with Other TSDB -->
-        <section class="section" id="vs-tsdb">
-            <div class="section-header">
-                <div class="section-number">20</div>
-                <h2 class="section-title">MongoDB vs Other Time Series Databases</h2>
-            </div>
-            
-            <div class="card">
-                <table class="comparison-table">
-                    <thead>
-                        <tr>
-                            <th>Feature</th>
-                            <th style="text-align: center;">
-                                <span style="color: var(--accent-green);">MongoDB</span>
-                            </th>
-                            <th style="text-align: center;">InfluxDB</th>
-                            <th style="text-align: center;">TimescaleDB</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Data Model</td>
-                            <td class="highlight-cell" style="text-align: center;">Document (BSON)</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Line Protocol</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Relational (SQL)</td>
-                        </tr>
-                        <tr>
-                            <td>Query Language</td>
-                            <td class="highlight-cell" style="text-align: center;">MQL + Aggregation</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Flux / InfluxQL</td>
-                            <td style="text-align: center; color: var(--text-secondary);">SQL</td>
-                        </tr>
-                        <tr>
-                            <td>Schema Flexibility</td>
-                            <td class="highlight-cell" style="text-align: center;">⭐⭐⭐⭐⭐</td>
-                            <td style="text-align: center; color: var(--text-secondary);">⭐⭐⭐</td>
-                            <td style="text-align: center; color: var(--text-secondary);">⭐⭐</td>
-                        </tr>
-                        <tr>
-                            <td>Joins & Relations</td>
-                            <td class="highlight-cell" style="text-align: center;">$lookup, embedding</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Limited</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Full SQL joins</td>
-                        </tr>
-                        <tr>
-                            <td>Ecosystem</td>
-                            <td class="highlight-cell" style="text-align: center;">Atlas, Charts, Search</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Telegraf, Grafana</td>
-                            <td style="text-align: center; color: var(--text-secondary);">PostgreSQL ecosystem</td>
-                        </tr>
-                        <tr>
-                            <td>Best For</td>
-                            <td class="highlight-cell" style="text-align: center;">Mixed workloads</td>
-                            <td style="text-align: center; color: var(--text-secondary);">Pure metrics</td>
-                            <td style="text-align: center; color: var(--text-secondary);">SQL shops</td>
-                        </tr>
-                        <tr>
-                            <td>Compression</td>
-                            <td class="highlight-cell" style="text-align: center;">~90%</td>
-                            <td style="text-align: center; color: var(--text-secondary);">~95%</td>
-                            <td style="text-align: center; color: var(--text-secondary);">~85%</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-                <div class="info-box" style="margin-top: 24px; border-color: var(--accent-green);">
-                    <div class="info-icon">🎯</div>
-                    <div class="info-content">
-                        <h4 style="color: var(--accent-green);">MongoDB's Unique Advantage</h4>
-                        <p>MongoDB lets you store time series data alongside your operational data in one database. No need for a separate TSDB + complex ETL pipelines. Combine sensor readings with device metadata, user profiles, and application state in unified queries.</p>
                     </div>
                 </div>
             </div>
