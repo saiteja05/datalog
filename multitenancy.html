@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MongoDB Multi-Tenancy Strategies - Interactive Demo</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><path d='M32 4C16.536 4 4 16.536 4 32s12.536 28 28 28 28-12.536 28-28S47.464 4 32 4z' fill='%2300684a'/><path d='M32.8 14.2c-.2-1.3-2-1.3-2.2 0l-1.2 8.3c-.3 1.8-1.8 3.2-3.6 3.4l-8.3 1c-1.3.2-1.3 2 0 2.2l8.3 1c1.8.2 3.3 1.6 3.6 3.4l1.2 8.3c.2 1.3 2 1.3 2.2 0l1.2-8.3c.3-1.8 1.8-3.2 3.6-3.4l8.3-1c1.3-.2 1.3-2 0-2.2l-8.3-1c-1.8-.2-3.3-1.6-3.6-3.4l-1.2-8.3z' fill='%2300ed64'/></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M15.9.087l.854 1.604c.192.296.4.558.645.802.715.715 1.394 1.464 2.004 2.266 1.447 1.9 2.423 4.01 3.12 6.292.418 1.394.645 2.824.662 4.27.07 4.323-1.412 8.035-4.4 11.12-.488.488-1.01.94-1.57 1.342-.296 0-.436-.227-.558-.436-.227-.383-.366-.82-.436-1.255-.105-.523-.174-1.046-.14-1.586v-.244c-.024-.052-.285-24.052-.181-24.175z' fill='%2300ed64'/><path d='M15.9.034c-.035-.07-.07-.017-.105.017.017.35-.105.662-.296.96-.21.296-.488.523-.767.767-1.55 1.342-2.77 2.963-3.747 4.776-1.3 2.44-1.97 5.055-2.16 7.808-.087.993.314 4.497.627 5.508.854 2.684 2.388 4.933 4.375 6.885.488.47 1.01.906 1.55 1.325.157 0 .174-.14.21-.244a4.78 4.78 0 0 0 .157-.68l.35-2.614L15.9.034z' fill='%2300684a'/><path d='M16.754 28.845c.035-.4.227-.732.436-1.063-.21-.087-.366-.26-.488-.453a3.235 3.235 0 0 1-.26-.575v-.017c-.017.227-.06.453-.105.662-.157.488-.384.94-.627 1.377v.052l-.017.052c.017.227.06.453.122.662l.105.454c.052.104.06.227.14.314.044.035.105.042.157.042h.017c.202-.07.384-.192.523-.366.12-.122.193-.28.227-.436.017-.14.052-.296.052-.453a5.04 5.04 0 0 0-.282-.252z' fill='%23b8c4c2'/></svg>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -954,6 +954,727 @@
         .rating-dot.filled { background: var(--accent-green); }
         .rating-dot.medium { background: var(--accent-orange); }
         .rating-dot.teal { background: var(--accent-teal); }
+
+        /* Performance Metrics Panel */
+        .metrics-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .metrics-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.75rem;
+        }
+
+        .metric-card {
+            background: var(--bg-card-alt);
+            border-radius: 10px;
+            padding: 0.75rem;
+            text-align: center;
+        }
+
+        .metric-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-gauge {
+            height: 8px;
+            background: var(--bg-dark);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.4rem;
+        }
+
+        .metric-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s ease, background 0.3s ease;
+        }
+
+        .metric-fill.green { background: var(--accent-green); }
+        .metric-fill.yellow { background: var(--accent-yellow); }
+        .metric-fill.orange { background: var(--accent-orange); }
+        .metric-fill.red { background: var(--accent-red); }
+        .metric-fill.teal { background: var(--accent-teal); }
+
+        .metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .metric-unit {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+
+        /* Noisy Neighbor Panel - Enhanced */
+        .noisy-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .noisy-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .noisy-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .noisy-subtitle {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            padding: 0.5rem;
+            background: var(--bg-card-alt);
+            border-radius: 6px;
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .noisy-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--accent-red);
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .noisy-btn:hover:not(:disabled) {
+            background: var(--accent-red);
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .noisy-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .noisy-btn.active {
+            background: var(--accent-red);
+            color: white;
+            animation: noisyPulse 0.5s ease infinite;
+        }
+
+        @keyframes noisyPulse {
+            0%, 100% { box-shadow: 0 0 5px var(--accent-red); }
+            50% { box-shadow: 0 0 20px var(--accent-red); }
+        }
+
+        .noisy-scenario {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .noisy-tenant-card {
+            background: var(--bg-card-alt);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 0.75rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .noisy-tenant-card.noisy-source {
+            border-color: var(--accent-red);
+            background: var(--accent-red-dim);
+        }
+
+        .noisy-tenant-card.noisy-source::before {
+            content: '🔥 HEAVY LOAD';
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-red);
+            color: white;
+            font-size: 0.55rem;
+            font-weight: 700;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            white-space: nowrap;
+        }
+
+        .noisy-tenant-card.protected {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+        }
+
+        .noisy-tenant-card.degraded {
+            border-color: var(--accent-yellow);
+            background: var(--accent-yellow-dim);
+        }
+
+        .noisy-tenant-card.severely-degraded {
+            border-color: var(--accent-red);
+            background: var(--accent-red-dim);
+        }
+
+        .tenant-card-icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .tenant-card-name {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .tenant-card-status {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            min-height: 2.5em;
+        }
+
+        .tenant-card-status.status-ok {
+            color: var(--accent-green);
+        }
+
+        .tenant-card-status.status-warning {
+            color: var(--accent-yellow);
+        }
+
+        .tenant-card-status.status-danger {
+            color: var(--accent-red);
+        }
+
+        .tenant-card-latency {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 0.3rem;
+        }
+
+        .noisy-arrow {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .noisy-metrics-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .noisy-metric {
+            background: var(--bg-card-alt);
+            border-radius: 8px;
+            padding: 0.6rem;
+            text-align: center;
+        }
+
+        .noisy-metric-label {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.3rem;
+        }
+
+        .noisy-metric-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .noisy-metric-bar {
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin-top: 0.4rem;
+            overflow: hidden;
+        }
+
+        .noisy-metric-fill {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+
+        .noisy-explanation {
+            background: var(--bg-card-alt);
+            border-radius: 8px;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
+        }
+
+        .noisy-explanation-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .noisy-explanation-text {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .noisy-isolation-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+        }
+
+        .noisy-isolation-badge.high {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .noisy-isolation-badge.medium {
+            background: var(--accent-yellow-dim);
+            color: var(--accent-yellow);
+        }
+
+        .noisy-isolation-badge.low {
+            background: var(--accent-red-dim);
+            color: var(--accent-red);
+        }
+
+        /* Security Boundaries */
+        .security-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--bg-card-alt);
+            padding: 0.3rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.65rem;
+        }
+
+        .security-level {
+            display: flex;
+            gap: 2px;
+        }
+
+        .security-bar {
+            width: 4px;
+            height: 12px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .security-bar.active { background: var(--accent-green); }
+        .security-bar.medium { background: var(--accent-yellow); }
+        .security-bar.low { background: var(--accent-red); }
+
+        .security-warning {
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-red-dim);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .security-warning.show {
+            opacity: 1;
+            animation: warningBlink 1s ease infinite;
+        }
+
+        @keyframes warningBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* Cost Panel */
+        .cost-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .cost-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 0.6rem;
+        }
+
+        .cost-item {
+            background: var(--bg-card-alt);
+            border-radius: 8px;
+            padding: 0.6rem;
+            text-align: center;
+        }
+
+        .cost-icon {
+            font-size: 1.2rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .cost-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        .cost-bars {
+            display: flex;
+            justify-content: center;
+            gap: 3px;
+        }
+
+        .cost-bar {
+            width: 8px;
+            height: 16px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .cost-bar.filled { background: var(--accent-green); }
+        .cost-bar.medium { background: var(--accent-yellow); }
+        .cost-bar.high { background: var(--accent-orange); }
+        .cost-bar.very-high { background: var(--accent-red); }
+
+        .cost-estimate {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            margin-top: 0.3rem;
+        }
+
+        /* Migration Path */
+        .migration-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .migration-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            padding: 0.5rem;
+        }
+
+        .migration-node {
+            background: var(--bg-card-alt);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.7rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .migration-node:hover {
+            border-color: var(--accent-green);
+        }
+
+        .migration-node.current {
+            border-color: var(--accent-green);
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .migration-arrow {
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .migration-tip {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            font-style: italic;
+        }
+
+        /* Connection Pool */
+        .pool-viz {
+            display: flex;
+            justify-content: center;
+            gap: 0.3rem;
+            margin: 0.5rem 0;
+            flex-wrap: wrap;
+        }
+
+        .pool-conn {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            background: var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .pool-conn.active { background: var(--accent-green); }
+        .pool-conn.tenant-a { background: var(--accent-blue); }
+        .pool-conn.tenant-b { background: var(--accent-purple); }
+        .pool-conn.tenant-c { background: var(--accent-orange); }
+
+        /* Schema Preview */
+        .schema-preview {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.6rem;
+            margin-top: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            overflow-x: auto;
+        }
+
+        /* Auto Demo Button */
+        .auto-demo-btn {
+            width: 100%;
+            padding: 0.6rem;
+            border: 2px solid var(--accent-cyan);
+            background: var(--accent-cyan-dim);
+            color: var(--accent-cyan);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.4rem;
+        }
+
+        .auto-demo-btn:hover:not(:disabled) {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+        }
+
+        .auto-demo-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .auto-demo-btn.running {
+            background: var(--accent-cyan);
+            color: var(--bg-dark);
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            position: absolute;
+            top: 0.4rem;
+            right: 0.4rem;
+            padding: 0.3rem 0.5rem;
+            border: 1px solid var(--border);
+            background: var(--bg-card-alt);
+            color: var(--text-muted);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.6rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+            border-color: var(--accent-green);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+        }
+
+        .code-display {
+            position: relative;
+        }
+
+        /* Add Tenant Button */
+        .add-tenant-section {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .add-tenant-btn {
+            width: 100%;
+            padding: 0.5rem;
+            border: 2px dashed var(--accent-green);
+            background: transparent;
+            color: var(--accent-green);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-tenant-btn:hover:not(:disabled) {
+            background: var(--accent-green-dim);
+        }
+
+        .add-tenant-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .onboarding-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .onboarding-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .onboarding-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.5rem;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .onboarding-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .onboarding-steps {
+            margin-bottom: 1rem;
+        }
+
+        .onboarding-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.6rem;
+            background: var(--bg-card-alt);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            opacity: 0.4;
+            transition: all 0.3s ease;
+        }
+
+        .onboarding-step.active {
+            opacity: 1;
+            border-left: 3px solid var(--accent-green);
+        }
+
+        .onboarding-step.complete {
+            opacity: 1;
+            background: var(--accent-green-dim);
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .onboarding-step.active .step-number {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+        }
+
+        .onboarding-step.complete .step-number {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+        }
+
+        .step-text {
+            font-size: 0.8rem;
+        }
+
+        .onboarding-close {
+            width: 100%;
+            padding: 0.6rem;
+            border: none;
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -962,10 +1683,10 @@
     <div class="container">
         <header>
             <div class="logo">
-                <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M32 4C16.536 4 4 16.536 4 32s12.536 28 28 28 28-12.536 28-28S47.464 4 32 4z" fill="#00684a"/>
-                    <path d="M32.8 14.2c-.2-1.3-2-1.3-2.2 0l-1.2 8.3c-.3 1.8-1.8 3.2-3.6 3.4l-8.3 1c-1.3.2-1.3 2 0 2.2l8.3 1c1.8.2 3.3 1.6 3.6 3.4l1.2 8.3c.2 1.3 2 1.3 2.2 0l1.2-8.3c.3-1.8 1.8-3.2 3.6-3.4l8.3-1c1.3-.2 1.3-2 0-2.2l-8.3-1c-1.8-.2-3.3-1.6-3.6-3.4l-1.2-8.3z" fill="#00ed64"/>
-                    <circle cx="32" cy="32" r="3" fill="#fff"/>
+                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15.9.087l.854 1.604c.192.296.4.558.645.802.715.715 1.394 1.464 2.004 2.266 1.447 1.9 2.423 4.01 3.12 6.292.418 1.394.645 2.824.662 4.27.07 4.323-1.412 8.035-4.4 11.12-.488.488-1.01.94-1.57 1.342-.296 0-.436-.227-.558-.436-.227-.383-.366-.82-.436-1.255-.105-.523-.174-1.046-.14-1.586v-.244c-.024-.052-.285-24.052-.181-24.175z" fill="#00ed64"/>
+                    <path d="M15.9.034c-.035-.07-.07-.017-.105.017.017.35-.105.662-.296.96-.21.296-.488.523-.767.767-1.55 1.342-2.77 2.963-3.747 4.776-1.3 2.44-1.97 5.055-2.16 7.808-.087.993.314 4.497.627 5.508.854 2.684 2.388 4.933 4.375 6.885.488.47 1.01.906 1.55 1.325.157 0 .174-.14.21-.244a4.78 4.78 0 0 0 .157-.68l.35-2.614L15.9.034z" fill="#00684a"/>
+                    <path d="M16.754 28.845c.035-.4.227-.732.436-1.063-.21-.087-.366-.26-.488-.453a3.235 3.235 0 0 1-.26-.575v-.017c-.017.227-.06.453-.105.662-.157.488-.384.94-.627 1.377v.052l-.017.052c.017.227.06.453.122.662l.105.454c.052.104.06.227.14.314.044.035.105.042.157.042h.017c.202-.07.384-.192.523-.366.12-.122.193-.28.227-.436.017-.14.052-.296.052-.453a5.04 5.04 0 0 0-.282-.252z" fill="#b8c4c2"/>
                 </svg>
                 <span class="logo-text">MongoDB</span>
             </div>
@@ -1020,6 +1741,17 @@
                         <span class="log-msg">Ready. Select tenant & operation.</span>
                     </div>
                 </div>
+
+                <!-- Auto Demo Button -->
+                <button class="auto-demo-btn" id="auto-demo-btn">
+                    ▶️ Auto Demo
+                </button>
+
+
+                <!-- Add Tenant Section -->
+                <div class="add-tenant-section">
+                    <button class="add-tenant-btn" id="add-tenant-btn">➕ Onboard New Tenant</button>
+                </div>
             </div>
 
             <!-- Visualization Area -->
@@ -1029,8 +1761,25 @@
                     <span class="badge" id="strategy-badge">ISOLATED</span>
                 </div>
 
+                <!-- Security Indicator -->
+                <div class="security-indicator" id="security-indicator">
+                    <span>🔒 Isolation:</span>
+                    <div class="security-level" id="security-level">
+                        <div class="security-bar active"></div>
+                        <div class="security-bar active"></div>
+                        <div class="security-bar active"></div>
+                        <div class="security-bar active"></div>
+                        <div class="security-bar active"></div>
+                    </div>
+                </div>
+
                 <div class="architecture-viz" id="architecture">
                     <!-- Content injected by JS -->
+                </div>
+
+                <!-- Security Warning -->
+                <div class="security-warning" id="security-warning">
+                    ⚠️ WARNING: Query missing tenant_id filter!
                 </div>
 
                 <!-- Data Packets -->
@@ -1052,9 +1801,252 @@
                     <span class="code-dot green"></span>
                     <span class="code-title" id="code-title">connection.js</span>
                 </div>
+                <button class="copy-btn" id="copy-btn">📋 Copy</button>
                 <div class="code-body" id="code-body">
                     <!-- Code injected by JS -->
                 </div>
+            </div>
+
+            <!-- Schema Preview -->
+            <div class="code-display" style="margin-top: 0.5rem;">
+                <div class="code-header">
+                    <span class="code-dot red"></span>
+                    <span class="code-dot yellow"></span>
+                    <span class="code-dot green"></span>
+                    <span class="code-title">📋 Document Schema</span>
+                </div>
+                <div class="code-body" id="schema-preview">
+                    <!-- Schema injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Metrics Panel -->
+        <div class="metrics-panel">
+            <div class="metrics-title">📈 Real-Time Performance Metrics</div>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">Query Latency</div>
+                    <div class="metric-gauge">
+                        <div class="metric-fill green" id="latency-fill" style="width: 20%;"></div>
+                    </div>
+                    <div class="metric-value" id="latency-value">2<span class="metric-unit">ms</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Ops/Second</div>
+                    <div class="metric-gauge">
+                        <div class="metric-fill teal" id="ops-fill" style="width: 70%;"></div>
+                    </div>
+                    <div class="metric-value" id="ops-value">12K<span class="metric-unit">/s</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Memory Usage</div>
+                    <div class="metric-gauge">
+                        <div class="metric-fill yellow" id="memory-fill" style="width: 65%;"></div>
+                    </div>
+                    <div class="metric-value" id="memory-value">2.4<span class="metric-unit">GB</span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Connections</div>
+                    <div class="metric-gauge">
+                        <div class="metric-fill orange" id="conn-fill" style="width: 45%;"></div>
+                    </div>
+                    <div class="metric-value" id="conn-value">450<span class="metric-unit"></span></div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Query Complexity</div>
+                    <div class="metric-gauge">
+                        <div class="metric-fill green" id="complexity-fill" style="width: 30%;"></div>
+                    </div>
+                    <div class="metric-value" id="complexity-value">Low</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Index Efficiency</div>
+                    <div class="metric-gauge">
+                        <div class="metric-fill green" id="index-fill" style="width: 95%;"></div>
+                    </div>
+                    <div class="metric-value" id="index-value">95<span class="metric-unit">%</span></div>
+                </div>
+            </div>
+
+            <!-- Connection Pool Visualization -->
+            <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--border);">
+                <div style="font-size: 0.75rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.4rem;">
+                    🔌 Connection Pool <span style="font-size: 0.65rem; color: var(--text-muted);" id="pool-label">(Per-Tenant Pools)</span>
+                </div>
+                <div class="pool-viz" id="pool-viz">
+                    <!-- Pool connections injected by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Estimation Panel -->
+        <div class="cost-panel">
+            <div class="metrics-title">💰 Cost Estimation <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 400;">(at 100 tenants)</span></div>
+            <div class="cost-grid" id="cost-grid">
+                <div class="cost-item">
+                    <div class="cost-icon">🔌</div>
+                    <div class="cost-label">Connections</div>
+                    <div class="cost-bars" id="cost-connections">
+                        <div class="cost-bar very-high"></div>
+                        <div class="cost-bar very-high"></div>
+                        <div class="cost-bar very-high"></div>
+                        <div class="cost-bar very-high"></div>
+                        <div class="cost-bar very-high"></div>
+                    </div>
+                    <div class="cost-estimate" id="cost-conn-text">~10,000</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-icon">💾</div>
+                    <div class="cost-label">Storage Overhead</div>
+                    <div class="cost-bars" id="cost-storage">
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar"></div>
+                        <div class="cost-bar"></div>
+                    </div>
+                    <div class="cost-estimate" id="cost-storage-text">High metadata</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-icon">⚡</div>
+                    <div class="cost-label">Compute</div>
+                    <div class="cost-bars" id="cost-compute">
+                        <div class="cost-bar medium"></div>
+                        <div class="cost-bar medium"></div>
+                        <div class="cost-bar"></div>
+                        <div class="cost-bar"></div>
+                        <div class="cost-bar"></div>
+                    </div>
+                    <div class="cost-estimate" id="cost-compute-text">Moderate</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-icon">🛠️</div>
+                    <div class="cost-label">Mgmt Complexity</div>
+                    <div class="cost-bars" id="cost-mgmt">
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar"></div>
+                    </div>
+                    <div class="cost-estimate" id="cost-mgmt-text">100 DBs to manage</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-icon">📊</div>
+                    <div class="cost-label">Index Storage</div>
+                    <div class="cost-bars" id="cost-index">
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar"></div>
+                        <div class="cost-bar"></div>
+                    </div>
+                    <div class="cost-estimate" id="cost-index-text">Duplicated indexes</div>
+                </div>
+                <div class="cost-item">
+                    <div class="cost-icon">💵</div>
+                    <div class="cost-label">Est. Monthly</div>
+                    <div class="cost-bars" id="cost-monthly">
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar high"></div>
+                        <div class="cost-bar"></div>
+                    </div>
+                    <div class="cost-estimate" id="cost-monthly-text">~$2,500</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Noisy Neighbor Panel - Full Width -->
+        <div class="noisy-panel" id="noisy-panel">
+            <div class="noisy-header">
+                <span class="noisy-title">🔊 Noisy Neighbor Simulation</span>
+                <button class="noisy-btn" id="noisy-btn">▶️ Start Simulation</button>
+            </div>
+            
+            <div class="noisy-subtitle">
+                💡 <strong>What is Noisy Neighbor?</strong> When one tenant consumes excessive resources (CPU, I/O, connections), 
+                it can degrade performance for other tenants. This simulation shows how your chosen isolation strategy handles this scenario.
+            </div>
+
+            <!-- Tenant Cards -->
+            <div class="noisy-scenario" id="noisy-scenario">
+                <div class="noisy-tenant-card" id="noisy-tenant-A" data-tenant="A">
+                    <div class="tenant-card-icon">🏢</div>
+                    <div class="tenant-card-name">Tenant A</div>
+                    <div class="tenant-card-status" id="status-A">Normal operations</div>
+                    <div class="tenant-card-latency" id="latency-A">2ms</div>
+                </div>
+                <div class="noisy-arrow">⟷</div>
+                <div class="noisy-tenant-card" id="noisy-tenant-B" data-tenant="B">
+                    <div class="tenant-card-icon">🏬</div>
+                    <div class="tenant-card-name">Tenant B</div>
+                    <div class="tenant-card-status" id="status-B">Normal operations</div>
+                    <div class="tenant-card-latency" id="latency-B">2ms</div>
+                </div>
+                <div class="noisy-arrow">⟷</div>
+                <div class="noisy-tenant-card" id="noisy-tenant-C" data-tenant="C">
+                    <div class="tenant-card-icon">🏭</div>
+                    <div class="tenant-card-name">Tenant C</div>
+                    <div class="tenant-card-status" id="status-C">Normal operations</div>
+                    <div class="tenant-card-latency" id="latency-C">2ms</div>
+                </div>
+            </div>
+
+            <!-- Impact Metrics -->
+            <div class="noisy-metrics-row" id="noisy-metrics">
+                <div class="noisy-metric">
+                    <div class="noisy-metric-label">Shared Resource Usage</div>
+                    <div class="noisy-metric-value" id="noisy-resource">25%</div>
+                    <div class="noisy-metric-bar">
+                        <div class="noisy-metric-fill" id="noisy-resource-fill" style="width: 25%; background: var(--accent-green);"></div>
+                    </div>
+                </div>
+                <div class="noisy-metric">
+                    <div class="noisy-metric-label">Cross-Tenant Impact</div>
+                    <div class="noisy-metric-value" id="noisy-impact-value">None</div>
+                    <div class="noisy-metric-bar">
+                        <div class="noisy-metric-fill" id="noisy-impact-fill" style="width: 0%; background: var(--accent-green);"></div>
+                    </div>
+                </div>
+                <div class="noisy-metric">
+                    <div class="noisy-metric-label">Isolation Effectiveness</div>
+                    <div class="noisy-metric-value" id="noisy-isolation">100%</div>
+                    <div class="noisy-metric-bar">
+                        <div class="noisy-metric-fill" id="noisy-isolation-fill" style="width: 100%; background: var(--accent-green);"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Explanation -->
+            <div class="noisy-explanation" id="noisy-explanation">
+                <div class="noisy-explanation-title">
+                    📊 Current Strategy: <span id="noisy-strategy-name">Database per Tenant</span>
+                    <span class="noisy-isolation-badge high" id="noisy-isolation-badge">🛡️ HIGH ISOLATION</span>
+                </div>
+                <div class="noisy-explanation-text" id="noisy-explanation-text">
+                    With separate databases per tenant, each tenant has dedicated resources. 
+                    A noisy neighbor cannot impact other tenants because they operate on completely isolated database instances.
+                </div>
+            </div>
+        </div>
+
+        <!-- Migration Path Panel -->
+        <div class="migration-panel">
+            <div class="metrics-title">🔄 Migration Path</div>
+            <div class="migration-flow" id="migration-flow">
+                <div class="migration-node current" data-strategy="shared">🔗 Shared</div>
+                <div class="migration-arrow">→</div>
+                <div class="migration-node" data-strategy="collection">📁 Collection</div>
+                <div class="migration-arrow">→</div>
+                <div class="migration-node" data-strategy="database">🗄️ Database</div>
+                <div class="migration-arrow">→</div>
+                <div class="migration-node" data-strategy="zone">🌍 Zone Shard</div>
+            </div>
+            <div class="migration-tip" id="migration-tip">
+                💡 Start with Shared Collection for prototyping, migrate to Collection/Tenant as you grow, then to DB/Tenant for enterprise customers.
             </div>
         </div>
 
@@ -1127,11 +2119,26 @@
         </div>
     </div>
 
+    <!-- Onboarding Modal -->
+    <div class="onboarding-modal" id="onboarding-modal">
+        <div class="onboarding-content">
+            <div class="onboarding-title">➕ Tenant Onboarding: <span id="onboard-strategy">Database per Tenant</span></div>
+            <div class="onboarding-steps" id="onboarding-steps">
+                <!-- Steps injected by JS -->
+            </div>
+            <button class="onboarding-close" id="onboarding-close">Close</button>
+        </div>
+    </div>
+
     <script>
         // State
         let currentStrategy = 'database';
         let currentTenant = 'A';
         let isAnimating = false;
+        let isNoisyActive = false;
+        let isAutoDemo = false;
+        let noisyInterval = null;
+        let autoDemoTimeout = null;
 
         // Tenant data
         const tenantData = {
@@ -1283,13 +2290,255 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
             C: { primary: '#f97316', dim: 'rgba(249, 115, 22, 0.15)' }
         };
 
+        // Performance metrics per strategy
+        const strategyMetrics = {
+            database: {
+                latency: { value: 2, unit: 'ms', fill: 20, color: 'green' },
+                ops: { value: '12K', fill: 70, color: 'teal' },
+                memory: { value: 2.4, unit: 'GB', fill: 65, color: 'yellow' },
+                connections: { value: 450, fill: 45, color: 'orange' },
+                complexity: { value: 'Low', fill: 30, color: 'green' },
+                index: { value: 95, unit: '%', fill: 95, color: 'green' }
+            },
+            collection: {
+                latency: { value: 3, unit: 'ms', fill: 25, color: 'green' },
+                ops: { value: '15K', fill: 80, color: 'teal' },
+                memory: { value: 1.8, unit: 'GB', fill: 50, color: 'green' },
+                connections: { value: 200, fill: 30, color: 'green' },
+                complexity: { value: 'Low', fill: 35, color: 'green' },
+                index: { value: 90, unit: '%', fill: 90, color: 'green' }
+            },
+            shared: {
+                latency: { value: 5, unit: 'ms', fill: 40, color: 'yellow' },
+                ops: { value: '20K', fill: 90, color: 'teal' },
+                memory: { value: 0.8, unit: 'GB', fill: 25, color: 'green' },
+                connections: { value: 100, fill: 15, color: 'green' },
+                complexity: { value: 'Medium', fill: 55, color: 'yellow' },
+                index: { value: 75, unit: '%', fill: 75, color: 'yellow' }
+            },
+            hybrid: {
+                latency: { value: 4, unit: 'ms', fill: 35, color: 'green' },
+                ops: { value: '14K', fill: 75, color: 'teal' },
+                memory: { value: 1.5, unit: 'GB', fill: 45, color: 'green' },
+                connections: { value: 250, fill: 35, color: 'yellow' },
+                complexity: { value: 'High', fill: 75, color: 'orange' },
+                index: { value: 85, unit: '%', fill: 85, color: 'green' }
+            },
+            zone: {
+                latency: { value: 1, unit: 'ms', fill: 10, color: 'green' },
+                ops: { value: '50K', fill: 95, color: 'teal' },
+                memory: { value: 4.0, unit: 'GB', fill: 80, color: 'orange' },
+                connections: { value: 600, fill: 55, color: 'yellow' },
+                complexity: { value: 'Medium', fill: 50, color: 'yellow' },
+                index: { value: 92, unit: '%', fill: 92, color: 'green' }
+            },
+            range: {
+                latency: { value: 2, unit: 'ms', fill: 15, color: 'green' },
+                ops: { value: '45K', fill: 92, color: 'teal' },
+                memory: { value: 3.5, unit: 'GB', fill: 70, color: 'yellow' },
+                connections: { value: 500, fill: 50, color: 'yellow' },
+                complexity: { value: 'Medium', fill: 45, color: 'yellow' },
+                index: { value: 88, unit: '%', fill: 88, color: 'green' }
+            }
+        };
+
+        // Cost estimates per strategy (at 100 tenants)
+        const strategyCosts = {
+            database: {
+                connections: { bars: 5, color: 'very-high', text: '~10,000' },
+                storage: { bars: 3, color: 'high', text: 'High metadata' },
+                compute: { bars: 2, color: 'medium', text: 'Moderate' },
+                mgmt: { bars: 4, color: 'high', text: '100 DBs to manage' },
+                index: { bars: 3, color: 'high', text: 'Duplicated indexes' },
+                monthly: { bars: 4, color: 'high', text: '~$2,500' }
+            },
+            collection: {
+                connections: { bars: 2, color: 'medium', text: '~2,000' },
+                storage: { bars: 2, color: 'medium', text: 'Moderate' },
+                compute: { bars: 2, color: 'medium', text: 'Moderate' },
+                mgmt: { bars: 3, color: 'high', text: '100 collections' },
+                index: { bars: 2, color: 'medium', text: 'Per-collection' },
+                monthly: { bars: 3, color: 'high', text: '~$1,500' }
+            },
+            shared: {
+                connections: { bars: 1, color: 'filled', text: '~500' },
+                storage: { bars: 1, color: 'filled', text: 'Minimal' },
+                compute: { bars: 1, color: 'filled', text: 'Low' },
+                mgmt: { bars: 1, color: 'filled', text: '1 collection' },
+                index: { bars: 2, color: 'medium', text: 'Compound indexes' },
+                monthly: { bars: 1, color: 'filled', text: '~$500' }
+            },
+            hybrid: {
+                connections: { bars: 3, color: 'high', text: '~4,000' },
+                storage: { bars: 2, color: 'medium', text: 'Variable' },
+                compute: { bars: 3, color: 'high', text: 'Per-tier scaling' },
+                mgmt: { bars: 4, color: 'high', text: 'Multi-tier logic' },
+                index: { bars: 3, color: 'high', text: 'Mixed strategy' },
+                monthly: { bars: 3, color: 'high', text: '~$1,800' }
+            },
+            zone: {
+                connections: { bars: 3, color: 'high', text: '~3,000' },
+                storage: { bars: 2, color: 'medium', text: 'Per-region' },
+                compute: { bars: 4, color: 'high', text: 'Multi-region' },
+                mgmt: { bars: 3, color: 'high', text: 'Zone config' },
+                index: { bars: 2, color: 'medium', text: 'Shared globally' },
+                monthly: { bars: 4, color: 'high', text: '~$3,500' }
+            },
+            range: {
+                connections: { bars: 2, color: 'medium', text: '~2,500' },
+                storage: { bars: 2, color: 'medium', text: 'Distributed' },
+                compute: { bars: 3, color: 'high', text: 'Shard overhead' },
+                mgmt: { bars: 2, color: 'medium', text: 'Shard balancing' },
+                index: { bars: 2, color: 'medium', text: 'Shared' },
+                monthly: { bars: 3, color: 'high', text: '~$2,800' }
+            }
+        };
+
+        // Security levels per strategy (5 = max isolation)
+        const securityLevels = {
+            database: 5,
+            collection: 4,
+            shared: 2,
+            hybrid: 4,
+            zone: 5,
+            range: 4
+        };
+
+        // Connection pool config per strategy
+        const poolConfigs = {
+            database: { perTenant: true, count: 15, shared: false },
+            collection: { perTenant: false, count: 20, shared: true },
+            shared: { perTenant: false, count: 10, shared: true },
+            hybrid: { perTenant: 'mixed', count: 12, shared: 'partial' },
+            zone: { perTenant: false, count: 18, shared: true },
+            range: { perTenant: false, count: 16, shared: true }
+        };
+
+        // Schema examples per strategy
+        const schemaExamples = {
+            database: `<span class="comment">// In database: tenant_a_db</span>
+{
+  <span class="property">"_id"</span>: <span class="string">"user_001"</span>,
+  <span class="property">"name"</span>: <span class="string">"Alice"</span>,
+  <span class="property">"email"</span>: <span class="string">"alice@acme.com"</span>,
+  <span class="property">"role"</span>: <span class="string">"admin"</span>
+}`,
+            collection: `<span class="comment">// In collection: users_tenant_a</span>
+{
+  <span class="property">"_id"</span>: <span class="string">"user_001"</span>,
+  <span class="property">"name"</span>: <span class="string">"Alice"</span>,
+  <span class="property">"email"</span>: <span class="string">"alice@acme.com"</span>,
+  <span class="property">"role"</span>: <span class="string">"admin"</span>
+}`,
+            shared: `<span class="comment">// In shared collection: users</span>
+{
+  <span class="property">"_id"</span>: <span class="string">"user_001"</span>,
+  <span class="property">"tenant_id"</span>: <span class="string">"tenant_a"</span>,  <span class="comment">// ← REQUIRED!</span>
+  <span class="property">"name"</span>: <span class="string">"Alice"</span>,
+  <span class="property">"email"</span>: <span class="string">"alice@acme.com"</span>
+}`,
+            hybrid: `<span class="comment">// Enterprise: own DB, Pro: own collection, Free: shared</span>
+{
+  <span class="property">"_id"</span>: <span class="string">"user_001"</span>,
+  <span class="property">"tenant_id"</span>: <span class="string">"tenant_c"</span>,  <span class="comment">// Only for Free tier</span>
+  <span class="property">"tier"</span>: <span class="string">"free"</span>,
+  <span class="property">"name"</span>: <span class="string">"Carol"</span>
+}`,
+            zone: `<span class="comment">// Sharded by tenant_id, zones by region</span>
+{
+  <span class="property">"_id"</span>: <span class="string">"user_001"</span>,
+  <span class="property">"tenant_id"</span>: <span class="string">"tenant_a"</span>,  <span class="comment">// ← Shard key</span>
+  <span class="property">"region"</span>: <span class="string">"US"</span>,  <span class="comment">// Data stays in US zone</span>
+  <span class="property">"name"</span>: <span class="string">"Alice"</span>
+}`,
+            range: `<span class="comment">// Sharded by tenant_id range</span>
+{
+  <span class="property">"_id"</span>: <span class="string">"user_001"</span>,
+  <span class="property">"tenant_id"</span>: <span class="string">"tenant_a"</span>,  <span class="comment">// ← Routes to shard-1</span>
+  <span class="property">"name"</span>: <span class="string">"Alice"</span>,
+  <span class="property">"email"</span>: <span class="string">"alice@acme.com"</span>
+}`
+        };
+
+        // Onboarding steps per strategy
+        const onboardingSteps = {
+            database: [
+                'Create new database: tenant_d_db',
+                'Create collections: users, orders, products',
+                'Build indexes on each collection',
+                'Configure connection pool for tenant',
+                'Set up authentication/authorization',
+                'Tenant ready! ✓'
+            ],
+            collection: [
+                'Create collections: users_tenant_d, orders_tenant_d',
+                'Build indexes on new collections',
+                'Update connection router config',
+                'Tenant ready! ✓'
+            ],
+            shared: [
+                'Generate unique tenant_id: tenant_d',
+                'Insert tenant metadata record',
+                'Tenant ready! (no schema changes) ✓'
+            ],
+            hybrid: [
+                'Determine tenant tier (Enterprise/Pro/Free)',
+                'Route to appropriate isolation level',
+                'Enterprise: Create dedicated database',
+                'Pro: Create tenant collections',
+                'Free: Add to shared collection',
+                'Tenant ready! ✓'
+            ],
+            zone: [
+                'Determine tenant region (US/EU/APAC)',
+                'Update zone key range mappings',
+                'Add zone tag: sh.addTagRange(...)',
+                'Verify data routing to correct shard',
+                'Tenant ready with data residency! ✓'
+            ],
+            range: [
+                'Determine tenant_id range placement',
+                'Pre-split if needed: sh.splitAt(...)',
+                'Verify chunk distribution',
+                'Tenant ready with range routing! ✓'
+            ]
+        };
+
+        // Migration tips
+        const migrationTips = {
+            shared: '💡 Start here for MVP/prototyping. Lowest cost, fastest to implement.',
+            collection: '💡 Move here when you need per-tenant indexes or billing isolation.',
+            database: '💡 Enterprise tier customers who need maximum isolation and dedicated resources.',
+            hybrid: '💡 Combine strategies: Free→Shared, Pro→Collection, Enterprise→Database.',
+            zone: '💡 Global SaaS with GDPR/data residency requirements. Data stays in-region.',
+            range: '💡 Large tenants with high throughput. All tenant data on same shard for efficiency.'
+        };
+
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
             renderArchitecture();
             renderInfo();
+            renderMetrics();
+            renderCosts();
+            renderSecurityLevel();
+            renderConnectionPool();
+            renderSchema();
+            updateMigrationPath();
+            updateNoisyPanel();
             setupEventListeners();
             updateRegionInfo();
         });
+
+        // Update noisy panel explanation when strategy changes
+        function updateNoisyPanel() {
+            const config = noisyNeighborConfig[currentStrategy];
+            updateNoisyExplanation(config);
+            
+            // If simulation is running, restart it with new config
+            if (isNoisyActive) {
+                stopNoisyNeighbor();
+            }
+        }
 
         function setupEventListeners() {
             document.querySelectorAll('.strategy-tab').forEach(tab => {
@@ -1300,6 +2549,13 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
                     currentStrategy = tab.dataset.strategy;
                     renderArchitecture();
                     renderInfo();
+                    renderMetrics();
+                    renderCosts();
+                    renderSecurityLevel();
+                    renderConnectionPool();
+                    renderSchema();
+                    updateMigrationPath();
+                    updateNoisyPanel();
                     updateRegionInfo();
                 });
             });
@@ -1318,6 +2574,29 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
                 btn.addEventListener('click', () => {
                     if (isAnimating) return;
                     performOperation(btn.dataset.op);
+                });
+            });
+
+            // Auto Demo button
+            document.getElementById('auto-demo-btn').addEventListener('click', toggleAutoDemo);
+
+            // Noisy Neighbor button
+            document.getElementById('noisy-btn').addEventListener('click', toggleNoisyNeighbor);
+
+            // Add Tenant button
+            document.getElementById('add-tenant-btn').addEventListener('click', showOnboardingModal);
+
+            // Onboarding close button
+            document.getElementById('onboarding-close').addEventListener('click', closeOnboardingModal);
+
+            // Copy code button
+            document.getElementById('copy-btn').addEventListener('click', copyCode);
+
+            // Migration nodes
+            document.querySelectorAll('.migration-node').forEach(node => {
+                node.addEventListener('click', () => {
+                    const strategy = node.dataset.strategy;
+                    document.querySelector(`.strategy-tab[data-strategy="${strategy}"]`).click();
                 });
             });
         }
@@ -1612,6 +2891,517 @@ sh.<span class="function">splitAt</span>(<span class="string">"mydb.users"</span
             `).join('');
             document.getElementById('code-title').textContent = `${currentStrategy}-strategy.js`;
             document.getElementById('code-body').innerHTML = strategy.code;
+        }
+
+        function renderMetrics() {
+            const metrics = strategyMetrics[currentStrategy];
+            
+            // Update latency
+            document.getElementById('latency-fill').style.width = metrics.latency.fill + '%';
+            document.getElementById('latency-fill').className = `metric-fill ${metrics.latency.color}`;
+            document.getElementById('latency-value').innerHTML = `${metrics.latency.value}<span class="metric-unit">${metrics.latency.unit || ''}</span>`;
+            
+            // Update ops
+            document.getElementById('ops-fill').style.width = metrics.ops.fill + '%';
+            document.getElementById('ops-fill').className = `metric-fill ${metrics.ops.color}`;
+            document.getElementById('ops-value').innerHTML = `${metrics.ops.value}<span class="metric-unit">/s</span>`;
+            
+            // Update memory
+            document.getElementById('memory-fill').style.width = metrics.memory.fill + '%';
+            document.getElementById('memory-fill').className = `metric-fill ${metrics.memory.color}`;
+            document.getElementById('memory-value').innerHTML = `${metrics.memory.value}<span class="metric-unit">${metrics.memory.unit}</span>`;
+            
+            // Update connections
+            document.getElementById('conn-fill').style.width = metrics.connections.fill + '%';
+            document.getElementById('conn-fill').className = `metric-fill ${metrics.connections.color}`;
+            document.getElementById('conn-value').innerHTML = `${metrics.connections.value}<span class="metric-unit"></span>`;
+            
+            // Update complexity
+            document.getElementById('complexity-fill').style.width = metrics.complexity.fill + '%';
+            document.getElementById('complexity-fill').className = `metric-fill ${metrics.complexity.color}`;
+            document.getElementById('complexity-value').textContent = metrics.complexity.value;
+            
+            // Update index efficiency
+            document.getElementById('index-fill').style.width = metrics.index.fill + '%';
+            document.getElementById('index-fill').className = `metric-fill ${metrics.index.color}`;
+            document.getElementById('index-value').innerHTML = `${metrics.index.value}<span class="metric-unit">${metrics.index.unit || ''}</span>`;
+        }
+
+        function renderCosts() {
+            const costs = strategyCosts[currentStrategy];
+            
+            const renderBars = (containerId, bars, color) => {
+                const container = document.getElementById(containerId);
+                container.innerHTML = '';
+                for (let i = 0; i < 5; i++) {
+                    const bar = document.createElement('div');
+                    bar.className = `cost-bar ${i < bars ? color : ''}`;
+                    container.appendChild(bar);
+                }
+            };
+            
+            renderBars('cost-connections', costs.connections.bars, costs.connections.color);
+            document.getElementById('cost-conn-text').textContent = costs.connections.text;
+            
+            renderBars('cost-storage', costs.storage.bars, costs.storage.color);
+            document.getElementById('cost-storage-text').textContent = costs.storage.text;
+            
+            renderBars('cost-compute', costs.compute.bars, costs.compute.color);
+            document.getElementById('cost-compute-text').textContent = costs.compute.text;
+            
+            renderBars('cost-mgmt', costs.mgmt.bars, costs.mgmt.color);
+            document.getElementById('cost-mgmt-text').textContent = costs.mgmt.text;
+            
+            renderBars('cost-index', costs.index.bars, costs.index.color);
+            document.getElementById('cost-index-text').textContent = costs.index.text;
+            
+            renderBars('cost-monthly', costs.monthly.bars, costs.monthly.color);
+            document.getElementById('cost-monthly-text').textContent = costs.monthly.text;
+        }
+
+        function renderSecurityLevel() {
+            const level = securityLevels[currentStrategy];
+            const container = document.getElementById('security-level');
+            container.innerHTML = '';
+            
+            for (let i = 0; i < 5; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'security-bar';
+                if (i < level) {
+                    if (level >= 4) bar.classList.add('active');
+                    else if (level >= 2) bar.classList.add('medium');
+                    else bar.classList.add('low');
+                }
+                container.appendChild(bar);
+            }
+        }
+
+        function renderConnectionPool() {
+            const config = poolConfigs[currentStrategy];
+            const container = document.getElementById('pool-viz');
+            const label = document.getElementById('pool-label');
+            
+            container.innerHTML = '';
+            
+            if (config.perTenant === true) {
+                label.textContent = '(Per-Tenant Pools)';
+                ['A', 'B', 'C'].forEach(tenant => {
+                    for (let i = 0; i < config.count; i++) {
+                        const conn = document.createElement('div');
+                        conn.className = `pool-conn tenant-${tenant.toLowerCase()}`;
+                        container.appendChild(conn);
+                    }
+                });
+            } else if (config.perTenant === 'mixed') {
+                label.textContent = '(Mixed Pool Strategy)';
+                // Enterprise gets own pool
+                for (let i = 0; i < 10; i++) {
+                    const conn = document.createElement('div');
+                    conn.className = 'pool-conn tenant-a';
+                    container.appendChild(conn);
+                }
+                // Pro/Free share
+                for (let i = 0; i < 20; i++) {
+                    const conn = document.createElement('div');
+                    conn.className = `pool-conn ${i % 2 === 0 ? 'tenant-b' : 'tenant-c'}`;
+                    container.appendChild(conn);
+                }
+            } else {
+                label.textContent = '(Shared Pool)';
+                for (let i = 0; i < config.count; i++) {
+                    const conn = document.createElement('div');
+                    conn.className = 'pool-conn active';
+                    container.appendChild(conn);
+                }
+            }
+        }
+
+        function renderSchema() {
+            document.getElementById('schema-preview').innerHTML = schemaExamples[currentStrategy];
+        }
+
+        function updateMigrationPath() {
+            document.querySelectorAll('.migration-node').forEach(node => {
+                node.classList.remove('current');
+                if (node.dataset.strategy === currentStrategy) {
+                    node.classList.add('current');
+                }
+            });
+            document.getElementById('migration-tip').textContent = migrationTips[currentStrategy];
+        }
+
+        // Auto Demo
+        async function toggleAutoDemo() {
+            const btn = document.getElementById('auto-demo-btn');
+            
+            if (isAutoDemo) {
+                isAutoDemo = false;
+                btn.classList.remove('running');
+                btn.innerHTML = '▶️ Auto Demo';
+                if (autoDemoTimeout) clearTimeout(autoDemoTimeout);
+                return;
+            }
+            
+            isAutoDemo = true;
+            btn.classList.add('running');
+            btn.innerHTML = '⏹️ Stop Demo';
+            
+            await runAutoDemo();
+        }
+
+        async function runAutoDemo() {
+            if (!isAutoDemo) return;
+            
+            const ops = ['insert', 'read', 'update', 'delete'];
+            const tenants = ['A', 'B', 'C'];
+            
+            for (const tenant of tenants) {
+                if (!isAutoDemo) break;
+                
+                // Select tenant
+                document.querySelector(`.tenant-btn[data-tenant="${tenant}"]`).click();
+                await sleep(300);
+                
+                for (const op of ops) {
+                    if (!isAutoDemo) break;
+                    
+                    // Skip delete sometimes to not empty data
+                    if (op === 'delete' && Math.random() > 0.3) continue;
+                    
+                    await performOperation(op);
+                    await sleep(500);
+                }
+            }
+            
+            if (isAutoDemo) {
+                autoDemoTimeout = setTimeout(runAutoDemo, 1000);
+            }
+        }
+
+        // ==========================================
+        // NOISY NEIGHBOR SIMULATION
+        // ==========================================
+        // This simulates what happens when one tenant (Tenant A) 
+        // suddenly starts consuming excessive resources (heavy queries, 
+        // bulk inserts, etc.) and shows how other tenants are affected
+        // based on the current isolation strategy.
+
+        // Configuration for each strategy's isolation behavior
+        const noisyNeighborConfig = {
+            database: {
+                isolationLevel: 'high',
+                isolationPercent: 100,
+                tenantALatency: 45,      // Noisy tenant's latency under load
+                tenantBLatency: 2,       // Other tenants unaffected
+                tenantCLatency: 2,
+                impactLevel: 'none',
+                resourceUsage: 95,
+                explanation: 'With separate databases per tenant, each tenant has completely isolated resources (connections, memory, I/O). Tenant A\'s heavy load only affects their own database instance. Tenants B and C continue operating normally on their dedicated databases.'
+            },
+            collection: {
+                isolationLevel: 'high',
+                isolationPercent: 90,
+                tenantALatency: 50,
+                tenantBLatency: 3,
+                tenantCLatency: 3,
+                impactLevel: 'minimal',
+                resourceUsage: 85,
+                explanation: 'Collections share the same database but have separate namespaces and can have dedicated indexes. Some database-level resources (connections, WiredTiger cache) are shared, causing minimal impact to other tenants during extreme load.'
+            },
+            shared: {
+                isolationLevel: 'low',
+                isolationPercent: 30,
+                tenantALatency: 80,
+                tenantBLatency: 35,
+                tenantCLatency: 40,
+                impactLevel: 'severe',
+                resourceUsage: 98,
+                explanation: '⚠️ CRITICAL: All tenants share the same collection and compete for the same resources. Tenant A\'s heavy queries lock documents, consume connection pool slots, and fill the cache—directly degrading performance for ALL other tenants. This is the "noisy neighbor" anti-pattern.'
+            },
+            hybrid: {
+                isolationLevel: 'medium',
+                isolationPercent: 75,
+                tenantALatency: 45,
+                tenantBLatency: 8,
+                tenantCLatency: 25,
+                impactLevel: 'varies',
+                resourceUsage: 80,
+                explanation: 'Impact varies by tier: Enterprise tenants (A) are isolated in their own DB. Pro tenants (B) share some resources. Free tenants (C) on shared collection experience more impact. Tier-based isolation provides graduated protection.'
+            },
+            zone: {
+                isolationLevel: 'high',
+                isolationPercent: 95,
+                tenantALatency: 40,
+                tenantBLatency: 2,
+                tenantCLatency: 2,
+                impactLevel: 'none',
+                resourceUsage: 90,
+                explanation: 'Zone sharding physically separates tenant data onto different shards (servers). Tenant A in US zone cannot impact Tenant B in EU zone or Tenant C in APAC zone—they\'re on completely different hardware. Geographic isolation = resource isolation.'
+            },
+            range: {
+                isolationLevel: 'high',
+                isolationPercent: 85,
+                tenantALatency: 42,
+                tenantBLatency: 3,
+                tenantCLatency: 3,
+                impactLevel: 'minimal',
+                resourceUsage: 88,
+                explanation: 'Range sharding distributes tenants across shards by tenant_id ranges. Each shard handles its own tenants independently. mongos router directs queries to specific shards, so Tenant A\'s load on shard-1 doesn\'t affect Tenants B and C on other shards.'
+            }
+        };
+
+        function toggleNoisyNeighbor() {
+            const btn = document.getElementById('noisy-btn');
+            
+            if (isNoisyActive) {
+                stopNoisyNeighbor();
+                return;
+            }
+            
+            startNoisyNeighbor();
+        }
+
+        function startNoisyNeighbor() {
+            isNoisyActive = true;
+            const btn = document.getElementById('noisy-btn');
+            btn.classList.add('active');
+            btn.innerHTML = '⏹️ Stop Simulation';
+            
+            addLog('insert', '🔊 NOISY NEIGHBOR: Tenant A started heavy batch operations!');
+            
+            // Get config for current strategy
+            const config = noisyNeighborConfig[currentStrategy];
+            
+            // Update explanation panel
+            updateNoisyExplanation(config);
+            
+            // Mark Tenant A as the noisy source
+            const tenantACard = document.getElementById('noisy-tenant-A');
+            tenantACard.classList.add('noisy-source');
+            
+            // Start the simulation animation
+            noisyInterval = setInterval(() => animateNoisySimulation(config), 400);
+        }
+
+        function stopNoisyNeighbor() {
+            isNoisyActive = false;
+            const btn = document.getElementById('noisy-btn');
+            btn.classList.remove('active');
+            btn.innerHTML = '▶️ Start Simulation';
+            
+            if (noisyInterval) {
+                clearInterval(noisyInterval);
+                noisyInterval = null;
+            }
+            
+            addLog('read', '🔊 NOISY NEIGHBOR: Simulation stopped. System returning to normal.');
+            
+            // Reset all tenant cards
+            ['A', 'B', 'C'].forEach(tenant => {
+                const card = document.getElementById(`noisy-tenant-${tenant}`);
+                card.classList.remove('noisy-source', 'protected', 'degraded', 'severely-degraded');
+                document.getElementById(`status-${tenant}`).textContent = 'Normal operations';
+                document.getElementById(`status-${tenant}`).className = 'tenant-card-status';
+                document.getElementById(`latency-${tenant}`).textContent = '2ms';
+            });
+            
+            // Reset metrics
+            document.getElementById('noisy-resource').textContent = '25%';
+            document.getElementById('noisy-resource-fill').style.width = '25%';
+            document.getElementById('noisy-resource-fill').style.background = 'var(--accent-green)';
+            
+            document.getElementById('noisy-impact-value').textContent = 'None';
+            document.getElementById('noisy-impact-fill').style.width = '0%';
+            document.getElementById('noisy-impact-fill').style.background = 'var(--accent-green)';
+            
+            document.getElementById('noisy-isolation').textContent = '100%';
+            document.getElementById('noisy-isolation-fill').style.width = '100%';
+            document.getElementById('noisy-isolation-fill').style.background = 'var(--accent-green)';
+            
+            // Reset main metrics panel too
+            renderMetrics();
+            
+            // Hide security warning
+            document.getElementById('security-warning').classList.remove('show');
+        }
+
+        function updateNoisyExplanation(config) {
+            // Update strategy name
+            document.getElementById('noisy-strategy-name').textContent = strategies[currentStrategy].title;
+            
+            // Update isolation badge
+            const badge = document.getElementById('noisy-isolation-badge');
+            badge.className = 'noisy-isolation-badge';
+            
+            if (config.isolationLevel === 'high') {
+                badge.classList.add('high');
+                badge.innerHTML = '🛡️ HIGH ISOLATION';
+            } else if (config.isolationLevel === 'medium') {
+                badge.classList.add('medium');
+                badge.innerHTML = '⚠️ MEDIUM ISOLATION';
+            } else {
+                badge.classList.add('low');
+                badge.innerHTML = '❌ LOW ISOLATION';
+            }
+            
+            // Update explanation text
+            document.getElementById('noisy-explanation-text').textContent = config.explanation;
+        }
+
+        function animateNoisySimulation(config) {
+            if (!isNoisyActive) return;
+            
+            // Add random jitter to make it feel more realistic
+            const jitter = () => 0.85 + Math.random() * 0.3;
+            
+            // === TENANT A (Noisy Source) ===
+            const latencyA = Math.round(config.tenantALatency * jitter());
+            document.getElementById('latency-A').textContent = `${latencyA}ms`;
+            document.getElementById('status-A').innerHTML = '🔥 Heavy batch processing<br>10K docs/sec';
+            document.getElementById('status-A').className = 'tenant-card-status status-danger';
+            
+            // === TENANT B ===
+            const latencyB = Math.round(config.tenantBLatency * jitter());
+            document.getElementById('latency-B').textContent = `${latencyB}ms`;
+            const cardB = document.getElementById('noisy-tenant-B');
+            cardB.classList.remove('protected', 'degraded', 'severely-degraded');
+            
+            if (latencyB <= 5) {
+                cardB.classList.add('protected');
+                document.getElementById('status-B').innerHTML = '✓ Protected<br>No impact detected';
+                document.getElementById('status-B').className = 'tenant-card-status status-ok';
+            } else if (latencyB <= 15) {
+                cardB.classList.add('degraded');
+                document.getElementById('status-B').innerHTML = '⚠️ Minor slowdown<br>Some shared resources';
+                document.getElementById('status-B').className = 'tenant-card-status status-warning';
+            } else {
+                cardB.classList.add('severely-degraded');
+                document.getElementById('status-B').innerHTML = '❌ Degraded<br>Competing for resources';
+                document.getElementById('status-B').className = 'tenant-card-status status-danger';
+            }
+            
+            // === TENANT C ===
+            const latencyC = Math.round(config.tenantCLatency * jitter());
+            document.getElementById('latency-C').textContent = `${latencyC}ms`;
+            const cardC = document.getElementById('noisy-tenant-C');
+            cardC.classList.remove('protected', 'degraded', 'severely-degraded');
+            
+            if (latencyC <= 5) {
+                cardC.classList.add('protected');
+                document.getElementById('status-C').innerHTML = '✓ Protected<br>No impact detected';
+                document.getElementById('status-C').className = 'tenant-card-status status-ok';
+            } else if (latencyC <= 15) {
+                cardC.classList.add('degraded');
+                document.getElementById('status-C').innerHTML = '⚠️ Minor slowdown<br>Some shared resources';
+                document.getElementById('status-C').className = 'tenant-card-status status-warning';
+            } else {
+                cardC.classList.add('severely-degraded');
+                document.getElementById('status-C').innerHTML = '❌ Degraded<br>Competing for resources';
+                document.getElementById('status-C').className = 'tenant-card-status status-danger';
+            }
+            
+            // === UPDATE METRICS ===
+            const resourceUsage = Math.round(config.resourceUsage * jitter());
+            document.getElementById('noisy-resource').textContent = `${resourceUsage}%`;
+            document.getElementById('noisy-resource-fill').style.width = `${resourceUsage}%`;
+            document.getElementById('noisy-resource-fill').style.background = 
+                resourceUsage > 90 ? 'var(--accent-red)' : 
+                resourceUsage > 70 ? 'var(--accent-orange)' : 'var(--accent-green)';
+            
+            // Impact level
+            const impactPercent = 100 - config.isolationPercent;
+            document.getElementById('noisy-impact-value').textContent = config.impactLevel === 'none' ? 'None' : 
+                config.impactLevel === 'minimal' ? 'Minimal' :
+                config.impactLevel === 'varies' ? 'Varies' : 'Severe';
+            document.getElementById('noisy-impact-fill').style.width = `${impactPercent}%`;
+            document.getElementById('noisy-impact-fill').style.background = 
+                impactPercent > 50 ? 'var(--accent-red)' : 
+                impactPercent > 20 ? 'var(--accent-yellow)' : 'var(--accent-green)';
+            
+            // Isolation effectiveness
+            const isolationPercent = Math.round(config.isolationPercent * jitter());
+            document.getElementById('noisy-isolation').textContent = `${isolationPercent}%`;
+            document.getElementById('noisy-isolation-fill').style.width = `${isolationPercent}%`;
+            document.getElementById('noisy-isolation-fill').style.background = 
+                isolationPercent > 80 ? 'var(--accent-green)' : 
+                isolationPercent > 50 ? 'var(--accent-yellow)' : 'var(--accent-red)';
+            
+            // Show security warning for low isolation strategies
+            if (config.isolationLevel === 'low') {
+                document.getElementById('security-warning').classList.add('show');
+            } else {
+                document.getElementById('security-warning').classList.remove('show');
+            }
+            
+            // Also update the main performance metrics panel
+            updateMainMetricsDuringNoisy(config);
+        }
+
+        function updateMainMetricsDuringNoisy(config) {
+            const jitter = () => 0.85 + Math.random() * 0.3;
+            
+            // Only affect latency metric based on isolation
+            if (config.isolationLevel === 'low') {
+                const avgLatency = Math.round(((config.tenantALatency + config.tenantBLatency + config.tenantCLatency) / 3) * jitter());
+                document.getElementById('latency-value').innerHTML = `${avgLatency}<span class="metric-unit">ms</span>`;
+                document.getElementById('latency-fill').style.width = `${Math.min(100, avgLatency * 2)}%`;
+                document.getElementById('latency-fill').className = `metric-fill ${avgLatency > 20 ? 'red' : avgLatency > 10 ? 'orange' : 'yellow'}`;
+            }
+        }
+
+        // Tenant Onboarding
+        function showOnboardingModal() {
+            const modal = document.getElementById('onboarding-modal');
+            const stepsContainer = document.getElementById('onboarding-steps');
+            const title = document.getElementById('onboard-strategy');
+            
+            title.textContent = strategies[currentStrategy].title;
+            
+            const steps = onboardingSteps[currentStrategy];
+            stepsContainer.innerHTML = steps.map((step, i) => `
+                <div class="onboarding-step" data-step="${i}">
+                    <div class="step-number">${i + 1}</div>
+                    <div class="step-text">${step}</div>
+                </div>
+            `).join('');
+            
+            modal.classList.add('show');
+            
+            // Animate steps
+            animateOnboardingSteps();
+        }
+
+        async function animateOnboardingSteps() {
+            const steps = document.querySelectorAll('.onboarding-step');
+            
+            for (let i = 0; i < steps.length; i++) {
+                await sleep(600);
+                steps[i].classList.add('active');
+                await sleep(400);
+                steps[i].classList.remove('active');
+                steps[i].classList.add('complete');
+            }
+        }
+
+        function closeOnboardingModal() {
+            document.getElementById('onboarding-modal').classList.remove('show');
+        }
+
+        // Copy Code
+        function copyCode() {
+            const codeBody = document.getElementById('code-body');
+            const text = codeBody.textContent || codeBody.innerText;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.getElementById('copy-btn');
+                btn.textContent = '✓ Copied!';
+                btn.classList.add('copied');
+                
+                setTimeout(() => {
+                    btn.textContent = '📋 Copy';
+                    btn.classList.remove('copied');
+                }, 2000);
+            });
         }
 
         async function performOperation(op) {
