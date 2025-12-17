@@ -1584,6 +1584,37 @@
             color: var(--mongo-green);
         }
 
+        /* Animation Controls */
+        .anim-controls {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 50;
+        }
+        .anim-btn {
+            background: rgba(0, 30, 43, 0.9);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            color: var(--mongo-green);
+            transition: all 0.2s ease;
+            min-width: 90px;
+            text-align: center;
+        }
+        .anim-btn:hover {
+            background: rgba(0, 237, 100, 0.1);
+            border-color: var(--mongo-green);
+        }
+        .anim-btn.paused {
+            background: rgba(255, 193, 7, 0.15);
+            border-color: #ffc107;
+            color: #ffc107;
+        }
+        
         /* Keyboard Shortcuts Toggle Button */
         .shortcuts-toggle {
             position: fixed;
@@ -1719,7 +1750,7 @@
             .shard-panel { min-width: 100%; }
             .write-flow-panel { width: 320px; right: 10px; bottom: 10px; }
             .read-flow-panel { width: 340px; left: 10px; bottom: 10px; }
-            .shortcuts-help, .shortcuts-toggle { display: none !important; }
+            .shortcuts-help, .shortcuts-toggle, .anim-controls { display: none !important; }
         }
     </style>
 </head>
@@ -2282,16 +2313,48 @@
         }
         
         // Animation speed multiplier (higher = slower animations)
-        // 1.0 = original speed, 2.0 = 2x slower, 3.0 = 3x slower
-        let ANIM_SPEED = 2.5;
-        const ANIM_SPEEDS = [1.0, 1.5, 2.5, 4.0]; // Fast, Normal, Slow, Very Slow
-        let currentSpeedIndex = 2; // Start at "Slow" (2.5x)
+        let ANIM_SPEED = 2.0;
+        const ANIM_SPEEDS = [1.0, 2.0, 3.5]; // Fast, Slow, Slowest
+        const SPEED_LABELS = ['⚡ Fast', '🐢 Slow', '🦥 Slowest'];
+        let currentSpeedIndex = 1; // Start at "Slow"
+        let isPaused = false;
+        let pauseResolvers = [];
         
-        function toggleAnimSpeed() {
+        function cycleAnimSpeed() {
             currentSpeedIndex = (currentSpeedIndex + 1) % ANIM_SPEEDS.length;
             ANIM_SPEED = ANIM_SPEEDS[currentSpeedIndex];
-            const labels = ['⚡ Fast', '🏃 Normal', '🐢 Slow', '🦥 Very Slow'];
-            log(`Animation speed: ${labels[currentSpeedIndex]} (${ANIM_SPEED}x)`, 'info');
+            updateSpeedDisplay();
+            log(`Animation speed: ${SPEED_LABELS[currentSpeedIndex]}`, 'info');
+        }
+        
+        function updateSpeedDisplay() {
+            const btn = document.getElementById('speed-btn');
+            if (btn) {
+                btn.textContent = SPEED_LABELS[currentSpeedIndex];
+            }
+        }
+        
+        function togglePause() {
+            isPaused = !isPaused;
+            const btn = document.getElementById('pause-btn');
+            if (btn) {
+                btn.textContent = isPaused ? '▶️ Resume' : '⏸️ Pause';
+                btn.classList.toggle('paused', isPaused);
+            }
+            log(isPaused ? '⏸️ Animations PAUSED' : '▶️ Animations RESUMED', 'info');
+            
+            // Resume any waiting animations
+            if (!isPaused) {
+                pauseResolvers.forEach(resolve => resolve());
+                pauseResolvers = [];
+            }
+        }
+        
+        // Check for pause before continuing animations
+        async function checkPause() {
+            if (isPaused) {
+                await new Promise(resolve => pauseResolvers.push(resolve));
+            }
         }
         
         function toggleShortcutsPanel() {
@@ -2308,7 +2371,8 @@
             }
         }
         
-        function sleep(ms) {
+        async function sleep(ms) {
+            await checkPause();
             return new Promise(resolve => setTimeout(resolve, ms * ANIM_SPEED));
         }
         
@@ -2316,6 +2380,9 @@
         function animDelay(ms) {
             return ms * ANIM_SPEED;
         }
+        
+        // Legacy function name for keyboard shortcut
+        function toggleAnimSpeed() { cycleAnimSpeed(); }
 
         // ============ CLUSTER MANAGEMENT ============
         function loadConfig(configId) {
@@ -3000,7 +3067,8 @@
             }, animDelay(2500));
         }
 
-        function animateParticle(fromEl, toEl, type, duration = 400) {
+        async function animateParticle(fromEl, toEl, type, duration = 400) {
+            await checkPause(); // Wait if paused
             const scaledDuration = duration * ANIM_SPEED;
             return new Promise(resolve => {
                 const overlay = document.getElementById('replication-overlay');
@@ -3019,10 +3087,19 @@
                 particle.style.left = `${startX}px`;
                 particle.style.top = `${startY}px`;
 
-                const startTime = performance.now();
+                let startTime = null;
+                let pausedTime = 0;
+                let lastPauseCheck = performance.now();
 
                 function animate(currentTime) {
-                    const elapsed = currentTime - startTime;
+                    // Handle pause during animation
+                    if (isPaused) {
+                        pausedTime += currentTime - lastPauseCheck;
+                    }
+                    lastPauseCheck = currentTime;
+                    
+                    if (startTime === null) startTime = currentTime;
+                    const elapsed = currentTime - startTime - pausedTime;
                     const progress = Math.min(elapsed / scaledDuration, 1);
                     
                     // Easing
@@ -4263,7 +4340,8 @@
                     case 'x': resetCluster(); break;
                     case 'd': toggleAutoDemo(); break;
                     case 't': toggleTopology(); break;
-                    case 's': toggleAnimSpeed(); break;
+                    case 's': cycleAnimSpeed(); break;
+                    case 'p': togglePause(); break;
                     case '1': selectConfig(0); break;
                     case '2': selectConfig(1); break;
                     case '3': selectConfig(2); break;
@@ -4385,6 +4463,12 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 
+    <!-- Animation Controls -->
+    <div class="anim-controls">
+        <button class="anim-btn" id="speed-btn" onclick="cycleAnimSpeed()" title="Press S to cycle">🐢 Slow</button>
+        <button class="anim-btn" id="pause-btn" onclick="togglePause()" title="Press P to toggle">⏸️ Pause</button>
+    </div>
+    
     <!-- Keyboard Shortcuts Toggle -->
     <div class="shortcuts-toggle" id="shortcuts-toggle" onclick="toggleShortcutsPanel()">
         ⌨️ Shortcuts
@@ -4401,7 +4485,8 @@
         <div class="shortcut-row"><span>Reset</span><span class="shortcut-key">X</span></div>
         <div class="shortcut-row"><span>Auto Demo</span><span class="shortcut-key">D</span></div>
         <div class="shortcut-row"><span>Toggle RS/Shard</span><span class="shortcut-key">T</span></div>
-        <div class="shortcut-row"><span>Speed: Slow/Fast</span><span class="shortcut-key">S</span></div>
+        <div class="shortcut-row"><span>Cycle Speed</span><span class="shortcut-key">S</span></div>
+        <div class="shortcut-row"><span>Pause/Resume</span><span class="shortcut-key">P</span></div>
     </div>
 
     <!-- Demo Narration Overlay -->
