@@ -1429,6 +1429,7 @@
         .node-card.primary { border-color: var(--node-primary); box-shadow: 0 0 12px rgba(0, 237, 100, 0.2); }
         .node-card.secondary { border-color: var(--node-secondary); }
         .node-card.priority-zero { border-color: #9d4edd; border-style: dashed; }
+        .node-card.read-replica { border-color: #ff6b6b; border-style: dashed; background: rgba(255, 107, 107, 0.05); }
         .node-card.down { border-color: var(--node-down); opacity: 0.5; }
         .node-card.recovering { border-color: var(--node-recovering); }
         .node-card.syncing { 
@@ -1460,6 +1461,7 @@
         .node-card.primary .node-role-badge { background: var(--node-primary); color: var(--mongo-forest); }
         .node-card.secondary .node-role-badge { background: var(--node-secondary); color: var(--mongo-forest); }
         .node-card.priority-zero .node-role-badge { background: #9d4edd; color: white; }
+        .node-card.read-replica .node-role-badge { background: #ff6b6b; color: white; }
         .node-card.down .node-role-badge { background: var(--node-down); color: white; }
         .node-card.recovering .node-role-badge { background: var(--node-recovering); color: var(--mongo-forest); }
         .node-card.syncing .node-role-badge { background: #00b4d8; color: white; }
@@ -1580,18 +1582,6 @@
         .conn-string-code.copied::after {
             content: '✓ Copied!';
             color: var(--mongo-green);
-        }
-
-        /* Read Concern Selector */
-        .read-concern-select {
-            padding: 8px 12px;
-            border-radius: 8px;
-            background: rgba(0, 30, 43, 0.9);
-            border: 1px solid rgba(0, 237, 100, 0.3);
-            color: #fff;
-            font-size: 0.85rem;
-            cursor: pointer;
-            font-family: 'Source Code Pro', monospace;
         }
 
         /* Keyboard Shortcuts Help */
@@ -1754,6 +1744,17 @@
                     <span class="region-chip region-3">🟠 Region 3: 1 P:0</span>
                 </div>
             </div>
+            <div class="cluster-option" data-config="rs-ha-misconception" data-type="replica-set">
+                <div class="cluster-option-header">
+                    <span class="cluster-option-title">⚠️ HA Misconception</span>
+                    <span class="cluster-option-badge" style="background: linear-gradient(135deg, #ff6b6b, #ee5a24);">4 Nodes</span>
+                </div>
+                <div class="cluster-option-desc">Common pitfall: 2+1+read-only (p:0, v:0). If Region 1 fails, no majority! Needs manual promotion.</div>
+                <div class="cluster-option-regions">
+                    <span class="region-chip region-1">🔵 Region 1: 2 nodes</span>
+                    <span class="region-chip region-2">🟢 Region 2: 1 node + 1 read-only</span>
+                </div>
+            </div>
             <!-- Sharded Cluster Options (hidden by default) -->
             <div class="cluster-option" data-config="sharded-single-region" data-type="sharded" style="display: none;">
                 <div class="cluster-option-header">
@@ -1853,14 +1854,6 @@
                 </select>
             </div>
             <div class="control-card">
-                <div class="control-title">📖 Read Concern</div>
-                <select class="read-concern-select" id="read-concern">
-                    <option value="local" selected>local</option>
-                    <option value="majority">majority</option>
-                    <option value="linearizable">linearizable</option>
-                </select>
-            </div>
-            <div class="control-card">
                 <div class="control-title">🎮 Cluster</div>
                 <div class="action-buttons">
                     <button class="action-btn danger" onclick="killRandomPrimary()">💥 Kill Primary</button>
@@ -1904,7 +1897,7 @@
         <div class="conn-string-panel" id="conn-string-panel">
             <div class="conn-string-title">🔗 Connection String</div>
             <div class="conn-string-code" id="conn-string" onclick="copyConnectionString()">
-                mongodb+srv://&lt;username&gt;:&lt;password&gt;@rs0-single.mongodb.net/?retryWrites=true&w=majority&readConcernLevel=local&readPreference=secondaryPreferred
+                mongodb+srv://&lt;username&gt;:&lt;password&gt;@rs0-single.mongodb.net/?retryWrites=true&w=majority&readPreference=secondaryPreferred
             </div>
         </div>
 
@@ -2028,6 +2021,21 @@
                     { id: 'rs-r2-1', name: 'mongo-r2-1', region: 'region-2', priority: 1, votes: 1 },
                     { id: 'rs-r2-2', name: 'mongo-r2-2', region: 'region-2', priority: 1, votes: 1 },
                     { id: 'rs-r3', name: 'mongo-r3', region: 'region-3', priority: 0, votes: 1 }
+                ]
+            },
+            'rs-ha-misconception': {
+                name: '⚠️ HA Misconception',
+                description: 'Common pitfall: 4 nodes (2+1+read-only) but read-only node has priority:0, votes:0. If Region 1 fails, only 1 vote remains - no majority (need 2)! Read-only nodes do NOT help with HA.',
+                isSharded: false,
+                regions: [
+                    { id: 'region-1', name: 'Region 1', icon: '🔵', latency: '~1ms' },
+                    { id: 'region-2', name: 'Region 2', icon: '🟢', latency: '~10ms' }
+                ],
+                nodes: [
+                    { id: 'rs-r1-1', name: 'mongo-r1-1', region: 'region-1', priority: 2, votes: 1 },
+                    { id: 'rs-r1-2', name: 'mongo-r1-2', region: 'region-1', priority: 1, votes: 1 },
+                    { id: 'rs-r2-1', name: 'mongo-r2-1', region: 'region-2', priority: 1, votes: 1 },
+                    { id: 'rs-r2-read', name: 'read-only', region: 'region-2', priority: 0, votes: 0, isReadReplica: true }
                 ]
             },
             // ========== SHARDED CLUSTER CONFIGURATIONS ==========
@@ -2166,7 +2174,6 @@
             // Common
             writeConcern: 'majority',
             readPreference: 'secondaryPreferred',
-            readConcern: 'local',
             oplogCounter: 0,
             isElecting: {},
             electionTerm: 1,
@@ -2205,9 +2212,14 @@
             return `Timestamp(${ts.t}, ${ts.i})`;
         }
 
-        function getMajorityRequired(shardOrNodes) {
+        function getVotingMembers(shardOrNodes) {
             const nodes = shardOrNodes.nodes || shardOrNodes;
-            return Math.floor(nodes.length / 2) + 1;
+            return nodes.filter(n => n.votes !== 0); // votes: 0 means non-voting
+        }
+
+        function getMajorityRequired(shardOrNodes) {
+            const votingNodes = getVotingMembers(shardOrNodes);
+            return Math.floor(votingNodes.length / 2) + 1;
         }
 
         function getHealthyNodes(shardOrNodes) {
@@ -2215,9 +2227,13 @@
             return nodes.filter(n => n.status === 'healthy' || n.status === 'syncing');
         }
 
-        function hasMajority(shardOrNodes) {
+        function getHealthyVoters(shardOrNodes) {
             const nodes = shardOrNodes.nodes || shardOrNodes;
-            return getHealthyNodes(nodes).length >= getMajorityRequired(nodes);
+            return nodes.filter(n => (n.status === 'healthy' || n.status === 'syncing') && n.votes !== 0);
+        }
+
+        function hasMajority(shardOrNodes) {
+            return getHealthyVoters(shardOrNodes).length >= getMajorityRequired(shardOrNodes);
         }
 
         function getRegionInfo(regionId) {
@@ -2331,7 +2347,10 @@
                 
                 renderReplicaSet();
                 log(`Loaded: ${config.name}`, 'success');
-                log(`${state.nodes.length}-node replica set, majority: ${getMajorityRequired(state.nodes)}`, 'info');
+                const votingCount = getVotingMembers(state.nodes).length;
+                const nonVotingCount = state.nodes.length - votingCount;
+                const votingInfo = nonVotingCount > 0 ? ` (${votingCount} voting, ${nonVotingCount} non-voting)` : '';
+                log(`${state.nodes.length}-node replica set${votingInfo}, majority: ${getMajorityRequired(state.nodes)}`, 'info');
             }
 
             updateInfoPanel(config);
@@ -2344,11 +2363,21 @@
 
         function updateInfoPanel(config) {
             const panel = document.getElementById('info-panel');
+            const isWarning = config.name.includes('Misconception');
+            panel.style.borderColor = isWarning ? 'rgba(255, 107, 107, 0.5)' : 'rgba(0, 237, 100, 0.3)';
             panel.innerHTML = `
-                <div class="info-icon">💡</div>
+                <div class="info-icon">${isWarning ? '⚠️' : '💡'}</div>
                 <div class="info-content">
-                    <div class="info-title">${config.name}</div>
+                    <div class="info-title" style="${isWarning ? 'color: #ff6b6b;' : ''}">${config.name}</div>
                     <div class="info-desc">${config.description} <span style="opacity: 0.7;">• 👆 Click nodes to simulate failure/recovery</span></div>
+                    ${isWarning ? `
+                        <div style="margin-top: 8px; padding: 8px 12px; background: rgba(255, 107, 107, 0.1); border-radius: 6px; font-size: 0.8rem; color: #ff6b6b;">
+                            <strong>⚡ Test it:</strong> Kill Region 1 and watch the cluster lose majority despite having 2 nodes in Region 2!
+                        </div>
+                        <div style="margin-top: 8px; padding: 8px 12px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; font-size: 0.8rem; color: #ffc107;">
+                            <strong>📝 Note:</strong> To recover, you must <u>manually</u> promote the read-only node by changing its priority and votes via rs.reconfig(). This requires human intervention!
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }
@@ -3541,19 +3570,27 @@
         }
 
         function renderRSNodeCard(node) {
+            const isReadReplica = node.isReadReplica || (node.votes === 0 && node.priority === 0);
             const roleClass = node.status === 'down' ? 'down' : 
                              node.status === 'recovering' ? 'recovering' :
                              node.status === 'syncing' ? 'syncing' :
+                             isReadReplica ? 'read-replica' :
                              node.priority === 0 ? 'priority-zero' : node.role;
             const roleLabel = node.status === 'down' ? 'DOWN' : 
                              node.status === 'recovering' ? 'SYNC' :
                              node.status === 'syncing' ? '🔄' :
+                             isReadReplica ? 'R/O' :
                              node.priority === 0 ? 'P:0' : node.role.toUpperCase();
-            const icon = node.role === 'primary' ? '👑' : node.priority === 0 ? '🛡️' : '📚';
+            const icon = node.role === 'primary' ? '👑' : 
+                        isReadReplica ? '📖' : 
+                        node.priority === 0 ? '🛡️' : '📚';
             
-            const priorityColor = node.priority === 0 ? 'rgba(255,255,255,0.3)' : 
+            const priorityColor = isReadReplica ? '#ff6b6b' :
+                                 node.priority === 0 ? 'rgba(255,255,255,0.3)' : 
                                  node.priority >= 3 ? 'var(--mongo-green)' :
                                  node.priority >= 2 ? '#00b4d8' : 'rgba(255,255,255,0.5)';
+            
+            const votesBadge = node.votes === 0 ? '<span style="color: #ff6b6b; margin-left: 4px; font-size: 0.65rem;">v:0</span>' : '';
 
             return `
                 <div class="node-card ${roleClass}" id="node-${node.id}" onclick="toggleRSNode('${node.id}')">
@@ -3564,7 +3601,7 @@
                     </div>
                     <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.7rem;">
                         <span class="node-oplog">oplog: ${node.oplogCount}</span>
-                        <span style="color: ${priorityColor}; font-weight: 600;">p:${node.priority}</span>
+                        <span style="color: ${priorityColor}; font-weight: 600;">p:${node.priority}${votesBadge}</span>
                     </div>
                 </div>
             `;
@@ -4018,15 +4055,6 @@
             });
         }
 
-        function setupReadConcernHandler() {
-            const select = document.getElementById('read-concern');
-            select.addEventListener('change', () => {
-                state.readConcern = select.value;
-                log(`Read concern: ${state.readConcern}`, 'info');
-                updateConnectionString();
-            });
-        }
-
         // ============ STATISTICS ============
         function updateStats(type, latency = 0) {
             if (type === 'write') state.stats.writes++;
@@ -4081,7 +4109,6 @@
             
             let connString = '';
             const wc = state.writeConcern;
-            const rc = state.readConcern;
             const rp = state.readPreference;
             
             // Use mongodb+srv:// format (DNS SRV connection string)
@@ -4090,7 +4117,7 @@
             const regionCount = config?.regions?.length || 1;
             const regionSuffix = regionCount === 1 ? 'single' : regionCount === 2 ? 'multi' : 'global';
             
-            connString = `mongodb+srv://<username>:<password>@${clusterName}-${regionSuffix}.mongodb.net/?retryWrites=true&w=${wc}&readConcernLevel=${rc}&readPreference=${rp}`;
+            connString = `mongodb+srv://<username>:<password>@${clusterName}-${regionSuffix}.mongodb.net/?retryWrites=true&w=${wc}&readPreference=${rp}`;
             
             connEl.textContent = connString;
         }
@@ -4233,7 +4260,6 @@
             setupClusterSelector();
             setupWriteConcernHandlers();
             setupReadPreferenceHandler();
-            setupReadConcernHandler();
             setupShardedDropdownHandlers();
             setupKeyboardShortcuts();
             loadConfig('rs-single-region');
