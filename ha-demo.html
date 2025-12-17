@@ -2453,7 +2453,16 @@
                 renderRegionButtons();
                 updateClusterStatus();
                 
-                if (hadPrimary) triggerRSElection();
+                // Only trigger election if we have majority AND lost the primary
+                if (hadPrimary) {
+                    if (hasMajority(state.nodes)) {
+                        triggerRSElection();
+                    } else {
+                        const healthyVoters = getHealthyVoters(state.nodes);
+                        const majorityRequired = getMajorityRequired(state.nodes);
+                        log(`⚠️ NO MAJORITY: ${healthyVoters.length} voters < ${majorityRequired} required. Cluster is READ-ONLY!`, 'error');
+                    }
+                }
             }
         }
 
@@ -2546,7 +2555,16 @@
                 renderRegionButtons();
                 updateClusterStatus();
                 
-                affectedShards.forEach(shard => triggerElection(shard));
+                // Only trigger election for shards that have majority
+                affectedShards.forEach(shard => {
+                    if (hasMajority(shard)) {
+                        triggerElection(shard);
+                    } else {
+                        const healthyVoters = getHealthyVoters(shard);
+                        const majorityRequired = getMajorityRequired(shard);
+                        log(`⚠️ ${shard.name}: NO MAJORITY (${healthyVoters.length}/${majorityRequired}). Shard is READ-ONLY!`, 'error');
+                    }
+                });
             }
         }
 
@@ -2586,16 +2604,24 @@
                 renderCluster();
                 updateClusterStatus();
                 
-                if (wasPrimary) {
-                    triggerElection(shard);
-                }
-                
+                // Check if current primary lost majority
                 const currentPrimary = shard.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
                 if (currentPrimary && !hasMajority(shard)) {
                     log(`${currentPrimary.name} stepping down: lost majority`, 'warning');
                     currentPrimary.role = 'secondary';
                     renderCluster();
                     updateClusterStatus();
+                }
+                
+                // Only trigger election if we have majority AND lost the primary
+                if (wasPrimary) {
+                    if (hasMajority(shard)) {
+                        triggerElection(shard);
+                    } else {
+                        const healthyVoters = getHealthyVoters(shard);
+                        const majorityRequired = getMajorityRequired(shard);
+                        log(`⚠️ ${shard.name}: NO MAJORITY (${healthyVoters.length}/${majorityRequired}). Shard is READ-ONLY!`, 'error');
+                    }
                 }
             }
         }
@@ -2634,20 +2660,23 @@
             
             modal.classList.add('visible');
             
-            if (healthyNodes.length < majorityRequired) {
+            const healthyVoters = getHealthyVoters(shard);
+            if (healthyVoters.length < majorityRequired) {
                 modalIcon.textContent = '⚠️';
                 modalTitle.textContent = 'Election Failed';
+                const hasNonVoting = shard.nodes.some(n => n.votes === 0);
+                const nonVotingNote = hasNonVoting ? '<br><span style="font-size: 0.75rem; color: #ff6b6b;">Read-only nodes (v:0) cannot vote!</span>' : '';
                 electionText.innerHTML = `
                     <strong style="color: var(--node-down);">${shard.name}: No majority!</strong><br><br>
-                    Healthy nodes: <strong>${healthyNodes.length}</strong><br>
-                    Majority required: <strong>${majorityRequired}</strong><br><br>
+                    Healthy voters: <strong>${healthyVoters.length}</strong><br>
+                    Majority required: <strong>${majorityRequired}</strong>${nonVotingNote}<br><br>
                     <span style="font-size: 0.8rem;">⚠️ ${shard.name} is READ-ONLY</span>
                 `;
                 progressBar.style.width = '100%';
                 progressBar.style.background = 'var(--node-down)';
                 electionStatus.textContent = `${shard.name}: Writes blocked`;
                 
-                log(`${shard.name} election FAILED: no majority (${healthyNodes.length}/${majorityRequired})`, 'error');
+                log(`${shard.name} election FAILED: no majority (${healthyVoters.length} voters / ${majorityRequired} needed)`, 'error');
                 
                 setTimeout(() => {
                     modal.classList.remove('visible');
@@ -3158,7 +3187,9 @@
         async function simulateRSWrite(operation) {
             const primary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
             if (!primary) {
-                log(`${operation.toUpperCase()} FAILED: No primary`, 'error');
+                const reason = !hasMajority(state.nodes) ? ' (no majority - cluster is read-only)' : '';
+                log(`${operation.toUpperCase()} FAILED: No primary${reason}`, 'error');
+                updateStats('failed');
                 return;
             }
 
@@ -3643,16 +3674,24 @@
                 renderReplicaSet();
                 updateClusterStatus();
                 
-                if (wasPrimary) {
-                    triggerRSElection();
-                }
-                
+                // Check if current primary lost majority
                 const currentPrimary = state.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
                 if (currentPrimary && !hasMajority(state.nodes)) {
                     log(`${currentPrimary.name} stepping down: lost majority`, 'warning');
                     currentPrimary.role = 'secondary';
                     renderReplicaSet();
                     updateClusterStatus();
+                }
+                
+                // Only trigger election if we have majority AND lost the primary
+                if (wasPrimary) {
+                    if (hasMajority(state.nodes)) {
+                        triggerRSElection();
+                    } else {
+                        const healthyVoters = getHealthyVoters(state.nodes);
+                        const majorityRequired = getMajorityRequired(state.nodes);
+                        log(`⚠️ NO MAJORITY: ${healthyVoters.length} voters < ${majorityRequired} required. Cluster is READ-ONLY!`, 'error');
+                    }
                 }
             }
         }
@@ -3674,20 +3713,23 @@
             
             modal.classList.add('visible');
             
-            if (healthyNodes.length < majorityRequired) {
+            const healthyVoters = getHealthyVoters(state.nodes);
+            if (healthyVoters.length < majorityRequired) {
                 modalIcon.textContent = '⚠️';
                 modalTitle.textContent = 'Election Failed';
+                const hasNonVoting = state.nodes.some(n => n.votes === 0);
+                const nonVotingNote = hasNonVoting ? '<br><span style="font-size: 0.75rem; color: #ff6b6b;">Read-only nodes (v:0) cannot vote!</span>' : '';
                 electionText.innerHTML = `
                     <strong style="color: var(--node-down);">rs0: No majority!</strong><br><br>
-                    Healthy nodes: <strong>${healthyNodes.length}</strong><br>
-                    Majority required: <strong>${majorityRequired}</strong><br><br>
+                    Healthy voters: <strong>${healthyVoters.length}</strong><br>
+                    Majority required: <strong>${majorityRequired}</strong>${nonVotingNote}<br><br>
                     <span style="font-size: 0.8rem;">⚠️ Replica set is READ-ONLY</span>
                 `;
                 progressBar.style.width = '100%';
                 progressBar.style.background = 'var(--node-down)';
                 electionStatus.textContent = 'rs0: Writes blocked';
                 
-                log(`rs0 election FAILED: no majority (${healthyNodes.length}/${majorityRequired})`, 'error');
+                log(`rs0 election FAILED: no majority (${healthyVoters.length} voters / ${majorityRequired} needed)`, 'error');
                 
                 setTimeout(() => {
                     modal.classList.remove('visible');
