@@ -2998,7 +2998,9 @@
             const primary = targetShard.nodes.find(n => n.role === 'primary' && n.status === 'healthy');
             
             if (!primary) { 
-                log(`${operation.toUpperCase()} FAILED: No primary on ${targetShard.name}`, 'error'); 
+                const reason = !hasMajority(targetShard) ? ' (no majority - shard is read-only)' : '';
+                log(`${operation.toUpperCase()} FAILED: No primary on ${targetShard.name}${reason}`, 'error');
+                updateStats('failed');
                 return; 
             }
 
