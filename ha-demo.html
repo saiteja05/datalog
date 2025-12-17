@@ -2244,8 +2244,26 @@
             return ['test.users', 'test.orders', 'test.products'][Math.floor(Math.random() * 3)];
         }
         
+        // Animation speed multiplier (higher = slower animations)
+        // 1.0 = original speed, 2.0 = 2x slower, 3.0 = 3x slower
+        let ANIM_SPEED = 2.5;
+        const ANIM_SPEEDS = [1.0, 1.5, 2.5, 4.0]; // Fast, Normal, Slow, Very Slow
+        let currentSpeedIndex = 2; // Start at "Slow" (2.5x)
+        
+        function toggleAnimSpeed() {
+            currentSpeedIndex = (currentSpeedIndex + 1) % ANIM_SPEEDS.length;
+            ANIM_SPEED = ANIM_SPEEDS[currentSpeedIndex];
+            const labels = ['⚡ Fast', '🏃 Normal', '🐢 Slow', '🦥 Very Slow'];
+            log(`Animation speed: ${labels[currentSpeedIndex]} (${ANIM_SPEED}x)`, 'info');
+        }
+        
         function sleep(ms) {
-            return new Promise(resolve => setTimeout(resolve, ms));
+            return new Promise(resolve => setTimeout(resolve, ms * ANIM_SPEED));
+        }
+        
+        // For timeouts that should also be slowed
+        function animDelay(ms) {
+            return ms * ANIM_SPEED;
         }
 
         // ============ CLUSTER MANAGEMENT ============
@@ -2928,10 +2946,11 @@
             
             setTimeout(() => {
                 document.getElementById('write-flow-panel').classList.remove('visible');
-            }, 2000);
+            }, animDelay(2500));
         }
 
         function animateParticle(fromEl, toEl, type, duration = 400) {
+            const scaledDuration = duration * ANIM_SPEED;
             return new Promise(resolve => {
                 const overlay = document.getElementById('replication-overlay');
                 const particle = document.createElement('div');
@@ -2953,7 +2972,7 @@
 
                 function animate(currentTime) {
                     const elapsed = currentTime - startTime;
-                    const progress = Math.min(elapsed / duration, 1);
+                    const progress = Math.min(elapsed / scaledDuration, 1);
                     
                     // Easing
                     const eased = 1 - Math.pow(1 - progress, 3);
@@ -3110,12 +3129,12 @@
                             if (secEl) {
                                 setTimeout(() => {
                                     secEl.classList.add('receiving');
-                                    setTimeout(() => secEl.classList.remove('receiving'), 500);
-                                }, 300);
+                                    setTimeout(() => secEl.classList.remove('receiving'), animDelay(800));
+                                }, animDelay(400));
                             }
                             renderCluster();
                         }
-                    }, 100 + i * 150);
+                    }, animDelay(150 + i * 200));
                 });
                 return;
             }
@@ -3136,7 +3155,7 @@
                 sec.oplogCount++;
                 if (secEl) {
                     secEl.classList.add('receiving');
-                    setTimeout(() => secEl.classList.remove('receiving'), 500);
+                    setTimeout(() => secEl.classList.remove('receiving'), animDelay(800));
                 }
                 renderCluster();
                 ackCount++;
@@ -3149,7 +3168,7 @@
                     updateFlowStep(5, false, true);
                     if (secEl) {
                         secEl.classList.add('acknowledged');
-                        setTimeout(() => secEl.classList.remove('acknowledged'), 1500);
+                        setTimeout(() => secEl.classList.remove('acknowledged'), animDelay(2000));
                     }
                     const wcName = state.writeConcern === 'majority' ? 'majority' : 'all';
                     log(`${operation.toUpperCase()} acknowledged (w:${wcName} = ${wcRequired} acks)`, 'success');
@@ -3157,7 +3176,7 @@
                     showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:${wcName})`);
                 }
                 
-                await sleep(100);
+                await sleep(150);
             }
         }
         
@@ -3237,7 +3256,7 @@
             
             if (primaryEl) {
                 primaryEl.classList.add('receiving');
-                setTimeout(() => primaryEl.classList.remove('receiving'), 500);
+                setTimeout(() => primaryEl.classList.remove('receiving'), animDelay(800));
             }
             primary.oplogCount++;
             renderReplicaSet();
@@ -3245,7 +3264,7 @@
             
             // Step 3: Write to oplog
             updateFlowStep(3, true);
-            await sleep(100);
+            await sleep(200);
             updateFlowStep(3, false, true);
             
             let ackCount = 1;
@@ -3269,17 +3288,17 @@
                             sec.oplogCount++;
                             const secEl = document.getElementById(`node-${sec.id}`);
                             if (primaryEl && secEl) {
-                                animateParticle(primaryEl, secEl, 'replication', 300);
+                                animateParticle(primaryEl, secEl, 'replication', 400);
                             }
                             if (secEl) {
                                 setTimeout(() => {
                                     secEl.classList.add('receiving');
-                                    setTimeout(() => secEl.classList.remove('receiving'), 500);
-                                }, 300);
+                                    setTimeout(() => secEl.classList.remove('receiving'), animDelay(800));
+                                }, animDelay(400));
                             }
                             renderReplicaSet();
                         }
-                    }, 100 + i * 150);
+                    }, animDelay(150 + i * 200));
                 });
                 return;
             }
@@ -3299,7 +3318,7 @@
                 sec.oplogCount++;
                 if (secEl) {
                     secEl.classList.add('receiving');
-                    setTimeout(() => secEl.classList.remove('receiving'), 500);
+                    setTimeout(() => secEl.classList.remove('receiving'), animDelay(800));
                 }
                 renderReplicaSet();
                 ackCount++;
@@ -3313,7 +3332,7 @@
                     updateFlowStep(5, false, true);
                     if (secEl) {
                         secEl.classList.add('acknowledged');
-                        setTimeout(() => secEl.classList.remove('acknowledged'), 1500);
+                        setTimeout(() => secEl.classList.remove('acknowledged'), animDelay(2000));
                     }
                     const wcName = state.writeConcern === 'majority' ? 'majority' : 'all';
                     log(`${operation.toUpperCase()} acknowledged (w:${wcName} = ${wcRequired} acks)`, 'success');
@@ -3321,7 +3340,7 @@
                     showWriteResult(true, `✓ ${operation.toUpperCase()} acknowledged (w:${wcName}) [${latency}ms]`);
                 }
                 
-                await sleep(100);
+                await sleep(150);
             }
         }
 
@@ -3388,14 +3407,14 @@
             
             if (nodeEl) {
                 nodeEl.classList.add('reading');
-                setTimeout(() => nodeEl.classList.remove('reading'), 600);
+                setTimeout(() => nodeEl.classList.remove('reading'), animDelay(1000));
             }
             
-            await sleep(150);
+            await sleep(200);
             
             // Animate response: node → client
             if (nodeEl && clientEl) {
-                await animateParticle(nodeEl, clientEl, 'read', 350);
+                await animateParticle(nodeEl, clientEl, 'read', 400);
             }
             
             log(`READ ← ${targetNode.name} complete`, 'success');
@@ -3404,7 +3423,7 @@
             // Hide read flow panel after delay
             setTimeout(() => {
                 document.getElementById('read-flow-panel').classList.remove('visible');
-            }, 1500);
+            }, animDelay(2000));
         }
         
         function showReadFlowPanel(readPref, targetNode, allNodes) {
@@ -3543,18 +3562,18 @@
             const nodeEl = document.getElementById(`node-${targetNode.id}`);
             
             if (mongosEl && nodeEl) {
-                await animateParticle(mongosEl, nodeEl, 'read', 300);
+                await animateParticle(mongosEl, nodeEl, 'read', 350);
             }
             
             if (nodeEl) {
                 nodeEl.classList.add('reading');
-                setTimeout(() => nodeEl.classList.remove('reading'), 600);
+                setTimeout(() => nodeEl.classList.remove('reading'), animDelay(1000));
             }
             
-            await sleep(150);
+            await sleep(200);
             
             if (nodeEl && mongosEl) {
-                await animateParticle(nodeEl, mongosEl, 'read', 350);
+                await animateParticle(nodeEl, mongosEl, 'read', 400);
             }
             
             const readLatency = isCrossRegion ? getLatency(activeMongos.region, targetNode.region) + 10 : 10;
@@ -3564,7 +3583,7 @@
             // Hide read flow panel after delay
             setTimeout(() => {
                 document.getElementById('read-flow-panel').classList.remove('visible');
-            }, 1500);
+            }, animDelay(2000));
         }
 
         function resetCluster() {
@@ -4193,6 +4212,7 @@
                     case 'x': resetCluster(); break;
                     case 'd': toggleAutoDemo(); break;
                     case 't': toggleTopology(); break;
+                    case 's': toggleAnimSpeed(); break;
                     case '1': selectConfig(0); break;
                     case '2': selectConfig(1); break;
                     case '3': selectConfig(2); break;
@@ -4324,6 +4344,7 @@
         <div class="shortcut-row"><span>Reset</span><span class="shortcut-key">X</span></div>
         <div class="shortcut-row"><span>Auto Demo</span><span class="shortcut-key">D</span></div>
         <div class="shortcut-row"><span>Toggle RS/Shard</span><span class="shortcut-key">T</span></div>
+        <div class="shortcut-row"><span>Speed: Slow/Fast</span><span class="shortcut-key">S</span></div>
     </div>
 
     <!-- Demo Narration Overlay -->
