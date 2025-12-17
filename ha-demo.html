@@ -1584,7 +1584,27 @@
             color: var(--mongo-green);
         }
 
-        /* Keyboard Shortcuts Help */
+        /* Keyboard Shortcuts Toggle Button */
+        .shortcuts-toggle {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 30, 43, 0.9);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.75rem;
+            z-index: 50;
+            cursor: pointer;
+            color: var(--mongo-green);
+            transition: all 0.2s ease;
+        }
+        .shortcuts-toggle:hover {
+            background: rgba(0, 237, 100, 0.1);
+            border-color: var(--mongo-green);
+        }
+        
+        /* Keyboard Shortcuts Help Panel */
         .shortcuts-help {
             position: fixed;
             bottom: 20px;
@@ -1593,13 +1613,30 @@
             border: 1px solid rgba(0, 237, 100, 0.3);
             border-radius: 12px;
             padding: 14px 18px;
+            padding-top: 28px;
             font-size: 0.75rem;
-            z-index: 50;
+            z-index: 51;
             max-width: 200px;
-            transition: all 0.3s;
-            opacity: 0.7;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(10px);
+            transition: all 0.2s ease;
         }
-        .shortcuts-help:hover { opacity: 1; }
+        .shortcuts-help.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        .shortcuts-close {
+            position: absolute;
+            top: 6px;
+            right: 10px;
+            cursor: pointer;
+            color: rgba(255,255,255,0.5);
+            font-size: 1.1rem;
+            line-height: 1;
+        }
+        .shortcuts-close:hover { color: #fff; }
         .shortcuts-title {
             font-weight: 600;
             color: var(--mongo-green);
@@ -1682,7 +1719,7 @@
             .shard-panel { min-width: 100%; }
             .write-flow-panel { width: 320px; right: 10px; bottom: 10px; }
             .read-flow-panel { width: 340px; left: 10px; bottom: 10px; }
-            .shortcuts-help { display: none; }
+            .shortcuts-help, .shortcuts-toggle { display: none !important; }
         }
     </style>
 </head>
@@ -2255,6 +2292,20 @@
             ANIM_SPEED = ANIM_SPEEDS[currentSpeedIndex];
             const labels = ['⚡ Fast', '🏃 Normal', '🐢 Slow', '🦥 Very Slow'];
             log(`Animation speed: ${labels[currentSpeedIndex]} (${ANIM_SPEED}x)`, 'info');
+        }
+        
+        function toggleShortcutsPanel() {
+            const panel = document.getElementById('shortcuts-help');
+            const toggle = document.getElementById('shortcuts-toggle');
+            const isVisible = panel.classList.contains('visible');
+            
+            if (isVisible) {
+                panel.classList.remove('visible');
+                toggle.style.display = 'block';
+            } else {
+                panel.classList.add('visible');
+                toggle.style.display = 'none';
+            }
         }
         
         function sleep(ms) {
@@ -4334,8 +4385,14 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 
-    <!-- Keyboard Shortcuts Help -->
+    <!-- Keyboard Shortcuts Toggle -->
+    <div class="shortcuts-toggle" id="shortcuts-toggle" onclick="toggleShortcutsPanel()">
+        ⌨️ Shortcuts
+    </div>
+    
+    <!-- Keyboard Shortcuts Help Panel -->
     <div class="shortcuts-help" id="shortcuts-help">
+        <span class="shortcuts-close" onclick="toggleShortcutsPanel()">×</span>
         <div class="shortcuts-title">⌨️ Keyboard Shortcuts</div>
         <div class="shortcut-row"><span>Insert</span><span class="shortcut-key">I</span></div>
         <div class="shortcut-row"><span>Update</span><span class="shortcut-key">U</span></div>
