@@ -946,6 +946,143 @@
                 padding: 20px;
             }
         }
+
+        /* Language Tabs */
+        .language-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 0;
+            background: var(--bg-elevated);
+            padding: 8px 12px;
+            border-radius: 10px 10px 0 0;
+            border: 1px solid var(--border-color);
+            border-bottom: none;
+            flex-wrap: wrap;
+        }
+
+        .lang-tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9em;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .lang-tab:hover {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+        }
+
+        .lang-tab.active {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.1));
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        .lang-tab svg {
+            flex-shrink: 0;
+        }
+
+        .copy-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85em;
+            margin-left: auto;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: var(--bg-dark);
+        }
+
+        .copy-btn.copied {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            color: var(--bg-dark);
+        }
+
+        .code-output {
+            border-radius: 0 0 10px 10px !important;
+            margin-top: 0 !important;
+            min-height: 350px;
+        }
+
+        .code-output pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Code explanation sections */
+        .code-section {
+            margin-bottom: 20px;
+        }
+
+        .code-section-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .code-section-title .step-num {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85em;
+            font-weight: 700;
+        }
+
+        .code-section pre {
+            background: #010409;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            margin: 0;
+            overflow-x: auto;
+        }
+
+        .code-note {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid var(--accent-cyan);
+            padding: 12px 16px;
+            margin-top: 12px;
+            border-radius: 0 6px 6px 0;
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+
+        .code-note strong {
+            color: var(--accent-cyan);
+        }
     </style>
 </head>
 <body>
@@ -2508,7 +2645,28 @@ db.orders.aggregate([
                         </div>
 
                         <h3>Generated Code</h3>
-                        <div class="demo-output" id="generated-code"></div>
+                        
+                        <!-- Language Selector Tabs -->
+                        <div class="language-tabs">
+                            <button class="lang-tab active" data-lang="python" onclick="switchLanguage('python')">
+                                <svg width="20" height="20" viewBox="0 0 256 255" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="py1" x1="12.959%" y1="12.039%" x2="79.639%" y2="78.201%"><stop stop-color="#387EB8" offset="0%"/><stop stop-color="#366994" offset="100%"/></linearGradient><linearGradient id="py2" x1="19.128%" y1="20.579%" x2="90.742%" y2="88.429%"><stop stop-color="#FFE052" offset="0%"/><stop stop-color="#FFC331" offset="100%"/></linearGradient></defs><path d="M126.916.072c-64.832 0-60.784 28.115-60.784 28.115l.072 29.128h61.868v8.745H41.631S.145 61.355.145 126.77c0 65.417 36.21 63.097 36.21 63.097h21.61v-30.356s-1.165-36.21 35.632-36.21h61.362s34.475.557 34.475-33.319V33.97S194.67.072 126.916.072zM92.802 19.66a11.12 11.12 0 0 1 11.13 11.13 11.12 11.12 0 0 1-11.13 11.13 11.12 11.12 0 0 1-11.13-11.13 11.12 11.12 0 0 1 11.13-11.13z" fill="url(#py1)"/><path d="M128.757 254.126c64.832 0 60.784-28.115 60.784-28.115l-.072-29.127H127.6v-8.745h86.441s41.486 4.705 41.486-60.712c0-65.416-36.21-63.096-36.21-63.096h-21.61v30.355s1.165 36.21-35.632 36.21h-61.362s-34.475-.557-34.475 33.32v56.013s-5.235 33.897 62.518 33.897zm34.114-19.586a11.12 11.12 0 0 1-11.13-11.13 11.12 11.12 0 0 1 11.13-11.131 11.12 11.12 0 0 1 11.13 11.13 11.12 11.12 0 0 1-11.13 11.13z" fill="url(#py2)"/></svg>
+                                Python
+                            </button>
+                            <button class="lang-tab" data-lang="nodejs" onclick="switchLanguage('nodejs')">
+                                <svg width="20" height="20" viewBox="0 0 256 289" xmlns="http://www.w3.org/2000/svg"><path d="M128 288.464c-3.975 0-7.685-1.06-11.13-2.915l-35.247-20.936c-5.3-2.915-2.65-3.975-1.06-4.505 7.155-2.385 8.48-2.915 15.9-7.156.796-.53 1.856-.265 2.65.265l27.032 16.166c1.06.53 2.385.53 3.18 0l105.74-61.217c1.06-.53 1.59-1.59 1.59-2.915V83.08c0-1.325-.53-2.385-1.59-2.915l-105.74-60.953c-1.06-.53-2.385-.53-3.18 0L20.705 80.166c-1.06.53-1.59 1.855-1.59 2.915v122.17c0 1.06.53 2.385 1.59 2.915l28.887 16.695c15.635 7.95 25.44-1.325 25.44-10.6V93.68c0-1.59 1.326-3.18 3.181-3.18h13.516c1.59 0 3.18 1.325 3.18 3.18v120.58c0 20.936-11.396 33.126-31.272 33.126-6.095 0-10.865 0-24.38-6.625l-27.827-15.9C4.24 220.355 0 212.935 0 204.984V82.815C0 74.865 4.24 67.445 11.13 63.205L116.87 2.253c6.625-3.71 15.635-3.71 22.26 0L244.87 63.47c6.89 3.975 11.13 11.395 11.13 19.345v122.17c0 7.95-4.24 15.37-11.13 19.345L139.13 285.55c-3.445 1.59-7.42 2.915-11.13 2.915zm32.596-84.009c-46.377 0-55.917-21.2-55.917-39.221 0-1.59 1.325-3.18 3.18-3.18h13.78c1.59 0 2.916 1.06 2.916 2.65 2.12 14.045 8.215 20.936 36.307 20.936 22.26 0 31.802-5.035 31.802-16.96 0-6.891-2.65-11.926-37.367-15.372-28.887-2.915-46.907-9.275-46.907-32.33 0-21.467 18.02-34.187 48.232-34.187 33.921 0 50.617 11.66 52.737 37.102 0 .795-.265 1.59-.795 2.385-.53.53-1.325 1.06-2.12 1.06h-13.78c-1.326 0-2.65-1.06-2.916-2.385-3.18-14.575-11.395-19.345-33.126-19.345-24.38 0-27.296 8.48-27.296 14.84 0 7.686 3.445 10.07 36.307 14.31 32.596 4.24 47.967 10.336 47.967 33.127-.265 23.175-19.345 36.57-53.002 36.57z" fill="#539E43"/></svg>
+                                Node.js
+                            </button>
+                            <button class="lang-tab" data-lang="shell" onclick="switchLanguage('shell')">
+                                <svg width="20" height="20" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg"><path d="M128 0C57.308 0 0 57.308 0 128s57.308 128 128 128 128-57.308 128-128S198.692 0 128 0z" fill="#13AA52"/><path d="M132.333 200.3V234l-8.333-3.75v-30.667c-26.667-3.333-45.833-19.333-45.833-44.25 0-4.25 3.417-7.667 7.667-7.667h.416c4.084.167 7.334 3.5 7.334 7.584 0 17.416 13.083 29.416 35 29.416 21.917 0 35-12 35-29.416 0-17.417-13.083-29.417-35-29.417-30.833 0-50-18.167-50-47.583 0-24.917 19.167-40.917 45.833-44.25V0l8.333 3.75v30.667c26.667 3.333 45.834 19.333 45.834 44.25 0 4.25-3.417 7.666-7.667 7.666h-.417c-4.083-.166-7.333-3.5-7.333-7.583 0-17.417-13.084-29.417-35-29.417-21.917 0-35 12-35 29.417s13.083 29.416 35 29.416c30.833 0 50 18.167 50 47.584 0 24.917-19.167 40.917-45.834 44.25z" fill="#FFF"/></svg>
+                                MongoDB Shell
+                            </button>
+                            <button class="copy-btn" onclick="copyGeneratedCode()" title="Copy to clipboard">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                Copy
+                            </button>
+                        </div>
+                        
+                        <div class="demo-output code-output" id="generated-code"></div>
 
                         <h3>Pipeline Results</h3>
                         <div class="demo-output" id="pipeline-results"></div>
@@ -2866,40 +3024,251 @@ db.orders.aggregate([
 
         function clearPipeline() {
             pipelineStages = [];
+            generatedCodeData = null;
             updatePipelineVisual();
-            document.getElementById('generated-code').innerHTML = '<pre style="color: var(--text-secondary);">Click "Generate Code" to see the aggregation query</pre>';
+            document.getElementById('generated-code').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3em; margin-bottom: 16px;">🔧</div>
+                    <div style="color: var(--text-secondary); font-size: 1.1em; margin-bottom: 8px;">Build Your Pipeline</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9em;">Click stages above, then "Generate Code" to get ready-to-use Python, Node.js, or MongoDB Shell code</div>
+                </div>
+            `;
             document.getElementById('pipeline-results').innerHTML = '<pre style="color: var(--text-secondary);">Build a pipeline and click "Execute Pipeline" to see results</pre>';
+        }
+
+        let currentLanguage = 'python';
+        let generatedCodeData = null;
+
+        function switchLanguage(lang) {
+            currentLanguage = lang;
+            
+            // Update tab styles
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.classList.toggle('active', tab.dataset.lang === lang);
+            });
+            
+            // Regenerate code if we have stages
+            if (pipelineStages.length > 0) {
+                generateCode();
+            }
+        }
+
+        function copyGeneratedCode() {
+            if (!generatedCodeData) return;
+            
+            const textToCopy = generatedCodeData[currentLanguage + 'Raw'] || '';
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.classList.add('copied');
+                btn.innerHTML = `
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                    Copied!
+                `;
+                setTimeout(() => {
+                    btn.classList.remove('copied');
+                    btn.innerHTML = `
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Copy
+                    `;
+                }, 2000);
+            });
         }
 
         function generateCode() {
             if (pipelineStages.length === 0) {
                 document.getElementById('generated-code').innerHTML =
                     '<pre style="color: var(--accent-pink);">⚠️ Add some stages first!</pre>';
+                generatedCodeData = null;
                 return;
             }
 
-            const stageTemplates = {
-                match: '  { <span class="string">$match</span>: { status: <span class="string">"completed"</span> } }',
-                group: '  { <span class="string">$group</span>: { _id: <span class="string">"$product"</span>, count: { <span class="string">$sum</span>: <span class="number">1</span> } } }',
-                project: '  { <span class="string">$project</span>: { product: <span class="number">1</span>, amount: <span class="number">1</span>, _id: <span class="number">0</span> } }',
-                sort: '  { <span class="string">$sort</span>: { amount: <span class="number">-1</span> } }',
-                limit: '  { <span class="string">$limit</span>: <span class="number">5</span> }',
-                addFields: '  { <span class="string">$addFields</span>: { processedAt: <span class="keyword">new</span> Date() } }'
+            // Stage definitions for each language
+            const stagesPython = {
+                match: '    {"$match": {"status": "completed"}}',
+                group: '    {"$group": {"_id": "$product", "count": {"$sum": 1}, "totalSales": {"$sum": "$amount"}}}',
+                project: '    {"$project": {"product": 1, "amount": 1, "_id": 0}}',
+                sort: '    {"$sort": {"totalSales": -1}}',
+                limit: '    {"$limit": 5}',
+                addFields: '    {"$addFields": {"processedAt": datetime.now()}}'
             };
 
-            let code = '<span class="comment">// Generated MongoDB Aggregation Pipeline</span>\n';
-            code += 'db.sales.<span class="keyword">aggregate</span>([\n';
-            pipelineStages.forEach((stage, index) => {
-                code += stageTemplates[stage];
-                if (index < pipelineStages.length - 1) {
-                    code += ',';
-                }
-                code += '\n';
-            });
-            code += '])';
+            const stagesNode = {
+                match: '      { $match: { status: "completed" } }',
+                group: '      { $group: { _id: "$product", count: { $sum: 1 }, totalSales: { $sum: "$amount" } } }',
+                project: '      { $project: { product: 1, amount: 1, _id: 0 } }',
+                sort: '      { $sort: { totalSales: -1 } }',
+                limit: '      { $limit: 5 }',
+                addFields: '      { $addFields: { processedAt: new Date() } }'
+            };
 
-            document.getElementById('generated-code').innerHTML =
-                `<pre>${code}</pre>`;
+            const stagesShell = {
+                match: '  { $match: { status: "completed" } }',
+                group: '  { $group: { _id: "$product", count: { $sum: 1 }, totalSales: { $sum: "$amount" } } }',
+                project: '  { $project: { product: 1, amount: 1, _id: 0 } }',
+                sort: '  { $sort: { totalSales: -1 } }',
+                limit: '  { $limit: 5 }',
+                addFields: '  { $addFields: { processedAt: new Date() } }'
+            };
+
+            // Build pipeline arrays
+            const pipelinePython = pipelineStages.map(s => stagesPython[s]).join(',\n');
+            const pipelineNode = pipelineStages.map(s => stagesNode[s]).join(',\n');
+            const pipelineShell = pipelineStages.map(s => stagesShell[s]).join(',\n');
+
+            // Generate full code for each language
+            const pythonCode = `# MongoDB Aggregation Pipeline - Python (PyMongo)
+# ================================================
+
+from pymongo import MongoClient
+from datetime import datetime
+
+# Step 1: Connect to MongoDB
+client = MongoClient("mongodb://localhost:27017/")
+db = client["your_database"]
+collection = db["sales"]
+
+# Step 2: Define the aggregation pipeline
+pipeline = [
+${pipelinePython}
+]
+
+# Step 3: Execute the pipeline
+results = collection.aggregate(pipeline)
+
+# Step 4: Process and display results
+print("\\n📊 Aggregation Results:")
+print("-" * 40)
+for doc in results:
+    print(doc)
+
+# Don't forget to close the connection when done
+client.close()`;
+
+            const nodeCode = `// MongoDB Aggregation Pipeline - Node.js
+// ================================================
+
+const { MongoClient } = require('mongodb');
+
+// Connection URI
+const uri = "mongodb://localhost:27017/";
+
+async function runAggregation() {
+  const client = new MongoClient(uri);
+  
+  try {
+    // Step 1: Connect to MongoDB
+    await client.connect();
+    console.log("✅ Connected to MongoDB");
+    
+    const db = client.db("your_database");
+    const collection = db.collection("sales");
+    
+    // Step 2: Define the aggregation pipeline
+    const pipeline = [
+${pipelineNode}
+    ];
+    
+    // Step 3: Execute the pipeline
+    const results = await collection.aggregate(pipeline).toArray();
+    
+    // Step 4: Process and display results
+    console.log("\\n📊 Aggregation Results:");
+    console.log("-".repeat(40));
+    results.forEach(doc => console.log(doc));
+    
+    return results;
+    
+  } finally {
+    // Step 5: Close the connection
+    await client.close();
+  }
+}
+
+// Run the aggregation
+runAggregation().catch(console.error);`;
+
+            const shellCode = `// MongoDB Aggregation Pipeline - MongoDB Shell (mongosh)
+// ================================================
+
+// Step 1: Switch to your database
+use your_database
+
+// Step 2: Run the aggregation pipeline
+db.sales.aggregate([
+${pipelineShell}
+])
+
+// Alternative: Store results in a variable
+// var results = db.sales.aggregate([...]).toArray()
+
+// To see explain plan (for optimization):
+// db.sales.explain("executionStats").aggregate([...])`;
+
+            // Store raw code for copying
+            generatedCodeData = {
+                pythonRaw: pythonCode,
+                nodejsRaw: nodeCode,
+                shellRaw: shellCode
+            };
+
+            // Generate highlighted HTML for display
+            const displayCode = {
+                python: highlightPython(pythonCode),
+                nodejs: highlightNode(nodeCode),
+                shell: highlightShell(shellCode)
+            };
+
+            document.getElementById('generated-code').innerHTML = `
+                <div class="code-section">
+                    <pre>${displayCode[currentLanguage]}</pre>
+                </div>
+                <div class="code-note">
+                    <strong>💡 Pro Tip:</strong> ${getProTip(currentLanguage)}
+                </div>
+            `;
+        }
+
+        function highlightPython(code) {
+            return code
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(#.*$)/gm, '<span class="comment">$1</span>')
+                .replace(/("mongodb:\/\/[^"]*"|"[^"]*")/g, '<span class="string">$1</span>')
+                .replace(/\b(from|import|def|async|await|for|in|try|finally|return|print|if|else|with|as)\b/g, '<span class="keyword">$1</span>')
+                .replace(/\b(MongoClient|datetime|client|db|collection|pipeline|results|doc)\b/g, '<span style="color: var(--accent-cyan);">$1</span>')
+                .replace(/(\$match|\$group|\$project|\$sort|\$limit|\$addFields|\$sum)/g, '<span class="string">$1</span>')
+                .replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+        }
+
+        function highlightNode(code) {
+            return code
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(\/\/.*$)/gm, '<span class="comment">$1</span>')
+                .replace(/("mongodb:\/\/[^"]*"|"[^"]*")/g, '<span class="string">$1</span>')
+                .replace(/\b(const|let|var|async|await|function|try|finally|return|require|forEach)\b/g, '<span class="keyword">$1</span>')
+                .replace(/\b(MongoClient|console|client|db|collection|pipeline|results|doc)\b/g, '<span style="color: var(--accent-cyan);">$1</span>')
+                .replace(/(\$match|\$group|\$project|\$sort|\$limit|\$addFields|\$sum)/g, '<span class="string">$1</span>')
+                .replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+        }
+
+        function highlightShell(code) {
+            return code
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(\/\/.*$)/gm, '<span class="comment">$1</span>')
+                .replace(/\b(use|var|db)\b/g, '<span class="keyword">$1</span>')
+                .replace(/(\$match|\$group|\$project|\$sort|\$limit|\$addFields|\$sum)/g, '<span class="string">$1</span>')
+                .replace(/\b(\d+)\b/g, '<span class="number">$1</span>');
+        }
+
+        function getProTip(lang) {
+            const tips = {
+                python: 'Install PyMongo with <code style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">pip install pymongo</code>. For async operations, use <code style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">motor</code> instead.',
+                nodejs: 'Install the MongoDB driver with <code style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">npm install mongodb</code>. Consider using connection pooling for production.',
+                shell: 'Run this in <code style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">mongosh</code> (MongoDB Shell). Use <code style="background: var(--bg-dark); padding: 2px 6px; border-radius: 4px;">.explain()</code> to analyze query performance.'
+            };
+            return tips[lang];
         }
 
         // Initialize demos on page load
@@ -3310,8 +3679,13 @@ db.orders.aggregate([
                 `<pre style="color: var(--accent-green);">${formatJSON(salesData)}</pre>`;
             document.getElementById('pipeline-results').innerHTML =
                 '<pre style="color: var(--text-secondary);">Build a pipeline and click "Execute Pipeline" to see results</pre>';
-            document.getElementById('generated-code').innerHTML =
-                '<pre style="color: var(--text-secondary);">Click "Generate Code" to see the aggregation query</pre>';
+            document.getElementById('generated-code').innerHTML = `
+                <div style="text-align: center; padding: 60px 20px;">
+                    <div style="font-size: 3em; margin-bottom: 16px;">🔧</div>
+                    <div style="color: var(--text-secondary); font-size: 1.1em; margin-bottom: 8px;">Build Your Pipeline</div>
+                    <div style="color: var(--text-secondary); font-size: 0.9em;">Click stages above, then "Generate Code" to get ready-to-use Python, Node.js, or MongoDB Shell code</div>
+                </div>
+            `;
         }
 
         // Stage syntax definitions
