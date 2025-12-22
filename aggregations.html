@@ -1,0 +1,3634 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Aggregation Pipeline Visualizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-elevated: #21262d;
+            --accent-green: #00ff88;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #a855f7;
+            --accent-orange: #ff8a00;
+            --accent-pink: #ff006e;
+            --accent-yellow: #ffd93d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --border-color: rgba(48, 54, 61, 0.8);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-dark);
+            background-image: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0, 212, 255, 0.15), transparent),
+                radial-gradient(ellipse 60% 40% at 100% 100%, rgba(168, 85, 247, 0.1), transparent);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px 40px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green), var(--accent-purple));
+        }
+
+        h1 {
+            color: var(--text-primary);
+            font-size: 2.8em;
+            margin-bottom: 12px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.15em;
+            font-weight: 300;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .nav-section {
+            margin-bottom: 24px;
+        }
+
+        .nav-section h3 {
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-size: 0.75em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .nav-button {
+            display: block;
+            width: 100%;
+            padding: 10px 14px;
+            margin-bottom: 6px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-size: 0.9em;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .nav-button:hover {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            transform: translateX(4px);
+        }
+
+        .nav-button.active {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.1));
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            font-weight: 500;
+        }
+
+        .content-area {
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 36px;
+            border: 1px solid var(--border-color);
+            min-height: 600px;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .content-section h2 {
+            color: var(--text-primary);
+            font-size: 2.2em;
+            margin-bottom: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .content-section h2::before {
+            content: '';
+            width: 5px;
+            height: 36px;
+            background: linear-gradient(180deg, var(--accent-green), var(--accent-cyan));
+            border-radius: 3px;
+        }
+
+        .content-section h3 {
+            color: var(--accent-cyan);
+            font-size: 1.4em;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .content-section p {
+            line-height: 1.8;
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+            font-size: 1.05em;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.08), rgba(0, 212, 255, 0.05));
+            border-left: 4px solid var(--accent-green);
+            padding: 18px 24px;
+            margin: 24px 0;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 255, 136, 0.15);
+            border-left-width: 4px;
+        }
+
+        .code-block {
+            background: #010409;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px 24px;
+            margin: 20px 0;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            line-height: 1.7;
+        }
+
+        .code-block pre {
+            color: var(--accent-green);
+        }
+
+        .keyword { color: var(--accent-pink); }
+        .string { color: var(--accent-yellow); }
+        .number { color: var(--accent-cyan); }
+        .comment { color: var(--text-secondary); font-style: italic; }
+
+        /* Document Visualization Styles */
+        .doc-visualization {
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .doc-flow {
+            display: flex;
+            align-items: stretch;
+            gap: 16px;
+            overflow-x: auto;
+            padding: 16px 0;
+        }
+
+        .doc-column {
+            flex: 1;
+            min-width: 280px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .doc-column-title {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .doc-column-title .count {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9em;
+        }
+
+        .doc-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8em;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .doc-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--accent-cyan);
+        }
+
+        .doc-card.filtered-out {
+            opacity: 0.3;
+            background: rgba(255, 0, 0, 0.05);
+            border-color: rgba(255, 0, 0, 0.2);
+        }
+
+        .doc-card.filtered-out::before {
+            background: #ff4757;
+        }
+
+        .doc-card.highlighted {
+            border-color: var(--accent-green);
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+        }
+
+        .doc-card.highlighted::before {
+            background: var(--accent-green);
+        }
+
+        .doc-field {
+            margin: 4px 0;
+            display: flex;
+            gap: 8px;
+        }
+
+        .doc-field-key {
+            color: var(--accent-purple);
+        }
+
+        .doc-field-value {
+            color: var(--accent-yellow);
+        }
+
+        .doc-field-value.number {
+            color: var(--accent-cyan);
+        }
+
+        .flow-arrow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 60px;
+            position: relative;
+        }
+
+        .flow-arrow svg {
+            width: 48px;
+            height: 48px;
+            color: var(--accent-green);
+            filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.3));
+        }
+
+        .flow-arrow .stage-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7em;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        /* Stage Execution Visualizer */
+        .stage-visualizer {
+            background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+            border-radius: 16px;
+            padding: 28px;
+            margin: 28px 0;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-visualizer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan), var(--accent-purple));
+        }
+
+        .stage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .stage-name {
+            font-size: 1.4em;
+            font-weight: 700;
+            color: var(--accent-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stage-name .icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+
+        .stage-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .stage-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9em;
+        }
+
+        .stage-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.3);
+        }
+
+        .stage-btn.secondary {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .stage-btn.secondary:hover {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+        }
+
+        /* Animation for document cards */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.4); }
+            50% { box-shadow: 0 0 20px 10px rgba(0, 255, 136, 0.1); }
+        }
+
+        .doc-card.animating {
+            animation: slideIn 0.5s ease forwards;
+        }
+
+        .doc-card.removing {
+            animation: slideOut 0.3s ease forwards;
+        }
+
+        .doc-card.processing {
+            animation: pulse 1s ease infinite;
+        }
+
+        .pipeline-visual {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 28px 0;
+            padding: 24px;
+            background: var(--bg-elevated);
+            border-radius: 14px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+        }
+
+        .stage {
+            min-width: 160px;
+            padding: 20px;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.08));
+            border: 2px solid var(--accent-green);
+            border-radius: 12px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .stage:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.25);
+        }
+
+        .stage-title {
+            font-weight: 700;
+            color: var(--accent-green);
+            margin-bottom: 8px;
+            font-size: 1.05em;
+        }
+
+        .stage-desc {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+        }
+
+        .arrow {
+            color: var(--accent-cyan);
+            font-size: 1.8em;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+
+        .interactive-demo {
+            background: var(--bg-elevated);
+            border-radius: 14px;
+            padding: 28px;
+            margin: 28px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .demo-controls {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .demo-button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .demo-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 255, 136, 0.35);
+        }
+
+        .demo-button:active {
+            transform: translateY(0);
+        }
+
+        .demo-output {
+            background: #010409;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 200px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+        }
+
+        .data-flow {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .data-box {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), rgba(168, 85, 247, 0.05));
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 12px;
+            padding: 18px;
+        }
+
+        .data-box h4 {
+            color: var(--accent-cyan);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .data-item {
+            background: var(--bg-dark);
+            padding: 10px 12px;
+            margin: 6px 0;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        ul {
+            margin-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        li {
+            margin-bottom: 12px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .stage-selector {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 14px;
+            margin: 24px 0;
+        }
+
+        .stage-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stage-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stage-card:hover {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 212, 255, 0.08));
+            border-color: var(--accent-green);
+            transform: translateY(-4px);
+        }
+
+        .stage-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stage-card.selected {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 212, 255, 0.1));
+            border-color: var(--accent-green);
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.2);
+        }
+
+        .stage-card.selected::before {
+            transform: scaleX(1);
+        }
+
+        .stage-card h4 {
+            color: var(--accent-green);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .stage-card p {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        /* Overlay Modal */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .overlay.active {
+            display: flex;
+        }
+
+        .overlay-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 800px;
+            max-height: 85vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .overlay-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan), var(--accent-purple));
+            border-radius: 16px 16px 0 0;
+        }
+
+        .overlay-close {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4em;
+            transition: all 0.3s ease;
+        }
+
+        .overlay-close:hover {
+            background: var(--accent-pink);
+            border-color: var(--accent-pink);
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .overlay h3 {
+            color: var(--accent-green);
+            font-size: 1.8em;
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .overlay p {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin-bottom: 16px;
+        }
+
+        /* Step Progress Indicator */
+        .step-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 24px 0;
+        }
+
+        .step-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+
+        .step-dot.active {
+            background: var(--accent-green);
+            border-color: var(--accent-green);
+            box-shadow: 0 0 12px rgba(0, 255, 136, 0.5);
+        }
+
+        .step-dot.completed {
+            background: var(--accent-cyan);
+            border-color: var(--accent-cyan);
+        }
+
+        .step-line {
+            width: 40px;
+            height: 2px;
+            background: var(--border-color);
+        }
+
+        .step-line.active {
+            background: linear-gradient(90deg, var(--accent-green), var(--accent-cyan));
+        }
+
+        /* Visual Transform Cards */
+        .transform-visual {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: stretch;
+            margin: 24px 0;
+            padding: 20px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .transform-column {
+            background: var(--bg-dark);
+            border-radius: 10px;
+            padding: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .transform-column h4 {
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .transform-column h4 .badge {
+            background: var(--accent-green);
+            color: var(--bg-dark);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.9em;
+        }
+
+        .transform-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px 0;
+        }
+
+        .transform-arrow .stage-indicator {
+            background: linear-gradient(135deg, var(--accent-green), var(--accent-cyan));
+            color: var(--bg-dark);
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .transform-arrow svg {
+            color: var(--accent-cyan);
+            width: 32px;
+            height: 32px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 24px;
+            padding: 16px 20px;
+            background: var(--bg-elevated);
+            border-radius: 10px;
+            margin: 16px 0;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--accent-green);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .stat-value.highlight {
+            color: var(--accent-cyan);
+        }
+
+        .stat-value.warning {
+            color: var(--accent-orange);
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .pipeline-visual {
+                flex-direction: column;
+            }
+
+            .arrow {
+                transform: rotate(90deg);
+            }
+
+            .transform-visual {
+                grid-template-columns: 1fr;
+            }
+
+            .transform-arrow {
+                flex-direction: row;
+                padding: 10px 0;
+            }
+
+            .transform-arrow svg {
+                transform: rotate(90deg);
+            }
+        }
+
+        @media (max-width: 640px) {
+            header {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .content-area {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🍃 MongoDB Aggregation Pipeline Visualizer</h1>
+            <p class="subtitle">Interactive Learning Tool for Mastering Aggregation Pipelines</p>
+        </header>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <nav>
+                    <div class="nav-section">
+                        <h3>📚 Learn</h3>
+                        <button class="nav-button active" data-section="what">What is Aggregation?</button>
+                        <button class="nav-button" data-section="why">Why Use Aggregation?</button>
+                        <button class="nav-button" data-section="how">How It Works</button>
+                    </div>
+
+                    <div class="nav-section">
+                        <h3>🔧 Pipeline Stages</h3>
+                        <button class="nav-button" data-section="stages-overview">Stages Overview</button>
+                        <button class="nav-button" data-section="match">$match</button>
+                        <button class="nav-button" data-section="group">$group</button>
+                        <button class="nav-button" data-section="project">$project</button>
+                        <button class="nav-button" data-section="sort">$sort</button>
+                        <button class="nav-button" data-section="limit">$limit & $skip</button>
+                        <button class="nav-button" data-section="lookup">$lookup (Join)</button>
+                        <button class="nav-button" data-section="unwind">$unwind</button>
+                        <button class="nav-button" data-section="addFields">$addFields</button>
+                    </div>
+
+                    <div class="nav-section">
+                        <h3>🎯 Interactive Demos</h3>
+                        <button class="nav-button" data-section="demo-basic">Basic Pipeline</button>
+                        <button class="nav-button" data-section="demo-advanced">Advanced Example</button>
+                        <button class="nav-button" data-section="demo-builder">Pipeline Builder</button>
+                    </div>
+                </nav>
+            </aside>
+
+            <main class="content-area">
+                <!-- WHAT IS AGGREGATION -->
+                <section id="what" class="content-section active">
+                    <h2>What is MongoDB Aggregation?</h2>
+
+                    <p>MongoDB's <strong>Aggregation Framework</strong> is a powerful data processing pipeline that allows you to transform and analyze documents in a collection. Think of it as a sophisticated assembly line where your data flows through multiple stages, each performing a specific transformation.</p>
+
+                    <div class="highlight-box">
+                        <strong>Key Concept:</strong> An aggregation pipeline consists of one or more stages that process documents sequentially. Each stage transforms the documents and passes the results to the next stage.
+                    </div>
+
+                    <h3>Visual Representation</h3>
+                    <div class="pipeline-visual">
+                        <div class="stage">
+                            <div class="stage-title">📥 Input</div>
+                            <div class="stage-desc">Collection Documents</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">Stage 1</div>
+                            <div class="stage-desc">Filter</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">Stage 2</div>
+                            <div class="stage-desc">Transform</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">Stage 3</div>
+                            <div class="stage-desc">Group</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">📤 Output</div>
+                            <div class="stage-desc">Results</div>
+                        </div>
+                    </div>
+
+                    <h3>Basic Syntax</h3>
+                    <div class="code-block">
+                        <pre>db.collection.<span class="keyword">aggregate</span>([
+  { <span class="string">$stage1</span>: { ... } },
+  { <span class="string">$stage2</span>: { ... } },
+  { <span class="string">$stage3</span>: { ... } }
+])
+
+<span class="comment">// Example: Find active users and count by country</span>
+db.users.<span class="keyword">aggregate</span>([
+  { <span class="string">$match</span>: { status: <span class="string">"active"</span> } },
+  { <span class="string">$group</span>: {
+      _id: <span class="string">"$country"</span>,
+      count: { <span class="string">$sum</span>: <span class="number">1</span> }
+    }
+  },
+  { <span class="string">$sort</span>: { count: <span class="number">-1</span> } }
+])</pre>
+                    </div>
+
+                    <h3>Core Characteristics</h3>
+                    <ul>
+                        <li><strong>Pipeline-based:</strong> Data flows through stages sequentially</li>
+                        <li><strong>Declarative:</strong> You specify what you want, not how to get it</li>
+                        <li><strong>Server-side:</strong> Processing happens in MongoDB, reducing network overhead</li>
+                        <li><strong>Optimized:</strong> MongoDB can reorder and combine stages for efficiency</li>
+                        <li><strong>Flexible:</strong> Supports complex transformations, joins, and analytics</li>
+                    </ul>
+                </section>
+
+                <!-- WHY USE AGGREGATION -->
+                <section id="why" class="content-section">
+                    <h2>Why Use Aggregation Pipelines?</h2>
+
+                    <p>Aggregation pipelines solve complex data processing challenges that simple queries cannot handle. They're essential for analytics, reporting, and data transformation tasks.</p>
+
+                    <h3>1. Performance & Efficiency</h3>
+                    <div class="highlight-box">
+                        <strong>Server-Side Processing:</strong> All computation happens on the database server, minimizing data transfer and leveraging MongoDB's optimized query engine.
+                    </div>
+
+                    <div class="code-block">
+                        <pre><span class="comment">// ❌ BAD: Fetch all data and process in application</span>
+<span class="keyword">const</span> users = <span class="keyword">await</span> db.users.find({}).toArray();
+<span class="keyword">const</span> result = users
+  .filter(u => u.age >= <span class="number">18</span>)
+  .reduce((acc, u) => {
+    acc[u.country] = (acc[u.country] || <span class="number">0</span>) + <span class="number">1</span>;
+    <span class="keyword">return</span> acc;
+  }, {});
+
+<span class="comment">// ✅ GOOD: Process on database server</span>
+<span class="keyword">const</span> result = <span class="keyword">await</span> db.users.aggregate([
+  { <span class="string">$match</span>: { age: { <span class="string">$gte</span>: <span class="number">18</span> } } },
+  { <span class="string">$group</span>: { _id: <span class="string">"$country"</span>, count: { <span class="string">$sum</span>: <span class="number">1</span> } } }
+]).toArray();</pre>
+                    </div>
+
+                    <h3>2. Complex Data Transformations</h3>
+                    <p>Aggregation enables sophisticated operations that would be difficult or impossible with simple queries:</p>
+                    <ul>
+                        <li><strong>Grouping & Aggregating:</strong> Calculate sums, averages, min/max across groups</li>
+                        <li><strong>Joining Collections:</strong> Combine data from multiple collections ($lookup)</li>
+                        <li><strong>Array Operations:</strong> Flatten, filter, and transform array fields</li>
+                        <li><strong>Computed Fields:</strong> Create new fields based on calculations</li>
+                        <li><strong>Text Search & Analysis:</strong> Full-text search with scoring</li>
+                    </ul>
+
+                    <h3>3. Real-World Use Cases</h3>
+                    <div class="data-flow">
+                        <div class="data-box">
+                            <h4>📊 Analytics & Reporting</h4>
+                            <div class="data-item">Sales by region</div>
+                            <div class="data-item">User engagement metrics</div>
+                            <div class="data-item">Revenue trends</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>🔄 Data Transformation</h4>
+                            <div class="data-item">ETL pipelines</div>
+                            <div class="data-item">Data normalization</div>
+                            <div class="data-item">Format conversion</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>🎯 Business Intelligence</h4>
+                            <div class="data-item">Customer segmentation</div>
+                            <div class="data-item">Cohort analysis</div>
+                            <div class="data-item">Funnel metrics</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>🔍 Advanced Queries</h4>
+                            <div class="data-item">Multi-collection joins</div>
+                            <div class="data-item">Geospatial analysis</div>
+                            <div class="data-item">Time-series data</div>
+                        </div>
+                    </div>
+
+                    <h3>4. When to Use Aggregation vs. Find</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Use find() for simple queries</span>
+db.users.find({ age: { $gte: <span class="number">18</span> }, country: <span class="string">"USA"</span> })
+
+<span class="comment">// Use aggregate() when you need:</span>
+<span class="comment">// - Grouping and calculations</span>
+<span class="comment">// - Multiple transformations</span>
+<span class="comment">// - Joins with other collections</span>
+<span class="comment">// - Complex filtering and reshaping</span>
+db.users.aggregate([
+  { <span class="string">$match</span>: { age: { <span class="string">$gte</span>: <span class="number">18</span> } } },
+  { <span class="string">$group</span>: {
+      _id: <span class="string">"$country"</span>,
+      avgAge: { <span class="string">$avg</span>: <span class="string">"$age"</span> },
+      total: { <span class="string">$sum</span>: <span class="number">1</span> }
+    }
+  },
+  { <span class="string">$sort</span>: { total: <span class="number">-1</span> } },
+  { <span class="string">$limit</span>: <span class="number">10</span> }
+])</pre>
+                    </div>
+                </section>
+
+                <!-- HOW IT WORKS -->
+                <section id="how" class="content-section">
+                    <h2>How Aggregation Pipelines Work</h2>
+
+                    <p>Understanding the execution flow of aggregation pipelines is crucial for writing efficient queries and debugging issues.</p>
+
+                    <h3>Pipeline Execution Flow</h3>
+                    <div class="pipeline-visual">
+                        <div class="stage">
+                            <div class="stage-title">1️⃣ Parse</div>
+                            <div class="stage-desc">Validate syntax</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">2️⃣ Optimize</div>
+                            <div class="stage-desc">Reorder stages</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">3️⃣ Execute</div>
+                            <div class="stage-desc">Process documents</div>
+                        </div>
+                        <div class="arrow">→</div>
+                        <div class="stage">
+                            <div class="stage-title">4️⃣ Return</div>
+                            <div class="stage-desc">Send results</div>
+                        </div>
+                    </div>
+
+                    <h3>Stage-by-Stage Processing</h3>
+                    <p>Each stage in the pipeline receives documents from the previous stage, processes them, and outputs transformed documents to the next stage.</p>
+
+                    <div class="code-block">
+                        <pre><span class="comment">// Example: E-commerce order analysis</span>
+db.orders.aggregate([
+  <span class="comment">// Stage 1: Filter orders from 2024</span>
+  { <span class="string">$match</span>: {
+      orderDate: {
+        <span class="string">$gte</span>: <span class="keyword">new</span> Date(<span class="string">"2024-01-01"</span>),
+        <span class="string">$lt</span>: <span class="keyword">new</span> Date(<span class="string">"2025-01-01"</span>)
+      }
+    }
+  },
+
+  <span class="comment">// Stage 2: Group by customer and calculate totals</span>
+  { <span class="string">$group</span>: {
+      _id: <span class="string">"$customerId"</span>,
+      totalSpent: { <span class="string">$sum</span>: <span class="string">"$amount"</span> },
+      orderCount: { <span class="string">$sum</span>: <span class="number">1</span> },
+      avgOrderValue: { <span class="string">$avg</span>: <span class="string">"$amount"</span> }
+    }
+  },
+
+  <span class="comment">// Stage 3: Filter high-value customers</span>
+  { <span class="string">$match</span>: { totalSpent: { <span class="string">$gte</span>: <span class="number">1000</span> } } },
+
+  <span class="comment">// Stage 4: Sort by total spent</span>
+  { <span class="string">$sort</span>: { totalSpent: <span class="number">-1</span> } },
+
+  <span class="comment">// Stage 5: Limit to top 10</span>
+  { <span class="string">$limit</span>: <span class="number">10</span> }
+])</pre>
+                    </div>
+
+                    <h3>Pipeline Optimization</h3>
+                    <div class="highlight-box">
+                        <strong>MongoDB automatically optimizes pipelines!</strong> It can reorder stages, combine operations, and push filters early to reduce the number of documents processed.
+                    </div>
+
+                    <ul>
+                        <li><strong>Early Filtering:</strong> $match stages are moved to the beginning when possible</li>
+                        <li><strong>Index Usage:</strong> Initial $match and $sort can use indexes</li>
+                        <li><strong>Stage Coalescing:</strong> Adjacent stages may be combined</li>
+                        <li><strong>Projection Pushdown:</strong> Unnecessary fields are excluded early</li>
+                    </ul>
+
+                    <h3>Memory Considerations</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// By default, each stage limited to 100MB RAM</span>
+<span class="comment">// Use allowDiskUse for large datasets</span>
+db.collection.aggregate(
+  [ <span class="comment">/* stages */</span> ],
+  { allowDiskUse: <span class="keyword">true</span> }
+)
+
+<span class="comment">// Best practices:</span>
+<span class="comment">// 1. Filter early with $match</span>
+<span class="comment">// 2. Project only needed fields</span>
+<span class="comment">// 3. Use indexes when possible</span>
+<span class="comment">// 4. Limit result set size</span></pre>
+                    </div>
+                </section>
+
+                <!-- STAGES OVERVIEW -->
+                <section id="stages-overview" class="content-section">
+                    <h2>Pipeline Stages Overview</h2>
+
+                    <p>MongoDB provides 30+ aggregation stages. Here are the most commonly used ones:</p>
+
+                    <div class="stage-selector">
+                        <div class="stage-card" onclick="showStageSyntax('match')">
+                            <h4>$match</h4>
+                            <p>Filters documents (like find())</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('group')">
+                            <h4>$group</h4>
+                            <p>Groups documents and calculates aggregates</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('project')">
+                            <h4>$project</h4>
+                            <p>Reshapes documents, includes/excludes fields</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('sort')">
+                            <h4>$sort</h4>
+                            <p>Orders documents</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('limit')">
+                            <h4>$limit</h4>
+                            <p>Limits number of documents</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('skip')">
+                            <h4>$skip</h4>
+                            <p>Skips documents (pagination)</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('lookup')">
+                            <h4>$lookup</h4>
+                            <p>Joins with another collection</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('unwind')">
+                            <h4>$unwind</h4>
+                            <p>Deconstructs array fields</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('addFields')">
+                            <h4>$addFields</h4>
+                            <p>Adds new computed fields</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('count')">
+                            <h4>$count</h4>
+                            <p>Counts documents</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('facet')">
+                            <h4>$facet</h4>
+                            <p>Multiple parallel pipelines</p>
+                        </div>
+                        <div class="stage-card" onclick="showStageSyntax('bucket')">
+                            <h4>$bucket</h4>
+                            <p>Categorizes into buckets</p>
+                        </div>
+                    </div>
+
+                    <h3>Stage Categories</h3>
+                    <div class="data-flow">
+                        <div class="data-box">
+                            <h4>🔍 Filtering</h4>
+                            <div class="data-item">$match</div>
+                            <div class="data-item">$limit</div>
+                            <div class="data-item">$skip</div>
+                            <div class="data-item">$sample</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>🔄 Transformation</h4>
+                            <div class="data-item">$project</div>
+                            <div class="data-item">$addFields</div>
+                            <div class="data-item">$set</div>
+                            <div class="data-item">$unset</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>📊 Grouping</h4>
+                            <div class="data-item">$group</div>
+                            <div class="data-item">$bucket</div>
+                            <div class="data-item">$bucketAuto</div>
+                            <div class="data-item">$count</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>🔗 Joining</h4>
+                            <div class="data-item">$lookup</div>
+                            <div class="data-item">$graphLookup</div>
+                            <div class="data-item">$unionWith</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>📋 Ordering</h4>
+                            <div class="data-item">$sort</div>
+                            <div class="data-item">$sortByCount</div>
+                        </div>
+                        <div class="data-box">
+                            <h4>🎯 Array Operations</h4>
+                            <div class="data-item">$unwind</div>
+                            <div class="data-item">$filter</div>
+                            <div class="data-item">$map</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- $MATCH STAGE -->
+                <section id="match" class="content-section">
+                    <h2>$match Stage</h2>
+
+                    <p>The <code>$match</code> stage filters documents, similar to the <code>find()</code> query. It's one of the most important stages for performance optimization.</p>
+
+                    <div class="highlight-box">
+                        <strong>Best Practice:</strong> Place $match as early as possible in your pipeline to reduce the number of documents processed by subsequent stages.
+                    </div>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">🔍</div>
+                                <span>$match Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runMatchDemo()">▶ Run Stage</button>
+                                <button class="stage-btn secondary" onclick="resetMatchDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre>{ <span class="string">$match</span>: { status: <span class="string">"completed"</span> } }</pre>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input Documents <span class="badge" id="match-input-count">5</span></h4>
+                                <div id="match-input-docs">
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">status:</span> <span class="doc-field-value">"completed"</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">150</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">status:</span> <span class="doc-field-value">"pending"</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">200</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">status:</span> <span class="doc-field-value">"completed"</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">75</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">status:</span> <span class="doc-field-value">"cancelled"</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">300</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">status:</span> <span class="doc-field-value">"completed"</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">425</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator">$match</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output Documents <span class="badge" id="match-output-count">?</span></h4>
+                                <div id="match-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Run Stage" to see filtered results</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar" id="match-stats" style="display: none;">
+                            <div class="stat-item">
+                                <span class="stat-label">Documents In</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Documents Out</span>
+                                <span class="stat-value highlight" id="match-docs-out">3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Filtered Out</span>
+                                <span class="stat-value warning" id="match-filtered">2</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Reduction</span>
+                                <span class="stat-value" id="match-reduction">40%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Basic Syntax</h3>
+                    <div class="code-block">
+                        <pre>{ <span class="string">$match</span>: { &lt;query&gt; } }
+
+<span class="comment">// Examples:</span>
+{ <span class="string">$match</span>: { status: <span class="string">"active"</span> } }
+{ <span class="string">$match</span>: { age: { <span class="string">$gte</span>: <span class="number">18</span> } } }
+{ <span class="string">$match</span>: {
+    <span class="string">$and</span>: [
+      { price: { <span class="string">$gte</span>: <span class="number">100</span> } },
+      { category: <span class="string">"electronics"</span> }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <h3>Common Use Cases</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// 1. Filter by field value</span>
+{ <span class="string">$match</span>: { country: <span class="string">"USA"</span> } }
+
+<span class="comment">// 2. Range queries</span>
+{ <span class="string">$match</span>: {
+    orderDate: {
+      <span class="string">$gte</span>: <span class="keyword">new</span> Date(<span class="string">"2024-01-01"</span>),
+      <span class="string">$lt</span>: <span class="keyword">new</span> Date(<span class="string">"2024-12-31"</span>)
+    }
+  }
+}
+
+<span class="comment">// 3. Array contains</span>
+{ <span class="string">$match</span>: { tags: <span class="string">"mongodb"</span> } }
+
+<span class="comment">// 4. Regular expressions</span>
+{ <span class="string">$match</span>: { email: { <span class="string">$regex</span>: <span class="string">"@gmail\\.com$"</span> } } }
+
+<span class="comment">// 5. Exists check</span>
+{ <span class="string">$match</span>: { phoneNumber: { <span class="string">$exists</span>: <span class="keyword">true</span> } } }
+
+<span class="comment">// 6. Multiple conditions</span>
+{ <span class="string">$match</span>: {
+    <span class="string">$or</span>: [
+      { status: <span class="string">"premium"</span> },
+      { totalSpent: { <span class="string">$gte</span>: <span class="number">1000</span> } }
+    ]
+  }
+}</pre>
+                    </div>
+
+                    <h3>Performance Tips</h3>
+                    <ul>
+                        <li><strong>Use indexes:</strong> $match at the beginning can use indexes</li>
+                        <li><strong>Filter early:</strong> Reduce documents before expensive operations</li>
+                        <li><strong>Combine with $project:</strong> Remove unnecessary fields after matching</li>
+                    </ul>
+
+                    <div class="code-block">
+                        <pre><span class="comment">// ✅ GOOD: Match first, then process</span>
+db.orders.aggregate([
+  { <span class="string">$match</span>: { status: <span class="string">"completed"</span> } }, <span class="comment">// Uses index</span>
+  { <span class="string">$group</span>: { _id: <span class="string">"$customerId"</span>, total: { <span class="string">$sum</span>: <span class="string">"$amount"</span> } } }
+])
+
+<span class="comment">// ❌ BAD: Group all, then filter</span>
+db.orders.aggregate([
+  { <span class="string">$group</span>: { _id: <span class="string">"$customerId"</span>, total: { <span class="string">$sum</span>: <span class="string">"$amount"</span> } } },
+  { <span class="string">$match</span>: { total: { <span class="string">$gte</span>: <span class="number">1000</span> } } }
+])</pre>
+                    </div>
+                </section>
+
+                <!-- $GROUP STAGE -->
+                <section id="group" class="content-section">
+                    <h2>$group Stage</h2>
+
+                    <p>The <code>$group</code> stage groups documents by a specified expression and can perform calculations on grouped data.</p>
+
+                    <div class="highlight-box">
+                        <strong>Key Concept:</strong> $group creates a new document for each unique group, with _id representing the group key.
+                    </div>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">📊</div>
+                                <span>$group Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runGroupDemo()">▶ Run Stage</button>
+                                <button class="stage-btn secondary" onclick="resetGroupDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre>{ <span class="string">$group</span>: { _id: <span class="string">"$category"</span>, count: { <span class="string">$sum</span>: <span class="number">1</span> }, total: { <span class="string">$sum</span>: <span class="string">"$price"</span> } } }</pre>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input Documents <span class="badge">6</span></h4>
+                                <div id="group-input-docs">
+                                    <div class="doc-card" style="border-left-color: #ff6b9d;"><div class="doc-field"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Electronics"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">299</span></div></div>
+                                    <div class="doc-card" style="border-left-color: #4db8ff;"><div class="doc-field"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Books"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">15</span></div></div>
+                                    <div class="doc-card" style="border-left-color: #ff6b9d;"><div class="doc-field"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Electronics"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">599</span></div></div>
+                                    <div class="doc-card" style="border-left-color: #ffd93d;"><div class="doc-field"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Clothing"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">45</span></div></div>
+                                    <div class="doc-card" style="border-left-color: #4db8ff;"><div class="doc-field"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Books"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">25</span></div></div>
+                                    <div class="doc-card" style="border-left-color: #ff6b9d;"><div class="doc-field"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Electronics"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">149</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator">$group</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output Documents <span class="badge" id="group-output-count">?</span></h4>
+                                <div id="group-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Run Stage" to see grouped results</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar" id="group-stats" style="display: none;">
+                            <div class="stat-item">
+                                <span class="stat-label">Documents In</span>
+                                <span class="stat-value">6</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Groups Created</span>
+                                <span class="stat-value highlight">3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Total Sum</span>
+                                <span class="stat-value">$1,132</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Basic Syntax</h3>
+                    <div class="code-block">
+                        <pre>{ <span class="string">$group</span>: {
+    _id: &lt;expression&gt;,  <span class="comment">// Group key</span>
+    &lt;field1&gt;: { &lt;accumulator&gt;: &lt;expression&gt; },
+    &lt;field2&gt;: { &lt;accumulator&gt;: &lt;expression&gt; }
+  }
+}</pre>
+                    </div>
+
+                    <h3>Common Accumulators</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// $sum - Count or sum values</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$category"</span>,
+    count: { <span class="string">$sum</span>: <span class="number">1</span> },
+    totalSales: { <span class="string">$sum</span>: <span class="string">"$amount"</span> }
+  }
+}
+
+<span class="comment">// $avg - Calculate average</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$department"</span>,
+    avgSalary: { <span class="string">$avg</span>: <span class="string">"$salary"</span> }
+  }
+}
+
+<span class="comment">// $min and $max - Find extremes</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$product"</span>,
+    minPrice: { <span class="string">$min</span>: <span class="string">"$price"</span> },
+    maxPrice: { <span class="string">$max</span>: <span class="string">"$price"</span> }
+  }
+}
+
+<span class="comment">// $push - Create array of values</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$customerId"</span>,
+    orders: { <span class="string">$push</span>: <span class="string">"$orderId"</span> }
+  }
+}
+
+<span class="comment">// $addToSet - Create array of unique values</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$userId"</span>,
+    uniqueProducts: { <span class="string">$addToSet</span>: <span class="string">"$productId"</span> }
+  }
+}
+
+<span class="comment">// $first and $last - Get first/last value</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$customerId"</span>,
+    firstOrder: { <span class="string">$first</span>: <span class="string">"$orderDate"</span> },
+    lastOrder: { <span class="string">$last</span>: <span class="string">"$orderDate"</span> }
+  }
+}</pre>
+                    </div>
+
+                    <h3>Grouping Examples</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Group by single field</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="string">"$country"</span>,
+    count: { <span class="string">$sum</span>: <span class="number">1</span> }
+  }
+}
+
+<span class="comment">// Group by multiple fields</span>
+{ <span class="string">$group</span>: {
+    _id: {
+      country: <span class="string">"$country"</span>,
+      city: <span class="string">"$city"</span>
+    },
+    count: { <span class="string">$sum</span>: <span class="number">1</span> }
+  }
+}
+
+<span class="comment">// Group all documents (count total)</span>
+{ <span class="string">$group</span>: {
+    _id: <span class="keyword">null</span>,
+    total: { <span class="string">$sum</span>: <span class="number">1</span> },
+    avgAge: { <span class="string">$avg</span>: <span class="string">"$age"</span> }
+  }
+}
+
+<span class="comment">// Group by date (year/month)</span>
+{ <span class="string">$group</span>: {
+    _id: {
+      year: { <span class="string">$year</span>: <span class="string">"$orderDate"</span> },
+      month: { <span class="string">$month</span>: <span class="string">"$orderDate"</span> }
+    },
+    revenue: { <span class="string">$sum</span>: <span class="string">"$amount"</span> }
+  }
+}</pre>
+                    </div>
+                </section>
+
+                <!-- $PROJECT STAGE -->
+                <section id="project" class="content-section">
+                    <h2>$project Stage</h2>
+
+                    <p>The <code>$project</code> stage reshapes documents by including, excluding, or adding fields. It's essential for controlling output format and creating computed fields.</p>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">✂️</div>
+                                <span>$project Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runProjectDemo()">▶ Run Stage</button>
+                                <button class="stage-btn secondary" onclick="resetProjectDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre>{ <span class="string">$project</span>: { name: <span class="number">1</span>, total: { <span class="string">$multiply</span>: [<span class="string">"$price"</span>, <span class="string">"$qty"</span>] }, _id: <span class="number">0</span> } }</pre>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input Documents <span class="badge">3</span></h4>
+                                <div id="project-input-docs">
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">_id:</span> <span class="doc-field-value number">1</span></div><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Laptop"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">999</span></div><div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">2</span></div><div class="doc-field" style="opacity: 0.5;"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Tech"</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">_id:</span> <span class="doc-field-value number">2</span></div><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Mouse"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">29</span></div><div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">5</span></div><div class="doc-field" style="opacity: 0.5;"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Tech"</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">_id:</span> <span class="doc-field-value number">3</span></div><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Desk"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">250</span></div><div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">1</span></div><div class="doc-field" style="opacity: 0.5;"><span class="doc-field-key">category:</span> <span class="doc-field-value">"Furniture"</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator">$project</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output Documents <span class="badge" id="project-output-count">?</span></h4>
+                                <div id="project-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Run Stage" to see reshaped documents</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar" id="project-stats" style="display: none;">
+                            <div class="stat-item">
+                                <span class="stat-label">Fields Before</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Fields After</span>
+                                <span class="stat-value highlight">2</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Computed Field</span>
+                                <span class="stat-value" style="color: var(--accent-purple);">total</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Basic Syntax</h3>
+                    <div class="code-block">
+                        <pre>{ <span class="string">$project</span>: {
+    field1: <span class="number">1</span>,        <span class="comment">// Include field</span>
+    field2: <span class="number">0</span>,        <span class="comment">// Exclude field</span>
+    newField: &lt;expression&gt;  <span class="comment">// Computed field</span>
+  }
+}</pre>
+                    </div>
+
+                    <h3>Common Operations</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// 1. Include specific fields</span>
+{ <span class="string">$project</span>: {
+    name: <span class="number">1</span>,
+    email: <span class="number">1</span>,
+    age: <span class="number">1</span>
+  }
+}
+
+<span class="comment">// 2. Exclude fields (exclude _id)</span>
+{ <span class="string">$project</span>: {
+    _id: <span class="number">0</span>,
+    password: <span class="number">0</span>
+  }
+}
+
+<span class="comment">// 3. Rename fields</span>
+{ <span class="string">$project</span>: {
+    fullName: <span class="string">"$name"</span>,
+    emailAddress: <span class="string">"$email"</span>
+  }
+}
+
+<span class="comment">// 4. Computed fields</span>
+{ <span class="string">$project</span>: {
+    name: <span class="number">1</span>,
+    total: { <span class="string">$multiply</span>: [<span class="string">"$price"</span>, <span class="string">"$quantity"</span>] },
+    discountedPrice: {
+      <span class="string">$subtract</span>: [
+        <span class="string">"$price"</span>,
+        { <span class="string">$multiply</span>: [<span class="string">"$price"</span>, <span class="string">"$discountPercent"</span>] }
+      ]
+    }
+  }
+}
+
+<span class="comment">// 5. String operations</span>
+{ <span class="string">$project</span>: {
+    upperName: { <span class="string">$toUpper</span>: <span class="string">"$name"</span> },
+    firstName: { <span class="string">$arrayElemAt</span>: [{ <span class="string">$split</span>: [<span class="string">"$name"</span>, <span class="string">" "</span>] }, <span class="number">0</span>] },
+    emailDomain: {
+      <span class="string">$arrayElemAt</span>: [
+        { <span class="string">$split</span>: [<span class="string">"$email"</span>, <span class="string">"@"</span>] },
+        <span class="number">1</span>
+      ]
+    }
+  }
+}
+
+<span class="comment">// 6. Date operations</span>
+{ <span class="string">$project</span>: {
+    year: { <span class="string">$year</span>: <span class="string">"$createdAt"</span> },
+    month: { <span class="string">$month</span>: <span class="string">"$createdAt"</span> },
+    dayOfWeek: { <span class="string">$dayOfWeek</span>: <span class="string">"$createdAt"</span> }
+  }
+}
+
+<span class="comment">// 7. Conditional fields</span>
+{ <span class="string">$project</span>: {
+    name: <span class="number">1</span>,
+    status: {
+      <span class="string">$cond</span>: {
+        <span class="keyword">if</span>: { <span class="string">$gte</span>: [<span class="string">"$age"</span>, <span class="number">18</span>] },
+        then: <span class="string">"adult"</span>,
+        <span class="keyword">else</span>: <span class="string">"minor"</span>
+      }
+    }
+  }
+}</pre>
+                    </div>
+
+                    <h3>Nested Field Access</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Access nested fields with dot notation</span>
+{ <span class="string">$project</span>: {
+    userName: <span class="string">"$user.name"</span>,
+    street: <span class="string">"$address.street"</span>,
+    city: <span class="string">"$address.city"</span>
+  }
+}
+
+<span class="comment">// Array element access</span>
+{ <span class="string">$project</span>: {
+    firstTag: { <span class="string">$arrayElemAt</span>: [<span class="string">"$tags"</span>, <span class="number">0</span>] },
+    tagCount: { <span class="string">$size</span>: <span class="string">"$tags"</span> }
+  }
+}</pre>
+                    </div>
+                </section>
+
+                <!-- $SORT STAGE -->
+                <section id="sort" class="content-section">
+                    <h2>$sort Stage</h2>
+
+                    <p>The <code>$sort</code> stage orders documents by specified fields.</p>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">↕️</div>
+                                <span>$sort Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runSortDemo('asc')">▲ Sort Ascending</button>
+                                <button class="stage-btn" onclick="runSortDemo('desc')">▼ Sort Descending</button>
+                                <button class="stage-btn secondary" onclick="resetSortDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+                        
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre id="sort-code">{ <span class="string">$sort</span>: { score: <span class="number">-1</span> } }  <span class="comment">// Descending by score</span></pre>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input (Unsorted) <span class="badge">5</span></h4>
+                                <div id="sort-input-docs">
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Alice"</span></div><div class="doc-field"><span class="doc-field-key">score:</span> <span class="doc-field-value number">85</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Bob"</span></div><div class="doc-field"><span class="doc-field-key">score:</span> <span class="doc-field-value number">92</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Carol"</span></div><div class="doc-field"><span class="doc-field-key">score:</span> <span class="doc-field-value number">78</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Dave"</span></div><div class="doc-field"><span class="doc-field-key">score:</span> <span class="doc-field-value number">95</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Eve"</span></div><div class="doc-field"><span class="doc-field-key">score:</span> <span class="doc-field-value number">88</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator">$sort</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output (Sorted) <span class="badge">5</span></h4>
+                                <div id="sort-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click sort buttons to see ordering</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><span class="comment">// 1 = ascending, -1 = descending</span>
+{ <span class="string">$sort</span>: { field: <span class="number">1</span> | <span class="number">-1</span> } }
+
+<span class="comment">// Examples:</span>
+{ <span class="string">$sort</span>: { age: <span class="number">1</span> } }              <span class="comment">// Ascending by age</span>
+{ <span class="string">$sort</span>: { createdAt: <span class="number">-1</span> } }      <span class="comment">// Descending by date</span>
+{ <span class="string">$sort</span>: {
+    country: <span class="number">1</span>,
+    city: <span class="number">1</span>,
+    name: <span class="number">1</span>
+  }
+}  <span class="comment">// Multi-field sort</span></pre>
+                    </div>
+
+                    <div class="highlight-box">
+                        <strong>Performance Tip:</strong> $sort can use an index if it's the first stage or immediately follows $match. Otherwise, it requires an in-memory sort (limited to 100MB unless allowDiskUse is enabled).
+                    </div>
+                </section>
+
+                <!-- $LIMIT & $SKIP STAGE -->
+                <section id="limit" class="content-section">
+                    <h2>$limit & $skip Stages</h2>
+
+                    <p>These stages control the number of documents returned, commonly used for pagination.</p>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">📄</div>
+                                <span>$limit & $skip Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runLimitDemo(3)">Limit 3</button>
+                                <button class="stage-btn" onclick="runSkipDemo(2)">Skip 2</button>
+                                <button class="stage-btn" onclick="runPaginationDemo()">Page 2 (Skip 2, Limit 2)</button>
+                                <button class="stage-btn secondary" onclick="resetLimitDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input Documents <span class="badge">6</span></h4>
+                                <div id="limit-input-docs">
+                                    <div class="doc-card" data-index="0"><div class="doc-field"><span class="doc-field-key">#1</span> <span class="doc-field-value">"Product A"</span></div></div>
+                                    <div class="doc-card" data-index="1"><div class="doc-field"><span class="doc-field-key">#2</span> <span class="doc-field-value">"Product B"</span></div></div>
+                                    <div class="doc-card" data-index="2"><div class="doc-field"><span class="doc-field-key">#3</span> <span class="doc-field-value">"Product C"</span></div></div>
+                                    <div class="doc-card" data-index="3"><div class="doc-field"><span class="doc-field-key">#4</span> <span class="doc-field-value">"Product D"</span></div></div>
+                                    <div class="doc-card" data-index="4"><div class="doc-field"><span class="doc-field-key">#5</span> <span class="doc-field-value">"Product E"</span></div></div>
+                                    <div class="doc-card" data-index="5"><div class="doc-field"><span class="doc-field-key">#6</span> <span class="doc-field-value">"Product F"</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator" id="limit-stage-label">$limit / $skip</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output Documents <span class="badge" id="limit-output-count">?</span></h4>
+                                <div id="limit-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click buttons to see $limit and $skip in action</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar" id="limit-stats" style="display: none;">
+                            <div class="stat-item">
+                                <span class="stat-label">Documents In</span>
+                                <span class="stat-value">6</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Skipped</span>
+                                <span class="stat-value warning" id="limit-skipped">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Returned</span>
+                                <span class="stat-value highlight" id="limit-returned">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>$limit</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Return only first N documents</span>
+{ <span class="string">$limit</span>: <span class="number">10</span> }
+
+<span class="comment">// Example: Top 5 products by sales</span>
+db.products.aggregate([
+  { <span class="string">$sort</span>: { sales: <span class="number">-1</span> } },
+  { <span class="string">$limit</span>: <span class="number">5</span> }
+])</pre>
+                    </div>
+
+                    <h3>$skip</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Skip first N documents</span>
+{ <span class="string">$skip</span>: <span class="number">20</span> }
+
+<span class="comment">// Example: Pagination (page 3, 10 items per page)</span>
+<span class="keyword">const</span> page = <span class="number">3</span>;
+<span class="keyword">const</span> pageSize = <span class="number">10</span>;
+
+db.products.aggregate([
+  { <span class="string">$sort</span>: { name: <span class="number">1</span> } },
+  { <span class="string">$skip</span>: (page - <span class="number">1</span>) * pageSize },
+  { <span class="string">$limit</span>: pageSize }
+])</pre>
+                    </div>
+
+                    <h3>Pagination Pattern</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Complete pagination with total count</span>
+db.products.aggregate([
+  { <span class="string">$match</span>: { category: <span class="string">"electronics"</span> } },
+  { <span class="string">$facet</span>: {
+      metadata: [
+        { <span class="string">$count</span>: <span class="string">"total"</span> }
+      ],
+      data: [
+        { <span class="string">$sort</span>: { price: <span class="number">-1</span> } },
+        { <span class="string">$skip</span>: <span class="number">20</span> },
+        { <span class="string">$limit</span>: <span class="number">10</span> }
+      ]
+    }
+  }
+])</pre>
+                    </div>
+                </section>
+
+                <!-- $LOOKUP STAGE -->
+                <section id="lookup" class="content-section">
+                    <h2>$lookup Stage (Join)</h2>
+
+                    <p>The <code>$lookup</code> stage performs a left outer join with another collection, similar to SQL JOIN.</p>
+
+                    <div class="highlight-box">
+                        <strong>Important:</strong> $lookup can impact performance. Ensure proper indexing on the foreign collection's join field.
+                    </div>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">🔗</div>
+                                <span>$lookup Visualization (JOIN)</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runLookupDemo()">▶ Run Join</button>
+                                <button class="stage-btn secondary" onclick="resetLookupDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0;">
+                            <div class="transform-column">
+                                <h4>Orders Collection</h4>
+                                <div id="lookup-orders">
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">orderId:</span> <span class="doc-field-value">"ORD-1"</span></div><div class="doc-field"><span class="doc-field-key">customerId:</span> <span class="doc-field-value number" style="color: #ff6b9d;">101</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">250</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">orderId:</span> <span class="doc-field-value">"ORD-2"</span></div><div class="doc-field"><span class="doc-field-key">customerId:</span> <span class="doc-field-value number" style="color: #4db8ff;">102</span></div><div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">180</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Customers Collection</h4>
+                                <div id="lookup-customers">
+                                    <div class="doc-card" style="border-left-color: #ff6b9d;"><div class="doc-field"><span class="doc-field-key">_id:</span> <span class="doc-field-value number" style="color: #ff6b9d;">101</span></div><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Alice"</span></div><div class="doc-field"><span class="doc-field-key">email:</span> <span class="doc-field-value">"alice@..."</span></div></div>
+                                    <div class="doc-card" style="border-left-color: #4db8ff;"><div class="doc-field"><span class="doc-field-key">_id:</span> <span class="doc-field-value number" style="color: #4db8ff;">102</span></div><div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Bob"</span></div><div class="doc-field"><span class="doc-field-key">email:</span> <span class="doc-field-value">"bob@..."</span></div></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre>{ <span class="string">$lookup</span>: { from: <span class="string">"customers"</span>, localField: <span class="string">"customerId"</span>, foreignField: <span class="string">"_id"</span>, as: <span class="string">"customer"</span> } }</pre>
+                        </div>
+
+                        <div class="transform-column" style="margin-top: 16px;">
+                            <h4>Joined Output <span class="badge" id="lookup-output-count">?</span></h4>
+                            <div id="lookup-output-docs" style="min-height: 100px;">
+                                <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 30px 0;">Click "Run Join" to see the joined documents</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Basic Syntax</h3>
+                    <div class="code-block">
+                        <pre>{ <span class="string">$lookup</span>: {
+    from: <span class="string">"&lt;collection to join&gt;"</span>,
+    localField: <span class="string">"&lt;field from input documents&gt;"</span>,
+    foreignField: <span class="string">"&lt;field from 'from' collection&gt;"</span>,
+    as: <span class="string">"&lt;output array field&gt;"</span>
+  }
+}</pre>
+                    </div>
+
+                    <h3>Simple Join Example</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Join orders with customer data</span>
+db.orders.aggregate([
+  { <span class="string">$lookup</span>: {
+      from: <span class="string">"customers"</span>,
+      localField: <span class="string">"customerId"</span>,
+      foreignField: <span class="string">"_id"</span>,
+      as: <span class="string">"customerInfo"</span>
+    }
+  }
+])
+
+<span class="comment">// Result structure:</span>
+{
+  _id: ObjectId(<span class="string">"..."</span>),
+  orderId: <span class="string">"ORD-001"</span>,
+  customerId: ObjectId(<span class="string">"..."</span>),
+  amount: <span class="number">150</span>,
+  customerInfo: [
+    {
+      _id: ObjectId(<span class="string">"..."</span>),
+      name: <span class="string">"John Doe"</span>,
+      email: <span class="string">"john@example.com"</span>
+    }
+  ]
+}</pre>
+                    </div>
+
+                    <h3>Advanced $lookup with Pipeline</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Complex join with filtering and transformation</span>
+db.orders.aggregate([
+  { <span class="string">$lookup</span>: {
+      from: <span class="string">"products"</span>,
+      <span class="keyword">let</span>: { orderItems: <span class="string">"$items"</span> },
+      pipeline: [
+        { <span class="string">$match</span>: {
+            <span class="string">$expr</span>: {
+              <span class="string">$in</span>: [<span class="string">"$_id"</span>, <span class="string">"$$orderItems.productId"</span>]
+            }
+          }
+        },
+        { <span class="string">$project</span>: { name: <span class="number">1</span>, price: <span class="number">1</span> } }
+      ],
+      as: <span class="string">"productDetails"</span>
+    }
+  }
+])</pre>
+                    </div>
+
+                    <h3>Unwinding Lookup Results</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Convert array to single object (1-to-1 relationship)</span>
+db.orders.aggregate([
+  { <span class="string">$lookup</span>: {
+      from: <span class="string">"customers"</span>,
+      localField: <span class="string">"customerId"</span>,
+      foreignField: <span class="string">"_id"</span>,
+      as: <span class="string">"customer"</span>
+    }
+  },
+  { <span class="string">$unwind</span>: <span class="string">"$customer"</span> },  <span class="comment">// Convert array to object</span>
+  { <span class="string">$project</span>: {
+      orderId: <span class="number">1</span>,
+      amount: <span class="number">1</span>,
+      customerName: <span class="string">"$customer.name"</span>,
+      customerEmail: <span class="string">"$customer.email"</span>
+    }
+  }
+])</pre>
+                    </div>
+                </section>
+
+                <!-- $UNWIND STAGE -->
+                <section id="unwind" class="content-section">
+                    <h2>$unwind Stage</h2>
+
+                    <p>The <code>$unwind</code> stage deconstructs an array field, creating a separate document for each array element.</p>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">💥</div>
+                                <span>$unwind Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runUnwindDemo()">▶ Unwind Array</button>
+                                <button class="stage-btn secondary" onclick="resetUnwindDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre>{ <span class="string">$unwind</span>: <span class="string">"$tags"</span> }</pre>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input Document <span class="badge">1</span></h4>
+                                <div id="unwind-input-docs">
+                                    <div class="doc-card">
+                                        <div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"Laptop Pro"</span></div>
+                                        <div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">1299</span></div>
+                                        <div class="doc-field" style="margin-top: 8px;">
+                                            <span class="doc-field-key">tags:</span>
+                                            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px;">
+                                                <span style="background: rgba(168, 85, 247, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.85em; color: var(--accent-purple);">electronics</span>
+                                                <span style="background: rgba(0, 212, 255, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.85em; color: var(--accent-cyan);">sale</span>
+                                                <span style="background: rgba(0, 255, 136, 0.3); padding: 2px 8px; border-radius: 12px; font-size: 0.85em; color: var(--accent-green);">featured</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator">$unwind</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output Documents <span class="badge" id="unwind-output-count">?</span></h4>
+                                <div id="unwind-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Unwind Array" to see explosion</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-bar" id="unwind-stats" style="display: none;">
+                            <div class="stat-item">
+                                <span class="stat-label">Documents In</span>
+                                <span class="stat-value">1</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Array Elements</span>
+                                <span class="stat-value highlight">3</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Documents Out</span>
+                                <span class="stat-value" style="color: var(--accent-purple);">3</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3>Basic Example</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Input document:</span>
+{
+  _id: <span class="number">1</span>,
+  name: <span class="string">"Product A"</span>,
+  tags: [<span class="string">"electronics"</span>, <span class="string">"sale"</span>, <span class="string">"featured"</span>]
+}
+
+<span class="comment">// Pipeline:</span>
+{ <span class="string">$unwind</span>: <span class="string">"$tags"</span> }
+
+<span class="comment">// Output (3 documents):</span>
+{ _id: <span class="number">1</span>, name: <span class="string">"Product A"</span>, tags: <span class="string">"electronics"</span> }
+{ _id: <span class="number">1</span>, name: <span class="string">"Product A"</span>, tags: <span class="string">"sale"</span> }
+{ _id: <span class="number">1</span>, name: <span class="string">"Product A"</span>, tags: <span class="string">"featured"</span> }</pre>
+                    </div>
+
+                    <h3>Common Use Cases</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// 1. Analyze array elements</span>
+db.products.aggregate([
+  { <span class="string">$unwind</span>: <span class="string">"$tags"</span> },
+  { <span class="string">$group</span>: {
+      _id: <span class="string">"$tags"</span>,
+      count: { <span class="string">$sum</span>: <span class="number">1</span> }
+    }
+  },
+  { <span class="string">$sort</span>: { count: <span class="number">-1</span> } }
+])
+
+<span class="comment">// 2. Process order items</span>
+db.orders.aggregate([
+  { <span class="string">$unwind</span>: <span class="string">"$items"</span> },
+  { <span class="string">$group</span>: {
+      _id: <span class="string">"$items.productId"</span>,
+      totalQuantity: { <span class="string">$sum</span>: <span class="string">"$items.quantity"</span> },
+      revenue: { <span class="string">$sum</span>: {
+          <span class="string">$multiply</span>: [<span class="string">"$items.price"</span>, <span class="string">"$items.quantity"</span>]
+        }
+      }
+    }
+  }
+])</pre>
+                    </div>
+
+                    <h3>Advanced Options</h3>
+                    <div class="code-block">
+                        <pre><span class="comment">// Preserve documents with empty arrays</span>
+{ <span class="string">$unwind</span>: {
+    path: <span class="string">"$tags"</span>,
+    preserveNullAndEmptyArrays: <span class="keyword">true</span>
+  }
+}
+
+<span class="comment">// Include array index</span>
+{ <span class="string">$unwind</span>: {
+    path: <span class="string">"$items"</span>,
+    includeArrayIndex: <span class="string">"itemIndex"</span>
+  }
+}</pre>
+                    </div>
+                </section>
+
+                <!-- $ADDFIELDS STAGE -->
+                <section id="addFields" class="content-section">
+                    <h2>$addFields Stage</h2>
+
+                    <p>The <code>$addFields</code> stage adds new fields to documents without removing existing fields (unlike $project).</p>
+
+                    <!-- Interactive Visualization -->
+                    <div class="stage-visualizer">
+                        <div class="stage-header">
+                            <div class="stage-name">
+                                <div class="icon">➕</div>
+                                <span>$addFields Visualization</span>
+                            </div>
+                            <div class="stage-controls">
+                                <button class="stage-btn" onclick="runAddFieldsDemo()">▶ Add Fields</button>
+                                <button class="stage-btn secondary" onclick="resetAddFieldsDemo()">↻ Reset</button>
+                            </div>
+                        </div>
+
+                        <div class="code-block" style="margin: 16px 0;">
+                            <pre>{ <span class="string">$addFields</span>: { total: { <span class="string">$multiply</span>: [<span class="string">"$price"</span>, <span class="string">"$qty"</span>] }, hasDiscount: { <span class="string">$gte</span>: [<span class="string">"$qty"</span>, <span class="number">3</span>] } } }</pre>
+                        </div>
+
+                        <div class="transform-visual">
+                            <div class="transform-column">
+                                <h4>Input Documents <span class="badge">3</span></h4>
+                                <div id="addfields-input-docs">
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">item:</span> <span class="doc-field-value">"Widget"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">10</span></div><div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">5</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">item:</span> <span class="doc-field-value">"Gadget"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">25</span></div><div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">2</span></div></div>
+                                    <div class="doc-card"><div class="doc-field"><span class="doc-field-key">item:</span> <span class="doc-field-value">"Gizmo"</span></div><div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">15</span></div><div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">4</span></div></div>
+                                </div>
+                            </div>
+                            <div class="transform-arrow">
+                                <div class="stage-indicator">$addFields</div>
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                                </svg>
+                            </div>
+                            <div class="transform-column">
+                                <h4>Output Documents <span class="badge" id="addfields-output-count">?</span></h4>
+                                <div id="addfields-output-docs" style="min-height: 150px;">
+                                    <p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Add Fields" to see computed fields</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="code-block">
+                        <pre><span class="comment">// Add computed fields</span>
+{ <span class="string">$addFields</span>: {
+    total: { <span class="string">$multiply</span>: [<span class="string">"$price"</span>, <span class="string">"$quantity"</span>] },
+    fullName: { <span class="string">$concat</span>: [<span class="string">"$firstName"</span>, <span class="string">" "</span>, <span class="string">"$lastName"</span>] }
+  }
+}
+
+<span class="comment">// Add current date</span>
+{ <span class="string">$addFields</span>: {
+    processedAt: <span class="keyword">new</span> Date(),
+    year: { <span class="string">$year</span>: <span class="string">"$createdAt"</span> }
+  }
+}
+
+<span class="comment">// Conditional fields</span>
+{ <span class="string">$addFields</span>: {
+    discount: {
+      <span class="string">$cond</span>: {
+        <span class="keyword">if</span>: { <span class="string">$gte</span>: [<span class="string">"$quantity"</span>, <span class="number">10</span>] },
+        then: <span class="number">0.1</span>,
+        <span class="keyword">else</span>: <span class="number">0</span>
+      }
+    }
+  }
+}</pre>
+                    </div>
+
+                    <div class="highlight-box">
+                        <strong>$addFields vs $project:</strong> Use $addFields when you want to keep all existing fields and just add new ones. Use $project when you need to reshape the entire document.
+                    </div>
+                </section>
+
+                <!-- BASIC DEMO -->
+                <section id="demo-basic" class="content-section">
+                    <h2>Interactive Demo: Basic Pipeline</h2>
+
+                    <p>This demo shows a simple aggregation pipeline that filters, groups, and sorts sales data. Watch the data transform through each stage!</p>
+
+                    <div class="interactive-demo">
+                        <!-- Step Progress -->
+                        <div class="step-progress" id="basic-progress">
+                            <div class="step-dot active" data-step="0"></div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" data-step="1"></div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" data-step="2"></div>
+                            <div class="step-line"></div>
+                            <div class="step-dot" data-step="3"></div>
+                        </div>
+
+                        <h3>Sample Data: Sales Collection</h3>
+                        <div class="demo-output" id="basic-sample-data" style="max-height: 200px; overflow-y: auto;"></div>
+
+                        <h3>Pipeline Stages</h3>
+                        <div class="pipeline-visual">
+                            <div class="stage" id="basic-stage-0">
+                                <div class="stage-title">📥 Input</div>
+                                <div class="stage-desc">8 documents</div>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div class="stage" id="basic-stage-1" style="opacity: 0.5;">
+                                <div class="stage-title">$match</div>
+                                <div class="stage-desc">Filter completed</div>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div class="stage" id="basic-stage-2" style="opacity: 0.5;">
+                                <div class="stage-title">$group</div>
+                                <div class="stage-desc">By product</div>
+                            </div>
+                            <div class="arrow">→</div>
+                            <div class="stage" id="basic-stage-3" style="opacity: 0.5;">
+                                <div class="stage-title">$sort</div>
+                                <div class="stage-desc">By totalSales</div>
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <pre>db.sales.aggregate([
+  { <span class="string">$match</span>: { status: <span class="string">"completed"</span> } },
+  { <span class="string">$group</span>: { _id: <span class="string">"$product"</span>, totalSales: { <span class="string">$sum</span>: <span class="string">"$amount"</span> }, count: { <span class="string">$sum</span>: <span class="number">1</span> } } },
+  { <span class="string">$sort</span>: { totalSales: <span class="number">-1</span> } }
+])</pre>
+                        </div>
+
+                        <div class="demo-controls">
+                            <button class="demo-button" onclick="runBasicDemoStepByStep()">▶ Run Step-by-Step</button>
+                            <button class="demo-button" onclick="runBasicDemo()">⚡ Run All</button>
+                            <button class="demo-button" onclick="resetBasicDemo()" style="background: var(--bg-dark); color: var(--text-primary); border: 1px solid var(--border-color);">↻ Reset</button>
+                        </div>
+
+                        <h3>Current Stage Output</h3>
+                        <div class="demo-output" id="basic-output"></div>
+                    </div>
+                </section>
+
+                <!-- ADVANCED DEMO -->
+                <section id="demo-advanced" class="content-section">
+                    <h2>Interactive Demo: Advanced Pipeline</h2>
+
+                    <p>This demo demonstrates a complex pipeline with $lookup, $unwind, and multiple transformations.</p>
+
+                    <div class="interactive-demo">
+                        <h3>Sample Data</h3>
+                        <div class="data-flow">
+                            <div class="data-box">
+                                <h4>Orders Collection</h4>
+                                <div class="demo-output" id="advanced-orders-data"></div>
+                            </div>
+                            <div class="data-box">
+                                <h4>Customers Collection</h4>
+                                <div class="demo-output" id="advanced-customers-data"></div>
+                            </div>
+                        </div>
+
+                        <h3>Pipeline</h3>
+                        <div class="code-block">
+                            <pre>db.orders.aggregate([
+  { <span class="string">$lookup</span>: {
+      from: <span class="string">"customers"</span>,
+      localField: <span class="string">"customerId"</span>,
+      foreignField: <span class="string">"_id"</span>,
+      as: <span class="string">"customer"</span>
+    }
+  },
+  { <span class="string">$unwind</span>: <span class="string">"$customer"</span> },
+  { <span class="string">$group</span>: {
+      _id: <span class="string">"$customer.country"</span>,
+      totalRevenue: { <span class="string">$sum</span>: <span class="string">"$amount"</span> },
+      orderCount: { <span class="string">$sum</span>: <span class="number">1</span> },
+      avgOrderValue: { <span class="string">$avg</span>: <span class="string">"$amount"</span> }
+    }
+  },
+  { <span class="string">$sort</span>: { totalRevenue: <span class="number">-1</span> } }
+])</pre>
+                        </div>
+
+                        <div class="demo-controls">
+                            <button class="demo-button" onclick="runAdvancedDemo()">▶ Run Pipeline</button>
+                            <button class="demo-button" onclick="resetAdvancedDemo()">↻ Reset</button>
+                        </div>
+
+                        <h3>Output</h3>
+                        <div class="demo-output" id="advanced-output"></div>
+                    </div>
+                </section>
+
+                <!-- PIPELINE BUILDER -->
+                <section id="demo-builder" class="content-section">
+                    <h2>Interactive Pipeline Builder</h2>
+
+                    <p>Build your own aggregation pipeline by selecting stages. Click on stages to add them to your pipeline.</p>
+
+                    <div class="interactive-demo">
+                        <h3>Sample Data: Sales Collection</h3>
+                        <div class="demo-output" id="builder-sample-data"></div>
+
+                        <h3>Available Stages</h3>
+                        <div class="stage-selector" id="stage-selector">
+                            <div class="stage-card" onclick="addStage('match')">
+                                <h4>$match</h4>
+                                <p>Filter documents</p>
+                            </div>
+                            <div class="stage-card" onclick="addStage('group')">
+                                <h4>$group</h4>
+                                <p>Group and aggregate</p>
+                            </div>
+                            <div class="stage-card" onclick="addStage('project')">
+                                <h4>$project</h4>
+                                <p>Reshape documents</p>
+                            </div>
+                            <div class="stage-card" onclick="addStage('sort')">
+                                <h4>$sort</h4>
+                                <p>Order results</p>
+                            </div>
+                            <div class="stage-card" onclick="addStage('limit')">
+                                <h4>$limit</h4>
+                                <p>Limit results</p>
+                            </div>
+                            <div class="stage-card" onclick="addStage('addFields')">
+                                <h4>$addFields</h4>
+                                <p>Add computed fields</p>
+                            </div>
+                        </div>
+
+                        <h3>Your Pipeline</h3>
+                        <div class="pipeline-visual" id="pipeline-builder" style="min-height: 100px; justify-content: center;">
+                            <p style="color: #888;">Click stages above to build your pipeline</p>
+                        </div>
+
+                        <div class="demo-controls">
+                            <button class="demo-button" onclick="clearPipeline()">Clear Pipeline</button>
+                            <button class="demo-button" onclick="generateCode()">Generate Code</button>
+                            <button class="demo-button" onclick="executePipeline()">▶ Execute Pipeline</button>
+                        </div>
+
+                        <h3>Generated Code</h3>
+                        <div class="demo-output" id="generated-code"></div>
+
+                        <h3>Pipeline Results</h3>
+                        <div class="demo-output" id="pipeline-results"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <!-- Overlay Modal -->
+    <div id="syntax-overlay" class="overlay" onclick="closeOverlay(event)">
+        <div class="overlay-content" onclick="event.stopPropagation()">
+            <button class="overlay-close" onclick="closeOverlay()">&times;</button>
+            <h3 id="overlay-title"></h3>
+            <p id="overlay-description"></p>
+            <div id="overlay-syntax"></div>
+        </div>
+    </div>
+
+    <script>
+        // Navigation
+        document.querySelectorAll('.nav-button').forEach(button => {
+            button.addEventListener('click', () => {
+                // Remove active class from all buttons and sections
+                document.querySelectorAll('.nav-button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.content-section').forEach(s => s.classList.remove('active'));
+
+                // Add active class to clicked button
+                button.classList.add('active');
+
+                // Show corresponding section
+                const sectionId = button.getAttribute('data-section');
+                document.getElementById(sectionId).classList.add('active');
+            });
+        });
+
+        // Sample data for demos
+        const salesData = [
+            { _id: 1, product: "Laptop", amount: 1200, status: "completed", date: "2024-01-15" },
+            { _id: 2, product: "Mouse", amount: 25, status: "completed", date: "2024-01-16" },
+            { _id: 3, product: "Laptop", amount: 1200, status: "pending", date: "2024-01-17" },
+            { _id: 4, product: "Keyboard", amount: 75, status: "completed", date: "2024-01-18" },
+            { _id: 5, product: "Mouse", amount: 25, status: "completed", date: "2024-01-19" },
+            { _id: 6, product: "Laptop", amount: 1200, status: "completed", date: "2024-01-20" },
+            { _id: 7, product: "Monitor", amount: 300, status: "completed", date: "2024-01-21" },
+            { _id: 8, product: "Keyboard", amount: 75, status: "cancelled", date: "2024-01-22" }
+        ];
+
+        const ordersData = [
+            { _id: 1, customerId: 101, amount: 250, date: "2024-01-15" },
+            { _id: 2, customerId: 102, amount: 180, date: "2024-01-16" },
+            { _id: 3, customerId: 101, amount: 320, date: "2024-01-17" },
+            { _id: 4, customerId: 103, amount: 450, date: "2024-01-18" },
+            { _id: 5, customerId: 102, amount: 200, date: "2024-01-19" }
+        ];
+
+        const customersData = [
+            { _id: 101, name: "Alice Johnson", country: "USA", email: "alice@example.com" },
+            { _id: 102, name: "Bob Smith", country: "Canada", email: "bob@example.com" },
+            { _id: 103, name: "Carol White", country: "USA", email: "carol@example.com" }
+        ];
+
+        // Helper function to format JSON
+        function formatJSON(data) {
+            return JSON.stringify(data, null, 2)
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        // Initialize basic demo
+        function initBasicDemo() {
+            document.getElementById('basic-sample-data').innerHTML =
+                `<pre style="color: var(--accent-green);">${formatJSON(salesData)}</pre>`;
+            document.getElementById('basic-output').innerHTML =
+                '<pre style="color: var(--text-secondary);">Click "Run Step-by-Step" or "Run All" to see results</pre>';
+        }
+
+        let basicDemoStep = 0;
+
+        // Run basic demo step by step
+        function runBasicDemoStepByStep() {
+            basicDemoStep++;
+            
+            const steps = [
+                { // Step 1: $match
+                    data: salesData.filter(doc => doc.status === "completed"),
+                    message: "🔍 $match: Filtered to completed orders only",
+                    stageIndex: 1
+                },
+                { // Step 2: $group
+                    data: salesData
+                        .filter(doc => doc.status === "completed")
+                        .reduce((acc, doc) => {
+                            const existing = acc.find(item => item._id === doc.product);
+                            if (existing) {
+                                existing.totalSales += doc.amount;
+                                existing.count += 1;
+                            } else {
+                                acc.push({ _id: doc.product, totalSales: doc.amount, count: 1 });
+                            }
+                            return acc;
+                        }, []),
+                    message: "📊 $group: Grouped by product with sum and count",
+                    stageIndex: 2
+                },
+                { // Step 3: $sort
+                    data: salesData
+                        .filter(doc => doc.status === "completed")
+                        .reduce((acc, doc) => {
+                            const existing = acc.find(item => item._id === doc.product);
+                            if (existing) {
+                                existing.totalSales += doc.amount;
+                                existing.count += 1;
+                            } else {
+                                acc.push({ _id: doc.product, totalSales: doc.amount, count: 1 });
+                            }
+                            return acc;
+                        }, [])
+                        .sort((a, b) => b.totalSales - a.totalSales),
+                    message: "↕️ $sort: Sorted by totalSales descending",
+                    stageIndex: 3
+                }
+            ];
+            
+            if (basicDemoStep > steps.length) {
+                basicDemoStep = 0;
+                resetBasicDemo();
+                return;
+            }
+            
+            const currentStep = steps[basicDemoStep - 1];
+            
+            // Update progress dots
+            document.querySelectorAll('#basic-progress .step-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i < basicDemoStep) dot.classList.add('completed');
+                if (i === basicDemoStep) dot.classList.add('active');
+            });
+            document.querySelectorAll('#basic-progress .step-line').forEach((line, i) => {
+                line.classList.toggle('active', i < basicDemoStep);
+            });
+            
+            // Update stage highlights
+            for (let i = 0; i <= 3; i++) {
+                const stage = document.getElementById(`basic-stage-${i}`);
+                if (stage) {
+                    stage.style.opacity = i <= currentStep.stageIndex ? '1' : '0.5';
+                    if (i === currentStep.stageIndex) {
+                        stage.style.boxShadow = '0 0 20px rgba(0, 255, 136, 0.4)';
+                    } else {
+                        stage.style.boxShadow = 'none';
+                    }
+                }
+            }
+            
+            // Update output
+            document.getElementById('basic-output').innerHTML = `
+                <div style="color: var(--accent-cyan); margin-bottom: 12px; font-weight: 600;">${currentStep.message}</div>
+                <div style="color: var(--text-secondary); font-size: 0.85em; margin-bottom: 8px;">Documents: ${currentStep.data.length}</div>
+                <pre style="color: var(--accent-green);">${formatJSON(currentStep.data)}</pre>
+            `;
+        }
+
+        // Run basic demo
+        function runBasicDemo() {
+            // Simulate aggregation pipeline
+            const result = salesData
+                .filter(doc => doc.status === "completed")
+                .reduce((acc, doc) => {
+                    const existing = acc.find(item => item._id === doc.product);
+                    if (existing) {
+                        existing.totalSales += doc.amount;
+                        existing.count += 1;
+                    } else {
+                        acc.push({
+                            _id: doc.product,
+                            totalSales: doc.amount,
+                            count: 1
+                        });
+                    }
+                    return acc;
+                }, [])
+                .sort((a, b) => b.totalSales - a.totalSales);
+
+            // Update all progress indicators
+            document.querySelectorAll('#basic-progress .step-dot').forEach(dot => {
+                dot.classList.add('completed');
+                dot.classList.remove('active');
+            });
+            document.querySelectorAll('#basic-progress .step-line').forEach(line => {
+                line.classList.add('active');
+            });
+            
+            // Highlight all stages
+            for (let i = 0; i <= 3; i++) {
+                const stage = document.getElementById(`basic-stage-${i}`);
+                if (stage) {
+                    stage.style.opacity = '1';
+                    stage.style.boxShadow = 'none';
+                }
+            }
+
+            document.getElementById('basic-output').innerHTML = `
+                <div style="color: var(--accent-green); margin-bottom: 12px; font-weight: 600;">✅ Pipeline Complete!</div>
+                <div style="color: var(--text-secondary); font-size: 0.85em; margin-bottom: 8px;">Final Results: ${result.length} documents</div>
+                <pre style="color: var(--accent-green);">${formatJSON(result)}</pre>
+            `;
+            
+            basicDemoStep = 3;
+        }
+
+        // Reset basic demo
+        function resetBasicDemo() {
+            basicDemoStep = 0;
+            
+            // Reset progress
+            document.querySelectorAll('#basic-progress .step-dot').forEach((dot, i) => {
+                dot.classList.remove('completed');
+                dot.classList.toggle('active', i === 0);
+            });
+            document.querySelectorAll('#basic-progress .step-line').forEach(line => {
+                line.classList.remove('active');
+            });
+            
+            // Reset stages
+            for (let i = 0; i <= 3; i++) {
+                const stage = document.getElementById(`basic-stage-${i}`);
+                if (stage) {
+                    stage.style.opacity = i === 0 ? '1' : '0.5';
+                    stage.style.boxShadow = 'none';
+                }
+            }
+            
+            document.getElementById('basic-output').innerHTML =
+                '<pre style="color: var(--text-secondary);">Click "Run Step-by-Step" or "Run All" to see results</pre>';
+        }
+
+        // Initialize advanced demo
+        function initAdvancedDemo() {
+            document.getElementById('advanced-orders-data').innerHTML =
+                `<pre style="color: var(--accent-cyan); font-size: 0.8em;">${formatJSON(ordersData)}</pre>`;
+            document.getElementById('advanced-customers-data').innerHTML =
+                `<pre style="color: var(--accent-cyan); font-size: 0.8em;">${formatJSON(customersData)}</pre>`;
+            document.getElementById('advanced-output').innerHTML =
+                '<pre style="color: var(--text-secondary);">Click "Run Pipeline" to see results</pre>';
+        }
+
+        // Run advanced demo
+        function runAdvancedDemo() {
+            // Simulate $lookup and aggregation with animation
+            const outputEl = document.getElementById('advanced-output');
+            
+            outputEl.innerHTML = '<div style="color: var(--accent-cyan);">🔗 Stage 1: $lookup - Joining orders with customers...</div>';
+            
+            setTimeout(() => {
+                const joined = ordersData.map(order => {
+                    const customer = customersData.find(c => c._id === order.customerId);
+                    return { ...order, customer: customer };
+                });
+                
+                outputEl.innerHTML = `
+                    <div style="color: var(--accent-green); margin-bottom: 8px;">✓ $lookup complete - ${joined.length} documents joined</div>
+                    <div style="color: var(--accent-cyan);">💥 Stage 2: $unwind - Flattening customer array...</div>
+                `;
+                
+                setTimeout(() => {
+                    outputEl.innerHTML = `
+                        <div style="color: var(--accent-green); margin-bottom: 4px;">✓ $lookup complete</div>
+                        <div style="color: var(--accent-green); margin-bottom: 8px;">✓ $unwind complete - ${joined.length} documents</div>
+                        <div style="color: var(--accent-cyan);">📊 Stage 3: $group - Grouping by country...</div>
+                    `;
+                    
+                    setTimeout(() => {
+                        const grouped = joined.reduce((acc, doc) => {
+                            const country = doc.customer.country;
+                            const existing = acc.find(item => item._id === country);
+                            if (existing) {
+                                existing.totalRevenue += doc.amount;
+                                existing.orderCount += 1;
+                                existing.avgOrderValue = Math.round(existing.totalRevenue / existing.orderCount);
+                            } else {
+                                acc.push({
+                                    _id: country,
+                                    totalRevenue: doc.amount,
+                                    orderCount: 1,
+                                    avgOrderValue: doc.amount
+                                });
+                            }
+                            return acc;
+                        }, []).sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+                        outputEl.innerHTML = `
+                            <div style="color: var(--accent-green); margin-bottom: 4px;">✓ $lookup complete</div>
+                            <div style="color: var(--accent-green); margin-bottom: 4px;">✓ $unwind complete</div>
+                            <div style="color: var(--accent-green); margin-bottom: 4px;">✓ $group complete - ${grouped.length} groups</div>
+                            <div style="color: var(--accent-green); margin-bottom: 12px;">✓ $sort complete</div>
+                            <div style="background: rgba(0, 255, 136, 0.1); padding: 12px; border-radius: 8px; border: 1px solid rgba(0, 255, 136, 0.3);">
+                                <div style="color: var(--accent-green); font-weight: 600; margin-bottom: 8px;">🎉 Final Results</div>
+                                <pre style="color: var(--accent-green);">${formatJSON(grouped)}</pre>
+                            </div>
+                        `;
+                    }, 500);
+                }, 400);
+            }, 300);
+        }
+
+        // Reset advanced demo
+        function resetAdvancedDemo() {
+            document.getElementById('advanced-output').innerHTML =
+                '<pre style="color: var(--text-secondary);">Click "Run Pipeline" to see results</pre>';
+        }
+
+        // Pipeline builder
+        let pipelineStages = [];
+
+        function addStage(stageName) {
+            pipelineStages.push(stageName);
+            updatePipelineVisual();
+        }
+
+        function updatePipelineVisual() {
+            const builder = document.getElementById('pipeline-builder');
+
+            if (pipelineStages.length === 0) {
+                builder.innerHTML = '<p style="color: var(--text-secondary);">Click stages above to build your pipeline</p>';
+                return;
+            }
+
+            const stageIcons = {
+                match: '🔍',
+                group: '📊',
+                project: '✂️',
+                sort: '↕️',
+                limit: '📄',
+                addFields: '➕'
+            };
+
+            let html = '<div class="stage" style="background: rgba(0, 212, 255, 0.1); border-color: var(--accent-cyan);"><div class="stage-title" style="color: var(--accent-cyan);">📥 Input</div><div class="stage-desc">8 docs</div></div>';
+            html += '<div class="arrow">→</div>';
+            
+            pipelineStages.forEach((stage, index) => {
+                html += `
+                    <div class="stage">
+                        <div class="stage-title">${stageIcons[stage] || '⚙️'} $${stage}</div>
+                        <div class="stage-desc">Stage ${index + 1}</div>
+                    </div>
+                `;
+                if (index < pipelineStages.length - 1) {
+                    html += '<div class="arrow">→</div>';
+                }
+            });
+
+            builder.innerHTML = html;
+        }
+
+        function clearPipeline() {
+            pipelineStages = [];
+            updatePipelineVisual();
+            document.getElementById('generated-code').innerHTML = '<pre style="color: var(--text-secondary);">Click "Generate Code" to see the aggregation query</pre>';
+            document.getElementById('pipeline-results').innerHTML = '<pre style="color: var(--text-secondary);">Build a pipeline and click "Execute Pipeline" to see results</pre>';
+        }
+
+        function generateCode() {
+            if (pipelineStages.length === 0) {
+                document.getElementById('generated-code').innerHTML =
+                    '<pre style="color: var(--accent-pink);">⚠️ Add some stages first!</pre>';
+                return;
+            }
+
+            const stageTemplates = {
+                match: '  { <span class="string">$match</span>: { status: <span class="string">"completed"</span> } }',
+                group: '  { <span class="string">$group</span>: { _id: <span class="string">"$product"</span>, count: { <span class="string">$sum</span>: <span class="number">1</span> } } }',
+                project: '  { <span class="string">$project</span>: { product: <span class="number">1</span>, amount: <span class="number">1</span>, _id: <span class="number">0</span> } }',
+                sort: '  { <span class="string">$sort</span>: { amount: <span class="number">-1</span> } }',
+                limit: '  { <span class="string">$limit</span>: <span class="number">5</span> }',
+                addFields: '  { <span class="string">$addFields</span>: { processedAt: <span class="keyword">new</span> Date() } }'
+            };
+
+            let code = '<span class="comment">// Generated MongoDB Aggregation Pipeline</span>\n';
+            code += 'db.sales.<span class="keyword">aggregate</span>([\n';
+            pipelineStages.forEach((stage, index) => {
+                code += stageTemplates[stage];
+                if (index < pipelineStages.length - 1) {
+                    code += ',';
+                }
+                code += '\n';
+            });
+            code += '])';
+
+            document.getElementById('generated-code').innerHTML =
+                `<pre>${code}</pre>`;
+        }
+
+        // Initialize demos on page load
+        window.addEventListener('load', () => {
+            initBasicDemo();
+            initAdvancedDemo();
+            initBuilderDemo();
+        });
+
+        // ============= $MATCH VISUALIZATION =============
+        function runMatchDemo() {
+            const inputDocs = document.querySelectorAll('#match-input-docs .doc-card');
+            const outputContainer = document.getElementById('match-output-docs');
+            const statsBar = document.getElementById('match-stats');
+            
+            outputContainer.innerHTML = '';
+            let passCount = 0;
+            
+            inputDocs.forEach((doc, index) => {
+                const statusField = doc.querySelector('.doc-field-value');
+                const isCompleted = statusField && statusField.textContent.includes('completed');
+                
+                setTimeout(() => {
+                    if (isCompleted) {
+                        doc.classList.add('highlighted');
+                        const newDoc = doc.cloneNode(true);
+                        newDoc.classList.add('animating');
+                        newDoc.classList.remove('highlighted');
+                        outputContainer.appendChild(newDoc);
+                        passCount++;
+                    } else {
+                        doc.classList.add('filtered-out');
+                    }
+                    
+                    if (index === inputDocs.length - 1) {
+                        document.getElementById('match-output-count').textContent = passCount;
+                        statsBar.style.display = 'flex';
+                        document.getElementById('match-docs-out').textContent = passCount;
+                        document.getElementById('match-filtered').textContent = inputDocs.length - passCount;
+                        document.getElementById('match-reduction').textContent = Math.round((1 - passCount/inputDocs.length) * 100) + '%';
+                    }
+                }, index * 200);
+            });
+        }
+
+        function resetMatchDemo() {
+            const inputDocs = document.querySelectorAll('#match-input-docs .doc-card');
+            inputDocs.forEach(doc => {
+                doc.classList.remove('highlighted', 'filtered-out');
+            });
+            document.getElementById('match-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Run Stage" to see filtered results</p>';
+            document.getElementById('match-output-count').textContent = '?';
+            document.getElementById('match-stats').style.display = 'none';
+        }
+
+        // ============= $GROUP VISUALIZATION =============
+        function runGroupDemo() {
+            const outputContainer = document.getElementById('group-output-docs');
+            const statsBar = document.getElementById('group-stats');
+            
+            outputContainer.innerHTML = '';
+            
+            const groups = [
+                { _id: 'Electronics', count: 3, total: 1047, color: '#ff6b9d' },
+                { _id: 'Books', count: 2, total: 40, color: '#4db8ff' },
+                { _id: 'Clothing', count: 1, total: 45, color: '#ffd93d' }
+            ];
+            
+            groups.forEach((group, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-card animating';
+                    card.style.borderLeftColor = group.color;
+                    card.innerHTML = `
+                        <div class="doc-field"><span class="doc-field-key">_id:</span> <span class="doc-field-value">"${group._id}"</span></div>
+                        <div class="doc-field"><span class="doc-field-key">count:</span> <span class="doc-field-value number">${group.count}</span></div>
+                        <div class="doc-field"><span class="doc-field-key">total:</span> <span class="doc-field-value number">$${group.total}</span></div>
+                    `;
+                    outputContainer.appendChild(card);
+                }, index * 300);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('group-output-count').textContent = '3';
+                statsBar.style.display = 'flex';
+            }, 900);
+        }
+
+        function resetGroupDemo() {
+            document.getElementById('group-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Run Stage" to see grouped results</p>';
+            document.getElementById('group-output-count').textContent = '?';
+            document.getElementById('group-stats').style.display = 'none';
+        }
+
+        // ============= $PROJECT VISUALIZATION =============
+        function runProjectDemo() {
+            const outputContainer = document.getElementById('project-output-docs');
+            const statsBar = document.getElementById('project-stats');
+            
+            outputContainer.innerHTML = '';
+            
+            const projected = [
+                { name: 'Laptop', total: 1998 },
+                { name: 'Mouse', total: 145 },
+                { name: 'Desk', total: 250 }
+            ];
+            
+            projected.forEach((doc, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-card animating';
+                    card.innerHTML = `
+                        <div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"${doc.name}"</span></div>
+                        <div class="doc-field"><span class="doc-field-key" style="color: var(--accent-purple);">total:</span> <span class="doc-field-value number" style="color: var(--accent-purple);">${doc.total}</span> <span style="font-size: 0.7em; color: var(--accent-purple);">← computed</span></div>
+                    `;
+                    outputContainer.appendChild(card);
+                }, index * 250);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('project-output-count').textContent = '3';
+                statsBar.style.display = 'flex';
+            }, 750);
+        }
+
+        function resetProjectDemo() {
+            document.getElementById('project-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Run Stage" to see reshaped documents</p>';
+            document.getElementById('project-output-count').textContent = '?';
+            document.getElementById('project-stats').style.display = 'none';
+        }
+
+        // ============= $SORT VISUALIZATION =============
+        function runSortDemo(order) {
+            const outputContainer = document.getElementById('sort-output-docs');
+            const codeBlock = document.getElementById('sort-code');
+            
+            const data = [
+                { name: 'Alice', score: 85 },
+                { name: 'Bob', score: 92 },
+                { name: 'Carol', score: 78 },
+                { name: 'Dave', score: 95 },
+                { name: 'Eve', score: 88 }
+            ];
+            
+            const sorted = order === 'asc' 
+                ? data.sort((a, b) => a.score - b.score)
+                : data.sort((a, b) => b.score - a.score);
+            
+            codeBlock.innerHTML = order === 'asc' 
+                ? '{ <span class="string">$sort</span>: { score: <span class="number">1</span> } }  <span class="comment">// Ascending by score</span>'
+                : '{ <span class="string">$sort</span>: { score: <span class="number">-1</span> } }  <span class="comment">// Descending by score</span>';
+            
+            outputContainer.innerHTML = '';
+            
+            sorted.forEach((doc, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-card animating';
+                    if (index === 0) card.classList.add('highlighted');
+                    card.innerHTML = `
+                        <div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"${doc.name}"</span></div>
+                        <div class="doc-field"><span class="doc-field-key">score:</span> <span class="doc-field-value number">${doc.score}</span></div>
+                    `;
+                    outputContainer.appendChild(card);
+                }, index * 150);
+            });
+        }
+
+        function resetSortDemo() {
+            document.getElementById('sort-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click sort buttons to see ordering</p>';
+            document.getElementById('sort-code').innerHTML = '{ <span class="string">$sort</span>: { score: <span class="number">-1</span> } }  <span class="comment">// Descending by score</span>';
+        }
+
+        // ============= $LIMIT & $SKIP VISUALIZATION =============
+        function runLimitDemo(limit) {
+            const inputDocs = document.querySelectorAll('#limit-input-docs .doc-card');
+            const outputContainer = document.getElementById('limit-output-docs');
+            const statsBar = document.getElementById('limit-stats');
+            
+            outputContainer.innerHTML = '';
+            inputDocs.forEach(doc => doc.classList.remove('highlighted', 'filtered-out'));
+            
+            inputDocs.forEach((doc, index) => {
+                setTimeout(() => {
+                    if (index < limit) {
+                        doc.classList.add('highlighted');
+                        const newDoc = doc.cloneNode(true);
+                        newDoc.classList.add('animating');
+                        newDoc.classList.remove('highlighted');
+                        outputContainer.appendChild(newDoc);
+                    } else {
+                        doc.classList.add('filtered-out');
+                    }
+                }, index * 100);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('limit-output-count').textContent = limit;
+                document.getElementById('limit-stage-label').textContent = '$limit: ' + limit;
+                statsBar.style.display = 'flex';
+                document.getElementById('limit-skipped').textContent = '0';
+                document.getElementById('limit-returned').textContent = limit;
+            }, 600);
+        }
+
+        function runSkipDemo(skip) {
+            const inputDocs = document.querySelectorAll('#limit-input-docs .doc-card');
+            const outputContainer = document.getElementById('limit-output-docs');
+            const statsBar = document.getElementById('limit-stats');
+            
+            outputContainer.innerHTML = '';
+            inputDocs.forEach(doc => doc.classList.remove('highlighted', 'filtered-out'));
+            
+            inputDocs.forEach((doc, index) => {
+                setTimeout(() => {
+                    if (index < skip) {
+                        doc.classList.add('filtered-out');
+                    } else {
+                        doc.classList.add('highlighted');
+                        const newDoc = doc.cloneNode(true);
+                        newDoc.classList.add('animating');
+                        newDoc.classList.remove('highlighted');
+                        outputContainer.appendChild(newDoc);
+                    }
+                }, index * 100);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('limit-output-count').textContent = inputDocs.length - skip;
+                document.getElementById('limit-stage-label').textContent = '$skip: ' + skip;
+                statsBar.style.display = 'flex';
+                document.getElementById('limit-skipped').textContent = skip;
+                document.getElementById('limit-returned').textContent = inputDocs.length - skip;
+            }, 600);
+        }
+
+        function runPaginationDemo() {
+            const inputDocs = document.querySelectorAll('#limit-input-docs .doc-card');
+            const outputContainer = document.getElementById('limit-output-docs');
+            const statsBar = document.getElementById('limit-stats');
+            
+            outputContainer.innerHTML = '';
+            inputDocs.forEach(doc => doc.classList.remove('highlighted', 'filtered-out'));
+            
+            inputDocs.forEach((doc, index) => {
+                setTimeout(() => {
+                    if (index < 2) {
+                        doc.classList.add('filtered-out');
+                    } else if (index < 4) {
+                        doc.classList.add('highlighted');
+                        const newDoc = doc.cloneNode(true);
+                        newDoc.classList.add('animating');
+                        newDoc.classList.remove('highlighted');
+                        outputContainer.appendChild(newDoc);
+                    } else {
+                        doc.classList.add('filtered-out');
+                    }
+                }, index * 100);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('limit-output-count').textContent = '2';
+                document.getElementById('limit-stage-label').textContent = 'Page 2';
+                statsBar.style.display = 'flex';
+                document.getElementById('limit-skipped').textContent = '2';
+                document.getElementById('limit-returned').textContent = '2';
+            }, 600);
+        }
+
+        function resetLimitDemo() {
+            const inputDocs = document.querySelectorAll('#limit-input-docs .doc-card');
+            inputDocs.forEach(doc => doc.classList.remove('highlighted', 'filtered-out'));
+            document.getElementById('limit-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click buttons to see $limit and $skip in action</p>';
+            document.getElementById('limit-output-count').textContent = '?';
+            document.getElementById('limit-stage-label').textContent = '$limit / $skip';
+            document.getElementById('limit-stats').style.display = 'none';
+        }
+
+        // ============= $LOOKUP VISUALIZATION =============
+        function runLookupDemo() {
+            const outputContainer = document.getElementById('lookup-output-docs');
+            
+            outputContainer.innerHTML = '';
+            
+            const joined = [
+                { orderId: 'ORD-1', customerId: 101, amount: 250, customer: { name: 'Alice', email: 'alice@...' }, color: '#ff6b9d' },
+                { orderId: 'ORD-2', customerId: 102, amount: 180, customer: { name: 'Bob', email: 'bob@...' }, color: '#4db8ff' }
+            ];
+            
+            joined.forEach((doc, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-card animating';
+                    card.style.borderLeftColor = doc.color;
+                    card.innerHTML = `
+                        <div class="doc-field"><span class="doc-field-key">orderId:</span> <span class="doc-field-value">"${doc.orderId}"</span></div>
+                        <div class="doc-field"><span class="doc-field-key">customerId:</span> <span class="doc-field-value number">${doc.customerId}</span></div>
+                        <div class="doc-field"><span class="doc-field-key">amount:</span> <span class="doc-field-value number">$${doc.amount}</span></div>
+                        <div class="doc-field" style="margin-top: 8px; padding: 8px; background: rgba(168, 85, 247, 0.15); border-radius: 6px;">
+                            <span class="doc-field-key" style="color: var(--accent-purple);">customer:</span>
+                            <div style="margin-left: 12px; margin-top: 4px;">
+                                <div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"${doc.customer.name}"</span></div>
+                                <div class="doc-field"><span class="doc-field-key">email:</span> <span class="doc-field-value">"${doc.customer.email}"</span></div>
+                            </div>
+                        </div>
+                    `;
+                    outputContainer.appendChild(card);
+                }, index * 400);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('lookup-output-count').textContent = '2';
+            }, 800);
+        }
+
+        function resetLookupDemo() {
+            document.getElementById('lookup-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 30px 0;">Click "Run Join" to see the joined documents</p>';
+            document.getElementById('lookup-output-count').textContent = '?';
+        }
+
+        // ============= $UNWIND VISUALIZATION =============
+        function runUnwindDemo() {
+            const outputContainer = document.getElementById('unwind-output-docs');
+            const statsBar = document.getElementById('unwind-stats');
+            
+            outputContainer.innerHTML = '';
+            
+            const unwound = [
+                { name: 'Laptop Pro', price: 1299, tag: 'electronics', color: 'var(--accent-purple)' },
+                { name: 'Laptop Pro', price: 1299, tag: 'sale', color: 'var(--accent-cyan)' },
+                { name: 'Laptop Pro', price: 1299, tag: 'featured', color: 'var(--accent-green)' }
+            ];
+            
+            unwound.forEach((doc, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-card animating';
+                    card.style.borderLeftColor = doc.color;
+                    card.innerHTML = `
+                        <div class="doc-field"><span class="doc-field-key">name:</span> <span class="doc-field-value">"${doc.name}"</span></div>
+                        <div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">${doc.price}</span></div>
+                        <div class="doc-field"><span class="doc-field-key">tags:</span> <span class="doc-field-value" style="color: ${doc.color};">"${doc.tag}"</span></div>
+                    `;
+                    outputContainer.appendChild(card);
+                }, index * 250);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('unwind-output-count').textContent = '3';
+                statsBar.style.display = 'flex';
+            }, 750);
+        }
+
+        function resetUnwindDemo() {
+            document.getElementById('unwind-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Unwind Array" to see explosion</p>';
+            document.getElementById('unwind-output-count').textContent = '?';
+            document.getElementById('unwind-stats').style.display = 'none';
+        }
+
+        // ============= $ADDFIELDS VISUALIZATION =============
+        function runAddFieldsDemo() {
+            const outputContainer = document.getElementById('addfields-output-docs');
+            
+            outputContainer.innerHTML = '';
+            
+            const withFields = [
+                { item: 'Widget', price: 10, qty: 5, total: 50, hasDiscount: true },
+                { item: 'Gadget', price: 25, qty: 2, total: 50, hasDiscount: false },
+                { item: 'Gizmo', price: 15, qty: 4, total: 60, hasDiscount: true }
+            ];
+            
+            withFields.forEach((doc, index) => {
+                setTimeout(() => {
+                    const card = document.createElement('div');
+                    card.className = 'doc-card animating';
+                    card.innerHTML = `
+                        <div class="doc-field"><span class="doc-field-key">item:</span> <span class="doc-field-value">"${doc.item}"</span></div>
+                        <div class="doc-field"><span class="doc-field-key">price:</span> <span class="doc-field-value number">${doc.price}</span></div>
+                        <div class="doc-field"><span class="doc-field-key">qty:</span> <span class="doc-field-value number">${doc.qty}</span></div>
+                        <div class="doc-field" style="background: rgba(0, 255, 136, 0.1); padding: 4px 8px; border-radius: 4px; margin-top: 4px;">
+                            <span class="doc-field-key" style="color: var(--accent-green);">total:</span> 
+                            <span class="doc-field-value number" style="color: var(--accent-green);">${doc.total}</span>
+                            <span style="font-size: 0.7em; color: var(--accent-green);">← NEW</span>
+                        </div>
+                        <div class="doc-field" style="background: rgba(168, 85, 247, 0.1); padding: 4px 8px; border-radius: 4px;">
+                            <span class="doc-field-key" style="color: var(--accent-purple);">hasDiscount:</span> 
+                            <span class="doc-field-value" style="color: ${doc.hasDiscount ? 'var(--accent-green)' : 'var(--accent-orange)'};">${doc.hasDiscount}</span>
+                            <span style="font-size: 0.7em; color: var(--accent-purple);">← NEW</span>
+                        </div>
+                    `;
+                    outputContainer.appendChild(card);
+                }, index * 250);
+            });
+            
+            setTimeout(() => {
+                document.getElementById('addfields-output-count').textContent = '3';
+            }, 750);
+        }
+
+        function resetAddFieldsDemo() {
+            document.getElementById('addfields-output-docs').innerHTML = '<p style="color: var(--text-secondary); font-size: 0.9em; text-align: center; padding: 40px 0;">Click "Add Fields" to see computed fields</p>';
+            document.getElementById('addfields-output-count').textContent = '?';
+        }
+
+        // Initialize builder demo
+        function initBuilderDemo() {
+            document.getElementById('builder-sample-data').innerHTML =
+                `<pre style="color: var(--accent-green);">${formatJSON(salesData)}</pre>`;
+            document.getElementById('pipeline-results').innerHTML =
+                '<pre style="color: var(--text-secondary);">Build a pipeline and click "Execute Pipeline" to see results</pre>';
+            document.getElementById('generated-code').innerHTML =
+                '<pre style="color: var(--text-secondary);">Click "Generate Code" to see the aggregation query</pre>';
+        }
+
+        // Stage syntax definitions
+        const stageSyntax = {
+            match: {
+                title: '$match',
+                description: 'Filters documents based on specified conditions. Similar to the find() query.',
+                syntax: `{ $match: { <query> } }
+
+// Examples:
+{ $match: { status: "active" } }
+{ $match: { age: { $gte: 18 } } }
+{ $match: {
+    $and: [
+      { price: { $gte: 100 } },
+      { category: "electronics" }
+    ]
+  }
+}`
+            },
+            group: {
+                title: '$group',
+                description: 'Groups documents by a specified expression and performs aggregations.',
+                syntax: `{ $group: {
+    _id: <expression>,
+    <field1>: { <accumulator>: <expression> }
+  }
+}
+
+// Examples:
+{ $group: {
+    _id: "$category",
+    count: { $sum: 1 },
+    totalSales: { $sum: "$amount" }
+  }
+}
+
+// Common accumulators:
+// $sum, $avg, $min, $max, $push, $addToSet, $first, $last`
+            },
+            project: {
+                title: '$project',
+                description: 'Reshapes documents by including, excluding, or adding fields.',
+                syntax: `{ $project: {
+    field1: 1,        // Include
+    field2: 0,        // Exclude
+    newField: <expression>
+  }
+}
+
+// Examples:
+{ $project: { name: 1, email: 1, _id: 0 } }
+{ $project: {
+    total: { $multiply: ["$price", "$quantity"] },
+    upperName: { $toUpper: "$name" }
+  }
+}`
+            },
+            sort: {
+                title: '$sort',
+                description: 'Orders documents by specified fields.',
+                syntax: `{ $sort: { field: 1 | -1 } }
+
+// 1 = ascending, -1 = descending
+
+// Examples:
+{ $sort: { age: 1 } }
+{ $sort: { createdAt: -1 } }
+{ $sort: { country: 1, city: 1, name: 1 } }`
+            },
+            limit: {
+                title: '$limit',
+                description: 'Limits the number of documents passed to the next stage.',
+                syntax: `{ $limit: <positive integer> }
+
+// Examples:
+{ $limit: 10 }
+{ $limit: 100 }`
+            },
+            skip: {
+                title: '$skip',
+                description: 'Skips a specified number of documents.',
+                syntax: `{ $skip: <positive integer> }
+
+// Examples:
+{ $skip: 20 }
+
+// Pagination pattern:
+{ $skip: (page - 1) * pageSize }
+{ $limit: pageSize }`
+            },
+            lookup: {
+                title: '$lookup',
+                description: 'Performs a left outer join with another collection.',
+                syntax: `{ $lookup: {
+    from: "<collection to join>",
+    localField: "<field from input>",
+    foreignField: "<field from 'from'>",
+    as: "<output array field>"
+  }
+}
+
+// Example:
+{ $lookup: {
+    from: "customers",
+    localField: "customerId",
+    foreignField: "_id",
+    as: "customerInfo"
+  }
+}`
+            },
+            unwind: {
+                title: '$unwind',
+                description: 'Deconstructs an array field, creating a document for each element.',
+                syntax: `{ $unwind: "<array field>" }
+
+// Or with options:
+{ $unwind: {
+    path: "<array field>",
+    preserveNullAndEmptyArrays: <boolean>,
+    includeArrayIndex: "<string>"
+  }
+}
+
+// Example:
+{ $unwind: "$tags" }
+{ $unwind: {
+    path: "$items",
+    includeArrayIndex: "itemIndex"
+  }
+}`
+            },
+            addFields: {
+                title: '$addFields',
+                description: 'Adds new fields to documents without removing existing fields.',
+                syntax: `{ $addFields: {
+    <newField>: <expression>,
+    <newField2>: <expression>
+  }
+}
+
+// Examples:
+{ $addFields: {
+    total: { $multiply: ["$price", "$quantity"] },
+    fullName: { $concat: ["$firstName", " ", "$lastName"] }
+  }
+}`
+            },
+            count: {
+                title: '$count',
+                description: 'Counts the number of documents and returns a single document with the count.',
+                syntax: `{ $count: "<output field name>" }
+
+// Example:
+{ $count: "totalDocuments" }
+
+// Output:
+{ totalDocuments: 42 }`
+            },
+            facet: {
+                title: '$facet',
+                description: 'Processes multiple aggregation pipelines in parallel within a single stage.',
+                syntax: `{ $facet: {
+    <outputField1>: [ <stage1>, <stage2>, ... ],
+    <outputField2>: [ <stage1>, <stage2>, ... ]
+  }
+}
+
+// Example:
+{ $facet: {
+    categorizedByPrice: [
+      { $bucket: {
+          groupBy: "$price",
+          boundaries: [0, 100, 500, 1000]
+        }
+      }
+    ],
+    topProducts: [
+      { $sort: { sales: -1 } },
+      { $limit: 5 }
+    ]
+  }
+}`
+            },
+            bucket: {
+                title: '$bucket',
+                description: 'Categorizes documents into buckets based on a specified expression and boundaries.',
+                syntax: `{ $bucket: {
+    groupBy: <expression>,
+    boundaries: [ <lowerbound1>, <lowerbound2>, ... ],
+    default: <literal>,
+    output: {
+      <output1>: { <accumulator>: <expression> }
+    }
+  }
+}
+
+// Example:
+{ $bucket: {
+    groupBy: "$price",
+    boundaries: [0, 100, 500, 1000, 5000],
+    default: "Other",
+    output: {
+      count: { $sum: 1 },
+      avgPrice: { $avg: "$price" }
+    }
+  }
+}`
+            }
+        };
+
+        // Show stage syntax overlay
+        function showStageSyntax(stageName) {
+            const stage = stageSyntax[stageName];
+            if (!stage) return;
+
+            document.getElementById('overlay-title').textContent = stage.title;
+            document.getElementById('overlay-description').textContent = stage.description;
+            document.getElementById('overlay-syntax').innerHTML =
+                `<div class="code-block"><pre style="color: var(--accent-green);">${stage.syntax}</pre></div>`;
+
+            document.getElementById('syntax-overlay').classList.add('active');
+        }
+
+        // Close overlay
+        function closeOverlay(event) {
+            if (!event || event.target.id === 'syntax-overlay') {
+                document.getElementById('syntax-overlay').classList.remove('active');
+            }
+        }
+
+        // Execute pipeline in builder
+        function executePipeline() {
+            if (pipelineStages.length === 0) {
+                document.getElementById('pipeline-results').innerHTML =
+                    '<pre style="color: #ff6b9d;">Add some stages to your pipeline first!</pre>';
+                return;
+            }
+
+            try {
+                let data = [...salesData];
+                let stageResults = [];
+
+                // Process each stage
+                pipelineStages.forEach((stageName, index) => {
+                    switch(stageName) {
+                        case 'match':
+                            data = data.filter(doc => doc.status === "completed");
+                            stageResults.push(`Stage ${index + 1} ($match): Filtered to ${data.length} documents`);
+                            break;
+
+                        case 'group':
+                            const grouped = data.reduce((acc, doc) => {
+                                const existing = acc.find(item => item._id === doc.product);
+                                if (existing) {
+                                    existing.count += 1;
+                                    existing.totalSales += doc.amount;
+                                } else {
+                                    acc.push({
+                                        _id: doc.product,
+                                        count: 1,
+                                        totalSales: doc.amount
+                                    });
+                                }
+                                return acc;
+                            }, []);
+                            data = grouped;
+                            stageResults.push(`Stage ${index + 1} ($group): Grouped into ${data.length} groups`);
+                            break;
+
+                        case 'project':
+                            data = data.map(doc => ({
+                                product: doc.product || doc._id,
+                                amount: doc.amount || doc.totalSales
+                            }));
+                            stageResults.push(`Stage ${index + 1} ($project): Reshaped documents`);
+                            break;
+
+                        case 'sort':
+                            data = data.sort((a, b) => {
+                                const aVal = a.amount || a.totalSales || 0;
+                                const bVal = b.amount || b.totalSales || 0;
+                                return bVal - aVal;
+                            });
+                            stageResults.push(`Stage ${index + 1} ($sort): Sorted documents`);
+                            break;
+
+                        case 'limit':
+                            data = data.slice(0, 5);
+                            stageResults.push(`Stage ${index + 1} ($limit): Limited to ${data.length} documents`);
+                            break;
+
+                        case 'addFields':
+                            data = data.map(doc => ({
+                                ...doc,
+                                processedAt: new Date().toISOString()
+                            }));
+                            stageResults.push(`Stage ${index + 1} ($addFields): Added computed fields`);
+                            break;
+                    }
+                });
+
+                const output = `<div style="color: var(--accent-cyan); margin-bottom: 15px; line-height: 1.8;">
+${stageResults.map(s => '✓ ' + s).join('<br>')}
+</div>
+<div style="background: rgba(0, 255, 136, 0.1); padding: 16px; border-radius: 8px; border: 1px solid rgba(0, 255, 136, 0.3); margin-top: 15px;">
+<div style="color: var(--accent-green); font-weight: 600; margin-bottom: 8px;">🎉 Final Result (${data.length} documents)</div>
+<pre style="color: var(--accent-green);">${formatJSON(data)}</pre>
+</div>`;
+
+                document.getElementById('pipeline-results').innerHTML = output;
+            } catch (error) {
+                document.getElementById('pipeline-results').innerHTML =
+                    `<pre style="color: var(--accent-pink);">Error executing pipeline: ${error.message}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>
+
