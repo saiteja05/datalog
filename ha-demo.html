@@ -6706,15 +6706,14 @@
             let ackCount = 1; // Primary already acked
             
             for (const sec of secondaries) {
+                if (ackCount >= requiredAcks) {
+                    break;
+                }
                 await new Promise(r => setTimeout(r, 200));
                 sec.el.classList.add('replicating');
                 ackCount++;
                 
                 setTimeout(() => sec.el.classList.remove('replicating'), 300);
-                
-                if (ackCount >= requiredAcks) {
-                    break;
-                }
             }
             
             await new Promise(r => setTimeout(r, 200));
