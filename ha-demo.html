@@ -2310,6 +2310,17 @@
             box-shadow: 0 0 15px var(--mongo-green);
         }
 
+        .mini-node.write-failed {
+            animation: writeFailFlash 0.5s ease-out;
+            box-shadow: 0 0 15px #e63946;
+        }
+
+        @keyframes writeFailFlash {
+            0% { background: #e63946; transform: scale(1.2); }
+            50% { background: #ff6b6b; }
+            100% { background: rgba(239, 71, 111, 0.3); transform: scale(1); }
+        }
+
         .mini-node.read-target {
             animation: readFlash 0.5s ease-out;
             box-shadow: 0 0 15px var(--node-secondary);
@@ -7710,23 +7721,48 @@
                 return;
             }
             
+            // Determine required acknowledgments
+            const healthyNodes = getStandbyHealthyNodes(activePos, shardIdx);
+            const totalNodes = 3; // Each shard has 3 nodes
+            const majority = Math.floor(totalNodes / 2) + 1; // 2
+            let requiredAcks = 1;
+            
+            if (standbyWriteConcern === 'majority') {
+                requiredAcks = majority;
+            } else if (standbyWriteConcern === 'all') {
+                requiredAcks = totalNodes;
+            }
+            
+            // For w:all, check if all nodes are healthy BEFORE attempting write
+            if (standbyWriteConcern === 'all' && healthyNodes.length < totalNodes) {
+                const downCount = totalNodes - healthyNodes.length;
+                logStandbyEvent(`❌ Write failed: w:all requires all ${totalNodes} nodes`, 'error');
+                logStandbyEvent(`   → ${downCount} node(s) in shard ${shardIdx} are down`, 'error');
+                logStandbyEvent(`   → Cannot satisfy write concern {w: "all"}`, 'warning');
+                
+                // Flash primary red to indicate failure
+                primary.el.classList.add('write-failed');
+                setTimeout(() => primary.el.classList.remove('write-failed'), 500);
+                return;
+            }
+            
+            // For w:majority, check if we have enough nodes
+            if (standbyWriteConcern === 'majority' && healthyNodes.length < majority) {
+                logStandbyEvent(`❌ Write failed: w:majority requires ${majority} nodes`, 'error');
+                logStandbyEvent(`   → Only ${healthyNodes.length} healthy node(s) in shard ${shardIdx}`, 'error');
+                
+                // Flash primary red to indicate failure
+                primary.el.classList.add('write-failed');
+                setTimeout(() => primary.el.classList.remove('write-failed'), 500);
+                return;
+            }
+            
             // Flash the primary
             primary.el.classList.add('write-target');
             logStandbyEvent(`✏️ ${opType === 'insert' ? 'Insert' : 'Update'} → Primary (shard ${shardIdx})`, 'info');
             
             await new Promise(r => setTimeout(r, 300));
             primary.el.classList.remove('write-target');
-            
-            // Determine required acknowledgments
-            const healthyNodes = getStandbyHealthyNodes(activePos, shardIdx);
-            const majority = Math.floor(3 / 2) + 1; // 2
-            let requiredAcks = 1;
-            
-            if (standbyWriteConcern === 'majority') {
-                requiredAcks = majority;
-            } else if (standbyWriteConcern === 'all') {
-                requiredAcks = 3;
-            }
             
             // Replicate to secondaries
             const secondaries = getStandbyHealthySecondaries(activePos, shardIdx);
