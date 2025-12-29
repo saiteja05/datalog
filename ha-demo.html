@@ -2612,6 +2612,123 @@
             background: rgba(0, 237, 100, 0.3);
         }
 
+        .standby-btn.switchover {
+            background: linear-gradient(135deg, #00b4d8, #0077b6);
+            color: white;
+            border: none;
+        }
+
+        .standby-btn.switchover:hover {
+            background: linear-gradient(135deg, #0096c7, #005f8f);
+        }
+
+        .standby-btn.switchover:disabled {
+            background: rgba(0, 180, 216, 0.3);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+        }
+
+        .standby-btn.failover {
+            background: linear-gradient(135deg, #ff9100, #ff6b00);
+            color: white;
+            border: none;
+        }
+
+        .standby-btn.failover:hover {
+            background: linear-gradient(135deg, #ff7b00, #e65c00);
+        }
+
+        .standby-btn.failover:disabled {
+            background: rgba(255, 145, 0, 0.3);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+        }
+
+        .standby-btn.splitover {
+            background: linear-gradient(135deg, #e63946, #d62839);
+            color: white;
+            border: none;
+        }
+
+        .standby-btn.splitover:hover {
+            background: linear-gradient(135deg, #d62839, #c11e2b);
+        }
+
+        .standby-btn.setup-standby {
+            background: linear-gradient(135deg, #00ed64, #00c853);
+            color: var(--mongo-forest);
+            border: none;
+            font-weight: 600;
+        }
+
+        .standby-btn.setup-standby:hover {
+            background: linear-gradient(135deg, #00c853, #00a844);
+        }
+
+        .standby-btn.setup-standby:disabled {
+            background: rgba(0, 237, 100, 0.3);
+            color: rgba(255, 255, 255, 0.5);
+            cursor: not-allowed;
+        }
+
+        .failover-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .failover-hints {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 0.7rem;
+        }
+
+        .failover-hints .hint {
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+        }
+
+        .failover-hints .hint.switchover-hint {
+            color: rgba(0, 180, 216, 0.8);
+        }
+
+        .failover-hints .hint.splitover-hint {
+            color: rgba(230, 57, 70, 0.8);
+        }
+
+        .split-mode .standby-region {
+            border: 2px solid #e63946 !important;
+        }
+
+        .split-mode .cross-region-flow {
+            opacity: 0.3;
+        }
+
+        .split-mode .flow-line-horizontal .flow-dot {
+            animation: none !important;
+            opacity: 0.2;
+        }
+
+        .cluster-box.independent {
+            border-color: #e63946 !important;
+            background: rgba(230, 57, 70, 0.1) !important;
+        }
+
+        .cluster-box.independent::after {
+            content: 'INDEPENDENT';
+            position: absolute;
+            top: -10px;
+            right: 10px;
+            background: #e63946;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
         .standby-btn.primary-op {
             background: var(--mongo-green);
             color: var(--mongo-forest);
@@ -2683,6 +2800,19 @@
             width: 100%;
         }
 
+        .standby-btn.switchover {
+            background: linear-gradient(135deg, rgba(0, 200, 83, 0.3), rgba(0, 150, 60, 0.3));
+            color: var(--mongo-green);
+            border: 2px solid var(--mongo-green);
+            font-weight: 600;
+        }
+
+        .standby-btn.switchover:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(0, 200, 83, 0.5), rgba(0, 150, 60, 0.5));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 237, 100, 0.3);
+        }
+
         .standby-btn.failover {
             background: linear-gradient(135deg, rgba(255, 145, 0, 0.3), rgba(255, 100, 0, 0.3));
             color: var(--region-3);
@@ -2690,16 +2820,60 @@
             font-weight: 600;
         }
 
-        .standby-btn.failover:hover {
+        .standby-btn.failover:hover:not(:disabled) {
             background: linear-gradient(135deg, rgba(255, 145, 0, 0.5), rgba(255, 100, 0, 0.5));
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(255, 145, 0, 0.3);
+        }
+
+        .standby-btn.splitover {
+            background: linear-gradient(135deg, rgba(255, 100, 100, 0.3), rgba(200, 50, 50, 0.3));
+            color: #ff6b6b;
+            border: 2px solid #ff6b6b;
+            font-weight: 600;
+        }
+
+        .standby-btn.splitover:hover:not(:disabled) {
+            background: linear-gradient(135deg, rgba(255, 100, 100, 0.5), rgba(200, 50, 50, 0.5));
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 100, 100, 0.3);
         }
 
         .standby-btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             transform: none !important;
+        }
+
+        .failover-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .failover-hints {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 0.7rem;
+        }
+
+        .failover-hints .hint {
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+        }
+
+        .failover-hints .switchover-hint {
+            color: rgba(0, 237, 100, 0.6);
+        }
+
+        .failover-hints .failover-hint {
+            color: rgba(255, 200, 0, 0.6);
+        }
+
+        .failover-hints .splitover-hint {
+            color: rgba(255, 107, 107, 0.6);
         }
 
         .standby-btn.active-failure {
@@ -3250,13 +3424,30 @@
                         </button>
                     </div>
                 </div>
-                <div class="standby-control-group">
-                    <div class="control-label">🔄 Manual Failover</div>
-                    <div class="standby-buttons">
-                        <button class="standby-btn failover" id="failover-btn" onclick="initiateFailover()">
-                            <span class="btn-icon">⚡</span>
-                            <span>Initiate Failover</span>
+                <div class="standby-control-group failover-controls">
+                    <div class="control-label">🔄 Cluster Operations</div>
+                    <div class="standby-buttons failover-buttons">
+                        <button class="standby-btn switchover" id="switchover-btn" onclick="initiateSwitchover()" title="Planned switch - locks active, syncs, then switches roles">
+                            <span class="btn-icon">🔄</span>
+                            <span>Switch Active Region</span>
                         </button>
+                        <button class="standby-btn failover" id="failover-btn" onclick="initiateFailover()" title="Emergency failover - promotes standby immediately">
+                            <span class="btn-icon">⚡</span>
+                            <span>Failover</span>
+                        </button>
+                        <button class="standby-btn splitover" id="splitover-btn" onclick="initiateSplitover()" title="Split clusters - both become independent">
+                            <span class="btn-icon">✂️</span>
+                            <span>Split Clusters</span>
+                        </button>
+                        <button class="standby-btn setup-standby" id="setup-standby-btn" onclick="setupStandby()" title="Re-establish standby relationship" style="display: none;">
+                            <span class="btn-icon">🔗</span>
+                            <span>Setup Standby</span>
+                        </button>
+                    </div>
+                    <div class="failover-hints">
+                        <span class="hint switchover-hint" id="switchover-hint">Switch Active Region: Both regions must be healthy</span>
+                        <span class="hint failover-hint" id="failover-hint">Failover: Requires one region to be down</span>
+                        <span class="hint splitover-hint" id="splitover-hint">Split Clusters: Both become independent</span>
                     </div>
                 </div>
                 <div class="standby-status-panel" id="standby-status-panel">
@@ -3295,7 +3486,7 @@
                             <div class="cloud-storage receiving" id="left-cloud-storage">
                                 <div class="storage-icon">☁️</div>
                                 <div class="storage-details">
-                                    <div class="storage-name">Azure Blob / S3</div>
+                                    <div class="storage-name">S3 / Azure Blob / GCS</div>
                                     <div class="storage-items">
                                         <span class="storage-item">📄 Oplog Store</span>
                                         <span class="storage-item">🔗 Cluster Link State</span>
@@ -3463,7 +3654,7 @@
                             <div class="cloud-storage receiving" id="right-cloud-storage">
                                 <div class="storage-icon">☁️</div>
                                 <div class="storage-details">
-                                    <div class="storage-name">Azure Blob / S3</div>
+                                    <div class="storage-name">S3 / Azure Blob / GCS</div>
                                     <div class="storage-items">
                                         <span class="storage-item">📄 Oplog Store</span>
                                         <span class="storage-item">🔗 Cluster Link State</span>
@@ -3609,7 +3800,7 @@
                         <div class="step-number">3</div>
                         <div class="step-content">
                             <strong>Push to Cloud Storage</strong>
-                            <p>Oplog data is pushed to cloud storage (S3/Azure Blob) for durability</p>
+                            <p>Oplog data is pushed to cloud storage (S3/Azure Blob/GCS) for durability</p>
                         </div>
                     </div>
                     <div class="flow-step">
@@ -3664,6 +3855,10 @@
                     <div class="failover-step" data-step="5">
                         <span class="failover-step-icon">⏳</span>
                         <span>Update DNS / connection strings</span>
+                    </div>
+                    <div class="failover-step" data-step="6" style="display: none;">
+                        <span class="failover-step-icon">⏳</span>
+                        <span>Reconfigure DNS settings</span>
                     </div>
                 </div>
             </div>
@@ -6079,7 +6274,8 @@
             leftRegionDown: false,
             rightRegionDown: false,
             activePosition: 'left', // which position (left or right) is currently active
-            failoverInProgress: false
+            failoverInProgress: false,
+            isSplit: false // whether clusters have been split (independent mode)
         };
 
         function setElementDisplay(id, display) {
@@ -6245,13 +6441,34 @@
         }
 
         function resetStandbyRegions() {
+            const wasSplit = standbyState.isSplit;
+            
             standbyState.leftRegionDown = false;
             standbyState.rightRegionDown = false;
             standbyState.activePosition = 'left';
             standbyState.failoverInProgress = false;
+            standbyState.isSplit = false;
             
             // Clear the event log first
             document.getElementById('event-log').innerHTML = '';
+            
+            // Remove split mode classes
+            const leftRegionEl = document.querySelector('.active-region');
+            const rightRegionEl = document.querySelector('.standby-region-box');
+            if (leftRegionEl) leftRegionEl.classList.remove('split-mode');
+            if (rightRegionEl) rightRegionEl.classList.remove('split-mode');
+            
+            // Remove independent class from clusters
+            document.querySelectorAll('.cluster-box.independent').forEach(el => {
+                el.classList.remove('independent');
+            });
+            
+            // Reset cross-region flow
+            const crossFlowEl = document.getElementById('cross-region-flow');
+            crossFlowEl.classList.remove('paused');
+            document.querySelector('.cross-region-label').innerHTML = 'CROSS-REGION<br/>OPLOG SYNC';
+            document.getElementById('flow-desc').innerHTML = 'push oplog to<br/>standby blob store';
+            document.getElementById('arrow-direction').textContent = '→→→';
             
             // Reset node states
             resetNodeStates();
@@ -6259,27 +6476,103 @@
             // Reset the entire UI
             resetStandbyUI();
             
-            logStandbyEvent('🔄 All regions and nodes reset to initial state', 'info');
+            if (wasSplit) {
+                logStandbyEvent('🔄 Standby cluster recreated from scratch', 'info');
+                logStandbyEvent('✅ Active-Standby architecture restored', 'success');
+            } else {
+                logStandbyEvent('🔄 All regions and nodes reset to initial state', 'info');
+            }
         }
 
         function updateFailoverButtonState() {
             const failoverBtn = document.getElementById('failover-btn');
-            // Enable failover anytime the current standby is healthy
-            if (!isCurrentStandbyDown() && !standbyState.failoverInProgress) {
+            const switchoverBtn = document.getElementById('switchover-btn');
+            const splitoverBtn = document.getElementById('splitover-btn');
+            const switchoverHint = document.getElementById('switchover-hint');
+            const failoverHint = document.getElementById('failover-hint');
+            
+            // If in split mode, disable all failover operations
+            if (standbyState.isSplit) {
+                failoverBtn.disabled = true;
+                switchoverBtn.disabled = true;
+                splitoverBtn.disabled = true;
+                failoverHint.textContent = 'Failover: Not available in split mode';
+                failoverHint.style.color = 'rgba(255, 107, 107, 0.8)';
+                return;
+            }
+            
+            const bothHealthy = !standbyState.leftRegionDown && !standbyState.rightRegionDown;
+            const bothDown = standbyState.leftRegionDown && standbyState.rightRegionDown;
+            const oneDown = (standbyState.leftRegionDown || standbyState.rightRegionDown) && !bothDown;
+            
+            // Switchover: only available when BOTH regions are healthy
+            if (bothHealthy && !standbyState.failoverInProgress) {
+                switchoverBtn.disabled = false;
+                switchoverHint.textContent = 'Switch Active Region: Both regions healthy ✓';
+                switchoverHint.style.color = 'rgba(0, 237, 100, 0.8)';
+            } else {
+                switchoverBtn.disabled = true;
+                if (oneDown || bothDown) {
+                    switchoverHint.textContent = 'Switch Active Region: Requires both regions healthy';
+                    switchoverHint.style.color = 'rgba(255, 107, 107, 0.8)';
+                } else {
+                    switchoverHint.textContent = 'Switch Active Region: Operation in progress...';
+                    switchoverHint.style.color = 'rgba(255, 200, 0, 0.8)';
+                }
+            }
+            
+            // Failover: available ONLY when one region is down (emergency promotion)
+            if (oneDown && !standbyState.failoverInProgress) {
                 failoverBtn.disabled = false;
+                failoverHint.textContent = 'Failover: Ready to promote standby ⚡';
+                failoverHint.style.color = 'rgba(255, 200, 0, 1)';
             } else {
                 failoverBtn.disabled = true;
+                if (bothHealthy) {
+                    failoverHint.textContent = 'Failover: Requires one region to be down';
+                    failoverHint.style.color = 'rgba(255, 200, 0, 0.6)';
+                } else if (bothDown) {
+                    failoverHint.textContent = 'Failover: Both regions down!';
+                    failoverHint.style.color = 'rgba(255, 107, 107, 0.8)';
+                } else {
+                    failoverHint.textContent = 'Failover: Operation in progress...';
+                    failoverHint.style.color = 'rgba(255, 200, 0, 0.8)';
+                }
             }
+            
+            // Splitover: available anytime EXCEPT when both regions are down
+            if (!bothDown && !standbyState.failoverInProgress) {
+                splitoverBtn.disabled = false;
+            } else {
+                splitoverBtn.disabled = true;
+            }
+            
+            // Update setup standby button visibility
+            updateSetupStandbyButton();
         }
 
         async function initiateFailover() {
             if (standbyState.failoverInProgress) return;
-            if (isCurrentStandbyDown()) {
-                logStandbyEvent('⚠️ Cannot failover: current standby region is down', 'warning');
+            if (standbyState.isSplit) {
+                logStandbyEvent('⚠️ Cannot failover: clusters are split', 'warning');
                 return;
             }
             
-            const isPlannedFailover = !isCurrentActiveDown();
+            const bothDown = standbyState.leftRegionDown && standbyState.rightRegionDown;
+            const oneDown = (standbyState.leftRegionDown || standbyState.rightRegionDown) && !bothDown;
+            
+            if (!oneDown) {
+                logStandbyEvent('⚠️ Failover requires exactly one region to be down', 'warning');
+                logStandbyEvent('💡 Use Switch Active Region when both regions are healthy', 'info');
+                return;
+            }
+            
+            if (isCurrentStandbyDown()) {
+                logStandbyEvent('⚠️ Cannot failover: standby region is down', 'warning');
+                logStandbyEvent('💡 Use Split Clusters for emergency scenarios', 'info');
+                return;
+            }
+            
             const currentActivePos = standbyState.activePosition;
             const newActivePos = currentActivePos === 'left' ? 'right' : 'left';
             
@@ -6288,15 +6581,16 @@
             const progressBar = document.getElementById('failover-progress-bar');
             const steps = document.querySelectorAll('.failover-step');
             
-            // Update modal text based on failover type
-            document.getElementById('failover-modal-text').textContent = isPlannedFailover 
-                ? `Performing planned failover: ${currentActivePos} → ${newActivePos}...`
-                : `Performing emergency failover: ${currentActivePos} → ${newActivePos}...`;
+            // Emergency failover - active region is down
+            document.getElementById('failover-modal-text').textContent = 
+                `🚨 Emergency failover: ${currentActivePos} → ${newActivePos}...`;
             
             modal.classList.add('visible');
             document.getElementById('failover-btn').disabled = true;
+            document.getElementById('switchover-btn').disabled = true;
+            document.getElementById('splitover-btn').disabled = true;
             
-            logStandbyEvent(isPlannedFailover ? '🔄 Initiating planned failover...' : '🚨 Initiating emergency failover...', 'info');
+            logStandbyEvent('🚨 Initiating emergency failover (active region is down)...', 'error');
             logStandbyEvent(`Switching active from ${currentActivePos.toUpperCase()} to ${newActivePos.toUpperCase()}`, 'info');
             
             const stepDurations = [800, 1000, 1200, 800, 600];
@@ -6465,6 +6759,739 @@
             logStandbyEvent('📝 Update your connection strings to point to the new active region', 'info');
             
             updateFailoverButtonState();
+        }
+
+        // ============ SWITCHOVER (Planned) ============
+        async function initiateSwitchover() {
+            if (standbyState.failoverInProgress) return;
+            if (standbyState.isSplit) {
+                logStandbyEvent('⚠️ Cannot switchover: clusters are split', 'warning');
+                return;
+            }
+            if (standbyState.leftRegionDown || standbyState.rightRegionDown) {
+                logStandbyEvent('⚠️ Cannot switchover: both regions must be healthy', 'warning');
+                return;
+            }
+            
+            const currentActivePos = standbyState.activePosition;
+            const newActivePos = currentActivePos === 'left' ? 'right' : 'left';
+            
+            standbyState.failoverInProgress = true;
+            const modal = document.getElementById('failover-modal');
+            const progressBar = document.getElementById('failover-progress-bar');
+            const steps = document.querySelectorAll('.failover-step');
+            
+            // Update modal for switchover
+            document.querySelector('#failover-modal h3').textContent = '🔄 Switching Active Region';
+            document.getElementById('failover-modal-text').textContent = 
+                `Performing planned switchover: ${currentActivePos} → ${newActivePos}...`;
+            
+            // Update step text for switchover
+            const stepTexts = [
+                'Lock active cluster (stop new writes)',
+                'Wait for in-flight writes to complete',
+                'Sync remaining oplogs to standby',
+                'Verify data consistency',
+                'Swap roles & update connection strings'
+            ];
+            steps.forEach((step, i) => {
+                step.querySelector('span:last-child').textContent = stepTexts[i];
+            });
+            
+            modal.classList.add('visible');
+            document.getElementById('switchover-btn').disabled = true;
+            document.getElementById('failover-btn').disabled = true;
+            document.getElementById('splitover-btn').disabled = true;
+            
+            logStandbyEvent('🔄 Initiating planned switchover...', 'info');
+            logStandbyEvent('🔒 Locking active cluster for writes', 'info');
+            
+            const stepDurations = [1000, 800, 1200, 1000, 800];
+            let progress = 0;
+            
+            for (let i = 0; i < steps.length; i++) {
+                steps[i].classList.add('active');
+                steps[i].querySelector('.failover-step-icon').textContent = '⏳';
+                
+                await new Promise(resolve => setTimeout(resolve, stepDurations[i]));
+                
+                steps[i].classList.remove('active');
+                steps[i].classList.add('complete');
+                steps[i].querySelector('.failover-step-icon').textContent = '✓';
+                
+                progress += 20;
+                progressBar.style.width = progress + '%';
+                
+                logStandbyEvent(`✓ ${stepTexts[i]}`, 'success');
+            }
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Perform the actual role swap (same as failover)
+            performRoleSwap(currentActivePos, newActivePos);
+            
+            modal.classList.remove('visible');
+            standbyState.failoverInProgress = false;
+            
+            // Reset steps
+            steps.forEach((step, i) => {
+                step.classList.remove('active', 'complete');
+                step.querySelector('.failover-step-icon').textContent = '⏳';
+                // Reset to failover step text
+                const failoverSteps = ['Stop writes to active cluster', 'Drain oplog queue', 
+                    'Apply remaining oplogs to standby', 'Promote standby to active', 'Update DNS / connection strings'];
+                step.querySelector('span:last-child').textContent = failoverSteps[i];
+            });
+            progressBar.style.width = '0%';
+            document.querySelector('#failover-modal h3').textContent = '🔄 Manual Failover in Progress';
+            
+            logStandbyEvent(`✅ Switch complete! ${newActivePos.toUpperCase()} is now Active`, 'success');
+            logStandbyEvent('🔓 Both clusters synchronized and operational', 'success');
+            
+            updateFailoverButtonState();
+        }
+
+        // ============ SPLITOVER (Emergency Split) ============
+        async function initiateSplitover() {
+            if (standbyState.failoverInProgress) return;
+            if (standbyState.isSplit) {
+                logStandbyEvent('⚠️ Clusters are already split', 'warning');
+                return;
+            }
+            
+            standbyState.failoverInProgress = true;
+            
+            // Setup modal
+            const modal = document.getElementById('failover-modal');
+            const progressBar = document.getElementById('failover-progress-bar');
+            const steps = document.querySelectorAll('.failover-step');
+            
+            // Update modal for split clusters
+            document.querySelector('#failover-modal h3').textContent = '✂️ Splitting Clusters';
+            document.getElementById('failover-modal-text').textContent = 
+                '⚠️ WARNING: This will make both clusters independent!';
+            
+            // Update step text for split (5 steps)
+            const stepTexts = [
+                'Stop cross-region replication',
+                'Disconnect cluster link',
+                'Promote standby to independent',
+                'Update cluster configurations',
+                'Finalize split operation'
+            ];
+            
+            steps.forEach((step, i) => {
+                if (i < 5) {
+                    step.style.display = '';
+                    step.querySelector('span:last-child').textContent = stepTexts[i];
+                } else {
+                    step.style.display = 'none'; // Hide 6th step
+                }
+                step.classList.remove('active', 'complete');
+                step.querySelector('.failover-step-icon').textContent = '⏳';
+            });
+            
+            progressBar.style.width = '0%';
+            modal.classList.add('visible');
+            
+            // Disable all operation buttons
+            document.getElementById('splitover-btn').disabled = true;
+            document.getElementById('switchover-btn').disabled = true;
+            document.getElementById('failover-btn').disabled = true;
+            
+            // Step 1: Stop cross-region replication
+            steps[0].classList.add('active');
+            logStandbyEvent('✂️ Step 1/5: Stopping cross-region replication...', 'warning');
+            logStandbyEvent('⚠️ WARNING: This will make both clusters independent!', 'error');
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Visual feedback - pause cross region flow
+            const crossFlowEl = document.getElementById('cross-region-flow');
+            crossFlowEl.classList.add('paused');
+            
+            steps[0].classList.remove('active');
+            steps[0].classList.add('complete');
+            steps[0].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '20%';
+            logStandbyEvent('✓ Cross-region replication stopped', 'success');
+            
+            // Step 2: Disconnect cluster link
+            steps[1].classList.add('active');
+            logStandbyEvent('🔌 Step 2/5: Disconnecting cluster link...', 'warning');
+            await new Promise(resolve => setTimeout(resolve, 700));
+            
+            // Hide shippers/injectors on both sides
+            setElementDisplay('left-shippers', 'none');
+            setElementDisplay('left-cluster-pull', 'none');
+            setElementDisplay('right-shippers', 'none');
+            setElementDisplay('right-cluster-pull', 'none');
+            setElementDisplay('left-coordinator', 'none');
+            setElementDisplay('left-injectors', 'none');
+            setElementDisplay('left-injector-push', 'none');
+            setElementDisplay('left-storage-pull', 'none');
+            setElementDisplay('left-blob-input', 'none');
+            setElementDisplay('left-blob-output', 'none');
+            setElementDisplay('right-coordinator', 'none');
+            setElementDisplay('right-injectors', 'none');
+            setElementDisplay('right-injector-push', 'none');
+            setElementDisplay('right-storage-pull', 'none');
+            setElementDisplay('right-blob-input', 'none');
+            setElementDisplay('right-blob-output', 'none');
+            
+            steps[1].classList.remove('active');
+            steps[1].classList.add('complete');
+            steps[1].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '40%';
+            logStandbyEvent('✓ Cluster link disconnected', 'success');
+            
+            // Step 3: Promote standby to independent
+            steps[2].classList.add('active');
+            logStandbyEvent('⬆️ Step 3/5: Promoting standby to independent cluster...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 900));
+            
+            // Mark as split
+            standbyState.isSplit = true;
+            
+            // Update both clusters to show as independent/active
+            const leftRegionEl = document.querySelector('.active-region');
+            const rightRegionEl = document.querySelector('.standby-region-box');
+            
+            // Add split mode class
+            leftRegionEl.classList.add('split-mode');
+            rightRegionEl.classList.add('split-mode');
+            
+            // Both become active clusters
+            const leftHeader = leftRegionEl.querySelector('.region-header');
+            const rightHeader = rightRegionEl.querySelector('.region-header');
+            
+            leftHeader.classList.remove('standby');
+            leftHeader.classList.add('active');
+            leftHeader.querySelector('.region-name').textContent = 'INDEPENDENT CLUSTER';
+            leftHeader.querySelector('.region-status').textContent = '● Active (Split)';
+            leftHeader.querySelector('.region-icon').textContent = '🔴';
+            
+            rightHeader.classList.remove('standby');
+            rightHeader.classList.add('active');
+            rightHeader.querySelector('.region-name').textContent = 'INDEPENDENT CLUSTER';
+            rightHeader.querySelector('.region-status').textContent = '● Active (Split)';
+            rightHeader.querySelector('.region-icon').textContent = '🔴';
+            
+            // Update cluster boxes
+            const leftCluster = leftRegionEl.querySelector('.cluster-box');
+            const rightCluster = rightRegionEl.querySelector('.cluster-box');
+            
+            leftCluster.classList.remove('standby-cluster');
+            leftCluster.classList.add('active-cluster', 'independent');
+            leftCluster.querySelector('.cluster-label').textContent = 'INDEPENDENT CLUSTER';
+            
+            rightCluster.classList.remove('standby-cluster');
+            rightCluster.classList.add('active-cluster', 'independent');
+            rightCluster.querySelector('.cluster-label').textContent = 'INDEPENDENT CLUSTER';
+            
+            // Remove sublabels
+            const sublabels = document.querySelectorAll('.cluster-sublabel');
+            sublabels.forEach(s => s.remove());
+            
+            // Both clusters get primaries
+            updateNodesAfterFailover(leftRegionEl, 'active');
+            updateNodesAfterFailover(rightRegionEl, 'active');
+            
+            steps[2].classList.remove('active');
+            steps[2].classList.add('complete');
+            steps[2].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '60%';
+            logStandbyEvent('✓ Standby promoted to independent cluster', 'success');
+            
+            // Step 4: Update cluster configurations
+            steps[3].classList.add('active');
+            logStandbyEvent('⚙️ Step 4/5: Updating cluster configurations...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Update status panel
+            document.getElementById('left-region-status').textContent = '● Independent';
+            document.getElementById('left-region-status').className = 'status-value';
+            document.getElementById('left-region-status').style.color = '#e63946';
+            
+            document.getElementById('right-region-status').textContent = '● Independent';
+            document.getElementById('right-region-status').className = 'status-value';
+            document.getElementById('right-region-status').style.color = '#e63946';
+            
+            document.getElementById('replication-status').textContent = '✖ Severed';
+            document.getElementById('replication-status').className = 'status-value';
+            document.getElementById('replication-status').style.color = '#e63946';
+            
+            steps[3].classList.remove('active');
+            steps[3].classList.add('complete');
+            steps[3].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '80%';
+            logStandbyEvent('✓ Cluster configurations updated', 'success');
+            
+            // Step 5: Finalize split operation
+            steps[4].classList.add('active');
+            logStandbyEvent('🏁 Step 5/5: Finalizing split operation...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            // Update cross-region label
+            document.querySelector('.cross-region-label').innerHTML = 'CONNECTION<br/>SEVERED';
+            document.getElementById('flow-desc').innerHTML = '✂️ No replication';
+            document.getElementById('arrow-direction').textContent = '✖✖✖';
+            
+            steps[4].classList.remove('active');
+            steps[4].classList.add('complete');
+            steps[4].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '100%';
+            logStandbyEvent('✓ Split operation finalized', 'success');
+            
+            // Brief pause to show 100% completion
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Hide modal and reset
+            modal.classList.remove('visible');
+            
+            // Reset modal for future use
+            const defaultStepTexts = [
+                'Stop writes to active cluster',
+                'Drain oplog queue',
+                'Apply remaining oplogs to standby',
+                'Promote standby to active',
+                'Update DNS / connection strings',
+                'Reconfigure DNS settings'
+            ];
+            steps.forEach((step, i) => {
+                step.classList.remove('active', 'complete');
+                step.querySelector('.failover-step-icon').textContent = '⏳';
+                if (i < defaultStepTexts.length) {
+                    step.querySelector('span:last-child').textContent = defaultStepTexts[i];
+                }
+                if (i === 5) {
+                    step.style.display = 'none';
+                }
+            });
+            progressBar.style.width = '0%';
+            document.querySelector('#failover-modal h3').textContent = '🔄 Manual Failover in Progress';
+            
+            standbyState.failoverInProgress = false;
+            
+            logStandbyEvent('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            logStandbyEvent('✂️ CLUSTERS ARE NOW SPLIT AND INDEPENDENT', 'error');
+            logStandbyEvent('⚠️ Both clusters accepting writes independently', 'warning');
+            logStandbyEvent('⚠️ DATA DIVERGENCE will occur!', 'error');
+            logStandbyEvent('📝 Use "Setup Standby" to re-establish replication', 'info');
+            logStandbyEvent('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            
+            updateFailoverButtonState();
+            updateSetupStandbyButton();
+        }
+
+        // ============ SETUP STANDBY (Re-establish relationship) ============
+        async function setupStandby() {
+            if (!standbyState.isSplit) {
+                logStandbyEvent('⚠️ Clusters are not split', 'warning');
+                return;
+            }
+            
+            // Check both regions are healthy (not down)
+            if (standbyState.leftRegionDown || standbyState.rightRegionDown) {
+                logStandbyEvent('⚠️ Cannot setup standby: both regions must be healthy', 'warning');
+                return;
+            }
+            
+            standbyState.failoverInProgress = true;
+            
+            const leftRegionEl = document.querySelector('.active-region');
+            const rightRegionEl = document.querySelector('.standby-region-box');
+            
+            // Setup modal
+            const modal = document.getElementById('failover-modal');
+            const progressBar = document.getElementById('failover-progress-bar');
+            const steps = document.querySelectorAll('.failover-step');
+            
+            // Update modal for setup standby
+            document.querySelector('#failover-modal h3').textContent = '🔗 Setting Up Standby Cluster';
+            document.getElementById('failover-modal-text').textContent = 
+                'Re-establishing Active-Standby relationship...';
+            
+            // Update step text for setup standby (6 steps)
+            const stepTexts = [
+                'Create standby cluster nodes',
+                'Sync data from existing cluster',
+                'Convert to standby mode',
+                'Restore oplog streaming',
+                'Enable shippers & injectors',
+                'Reconfigure DNS settings'
+            ];
+            
+            // Show 6th step and update all step texts
+            steps.forEach((step, i) => {
+                step.style.display = ''; // Show all steps including 6th
+                if (i < stepTexts.length) {
+                    step.querySelector('span:last-child').textContent = stepTexts[i];
+                }
+                step.classList.remove('active', 'complete');
+                step.querySelector('.failover-step-icon').textContent = '⏳';
+            });
+            
+            progressBar.style.width = '0%';
+            modal.classList.add('visible');
+            
+            // Disable all operation buttons
+            document.getElementById('setup-standby-btn').disabled = true;
+            document.getElementById('switchover-btn').disabled = true;
+            document.getElementById('failover-btn').disabled = true;
+            document.getElementById('splitover-btn').disabled = true;
+            
+            // Step 1: Creating standby cluster
+            steps[0].classList.add('active');
+            logStandbyEvent('🔧 Step 1/6: Creating standby cluster...', 'info');
+            logStandbyEvent('   → Provisioning nodes in right region', 'info');
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            // Remove split mode visuals
+            leftRegionEl.classList.remove('split-mode');
+            rightRegionEl.classList.remove('split-mode');
+            document.querySelectorAll('.cluster-box.independent').forEach(el => {
+                el.classList.remove('independent');
+            });
+            
+            steps[0].classList.remove('active');
+            steps[0].classList.add('complete');
+            steps[0].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '17%';
+            logStandbyEvent('✓ Standby cluster nodes provisioned', 'success');
+            
+            // Step 2: Syncing data from existing cluster
+            steps[1].classList.add('active');
+            logStandbyEvent('📦 Step 2/6: Syncing data from existing cluster...', 'info');
+            logStandbyEvent('   → Creating initial snapshot from left cluster', 'info');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            logStandbyEvent('   → Transferring data to right cluster...', 'info');
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            steps[1].classList.remove('active');
+            steps[1].classList.add('complete');
+            steps[1].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '34%';
+            logStandbyEvent('✓ Initial data sync complete', 'success');
+            
+            // Step 3: Converting right cluster to standby mode
+            steps[2].classList.add('active');
+            logStandbyEvent('🔄 Step 3/6: Converting right cluster to standby mode...', 'info');
+            logStandbyEvent('   → Stopping writes on right cluster', 'info');
+            await new Promise(resolve => setTimeout(resolve, 600));
+            logStandbyEvent('   → Demoting primaries to secondaries', 'info');
+            
+            // Reset to initial state - left active, right standby
+            standbyState.isSplit = false;
+            standbyState.activePosition = 'left';
+            
+            // Update headers
+            const leftHeader = leftRegionEl.querySelector('.region-header');
+            const rightHeader = rightRegionEl.querySelector('.region-header');
+            
+            leftHeader.classList.add('active');
+            leftHeader.classList.remove('standby');
+            leftHeader.querySelector('.region-name').textContent = 'ACTIVE REGION';
+            leftHeader.querySelector('.region-status').textContent = '● Primary';
+            leftHeader.querySelector('.region-icon').textContent = '🔵';
+            
+            rightHeader.classList.add('standby');
+            rightHeader.classList.remove('active');
+            rightHeader.querySelector('.region-name').textContent = 'STANDBY REGION';
+            rightHeader.querySelector('.region-status').textContent = '○ Standby';
+            rightHeader.querySelector('.region-icon').textContent = '🟢';
+            
+            // Update cluster boxes
+            const leftCluster = leftRegionEl.querySelector('.cluster-box');
+            const rightCluster = rightRegionEl.querySelector('.cluster-box');
+            
+            leftCluster.classList.add('active-cluster');
+            leftCluster.classList.remove('standby-cluster');
+            leftCluster.querySelector('.cluster-label').textContent = 'ACTIVE CLUSTER';
+            
+            rightCluster.classList.add('standby-cluster');
+            rightCluster.classList.remove('active-cluster');
+            rightCluster.querySelector('.cluster-label').textContent = 'STANDBY CLUSTER';
+            
+            // Add sublabel to standby
+            let rightSublabel = rightCluster.querySelector('.cluster-sublabel');
+            if (!rightSublabel) {
+                rightSublabel = document.createElement('div');
+                rightSublabel.className = 'cluster-sublabel';
+                rightCluster.querySelector('.cluster-label').after(rightSublabel);
+            }
+            rightSublabel.textContent = '(All Secondaries)';
+            
+            // Remove sublabel from active
+            const leftSublabel = leftCluster.querySelector('.cluster-sublabel');
+            if (leftSublabel) leftSublabel.remove();
+            
+            // Update nodes
+            updateNodesAfterFailover(leftRegionEl, 'active');
+            updateNodesAfterFailover(rightRegionEl, 'standby');
+            
+            // Reset node states
+            syncNodeStatesToRole('left', 'active');
+            syncNodeStatesToRole('right', 'standby');
+            
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            steps[2].classList.remove('active');
+            steps[2].classList.add('complete');
+            steps[2].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '50%';
+            logStandbyEvent('✓ Right cluster converted to standby mode', 'success');
+            
+            // Step 4: Restoring oplog streaming
+            steps[3].classList.add('active');
+            logStandbyEvent('📡 Step 4/6: Restoring oplog streaming...', 'info');
+            logStandbyEvent('   → Configuring cluster link between regions', 'info');
+            await new Promise(resolve => setTimeout(resolve, 700));
+            
+            // Restore cross-region flow
+            const crossFlowEl = document.getElementById('cross-region-flow');
+            crossFlowEl.classList.remove('paused');
+            document.querySelector('.cross-region-label').innerHTML = 'CROSS-REGION<br/>OPLOG SYNC';
+            document.getElementById('flow-desc').innerHTML = 'push oplog to<br/>standby blob store';
+            document.getElementById('arrow-direction').textContent = '→→→';
+            
+            logStandbyEvent('   → Oplog streaming from left → right blob store', 'info');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            steps[3].classList.remove('active');
+            steps[3].classList.add('complete');
+            steps[3].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '67%';
+            logStandbyEvent('✓ Oplog streaming established', 'success');
+            
+            // Step 5: Re-enabling shippers, injectors, and cross-region flow
+            steps[4].classList.add('active');
+            logStandbyEvent('⚙️ Step 5/6: Re-enabling shippers, injectors, and cross-region flow...', 'info');
+            logStandbyEvent('   → Starting shippers on active cluster', 'info');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Restore region components
+            updateRegionComponents('left');
+            
+            logStandbyEvent('   → Starting injectors on standby cluster', 'info');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            logStandbyEvent('   → Enabling cross-region replication flow', 'info');
+            await new Promise(resolve => setTimeout(resolve, 400));
+            
+            steps[4].classList.remove('active');
+            steps[4].classList.add('complete');
+            steps[4].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '84%';
+            logStandbyEvent('✓ All cluster link components active', 'success');
+            
+            // Step 6: Reconfigure DNS settings
+            steps[5].classList.add('active');
+            document.getElementById('failover-modal-text').textContent = 
+                'Finalizing DNS configuration...';
+            logStandbyEvent('🌐 Step 6/6: Reconfiguring DNS settings...', 'info');
+            logStandbyEvent('   → Updating connection string endpoints', 'info');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            logStandbyEvent('   → Setting TTL for DNS records', 'info');
+            await new Promise(resolve => setTimeout(resolve, 400));
+            logStandbyEvent('   → Verifying DNS propagation', 'info');
+            await new Promise(resolve => setTimeout(resolve, 600));
+            
+            steps[5].classList.remove('active');
+            steps[5].classList.add('complete');
+            steps[5].querySelector('.failover-step-icon').textContent = '✓';
+            progressBar.style.width = '100%';
+            logStandbyEvent('✓ DNS configuration complete', 'success');
+            
+            // Update status panel
+            document.getElementById('left-region-status').textContent = '● Active';
+            document.getElementById('left-region-status').className = 'status-value healthy';
+            document.getElementById('left-region-status').style.color = '';
+            
+            document.getElementById('right-region-status').textContent = '● Standby';
+            document.getElementById('right-region-status').className = 'status-value healthy';
+            document.getElementById('right-region-status').style.color = '';
+            
+            document.getElementById('replication-status').textContent = '⟳ Syncing';
+            document.getElementById('replication-status').className = 'status-value syncing';
+            document.getElementById('replication-status').style.color = '';
+            
+            // Brief pause to show 100% completion
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Hide modal and reset
+            modal.classList.remove('visible');
+            
+            // Reset modal for future use
+            const defaultStepTexts = [
+                'Stop writes to active cluster',
+                'Drain oplog queue',
+                'Apply remaining oplogs to standby',
+                'Promote standby to active',
+                'Update DNS / connection strings',
+                'Reconfigure DNS settings'
+            ];
+            steps.forEach((step, i) => {
+                step.classList.remove('active', 'complete');
+                step.querySelector('.failover-step-icon').textContent = '⏳';
+                if (i < defaultStepTexts.length) {
+                    step.querySelector('span:last-child').textContent = defaultStepTexts[i];
+                }
+                // Hide the 6th step by default (only used for setup standby)
+                if (i === 5) {
+                    step.style.display = 'none';
+                }
+            });
+            progressBar.style.width = '0%';
+            document.querySelector('#failover-modal h3').textContent = '🔄 Manual Failover in Progress';
+            
+            standbyState.failoverInProgress = false;
+            
+            logStandbyEvent('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            logStandbyEvent('✅ STANDBY SETUP COMPLETE!', 'success');
+            logStandbyEvent('🔵 Left Region = ACTIVE (Primary)', 'info');
+            logStandbyEvent('🟢 Right Region = STANDBY (All Secondaries)', 'info');
+            logStandbyEvent('📡 Oplog streaming: Active → Standby', 'info');
+            logStandbyEvent('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', 'info');
+            
+            updateFailoverButtonState();
+            updateSetupStandbyButton();
+        }
+
+        function updateSetupStandbyButton() {
+            const setupBtn = document.getElementById('setup-standby-btn');
+            const splitoverHint = document.getElementById('splitover-hint');
+            
+            if (standbyState.isSplit) {
+                // Show setup standby button, hide splitover
+                setupBtn.style.display = '';
+                document.getElementById('splitover-btn').style.display = 'none';
+                
+                // Check if both regions are healthy
+                const bothHealthy = !standbyState.leftRegionDown && !standbyState.rightRegionDown;
+                setupBtn.disabled = !bothHealthy || standbyState.failoverInProgress;
+                
+                if (bothHealthy) {
+                    splitoverHint.textContent = 'Setup Standby: Re-establish replication ✓';
+                    splitoverHint.style.color = 'rgba(0, 237, 100, 0.8)';
+                } else {
+                    splitoverHint.textContent = 'Setup Standby: Requires both regions healthy';
+                    splitoverHint.style.color = 'rgba(255, 107, 107, 0.8)';
+                }
+            } else {
+                // Show splitover button, hide setup standby
+                setupBtn.style.display = 'none';
+                document.getElementById('splitover-btn').style.display = '';
+                splitoverHint.textContent = 'Split Clusters: Both become independent';
+                splitoverHint.style.color = '';
+            }
+        }
+
+        // Helper function to perform the actual role swap
+        function performRoleSwap(currentActivePos, newActivePos) {
+            const leftRegionEl = document.querySelector('.active-region');
+            const rightRegionEl = document.querySelector('.standby-region-box');
+            
+            const leftHeader = leftRegionEl.querySelector('.region-header');
+            const rightHeader = rightRegionEl.querySelector('.region-header');
+            
+            if (newActivePos === 'right') {
+                // Left becomes standby, right becomes active
+                leftHeader.classList.remove('active');
+                leftHeader.classList.add('standby');
+                leftHeader.querySelector('.region-name').textContent = 'STANDBY REGION';
+                leftHeader.querySelector('.region-icon').textContent = '🟢';
+                leftHeader.querySelector('.region-status').textContent = standbyState.leftRegionDown ? '✖ Down' : '○ Standby';
+                
+                rightHeader.classList.remove('standby');
+                rightHeader.classList.add('active');
+                rightHeader.querySelector('.region-name').textContent = 'ACTIVE REGION';
+                rightHeader.querySelector('.region-icon').textContent = '🔵';
+                rightHeader.querySelector('.region-status').textContent = '● Primary';
+                
+                // Update cluster labels
+                leftRegionEl.querySelector('.cluster-label').textContent = 'STANDBY CLUSTER';
+                let leftSublabel = leftRegionEl.querySelector('.cluster-sublabel');
+                if (!leftSublabel) {
+                    leftSublabel = document.createElement('div');
+                    leftSublabel.className = 'cluster-sublabel';
+                    leftRegionEl.querySelector('.cluster-label').after(leftSublabel);
+                }
+                leftSublabel.textContent = '(All Secondaries)';
+                
+                rightRegionEl.querySelector('.cluster-label').textContent = 'ACTIVE CLUSTER';
+                const rightSublabel = rightRegionEl.querySelector('.cluster-sublabel');
+                if (rightSublabel) rightSublabel.remove();
+                
+                // Update nodes
+                updateNodesAfterFailover(leftRegionEl, 'standby');
+                updateNodesAfterFailover(rightRegionEl, 'active');
+                
+                // Update arrows
+                document.getElementById('arrow-direction').textContent = '←←←';
+            } else {
+                // Right becomes standby, left becomes active
+                rightHeader.classList.remove('active');
+                rightHeader.classList.add('standby');
+                rightHeader.querySelector('.region-name').textContent = 'STANDBY REGION';
+                rightHeader.querySelector('.region-icon').textContent = '🟢';
+                rightHeader.querySelector('.region-status').textContent = standbyState.rightRegionDown ? '✖ Down' : '○ Standby';
+                
+                leftHeader.classList.remove('standby');
+                leftHeader.classList.add('active');
+                leftHeader.querySelector('.region-name').textContent = 'ACTIVE REGION';
+                leftHeader.querySelector('.region-icon').textContent = '🔵';
+                leftHeader.querySelector('.region-status').textContent = '● Primary';
+                
+                // Update cluster labels
+                rightRegionEl.querySelector('.cluster-label').textContent = 'STANDBY CLUSTER';
+                let rightSublabel = rightRegionEl.querySelector('.cluster-sublabel');
+                if (!rightSublabel) {
+                    rightSublabel = document.createElement('div');
+                    rightSublabel.className = 'cluster-sublabel';
+                    rightRegionEl.querySelector('.cluster-label').after(rightSublabel);
+                }
+                rightSublabel.textContent = '(All Secondaries)';
+                
+                leftRegionEl.querySelector('.cluster-label').textContent = 'ACTIVE CLUSTER';
+                const leftSublabel = leftRegionEl.querySelector('.cluster-sublabel');
+                if (leftSublabel) leftSublabel.remove();
+                
+                // Update nodes
+                updateNodesAfterFailover(rightRegionEl, 'standby');
+                updateNodesAfterFailover(leftRegionEl, 'active');
+                
+                // Update arrows
+                document.getElementById('arrow-direction').textContent = '→→→';
+            }
+            
+            // Update flow direction
+            const crossFlowEl = document.getElementById('cross-region-flow');
+            crossFlowEl.classList.remove('reversed');
+            if (newActivePos === 'right') {
+                crossFlowEl.classList.add('reversed');
+            }
+            
+            // Update region components
+            updateRegionComponents(newActivePos);
+            
+            // Update active position
+            standbyState.activePosition = newActivePos;
+            
+            // Update status panel
+            const leftIsNowActive = newActivePos === 'left';
+            if (!standbyState.leftRegionDown) {
+                document.getElementById('left-region-status').textContent = leftIsNowActive ? '● Active' : '● Standby';
+                document.getElementById('left-region-status').className = 'status-value healthy';
+                document.getElementById('left-region-status').style.color = '';
+            }
+            if (!standbyState.rightRegionDown) {
+                document.getElementById('right-region-status').textContent = leftIsNowActive ? '● Standby' : '● Active';
+                document.getElementById('right-region-status').className = 'status-value healthy';
+                document.getElementById('right-region-status').style.color = '';
+            }
+            
+            // Sync node states
+            syncNodeStatesToRole(newActivePos === 'left' ? 'right' : 'left', 'standby');
+            syncNodeStatesToRole(newActivePos, 'active');
         }
         
         function updateNodesAfterFailover(regionEl, newRole) {
@@ -6955,17 +7982,25 @@
             // Reset status panel
             document.getElementById('left-region-status').textContent = '● Active';
             document.getElementById('left-region-status').className = 'status-value healthy';
+            document.getElementById('left-region-status').style.color = '';
             document.getElementById('right-region-status').textContent = '● Standby';
             document.getElementById('right-region-status').className = 'status-value healthy';
+            document.getElementById('right-region-status').style.color = '';
             document.getElementById('replication-status').textContent = '⟳ Syncing';
             document.getElementById('replication-status').className = 'status-value syncing';
+            document.getElementById('replication-status').style.color = '';
             
             // Reset kill/restore buttons
             document.getElementById('kill-left-btn').style.display = '';
             document.getElementById('restore-left-btn').style.display = 'none';
             document.getElementById('kill-right-btn').style.display = '';
             document.getElementById('restore-right-btn').style.display = 'none';
-            document.getElementById('failover-btn').disabled = false;
+            document.getElementById('splitover-btn').style.display = '';
+            document.getElementById('setup-standby-btn').style.display = 'none';
+            
+            // Reset hints
+            document.getElementById('splitover-hint').textContent = 'Split Clusters: Both become independent';
+            document.getElementById('splitover-hint').style.color = '';
             
             // Reset failover modal steps
             const steps = document.querySelectorAll('.failover-step');
@@ -6974,6 +8009,12 @@
                 step.querySelector('.failover-step-icon').textContent = '⏳';
             });
             document.getElementById('failover-progress-bar').style.width = '0%';
+            
+            // Update button states based on current region status
+            // Failover: disabled (both regions healthy)
+            // Switchover: enabled (both regions healthy)
+            // Splitover: enabled (not both down)
+            updateFailoverButtonState();
             
             logStandbyEvent('🔄 Active-Standby cluster initialized', 'success');
             logStandbyEvent('💡 Left region is Active, Right region is Standby', 'info');
