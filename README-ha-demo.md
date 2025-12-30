@@ -10,6 +10,9 @@ This demo helps explain:
 - How elections work and why majority matters
 - The difference between single-region and multi-region deployments
 - Common HA misconceptions (like read-only replicas not helping with failover)
+- **[BETA]** Active-Standby cluster architecture with manual failover
+- Async oplog replication via cloud storage (S3/Azure Blob/GCS)
+- Trade-offs between automatic and manual failover strategies
 
 ---
 
@@ -20,6 +23,12 @@ This demo helps explain:
 3. Use the operation buttons to simulate reads/writes
 4. Click on nodes to simulate failures
 5. Watch the elections and replication in action
+
+**For Standby Cluster Demo:**
+1. Click the **🔄 Standby Cluster** tab (marked BETA)
+2. Observe the Active-Standby architecture with oplog flow
+3. Use region controls to kill/restore regions
+4. Try different failover operations (Switch, Failover, Split)
 
 ---
 
@@ -41,6 +50,16 @@ This demo helps explain:
 | **🐢 Slow / ⚡ Fast / 🦥 Slowest** | Cycle animation speed |
 | **⏸️ Pause / ▶️ Resume** | Pause or resume animations |
 
+### Standby Cluster Controls
+| Button | Action |
+|--------|--------|
+| **💥 Kill Left/Right** | Simulate region failure |
+| **🔄 Restore Left/Right** | Restore a failed region |
+| **🔄 Switch Active Region** | Planned failover (requires both regions healthy) |
+| **⚡ Failover** | Emergency failover (requires one region down) |
+| **✂️ Split Clusters** | Make both clusters independent (severs replication) |
+| **🔗 Setup Standby** | Re-establish Active-Standby relationship after split |
+| **🔄 Reset** | Reset everything to initial state |
 
 ---
 
@@ -60,6 +79,17 @@ Same regional configurations but with:
 - Multiple shards
 - Mongos routers
 - Config servers
+
+### 🔄 Standby Cluster Mode (BETA)
+
+A separate tab for demonstrating Active-Standby architecture with manual failover:
+
+| Feature | Description |
+|---------|-------------|
+| **Architecture** | Two independent clusters with async oplog replication via cloud storage |
+| **Replication** | Shippers pull oplog from active → push to blob storage → Injectors apply to standby |
+| **Failover** | Manual failover required (not automatic like replica sets) |
+| **Use Case** | Regions where 3-region deployments aren't possible or cross-region latency is unacceptable |
 
 ---
 
@@ -159,6 +189,85 @@ Same regional configurations but with:
 
 ---
 
+### Scenario 6: Standby Cluster - Active-Standby Architecture (10 mins)
+**Goal:** Demonstrate async replication and manual failover for special deployment scenarios
+
+1. Select **🔄 Standby Cluster** tab
+2. Explain the architecture:
+   - "Two clusters: Active (left) with primaries, Standby (right) with all secondaries"
+   - "Shippers pull oplog from active cluster → push to cloud storage"
+   - "Injectors pull from cloud storage → apply to standby cluster"
+   - "This is ASYNC replication - not the same as replica sets"
+
+3. **Demonstrate normal operations:**
+   - Click **Insert** with different write concerns
+   - Show replication flow in the diagram
+
+4. **Simulate region failure:**
+   - Click **Kill Left** (active region)
+   - Notice: "No automatic failover! Manual intervention required"
+   - Click **Failover** button
+   - Watch the 5-step failover process
+   - "Standby becomes active, but this required human action"
+
+5. **Demonstrate planned switchover:**
+   - Click **Reset** to restore
+   - Click **Switch Active Region**
+   - "This is for maintenance - locks active, syncs, then switches"
+
+**Key Talking Points:**
+- This is for deployments where 3-region isn't possible
+- Failover is MANUAL - requires human decision
+- There will be data lag between active and standby
+- Cloud storage (S3/Azure Blob/GCS) is the replication medium
+
+---
+
+### Scenario 7: Standby Cluster - Split Brain and Recovery (7 mins)
+**Goal:** Show what happens when clusters are split and how to recover
+
+1. Start in **🔄 Standby Cluster** tab
+2. Click **Split Clusters**
+   - Watch both clusters become "INDEPENDENT"
+   - "Both are now accepting writes - DATA DIVERGENCE will occur!"
+
+3. Explain the danger:
+   - "If applications write to both, you'll have conflicting data"
+   - "This is an emergency scenario - should be avoided"
+
+4. Click **Setup Standby** to recover:
+   - Watch the 6-step process
+   - "Creates new standby, syncs data, restores replication"
+   - "In real life, you'd need to reconcile any divergent data"
+
+**Key Talking Points:**
+- Split clusters = potential data loss/conflicts
+- Recovery requires re-syncing all data
+- This is why manual failover needs careful planning
+
+---
+
+### Scenario 8: Standby Cluster - Write Concerns with Node Failures (5 mins)
+**Goal:** Show how write concerns affect availability in standby mode
+
+1. In **🔄 Standby Cluster** tab
+2. Click on a secondary node in the active region to fail it
+3. Try different write concerns:
+   - **w:1** - Works! Only needs primary
+   - **w:majority** - Works! 2 of 3 nodes healthy
+   - **w:all** - FAILS! "w:all requires all 3 nodes"
+
+4. Fail another secondary (leaving only primary)
+   - **w:1** - Still works
+   - **w:majority** - FAILS! "Only 1 healthy node"
+
+**Key Talking Points:**
+- w:all is dangerous - single node failure blocks all writes
+- w:majority provides good durability without blocking
+- Always design for node failures
+
+---
+
 ## 💡 Presenter Tips
 
 ### Before the Demo
@@ -186,6 +295,19 @@ A: Yes, but only 7 voting members max. Additional nodes can be non-voting.
 
 **Q: What's the latency impact of w:majority?**
 A: Adds one network round-trip to closest secondary. In same region, ~1-2ms.
+
+**Q: When should I use Standby Cluster vs Replica Set?**
+A: Use Standby Cluster when:
+- 3-region deployment isn't possible (on-prem, limited cloud regions)
+- Cross-region latency is too high for synchronous replication
+- You need local reads AND writes in both regions
+- You can accept manual failover and potential data lag
+
+**Q: What's the RPO/RTO for Standby Cluster?**
+A: RPO depends on replication lag (typically seconds to minutes). RTO depends on how quickly you can execute manual failover (minutes to hours depending on process).
+
+**Q: Can both clusters accept writes simultaneously?**
+A: Only after a "Split Clusters" operation, but this causes data divergence. In normal operation, only the active cluster accepts writes.
 
 ---
 
