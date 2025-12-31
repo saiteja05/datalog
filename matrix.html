@@ -419,6 +419,38 @@
             transition: opacity 0.3s ease;
         }
 
+        /* --- FEEDBACK LINK --- */
+        .feedback-link {
+            position: fixed;
+            bottom: 30px;
+            right: 150px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2), 0 0 0 1px rgba(255,255,255,0.1);
+            z-index: 95;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: #001e2b;
+            font-size: 0.9rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .feedback-link:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0,237,100,0.3), 0 0 0 2px rgba(0,237,100,0.3);
+            background: linear-gradient(135deg, #00ED64 0%, #4DB33D 100%);
+            color: #001e2b;
+        }
+        .feedback-link svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
         /* --- DUAL MODE INTERFACE --- */
         /* Mode Tabs */
         .mode-tabs {
@@ -765,6 +797,48 @@
             justify-content: center;
         }
 
+        /* Recommendation Feedback */
+        .rec-feedback {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .rec-feedback-title {
+            font-size: 1rem;
+            color: #666;
+            margin-bottom: 16px;
+            font-weight: 500;
+        }
+
+        .rec-feedback-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 2px solid rgba(0,0,0,0.1);
+            border-radius: 50px;
+            color: #001e2b;
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .rec-feedback-link:hover {
+            background: linear-gradient(135deg, #00ED64 0%, #4DB33D 100%);
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,237,100,0.35);
+            color: #001e2b;
+        }
+
+        .rec-feedback-link svg {
+            flex-shrink: 0;
+        }
+
         /* Feedback Section */
         .feedback-section {
             margin-top: 40px;
@@ -1039,6 +1113,12 @@
         <button class="ctrl-btn" onclick="zoomOut()"><span>−</span></button>
         <button class="ctrl-btn" onclick="resetZoom()"><span>↺</span></button>
     </div>
+
+    <!-- Feedback Link -->
+    <a href="https://docs.google.com/forms/d/e/1FAIpQLSdap7ckZOQmVsn16R1OHMeKxDrUAs1LSe1EaBDDdrzZWpX4oA/viewform" target="_blank" class="feedback-link" title="Report a bug or give feedback">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM11 5h2v6h-2zm0 8h2v2h-2z"/></svg>
+        Feedback / Report Bug
+    </a>
 
     <div id="side-drawer">
         <div class="drawer-header">
@@ -5103,6 +5183,14 @@ flowchart TB
                         <button class="wizard-btn secondary" onclick="exportRecommendation('csv')">📊 Export as CSV</button>
                         <button class="wizard-btn secondary" onclick="restartWizard()">Start Over</button>
                         <button class="wizard-btn primary" onclick="viewExpertPath()">See Full Decision Tree →</button>
+                    </div>
+
+                    <div class="rec-feedback">
+                        <div class="rec-feedback-title">Was this recommendation helpful?</div>
+                        <a href="https://docs.google.com/forms/d/e/1FAIpQLSdap7ckZOQmVsn16R1OHMeKxDrUAs1LSe1EaBDDdrzZWpX4oA/viewform" target="_blank" class="rec-feedback-link">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12zM11 5h2v6h-2zm0 8h2v2h-2z"/></svg>
+                            Give Feedback / Report a Bug
+                        </a>
                     </div>
                 </div>
             `;
