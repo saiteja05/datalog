@@ -295,6 +295,59 @@
             height: 16px;
         }
 
+        /* Card Footer with Actions */
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        .card-footer .card-arrow {
+            margin-top: 0;
+        }
+
+        /* README Badge */
+        .readme-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            padding: 0.375rem 0.625rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .readme-link:hover {
+            color: var(--accent);
+            border-color: var(--border-accent);
+            background: var(--accent-glow);
+        }
+
+        .readme-link svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Card as div (with multiple links) */
+        div.card {
+            cursor: default;
+        }
+
+        div.card:hover .card-arrow {
+            color: var(--accent);
+            gap: 0.75rem;
+        }
+
         /* Featured Card */
         .card.featured {
             grid-column: span 2;
@@ -389,79 +442,115 @@
         <div class="section-group">
             <h2 class="section-title">Overview</h2>
             <div class="card-grid">
-                <a href="https://saiteja05.github.io/datalog/ddp.html" target="_blank" class="card">
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
                     </div>
                     <h3 class="card-title">MongoDB Atlas Data Platform</h3>
                     <p class="card-description">Discover MongoDB's fully managed, multi-cloud developer data platform — built for easier absorption by executives and technical decision makers.</p>
-                    <span class="card-arrow">
-                        Explore platform
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/atlas.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-ddp.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/ddp.html" target="_blank" class="card-arrow">
+                            Explore platform
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg>
                     </div>
                     <h3 class="card-title">MongoDB Atlas</h3>
                     <p class="card-description">The fully managed, multi-cloud platform that automates operations and simplifies building modern applications.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/matrix.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-atlas.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/atlas.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-                    </div>
+            </div>
                     <h3 class="card-title">How to Choose a Database?</h3>
                     <p class="card-description">Decision framework to help your teams choose the right database technology for your application needs.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-matrix.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/matrix.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                </div>
             </div>
-        </div>
+                </div>
+            </div>
 
         <!-- Availability & Scalability -->
         <div class="section-group">
             <h2 class="section-title">Availability & Scalability</h2>
             <div class="card-grid">
-                <a href="https://saiteja05.github.io/datalog/mongoatscalev2.html" target="_blank" class="card">
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                     </div>
                     <h3 class="card-title">Running MongoDB at Scale</h3>
                     <p class="card-description">Discover how MongoDB handles massive workloads with horizontal scaling, sharding, and high availability.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/ha-demo.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-mongoatscalev2.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/mongoatscalev2.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
-                    </div>
+            </div>
                     <h3 class="card-title">High Availability Demo</h3>
                     <p class="card-description">Interactive demonstration of MongoDB's replica set failover, elections, and multi-region high availability.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/multitenancy.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-ha-demo.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/ha-demo.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21"/></svg>
                     </div>
                     <h3 class="card-title">Multi-Tenancy Strategies</h3>
                     <p class="card-description">Explore different architectural patterns for building multi-tenant applications with MongoDB.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-multitenancy.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/multitenancy.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            </a>
+        </div>
+                </div>
             </div>
         </div>
 
@@ -469,101 +558,149 @@
         <div class="section-group">
             <h2 class="section-title">Core Capabilities</h2>
             <div class="card-grid">
-                <a href="https://saiteja05.github.io/datalog/crud.html" target="_blank" class="card">
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
                     </div>
                     <h3 class="card-title">CRUD Operations</h3>
                     <p class="card-description">Master MongoDB's intuitive and powerful API for creating, reading, updating, and deleting documents.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/aggregations.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-crud.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/crud.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
                     </div>
                     <h3 class="card-title">Aggregation Pipeline</h3>
                     <p class="card-description">Visualize and understand MongoDB's powerful aggregation framework for data transformation and analytics.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/transactional_db.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-aggregations.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/aggregations.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/></svg>
                     </div>
                     <h3 class="card-title">Transactional Database</h3>
                     <p class="card-description">Understand multi-document ACID transactions and comparisons with CockroachDB, ScyllaDB, Postgres, and DynamoDB.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/timeseries.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-transactional_db.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/transactional_db.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
                     </div>
                     <h3 class="card-title">Time Series Collections</h3>
                     <p class="card-description">Deep dive into MongoDB's optimized time series collections for IoT, metrics, and event data workloads.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/security.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-timeseries.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/timeseries.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
                     </div>
                     <h3 class="card-title">Security</h3>
                     <p class="card-description">Dive into the multi-layered security framework covering authentication, authorization, encryption, and network isolation.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-security.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/security.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                </div>
             </div>
-        </div>
 
         <!-- AI & Search -->
         <div class="section-group">
             <h2 class="section-title">AI & Search</h2>
             <div class="card-grid">
-                <a href="https://saiteja05.github.io/datalog/speciality.html" target="_blank" class="card">
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
                     <h3 class="card-title">Specialty Data Stores</h3>
                     <p class="card-description">Explore MongoDB's optimized solutions for search and comparisons with Pinecone, Qdrant, and Elasticsearch.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/aisearch.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-speciality.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/speciality.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-                </div>
+                    </div>
                     <h3 class="card-title">AI Search</h3>
                     <p class="card-description">Learn about Atlas Search's AI-powered capabilities and comparisons with AWS Kendra and Azure AI Search.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
-                <a href="https://saiteja05.github.io/datalog/aimongo.html" target="_blank" class="card">
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-aisearch.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/aisearch.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card">
                     <div class="card-icon">
                         <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                </div>
+                    </div>
                     <h3 class="card-title">State of AI with MongoDB</h3>
                     <p class="card-description">Discover how Atlas Search plays a critical role in building intelligent AI agents and modern applications.</p>
-                    <span class="card-arrow">
-                        Learn more
-                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
-                    </span>
-                </a>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/README-aimongo.md" target="_blank" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/aimongo.html" target="_blank" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
             </div>
         </div>
 
