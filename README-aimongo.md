@@ -2,87 +2,144 @@
 
 An interactive guide to building AI-powered applications with MongoDB Atlas Vector Search.
 
-## 🎯 Purpose
+## Purpose
 
-This guide explains:
+This guide helps explain:
 - How Atlas Vector Search enables AI applications
 - Building RAG (Retrieval Augmented Generation) systems
 - AI agent architectures with MongoDB
 - Vector embeddings and semantic search
 - Hybrid search combining vectors with keywords
 
-## 📋 Key Topics Covered
+---
 
-### Vector Search Fundamentals
-- What are vector embeddings
-- Similarity search concepts
-- HNSW index algorithm
-- Distance metrics (cosine, euclidean, dot product)
+## Quick Start
 
-### RAG Architecture
-- Document chunking strategies
-- Embedding generation pipelines
-- Retrieval and context injection
-- LLM integration patterns
-
-### Agent Memory Systems
-- Conversation history storage
-- Long-term memory patterns
-- Context window management
-- Memory retrieval strategies
-
-### Hybrid Search
-- Combining vector and full-text search
-- Reciprocal Rank Fusion (RRF)
-- Boosting and filtering
-- Real-time relevance tuning
-
-## 🚀 Quick Start
-
-1. Open `aimongo.html` in a web browser
+1. Open aimongo.html in a web browser
 2. Use the navigation to explore sections
 3. Interact with the TCO calculator
 4. Try the hybrid search demo
 5. Review the competitive matrix
 
-## 🎨 Interactive Features
+---
 
-- **TCO Calculator** - Slider to compare costs at scale
-- **Hybrid Search Demo** - See vector + keyword search in action
-- **Architecture Diagrams** - Compare unified vs. specialized stacks
-- **Competitive Matrix** - Hover for detailed feature comparisons
-- **Tabbed Content** - Organized exploration of key advantages
+## Key Concepts
 
-## 💡 Key Advantages
+### Vector Search Basics
+| Concept | Description |
+|---------|-------------|
+| Embeddings | Numeric representations of data |
+| Similarity | Finding close vectors |
+| HNSW | Efficient search algorithm |
+| Dimensions | Vector size (768, 1536, etc.) |
 
-### Unified Platform
-```
-Traditional Stack          Atlas Stack
-┌─────────────────┐        ┌─────────────────┐
-│ App Database    │        │                 │
-├─────────────────┤        │  MongoDB Atlas  │
-│ Vector Database │   →    │  (All-in-One)   │
-├─────────────────┤        │                 │
-│ Search Engine   │        └─────────────────┘
-└─────────────────┘
-```
+### RAG Architecture
+| Component | Role |
+|-----------|------|
+| Document Store | MongoDB collections |
+| Embeddings | OpenAI, Cohere, etc. |
+| Vector Index | Atlas Vector Search |
+| LLM | GPT, Claude, etc. |
 
-### Zero-ETL Architecture
-- No data synchronization pipelines
-- Real-time vector indexing
-- Reduced operational complexity
-- Lower total cost of ownership
+### Hybrid Search
+| Type | Use Case |
+|------|----------|
+| Vector | Semantic meaning |
+| Full-text | Exact keywords |
+| Hybrid | Best of both |
 
-## 📊 Use Cases
+---
 
-- **Semantic Search** - Find by meaning, not just keywords
-- **Recommendation Engines** - Similar items and content
-- **Chatbots & Agents** - Intelligent conversational AI
-- **Document Q&A** - Ask questions about your data
-- **Image Search** - Visual similarity matching
+## Demo Scenarios
 
-## 🔗 Related Resources
+### Scenario 1: Vector Search Intro (15 mins)
+Goal: Explain what vector search is
 
-- [Atlas Vector Search](https://www.mongodb.com/docs/atlas/atlas-vector-search/)
-- [Building AI Applications](https://www.mongodb.com/developer/products/atlas/building-generative-ai-applications/)
-- [LangChain + MongoDB](https://python.langchain.com/docs/integrations/vectorstores/mongodb_atlas)
+1. Traditional search limitations (keywords only)
+2. Vector search approach (embeddings, similarity)
+3. Simple example with vector index creation
+
+Key Talking Points:
+- Vectors capture meaning
+- Similarity finds related content
+- Foundation for AI applications
+
+---
+
+### Scenario 2: RAG Implementation (20 mins)
+Goal: Build a complete RAG system
+
+1. Document ingestion and chunking
+2. Generate embeddings
+3. Query flow with vector search
+4. Pass context to LLM
+
+Key Talking Points:
+- RAG grounds LLMs in your data
+- Reduces hallucinations
+- Keeps data private
+
+---
+
+### Scenario 3: Hybrid Search (10 mins)
+Goal: Show combined vector + text search
+
+1. Why hybrid? Best of both worlds
+2. Implementation with compound queries
+3. Reciprocal Rank Fusion for scoring
+
+Key Talking Points:
+- Hybrid beats either alone
+- Real-world search needs both
+- MongoDB does it natively
+
+---
+
+## Common Questions
+
+Q: What embedding model should I use?
+A: OpenAI ada-002 is popular. Cohere and open source options also work.
+
+Q: How many dimensions?
+A: 768-1536 is common. More = better quality but more storage.
+
+Q: How does this compare to Pinecone?
+A: Similar vector capabilities but MongoDB adds database and full-text.
+
+---
+
+## TCO Comparison
+
+### Specialized Stack
+- Database: $X/mo
+- Vector DB: $Y/mo
+- Sync Pipeline: $Z/mo
+- Total: Higher
+
+### Atlas Unified
+- MongoDB Atlas: $X/mo (includes vectors)
+- Total: Lower
+
+---
+
+## Implementation Checklist
+
+- Design document schema
+- Choose embedding model
+- Create vector index
+- Build embedding pipeline
+- Implement search queries
+- Add hybrid search if needed
+- Test and tune
+
+---
+
+## Additional Resources
+
+- Atlas Vector Search: https://www.mongodb.com/docs/atlas/atlas-vector-search/
+- Building AI Apps: https://www.mongodb.com/developer/products/atlas/building-generative-ai-applications/
+- LangChain Integration: https://python.langchain.com/docs/integrations/vectorstores/mongodb_atlas
+
+---
+
+Built for MongoDB Solutions Architecture team

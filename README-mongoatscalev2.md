@@ -2,53 +2,88 @@
 
 A comprehensive guide to running MongoDB at massive scale with enterprise workloads.
 
-## 🎯 Purpose
+## Purpose
 
-This demo explains:
-- How MongoDB handles massive workloads
+This demo helps explain:
+- How MongoDB handles millions of operations per second
 - Horizontal scaling with sharding
 - High availability and replication strategies
-- Performance optimization at scale
-- Real-world scaling patterns and best practices
+- Performance optimization techniques
+- Real-world scaling patterns from large deployments
 
-## 📋 Key Topics Covered
+---
 
-- **Sharding Architecture** - How data is distributed across shards
-- **Replica Sets** - Replication for high availability
-- **Auto-Scaling** - Dynamic scaling based on workload
-- **Performance Tuning** - Indexing, query optimization, connection pooling
-- **Monitoring & Observability** - Metrics, alerts, and diagnostics
-- **Global Clusters** - Multi-region deployment strategies
+## Quick Start
 
-## 🚀 Quick Start
+1. Open mongoatscalev2.html in a web browser
+2. Use the sidebar navigation to jump to sections
+3. Scroll through detailed explanations
+4. Review code examples and diagrams
 
-1. Open `mongoatscalev2.html` in a web browser
-2. Use the sidebar navigation to explore topics
-3. Scroll through detailed sections
-4. Review code examples and architecture diagrams
+---
 
-## 🎨 Interactive Features
+## Page Sections
 
-- **Sticky Navigation** - Easy access to all sections
-- **Code Blocks** - Copyable configuration examples
-- **Architecture Diagrams** - Visual scaling patterns
-- **Metric Visualizations** - Understanding performance data
+| Section | Content | Best For |
+|---------|---------|----------|
+| Overview | Scale capabilities | Starting the conversation |
+| Sharding | Horizontal partitioning | Large data discussions |
+| Replication | HA and data protection | Reliability requirements |
+| Indexing | Query optimization | Performance tuning |
+| Monitoring | Observability tools | Operations teams |
 
-## 💡 Key Takeaways
+---
 
-- MongoDB can scale to millions of operations per second
-- Sharding provides horizontal scalability
-- Proper indexing is critical for performance
-- Atlas automates many scaling operations
+## Demo Scenarios
 
-## 📊 Scaling Benchmarks
+### Scenario 1: Scaling Overview (10 mins)
+Goal: Establish MongoDB scale credentials
 
-- Handles petabytes of data
-- Supports millions of concurrent connections
-- Sub-millisecond latency at scale
-- 99.995% uptime SLA with Atlas
+1. Start with headline numbers (millions of ops/sec)
+2. Show scaling approaches: vertical and horizontal
+3. Reference customers at scale
 
-## 🔗 Related Resources
+Key Talking Points:
+- Battle-tested at massive scale
+- Automatic and manual scaling options
+- Atlas removes operational complexity
 
-- [Sharding Documentation](https://www.mongodb.com/docs/manual/sharding/)
-- [Performance Best Practices](https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/)
+---
+
+### Scenario 2: Sharding Deep Dive (20 mins)
+Goal: Explain horizontal scaling mechanics
+
+1. What is sharding - partitioning data across servers
+2. Shard key selection - critical decision
+3. Show the architecture - config servers, mongos, shards
+
+---
+
+## Common Questions
+
+Q: When do I need sharding?
+A: When data exceeds single server capacity (2-5TB) or need more write throughput.
+
+Q: How do I choose a shard key?
+A: Consider query patterns, cardinality, write distribution.
+
+---
+
+## Scale Benchmarks
+
+| Metric | Capability |
+|--------|------------|
+| Operations/sec | Millions with proper architecture |
+| Data Size | Petabytes across shards |
+| Connections | Tens of thousands concurrent |
+
+---
+
+## Additional Resources
+
+- Sharding: https://www.mongodb.com/docs/manual/sharding/
+- Performance: https://www.mongodb.com/docs/manual/administration/analyzing-mongodb-performance/
+
+---
+
+Built for MongoDB Solutions Architecture team
