@@ -871,6 +871,348 @@
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
         .pulse { animation: pulse 2s infinite; }
 
+        /* ===== INTERACTIVE ENHANCEMENTS ===== */
+
+        /* Animated layer connectors */
+        .layer-connector {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layer-connector-line {
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, var(--accent), transparent);
+            position: relative;
+        }
+
+        .layer-connector-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px var(--accent);
+            left: 50%;
+            transform: translateX(-50%);
+            animation: flowDot 1.5s ease-in-out infinite;
+        }
+
+        .layer-connector-dot:nth-child(2) { animation-delay: 0.5s; }
+        .layer-connector-dot:nth-child(3) { animation-delay: 1s; }
+
+        @keyframes flowDot {
+            0% { top: -6px; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 100%; opacity: 0; }
+        }
+
+        .layer-connector-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.5625rem;
+            color: var(--text-muted);
+            position: absolute;
+            right: calc(50% + 16px);
+            top: 50%;
+            transform: translateY(-50%);
+            white-space: nowrap;
+            opacity: 0.7;
+        }
+
+        /* Interactive mini-nodes */
+        .mini-node {
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .mini-node:hover {
+            border-color: var(--accent);
+            background: rgba(0, 237, 100, 0.05);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px -4px rgba(0, 237, 100, 0.2);
+            z-index: 10;
+        }
+
+        .mini-node.highlighted {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+            box-shadow: 0 0 20px -5px var(--accent-glow);
+        }
+
+        .mini-node.dimmed {
+            opacity: 0.3;
+            filter: grayscale(0.5);
+        }
+
+        /* Node tooltip */
+        .node-tooltip {
+            position: fixed;
+            z-index: 1000;
+            background: var(--bg-card);
+            border: 1px solid var(--border-accent);
+            border-radius: 10px;
+            padding: 1rem 1.25rem;
+            max-width: 320px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5), 0 0 40px -10px var(--accent-glow);
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+
+        .node-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .node-tooltip-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.375rem;
+        }
+
+        .node-tooltip-text {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .node-tooltip-tags {
+            display: flex;
+            gap: 0.375rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+
+        /* Flow simulation */
+        .flow-container {
+            position: relative;
+        }
+
+        .flow-play-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1.25rem;
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            border-radius: 8px;
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 1rem;
+        }
+
+        .flow-play-btn:hover {
+            background: rgba(0, 237, 100, 0.25);
+            box-shadow: 0 0 20px -5px var(--accent-glow);
+        }
+
+        .flow-play-btn.playing {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+
+        .flow-step {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .flow-step.active-step {
+            border-color: var(--accent) !important;
+            background: rgba(0, 237, 100, 0.08);
+            box-shadow: 0 0 30px -10px var(--accent-glow);
+            transform: scale(1.03);
+        }
+
+        .flow-step.completed-step {
+            border-color: rgba(0, 237, 100, 0.4);
+            background: rgba(0, 237, 100, 0.03);
+        }
+
+        .flow-step.completed-step .flow-step-title::after {
+            content: ' ✓';
+            color: var(--accent);
+            font-size: 0.875rem;
+        }
+
+        .flow-arrow {
+            transition: all 0.3s;
+        }
+
+        .flow-arrow.active-arrow {
+            color: var(--accent);
+            transform: scale(1.3);
+            text-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Network layer interactivity */
+        .network-layer {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .network-layer:hover {
+            transform: translateX(4px);
+        }
+
+        .network-layer.layer-active {
+            box-shadow: 0 0 40px -15px currentColor;
+            transform: translateX(8px);
+        }
+
+        .network-layer.layer-dimmed {
+            opacity: 0.3;
+            filter: grayscale(0.5);
+            transform: scale(0.98);
+        }
+
+        /* Animated data particles inside layers */
+        .layer-particle-track {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+
+        .layer-particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            opacity: 0;
+        }
+
+        /* Flow step number badge */
+        .flow-step-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.375rem;
+            transition: all 0.3s;
+        }
+
+        .flow-step.active-step .flow-step-num {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg-primary);
+            box-shadow: 0 0 12px var(--accent-glow);
+        }
+
+        .flow-step.completed-step .flow-step-num {
+            background: rgba(0, 237, 100, 0.2);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        /* Interactive diagram - connection lines */
+        .conn-line {
+            stroke: var(--border-subtle);
+            stroke-width: 1.5;
+            fill: none;
+            transition: all 0.3s;
+        }
+
+        .conn-line.active {
+            stroke: var(--accent);
+            stroke-width: 2;
+            filter: drop-shadow(0 0 4px var(--accent));
+        }
+
+        /* Animated flowing dashes */
+        .conn-line-animated {
+            stroke-dasharray: 6 4;
+            animation: dashFlow 1s linear infinite;
+        }
+
+        @keyframes dashFlow {
+            to { stroke-dashoffset: -10; }
+        }
+
+        /* Subservice card connection indicator */
+        .subservice-card::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .subservice-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .subservice-card.selected::before,
+        .subservice-card:hover::before {
+            opacity: 1;
+        }
+
+        /* Data flow indicator on subservice cards */
+        .subservice-flow-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            color: var(--text-muted);
+        }
+
+        .subservice-flow-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: pulse 1.5s infinite;
+        }
+
+        .subservice-flow-dot.paused {
+            animation: none;
+            background: var(--text-muted);
+        }
+
+        /* Interactive highlight groups */
+        [data-group]:hover ~ [data-group] {
+            opacity: 0.5;
+        }
+
+        /* Status indicator animation */
+        @keyframes statusPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(0, 237, 100, 0.4); }
+            50% { box-shadow: 0 0 0 6px rgba(0, 237, 100, 0); }
+        }
+
+        .status-live {
+            animation: statusPulse 2s infinite;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
@@ -919,48 +1261,51 @@
                 <h2 class="section-heading">MongoDB Enterprise Advanced</h2>
                 <p class="section-sub">Enterprise-grade features for security, management, and support. Everything in Community plus advanced capabilities for mission-critical deployments.</p>
 
-                <div class="arch-diagram">
-                    <div class="arch-diagram-title">MongoDB EA Component Stack</div>
+                <div class="arch-diagram" id="ea-stack-diagram">
+                    <div class="arch-diagram-title">MongoDB EA Component Stack <span style="margin-left: auto; font-size: 0.5625rem; opacity: 0.5;">CLICK COMPONENTS FOR DETAILS</span></div>
 
-                    <div class="network-layers">
-                        <div class="network-layer client">
+                    <div class="network-layers" data-interactive-layers>
+                        <div class="network-layer client" data-layer="app">
                             <div class="network-layer-label">Application Layer</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">🖥️ Application Drivers (all languages)</div>
-                                <div class="mini-node">🔌 BI Connector (SQL → MQL translation)</div>
-                                <div class="mini-node">🧭 Compass GUI</div>
-                                <div class="mini-node">🐚 mongosh</div>
+                                <div class="mini-node" data-tip="Application Drivers|Official drivers for Python, Java, Node.js, Go, C#, C++, Ruby, Rust, PHP, Swift. Wire protocol compatible. Connection pooling, retryable writes, automatic encryption.|tags:PyMongo,Motor,Java Sync,Node.js,Go">🖥️ Application Drivers (all languages)</div>
+                                <div class="mini-node" data-tip="BI Connector|mongosqld translates SQL to MQL via MySQL wire protocol. Supports Tableau, Power BI, Looker, Excel. Schema sampling auto-generates table mappings.|tags:SQL,ODBC,JDBC,Port 3307">🔌 BI Connector (SQL → MQL translation)</div>
+                                <div class="mini-node" data-tip="MongoDB Compass|Official GUI for MongoDB. Visual query builder, schema analysis, aggregation pipeline builder, index management, real-time performance tab.|tags:GUI,Free,Cross-platform">🧭 Compass GUI</div>
+                                <div class="mini-node" data-tip="mongosh|Modern MongoDB shell with syntax highlighting, auto-completion, async/await support, and snippets. Replaces legacy mongo shell.|tags:Shell,JavaScript,REPL">🐚 mongosh</div>
                             </div>
                         </div>
-                        <div class="network-layer app">
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">TLS / HTTPS</div></div>
+                        <div class="network-layer app" data-layer="mgmt">
                             <div class="network-layer-label">Management Layer — Ops Manager</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">⚙️ Automation</div>
-                                <div class="mini-node">📊 Monitoring</div>
-                                <div class="mini-node">💾 Backup</div>
-                                <div class="mini-node">🔔 Alerting</div>
-                                <div class="mini-node">🔧 REST API</div>
-                                <div class="mini-node">🖥️ Web UI</div>
+                                <div class="mini-node" data-tip="Automation|Pull-based convergence engine. Agents poll every 10s for goal state JSON. Handles deployments, rolling upgrades, topology changes, auth bootstrap.|tags:Agent,Goal State,Poll" data-connects="backup,monitoring">⚙️ Automation</div>
+                                <div class="mini-node" data-tip="Monitoring|Collects 100+ metrics per mongod/mongos: serverStatus, replSetGetStatus, dbStats, host hardware. Pushes compressed payloads every 60s.|tags:Metrics,Push,60s interval" data-connects="alerting">📊 Monitoring</div>
+                                <div class="mini-node" data-tip="Backup|Continuous oplog tailing + periodic snapshots. Supports PIT restore to any second. Storage: Blockstore RS, S3, or filesystem.|tags:Oplog,Snapshots,PIT">💾 Backup</div>
+                                <div class="mini-node" data-tip="Alerting|Evaluates threshold, rate, and boolean conditions every 60s. Integrates with PagerDuty, Slack, email, webhooks, SNMP.|tags:PagerDuty,Slack,Webhooks" data-connects="monitoring">🔔 Alerting</div>
+                                <div class="mini-node" data-tip="REST API v2.0|Full CRUD for organizations, projects, clusters, users, alerts, backup configs. Digest auth or programmatic API keys.|tags:REST,JSON,API Keys">🔧 REST API</div>
+                                <div class="mini-node" data-tip="Web UI|React-based SPA served by embedded Jetty on port 8443. Dashboards, cluster management, user/project settings, activity feed.|tags:React,Jetty,Port 8443">🖥️ Web UI</div>
                             </div>
                         </div>
-                        <div class="network-layer data">
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Agent Protocol</div></div>
+                        <div class="network-layer data" data-layer="db">
                             <div class="network-layer-label">Database Layer — MongoDB Enterprise Server</div>
                             <div class="network-layer-content">
-                                <div class="mini-node"><span class="mini-node-dot primary"></span> WiredTiger (Encrypted)</div>
-                                <div class="mini-node"><span class="mini-node-dot secondary"></span> In-Memory Engine</div>
-                                <div class="mini-node">🔐 LDAP / Kerberos / x.509</div>
-                                <div class="mini-node">📋 Auditing</div>
-                                <div class="mini-node">🔑 CSFLE / Queryable Encryption</div>
-                                <div class="mini-node">🔗 Cluster-to-Cluster Sync</div>
+                                <div class="mini-node" data-tip="WiredTiger Encrypted|Default storage engine with native AES-256 encryption. KMIP, AWS KMS, Azure Key Vault, GCP KMS for master key. Online key rotation.|tags:AES-256,KMIP,Encrypted"><span class="mini-node-dot primary"></span> WiredTiger (Encrypted)</div>
+                                <div class="mini-node" data-tip="In-Memory Engine|Enterprise-only engine for ultra-low-latency workloads. Data held entirely in RAM. Durability via replica set secondaries on WiredTiger.|tags:RAM-only,Sub-ms,Enterprise"><span class="mini-node-dot secondary"></span> In-Memory Engine</div>
+                                <div class="mini-node" data-tip="Authentication|LDAP: Bind to AD/OpenLDAP for user auth + group→role mapping. Kerberos: GSSAPI/SPNEGO for SSO. x.509: Mutual TLS client certificate auth.|tags:LDAP,Kerberos,x.509,SSO">🔐 LDAP / Kerberos / x.509</div>
+                                <div class="mini-node" data-tip="Audit Logging|Enterprise-only configurable audit. Filter by event type (auth, CRUD, DDL, admin). Output to file (JSON/BSON), syslog, or console.|tags:Compliance,JSON,Filters">📋 Auditing</div>
+                                <div class="mini-node" data-tip="Client-Side Encryption|CSFLE: Driver encrypts fields before sending to server. Deterministic (equality queries) or Randomized. Queryable Encryption: Query encrypted data server-side.|tags:CSFLE,QE,Driver-side">🔑 CSFLE / Queryable Encryption</div>
+                                <div class="mini-node" data-tip="Cluster-to-Cluster Sync|mongosync: Continuous bi-directional or uni-directional data sync between clusters. Supports live migrations, DR failover, and active-passive.|tags:mongosync,Migration,DR">🔗 Cluster-to-Cluster Sync</div>
                             </div>
                         </div>
-                        <div class="network-layer infra">
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Process Mgmt</div></div>
+                        <div class="network-layer infra" data-layer="infra">
                             <div class="network-layer-label">Infrastructure Layer</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">☸️ Kubernetes Operator</div>
-                                <div class="mini-node">🐳 Container Support</div>
-                                <div class="mini-node">🖧 Bare Metal / VM</div>
-                                <div class="mini-node">☁️ Any Cloud (AWS, GCP, Azure)</div>
+                                <div class="mini-node" data-tip="Kubernetes Operator|Enterprise Operator manages MongoDB CRDs: MongoDB, MongoDBOpsManager, MongoDBUser, MongoDBMultiCluster. Creates StatefulSets, PVCs, Services.|tags:CRDs,StatefulSet,Helm">☸️ Kubernetes Operator</div>
+                                <div class="mini-node" data-tip="Container Support|Official enterprise Docker images. Init containers for agent setup, sidecar containers for monitoring. OCI-compliant.|tags:Docker,OCI,Sidecar">🐳 Container Support</div>
+                                <div class="mini-node" data-tip="Bare Metal / VM|Direct RPM/DEB installation. Full hardware control. Ansible/Terraform automation. Recommended for air-gapped and high-performance workloads.|tags:RPM,DEB,Ansible">🖧 Bare Metal / VM</div>
+                                <div class="mini-node" data-tip="Cloud Infrastructure|Deploy on any cloud: AWS (EC2, EBS, EKS), GCP (GCE, GKE), Azure (VMs, AKS). Multi-cloud supported.|tags:AWS,GCP,Azure,Multi-cloud">☁️ Any Cloud (AWS, GCP, Azure)</div>
                             </div>
                         </div>
                     </div>
@@ -1035,45 +1380,48 @@
                 <h2 class="section-heading">Ops Manager Architecture</h2>
                 <p class="section-sub">Ops Manager is a self-hosted management platform. It consists of the Application Server, a backing Application Database, agents deployed on every managed host, and dedicated backup infrastructure.</p>
 
-                <div class="arch-diagram">
-                    <div class="arch-diagram-title">High-Level Ops Manager Topology</div>
-                    <div class="network-layers">
-                        <div class="network-layer client">
+                <div class="arch-diagram" id="om-topology-diagram">
+                    <div class="arch-diagram-title">High-Level Ops Manager Topology <span style="margin-left: auto; font-size: 0.5625rem; opacity: 0.5;">CLICK COMPONENTS FOR DETAILS</span></div>
+                    <div class="network-layers" data-interactive-layers>
+                        <div class="network-layer client" data-layer="users">
                             <div class="network-layer-label">Users & Integrations</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">👤 Ops Manager Web UI</div>
-                                <div class="mini-node">🔧 REST API v2.0</div>
-                                <div class="mini-node">🔗 Terraform Provider</div>
-                                <div class="mini-node">📧 Alert Webhooks / Email / PagerDuty / Slack</div>
+                                <div class="mini-node" data-tip="Web UI Access|Browser-based SPA. Supports LDAP SSO, SAML, and local auth. Session timeout configurable. Requires HTTPS in production.|tags:Port 8443,HTTPS,React">👤 Ops Manager Web UI</div>
+                                <div class="mini-node" data-tip="REST API v2.0|Programmatic access to all Ops Manager resources. Digest auth or API keys. Supports pagination, field projection, and envelope responses.|tags:Digest Auth,JSON,Programmatic">🔧 REST API v2.0</div>
+                                <div class="mini-node" data-tip="Terraform Provider|HashiCorp Terraform provider for MongoDB. Manages clusters, users, alerts as infrastructure-as-code. Supports plan/apply lifecycle.|tags:IaC,HCL,GitOps">🔗 Terraform Provider</div>
+                                <div class="mini-node" data-tip="Alert Integrations|Outbound webhooks for alert notifications. Supports PagerDuty, Slack, OpsGenie, VictorOps, email (SMTP), SNMP traps, and custom webhooks.|tags:PagerDuty,Slack,SMTP,SNMP">📧 Alert Webhooks / Email / PagerDuty / Slack</div>
                             </div>
                         </div>
-                        <div class="network-layer app">
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">HTTPS :8443</div></div>
+                        <div class="network-layer app" data-layer="omapp">
                             <div class="network-layer-label">Ops Manager Application Servers (2+ for HA)</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">🖥️ HTTP Server (Jetty)</div>
-                                <div class="mini-node">💾 Backup Daemon</div>
-                                <div class="mini-node">🔔 Alert Engine</div>
-                                <div class="mini-node">⚙️ Goal State Engine</div>
-                                <div class="mini-node">📊 Metric Aggregator</div>
-                                <div class="mini-node">👥 Auth (LDAP/SAML/SCRAM)</div>
+                                <div class="mini-node" data-tip="HTTP Server (Jetty)|Embedded Jetty serves Web UI and API. Handles TLS termination (or behind LB). Default heap: 4 GB. Configurable thread pool.|tags:Jetty,Port 8443,TLS">🖥️ HTTP Server (Jetty)</div>
+                                <div class="mini-node" data-tip="Backup Daemon|Coordinates snapshot scheduling, Head DB management, and oplog slice processing. Only ONE active instance across all OM servers (active-passive failover).|tags:Active-Passive,Snapshots,Head DB">💾 Backup Daemon</div>
+                                <div class="mini-node" data-tip="Alert Engine|Evaluates all alert conditions every monitoring cycle. Manages alert state machine: OPEN→ACKNOWLEDGED→CLOSED. Handles notification dispatch.|tags:Thresholds,State Machine,60s">🔔 Alert Engine</div>
+                                <div class="mini-node" data-tip="Goal State Engine|Generates goal state JSON document from user-configured topology. Served to agents on poll. Handles version sequencing for safe rollouts.|tags:JSON,Versioned,Convergence">⚙️ Goal State Engine</div>
+                                <div class="mini-node" data-tip="Metric Aggregator|Receives compressed metric payloads from monitoring agents. Stores raw data, computes rollups (1min→5min→1hr→daily). Feeds dashboards and alerting.|tags:Compression,Rollups,Time-series">📊 Metric Aggregator</div>
+                                <div class="mini-node" data-tip="Authentication|Multi-provider auth: Local SCRAM, LDAP bind, SAML 2.0 SSO. RBAC with Global Owner, Org Admin, Project Owner, Read Only roles.|tags:LDAP,SAML,SSO,RBAC">👥 Auth (LDAP/SAML/SCRAM)</div>
                             </div>
                         </div>
-                        <div class="network-layer data">
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">MongoDB Wire Protocol</div></div>
+                        <div class="network-layer data" data-layer="omdata">
                             <div class="network-layer-label">Ops Manager Backing Databases</div>
                             <div class="network-layer-content">
-                                <div class="mini-node"><span class="mini-node-dot primary"></span> Application DB (3-node RS)</div>
-                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Blockstore (snapshot chunks)</div>
-                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Oplog Store (oplog slices)</div>
-                                <div class="mini-node"><span class="mini-node-dot arbiter"></span> Head DB (staging)</div>
+                                <div class="mini-node status-live" data-tip="Application Database|3-node RS storing all OM metadata: users, orgs, projects, configs, metrics, audit. SSD required. ~2 GB per 100 managed servers. NEVER managed by OM itself.|tags:Critical,3-node RS,SSD,Independent"><span class="mini-node-dot primary"></span> Application DB (3-node RS)</div>
+                                <div class="mini-node" data-tip="Blockstore|RS storing compressed, deduplicated snapshot chunks. Size: 2-3x total backup data. Can use multiple blockstores for load distribution. Also supports S3/filesystem.|tags:Snapshots,Dedup,Compressed"><span class="mini-node-dot secondary"></span> Blockstore (snapshot chunks)</div>
+                                <div class="mini-node" data-tip="Oplog Store|RS storing oplog slices between snapshots for PIT recovery. Size: ~10-20% of blockstore. Compressed. Garbage-collected after snapshots cover the time range.|tags:Oplog Slices,PIT,Compressed"><span class="mini-node-dot secondary"></span> Oplog Store (oplog slices)</div>
+                                <div class="mini-node" data-tip="Head Database|Per-replica-set staging copy. Backup Daemon applies oplog to keep current. Snapshots taken from here. High I/O — needs fast SSD. Size = dataset of backed-up RS.|tags:Staging,High I/O,SSD,Temporary"><span class="mini-node-dot arbiter"></span> Head DB (staging)</div>
                             </div>
                         </div>
-                        <div class="network-layer infra">
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Agent ← Poll → OM</div></div>
+                        <div class="network-layer infra" data-layer="agents">
                             <div class="network-layer-label">Managed MongoDB Hosts (Agents)</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">🤖 MongoDB Agent (unified)</div>
-                                <div class="mini-node">→ Automation Module</div>
-                                <div class="mini-node">→ Monitoring Module</div>
-                                <div class="mini-node">→ Backup Module</div>
+                                <div class="mini-node" data-tip="MongoDB Agent (Unified)|Single binary since OM 4.0. Combines automation, monitoring, and backup modules. Outbound HTTPS only (no inbound ports). Auto-restart via systemd.|tags:Unified,Outbound,systemd">🤖 MongoDB Agent (unified)</div>
+                                <div class="mini-node" data-tip="Automation Module|Polls goal state every 10s. Compares, converges. Manages mongod/mongos processes, configs, keyfiles, certs. Rolling upgrade orchestration.|tags:Poll 10s,Convergence,Rolling">→ Automation Module</div>
+                                <div class="mini-node" data-tip="Monitoring Module|Runs serverStatus, replSetGetStatus, dbStats, top, currentOp every 60s. Collects host CPU/disk/memory/network. Pushes compressed to OM.|tags:60s,Push,Compressed">→ Monitoring Module</div>
+                                <div class="mini-node" data-tip="Backup Module|Tails local.oplog.rs continuously. Slices and compresses oplog. Coordinates with Backup Daemon for snapshot timing. Bandwidth-throttled.|tags:Oplog Tail,Continuous,Throttled">→ Backup Module</div>
                             </div>
                         </div>
                     </div>
@@ -1231,29 +1579,35 @@
 
                 <div class="arch-diagram">
                     <div class="arch-diagram-title">Automation Agent Convergence Loop</div>
-                    <div class="flow-horizontal">
+                    <button class="flow-play-btn" onclick="playFlow(this)">▶ Simulate Flow</button>
+                    <div class="flow-horizontal" data-flow-sim>
                         <div class="flow-step">
-                            <div class="flow-step-title">1. Agent Polls</div>
+                            <div class="flow-step-num">1</div>
+                            <div class="flow-step-title">Agent Polls</div>
                             <div class="flow-step-desc">GET /api/agent/v1/goalState<br>Every 10s via HTTPS</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
-                            <div class="flow-step-title">2. Goal State Received</div>
+                            <div class="flow-step-num">2</div>
+                            <div class="flow-step-title">Goal State Received</div>
                             <div class="flow-step-desc">JSON describing desired<br>topology & config</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
-                            <div class="flow-step-title">3. Compare</div>
+                            <div class="flow-step-num">3</div>
+                            <div class="flow-step-title">Compare</div>
                             <div class="flow-step-desc">Diff current state vs<br>goal state</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
-                            <div class="flow-step-title">4. Converge</div>
+                            <div class="flow-step-num">4</div>
+                            <div class="flow-step-title">Converge</div>
                             <div class="flow-step-desc">Apply changes: start/stop<br>processes, reconfig RS</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
-                            <div class="flow-step-title">5. Report</div>
+                            <div class="flow-step-num">5</div>
+                            <div class="flow-step-title">Report</div>
                             <div class="flow-step-desc">POST status back to<br>Ops Manager</div>
                         </div>
                     </div>
@@ -1261,28 +1615,34 @@
 
                 <div class="arch-diagram">
                     <div class="arch-diagram-title">Monitoring Data Flow</div>
-                    <div class="flow-horizontal">
+                    <button class="flow-play-btn" onclick="playFlow(this)">▶ Simulate Flow</button>
+                    <div class="flow-horizontal" data-flow-sim>
                         <div class="flow-step">
+                            <div class="flow-step-num">1</div>
                             <div class="flow-step-title">mongod / mongos</div>
                             <div class="flow-step-desc">serverStatus, replSetGetStatus<br>dbStats, currentOp</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
+                            <div class="flow-step-num">2</div>
                             <div class="flow-step-title">Monitoring Module</div>
                             <div class="flow-step-desc">Collects every 60s<br>+ host hardware stats</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
+                            <div class="flow-step-num">3</div>
                             <div class="flow-step-title">Compressed Push</div>
                             <div class="flow-step-desc">HTTPS POST to<br>Ops Manager</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
+                            <div class="flow-step-num">4</div>
                             <div class="flow-step-title">Metric Aggregator</div>
                             <div class="flow-step-desc">Stores in App DB<br>with time-based rollup</div>
                         </div>
                         <div class="flow-arrow">→</div>
                         <div class="flow-step">
+                            <div class="flow-step-num">5</div>
                             <div class="flow-step-title">UI / Alerts</div>
                             <div class="flow-step-desc">Dashboards, charts<br>Alert evaluation</div>
                         </div>
@@ -1343,8 +1703,8 @@
                 <p class="section-sub">Ops Manager provides enterprise-grade backup with continuous point-in-time recovery, automated scheduling, and multiple restore options.</p>
 
                 <div class="arch-diagram">
-                    <div class="arch-diagram-title">Backup Data Flow</div>
-                    <div class="network-layers">
+                    <div class="arch-diagram-title">Backup Data Flow <span style="margin-left: auto; font-size: 0.5625rem; opacity: 0.5;">HOVER LAYERS TO FOCUS</span></div>
+                    <div class="network-layers" data-interactive-layers>
                         <div class="network-layer client">
                             <div class="network-layer-label">Source: Managed MongoDB Clusters</div>
                             <div class="network-layer-content">
@@ -1353,6 +1713,7 @@
                                 <div class="mini-node">📋 local.oplog.rs (capped collection)</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Oplog Tail</div></div>
                         <div class="network-layer app">
                             <div class="network-layer-label">Processing: Backup Agent + Daemon</div>
                             <div class="network-layer-content">
@@ -1362,6 +1723,7 @@
                                 <div class="mini-node">📸 Takes periodic snapshots from Head DB</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Compressed Write</div></div>
                         <div class="network-layer data">
                             <div class="network-layer-label">Storage: Blockstore + Oplog Store</div>
                             <div class="network-layer-content">
@@ -1388,30 +1750,35 @@
                 <div class="expandable-body">
                     <div class="expandable-content">
                         <h4 style="color: var(--text-primary); margin-bottom: 1rem;">How Snapshots Work</h4>
-
-                        <div class="flow-diagram">
+                        <button class="flow-play-btn" onclick="playFlowVertical(this)">▶ Simulate Snapshot Process</button>
+                        <div class="flow-diagram" data-flow-sim-v>
                             <div class="flow-step" style="border-color: var(--border-accent);">
-                                <div class="flow-step-title">1. Initial Sync</div>
+                                <div class="flow-step-num">1</div>
+                                <div class="flow-step-title">Initial Sync</div>
                                 <div class="flow-step-desc">Full copy of dataset from primary to Head Database. Uses mongodump or filesystem snapshot.</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">2. Continuous Oplog Tailing</div>
+                                <div class="flow-step-num">2</div>
+                                <div class="flow-step-title">Continuous Oplog Tailing</div>
                                 <div class="flow-step-desc">Backup Agent tails oplog from a secondary. Sends compressed slices to Oplog Store every few seconds.</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">3. Head DB Catch-up</div>
+                                <div class="flow-step-num">3</div>
+                                <div class="flow-step-title">Head DB Catch-up</div>
                                 <div class="flow-step-desc">Backup Daemon applies oplog slices to Head DB, keeping it within seconds of the live cluster.</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">4. Snapshot Creation</div>
+                                <div class="flow-step-num">4</div>
+                                <div class="flow-step-title">Snapshot Creation</div>
                                 <div class="flow-step-desc">At scheduled intervals, Daemon snapshots the Head DB. First snapshot is full; subsequent ones are incremental (block-level dedup).</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">5. Storage in Blockstore</div>
+                                <div class="flow-step-num">5</div>
+                                <div class="flow-step-title">Storage in Blockstore</div>
                                 <div class="flow-step-desc">Snapshot chunks compressed with zstd and stored in Blockstore. Deduplication across snapshots saves 60-80% space.</div>
                             </div>
                         </div>
@@ -1448,24 +1815,28 @@
                 <div class="expandable-body">
                     <div class="expandable-content">
                         <h4 style="color: var(--text-primary); margin-bottom: 1rem;">How Point-in-Time Recovery Works</h4>
-
-                        <div class="flow-diagram">
-                            <div class="flow-step" style="border-color: var(--blue); border-color: rgba(59, 130, 246, 0.3);">
+                        <button class="flow-play-btn" onclick="playFlowVertical(this)">▶ Simulate PIT Restore</button>
+                        <div class="flow-diagram" data-flow-sim-v>
+                            <div class="flow-step" style="border-color: rgba(59, 130, 246, 0.3);">
+                                <div class="flow-step-num">1</div>
                                 <div class="flow-step-title">Closest Prior Snapshot</div>
                                 <div class="flow-step-desc">System identifies the most recent snapshot before the target timestamp</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
+                                <div class="flow-step-num">2</div>
                                 <div class="flow-step-title">Restore Snapshot Base</div>
                                 <div class="flow-step-desc">Reconstructs dataset from Blockstore chunks</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
+                                <div class="flow-step-num">3</div>
                                 <div class="flow-step-title">Replay Oplog Slices</div>
                                 <div class="flow-step-desc">Applies stored oplog slices from Oplog Store up to the exact target timestamp</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
+                                <div class="flow-step-num">4</div>
                                 <div class="flow-step-title">Deliver Restore</div>
                                 <div class="flow-step-desc">Download as archive or automated restore to a cluster</div>
                             </div>
@@ -1583,8 +1954,8 @@
                 <p class="section-sub">MongoDB Enterprise Advanced provides defense-in-depth security across authentication, authorization, encryption, and auditing.</p>
 
                 <div class="arch-diagram">
-                    <div class="arch-diagram-title">Security Layers</div>
-                    <div class="network-layers">
+                    <div class="arch-diagram-title">Security Layers <span style="margin-left: auto; font-size: 0.5625rem; opacity: 0.5;">HOVER LAYERS TO FOCUS</span></div>
+                    <div class="network-layers" data-interactive-layers>
                         <div class="network-layer" style="border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
                             <div class="network-layer-label" style="color: var(--red);">Network Security</div>
                             <div class="network-layer-content">
@@ -1594,41 +1965,45 @@
                                 <div class="mini-node">🔗 x.509 mutual TLS</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div></div>
                         <div class="network-layer" style="border-color: rgba(249, 115, 22, 0.3); background: rgba(249, 115, 22, 0.03);">
                             <div class="network-layer-label" style="color: var(--orange);">Authentication</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">🔐 SCRAM-SHA-256</div>
-                                <div class="mini-node">📂 LDAP (Active Directory)</div>
-                                <div class="mini-node">🎫 Kerberos (GSSAPI)</div>
-                                <div class="mini-node">📜 x.509 Certificates</div>
-                                <div class="mini-node">🔑 AWS IAM (Atlas)</div>
+                                <div class="mini-node" data-tip="SCRAM-SHA-256|Default auth mechanism. Salted Challenge Response. Supports SHA-1 (legacy) and SHA-256. Password stored as salted hash.|tags:Default,Password,Salted">🔐 SCRAM-SHA-256</div>
+                                <div class="mini-node" data-tip="LDAP Authentication|Bind against Active Directory or OpenLDAP. Supports simple bind and SASL. Can map LDAP groups to MongoDB roles for authorization.|tags:Active Directory,OpenLDAP,Bind">📂 LDAP (Active Directory)</div>
+                                <div class="mini-node" data-tip="Kerberos|GSSAPI/SPNEGO authentication. Single sign-on with existing Kerberos infrastructure. Requires keytab file on mongod host.|tags:GSSAPI,SSO,Keytab">🎫 Kerberos (GSSAPI)</div>
+                                <div class="mini-node" data-tip="x.509 Certificates|Client certificate authentication via mutual TLS. Certificate subject used as username. Also used for intra-cluster member auth.|tags:Mutual TLS,Certs,PKI">📜 x.509 Certificates</div>
+                                <div class="mini-node" data-tip="AWS IAM|Atlas-only: Authenticate using AWS IAM roles. No password management. Supports EC2 instance roles and ECS task roles.|tags:Atlas,IAM Roles,Passwordless">🔑 AWS IAM (Atlas)</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div></div>
                         <div class="network-layer" style="border-color: rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.03);">
                             <div class="network-layer-label" style="color: var(--yellow);">Authorization</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">👤 RBAC (100+ built-in roles)</div>
-                                <div class="mini-node">📂 LDAP Group → Role Mapping</div>
-                                <div class="mini-node">🔧 Custom Roles (collection-level)</div>
-                                <div class="mini-node">🔍 Privilege Actions (180+)</div>
+                                <div class="mini-node" data-tip="RBAC|100+ built-in roles across read, readWrite, dbAdmin, userAdmin, clusterAdmin, backup, restore. Database-level and collection-level granularity.|tags:100+ Roles,Granular,Built-in">👤 RBAC (100+ built-in roles)</div>
+                                <div class="mini-node" data-tip="LDAP Group Mapping|Map LDAP/AD groups directly to MongoDB roles. Users inherit roles from their group membership. Centralized authorization management.|tags:AD Groups,Centralized,Auto">📂 LDAP Group → Role Mapping</div>
+                                <div class="mini-node" data-tip="Custom Roles|Define roles with specific privilege actions on specific resources (database.collection). Combine multiple privileges. Inherit from other roles.|tags:Custom,Collection-level,Inherit">🔧 Custom Roles (collection-level)</div>
+                                <div class="mini-node" data-tip="Privilege Actions|180+ granular actions: find, insert, update, remove, createCollection, createIndex, viewRole, killCursors, inprog, and more.|tags:180+ Actions,Fine-grained">🔍 Privilege Actions (180+)</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div></div>
                         <div class="network-layer" style="border-color: rgba(0, 237, 100, 0.3); background: rgba(0, 237, 100, 0.03);">
                             <div class="network-layer-label" style="color: var(--accent);">Encryption</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">💽 Encryption at Rest (WiredTiger)</div>
-                                <div class="mini-node">🔑 KMIP / AWS KMS / Azure / GCP</div>
-                                <div class="mini-node">🔐 Client-Side FLE (CSFLE)</div>
-                                <div class="mini-node">🔍 Queryable Encryption</div>
+                                <div class="mini-node" data-tip="Encryption at Rest|WiredTiger native AES-256 encryption. All data files, indexes, journal, oplog encrypted. Master key from KMIP/KMS. Online key rotation.|tags:AES-256,WiredTiger,Online Rotation">💽 Encryption at Rest (WiredTiger)</div>
+                                <div class="mini-node" data-tip="Key Management|External KMS integration: KMIP (Thales, Gemalto, HashiCorp Vault), AWS KMS, Azure Key Vault, GCP KMS. Master key never on disk.|tags:KMIP,AWS KMS,Azure,GCP">🔑 KMIP / AWS KMS / Azure / GCP</div>
+                                <div class="mini-node" data-tip="Client-Side FLE|Driver-side encryption before data reaches server. Deterministic (equality queries) or Randomized (no queries). Key vault collection stores DEKs.|tags:Driver-side,Deterministic,DEKs">🔐 Client-Side FLE (CSFLE)</div>
+                                <div class="mini-node" data-tip="Queryable Encryption|Query encrypted data without server decryption. Equality queries GA, range queries preview. Structured encryption with contention factor.|tags:Encrypted Queries,Equality,Range">🔍 Queryable Encryption</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div></div>
                         <div class="network-layer" style="border-color: rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.03);">
                             <div class="network-layer-label" style="color: var(--purple);">Auditing & Compliance</div>
                             <div class="network-layer-content">
-                                <div class="mini-node">📋 Database Audit Log</div>
-                                <div class="mini-node">🔍 Configurable Audit Filters</div>
-                                <div class="mini-node">📜 FIPS 140-2</div>
-                                <div class="mini-node">🏛️ SOC2, HIPAA, PCI-DSS, GDPR</div>
+                                <div class="mini-node" data-tip="Database Audit Log|Enterprise-only. Logs auth, CRUD, DDL, admin events. JSON or BSON format. File, syslog, or console destination.|tags:JSON,BSON,Enterprise">📋 Database Audit Log</div>
+                                <div class="mini-node" data-tip="Audit Filters|Match expressions to select which events to audit. Filter by action type, database, collection, user. Reduces log volume.|tags:Selective,Performance">🔍 Configurable Audit Filters</div>
+                                <div class="mini-node" data-tip="FIPS 140-2|Federal Information Processing Standard. FIPS-validated OpenSSL module. Required for US government and regulated industries.|tags:Government,OpenSSL,Validated">📜 FIPS 140-2</div>
+                                <div class="mini-node" data-tip="Compliance|MongoDB Atlas and EA certified for SOC2 Type II, HIPAA, PCI-DSS Level 1, ISO 27001, GDPR, FedRAMP, CSA STAR.|tags:SOC2,HIPAA,PCI,GDPR">🏛️ SOC2, HIPAA, PCI-DSS, GDPR</div>
                             </div>
                         </div>
                     </div>
@@ -1648,19 +2023,22 @@
                 <div class="expandable-body">
                     <div class="expandable-content">
                         <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Key Hierarchy</h4>
-
-                        <div class="flow-diagram">
+                        <button class="flow-play-btn" onclick="playFlowVertical(this)">▶ Simulate Key Wrapping</button>
+                        <div class="flow-diagram" data-flow-sim-v>
                             <div class="flow-step" style="border-color: rgba(239, 68, 68, 0.3);">
+                                <div class="flow-step-num">1</div>
                                 <div class="flow-step-title">Master Key</div>
                                 <div class="flow-step-desc">Stored externally in KMIP server, AWS KMS, Azure Key Vault, or GCP KMS. Never stored on disk.</div>
                             </div>
                             <div class="flow-arrow">↓ wraps</div>
                             <div class="flow-step" style="border-color: rgba(249, 115, 22, 0.3);">
+                                <div class="flow-step-num">2</div>
                                 <div class="flow-step-title">Database Key</div>
                                 <div class="flow-step-desc">Per-database encryption key. Encrypted (wrapped) by the Master Key. Stored on disk alongside data.</div>
                             </div>
                             <div class="flow-arrow">↓ encrypts</div>
                             <div class="flow-step" style="border-color: var(--border-accent);">
+                                <div class="flow-step-num">3</div>
                                 <div class="flow-step-title">Data Files</div>
                                 <div class="flow-step-desc">WiredTiger data files, indexes, journal, oplog — all encrypted with AES-256-CBC or AES-256-GCM.</div>
                             </div>
@@ -1777,23 +2155,28 @@
                             </div>
                         </div>
 
-                        <div class="flow-horizontal">
+                        <button class="flow-play-btn" onclick="playFlow(this)">▶ Simulate CSFLE Flow</button>
+                        <div class="flow-horizontal" data-flow-sim>
                             <div class="flow-step">
+                                <div class="flow-step-num">1</div>
                                 <div class="flow-step-title">Application</div>
                                 <div class="flow-step-desc">{ ssn: "123-45-6789" }</div>
                             </div>
                             <div class="flow-arrow">→</div>
                             <div class="flow-step" style="border-color: rgba(249, 115, 22, 0.3);">
+                                <div class="flow-step-num">2</div>
                                 <div class="flow-step-title">Driver + CMK</div>
                                 <div class="flow-step-desc">Encrypts ssn field</div>
                             </div>
                             <div class="flow-arrow">→</div>
                             <div class="flow-step" style="border-color: rgba(168, 85, 247, 0.3);">
+                                <div class="flow-step-num">3</div>
                                 <div class="flow-step-title">MongoDB Server</div>
                                 <div class="flow-step-desc">{ ssn: Binary("encrypted...") }</div>
                             </div>
                             <div class="flow-arrow">→</div>
                             <div class="flow-step" style="border-color: var(--border-accent);">
+                                <div class="flow-step-num">4</div>
                                 <div class="flow-step-title">On Disk</div>
                                 <div class="flow-step-desc">Encrypted at field level<br>+ encrypted at rest</div>
                             </div>
@@ -2095,9 +2478,9 @@
                 <h2 class="section-heading" style="font-size: 1.25rem;">HA Ops Manager Deployment</h2>
 
                 <div class="arch-diagram">
-                    <div class="arch-diagram-title">Production HA Topology</div>
+                    <div class="arch-diagram-title">Production HA Topology <span style="margin-left: auto; font-size: 0.5625rem; opacity: 0.5;">HOVER LAYERS TO FOCUS</span></div>
 
-                    <div class="network-layers">
+                    <div class="network-layers" data-interactive-layers>
                         <div class="network-layer client">
                             <div class="network-layer-label">Load Balancer (L7, sticky sessions)</div>
                             <div class="network-layer-content">
@@ -2106,6 +2489,7 @@
                                 <div class="mini-node">❤️ Health check: GET /user/login (HTTP 200)</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Round Robin</div></div>
                         <div class="network-layer app">
                             <div class="network-layer-label">Ops Manager Application Servers (2+)</div>
                             <div class="network-layer-content">
@@ -2114,6 +2498,7 @@
                                 <div class="mini-node">🖥️ OM Server 3 (HTTP + Backup Daemon STANDBY)</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">Wire Protocol</div></div>
                         <div class="network-layer data">
                             <div class="network-layer-label">Backing Databases (All Replica Sets)</div>
                             <div class="network-layer-content">
@@ -2124,6 +2509,7 @@
                                 <div class="mini-node"><span class="mini-node-dot secondary"></span> Oplog Store 2: P + S + S (optional)</div>
                             </div>
                         </div>
+                        <div class="layer-connector"><div class="layer-connector-line"><div class="layer-connector-dot"></div><div class="layer-connector-dot"></div></div><div class="layer-connector-label">HTTPS Outbound</div></div>
                         <div class="network-layer infra">
                             <div class="network-layer-label">Managed MongoDB Infrastructure</div>
                             <div class="network-layer-content">
@@ -2189,30 +2575,35 @@
                 <div class="expandable-body">
                     <div class="expandable-content">
                         <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Deployment Steps</h4>
-
-                        <div class="flow-diagram">
+                        <button class="flow-play-btn" onclick="playFlowVertical(this)">▶ Simulate Deployment</button>
+                        <div class="flow-diagram" data-flow-sim-v>
                             <div class="flow-step" style="border-color: rgba(59, 130, 246, 0.3);">
-                                <div class="flow-step-title">1. Provision Infrastructure</div>
+                                <div class="flow-step-num">1</div>
+                                <div class="flow-step-title">Provision Infrastructure</div>
                                 <div class="flow-step-desc">Allocate VMs/bare metal for: Ops Manager (2+), App DB (3), Blockstore (3), Oplog Store (3), Managed hosts (N)</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">2. Install Ops Manager</div>
+                                <div class="flow-step-num">2</div>
+                                <div class="flow-step-title">Install Ops Manager</div>
                                 <div class="flow-step-desc">RPM/DEB package. Configure gen.key, mms.conf. Point to Application DB connection string</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">3. Configure Backup Stores</div>
+                                <div class="flow-step-num">3</div>
+                                <div class="flow-step-title">Configure Backup Stores</div>
                                 <div class="flow-step-desc">Via Ops Manager UI: add Blockstore RS, Oplog Store RS, or S3 backend. Set retention policies</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">4. Install Agents on Managed Hosts</div>
+                                <div class="flow-step-num">4</div>
+                                <div class="flow-step-title">Install Agents on Managed Hosts</div>
                                 <div class="flow-step-desc">Download agent from Ops Manager. Install via RPM/DEB. Agent auto-registers with Ops Manager</div>
                             </div>
                             <div class="flow-arrow">↓</div>
                             <div class="flow-step">
-                                <div class="flow-step-title">5. Deploy MongoDB Clusters</div>
+                                <div class="flow-step-num">5</div>
+                                <div class="flow-step-title">Deploy MongoDB Clusters</div>
                                 <div class="flow-step-desc">Via Ops Manager UI or API: define topology, agents converge to deploy RS/sharded clusters</div>
                             </div>
                         </div>
@@ -2258,8 +2649,8 @@
                         <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Operator Architecture</h4>
 
                         <div class="arch-diagram" style="margin-bottom: 1.5rem;">
-                            <div class="arch-diagram-title">Kubernetes Operator Components</div>
-                            <div class="network-layers">
+                            <div class="arch-diagram-title">Kubernetes Operator Components <span style="margin-left: auto; font-size: 0.5625rem; opacity: 0.5;">HOVER LAYERS TO FOCUS</span></div>
+                            <div class="network-layers" data-interactive-layers>
                                 <div class="network-layer" style="border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.03);">
                                     <div class="network-layer-label" style="color: var(--cyan);">Custom Resource Definitions (CRDs)</div>
                                     <div class="network-layer-content">
@@ -2400,8 +2791,15 @@
 
     </div><!-- /main-content -->
 
+    <!-- Tooltip Element -->
+    <div class="node-tooltip" id="node-tooltip">
+        <div class="node-tooltip-title" id="tooltip-title"></div>
+        <div class="node-tooltip-text" id="tooltip-text"></div>
+        <div class="node-tooltip-tags" id="tooltip-tags"></div>
+    </div>
+
     <script>
-        // Tab Navigation
+        // ===== Tab Navigation =====
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -2412,12 +2810,12 @@
             });
         });
 
-        // Expandable Panels
+        // ===== Expandable Panels =====
         function toggleExpandable(el) {
             el.classList.toggle('open');
         }
 
-        // Subservice Cards
+        // ===== Subservice Cards =====
         function toggleSubservice(el) {
             if (el.classList.contains('selected')) {
                 el.classList.remove('selected');
@@ -2425,6 +2823,250 @@
                 el.classList.add('selected');
             }
         }
+
+        // ===== Interactive Tooltips on Mini-Nodes =====
+        const tooltip = document.getElementById('node-tooltip');
+        const tooltipTitle = document.getElementById('tooltip-title');
+        const tooltipText = document.getElementById('tooltip-text');
+        const tooltipTags = document.getElementById('tooltip-tags');
+        let tooltipTimeout;
+        let activeNode = null;
+
+        document.querySelectorAll('.mini-node[data-tip]').forEach(node => {
+            node.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const tipData = node.getAttribute('data-tip');
+                const parts = tipData.split('|');
+                const title = parts[0] || '';
+                const text = parts[1] || '';
+                const tags = parts[2] ? parts[2].replace('tags:', '').split(',') : [];
+
+                // Toggle same node
+                if (activeNode === node) {
+                    hideTooltip();
+                    return;
+                }
+
+                // Clear previous
+                if (activeNode) activeNode.classList.remove('highlighted');
+
+                activeNode = node;
+                node.classList.add('highlighted');
+
+                tooltipTitle.textContent = title;
+                tooltipText.textContent = text;
+                tooltipTags.innerHTML = tags.map(t =>
+                    `<span class="tag green">${t.trim()}</span>`
+                ).join('');
+
+                // Position tooltip
+                const rect = node.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                let top = rect.bottom + 8;
+                let left = rect.left;
+
+                // Keep within viewport
+                if (top + 200 > window.innerHeight) {
+                    top = rect.top - 8 - 200;
+                }
+                if (left + 320 > window.innerWidth) {
+                    left = window.innerWidth - 330;
+                }
+
+                tooltip.style.top = top + 'px';
+                tooltip.style.left = Math.max(10, left) + 'px';
+                tooltip.classList.add('visible');
+
+                // Dim other nodes in same layer
+                const layer = node.closest('.network-layer');
+                if (layer) {
+                    layer.querySelectorAll('.mini-node').forEach(n => {
+                        if (n !== node && !n.classList.contains('highlighted')) {
+                            n.classList.add('dimmed');
+                        }
+                    });
+                }
+            });
+        });
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+            if (activeNode) {
+                activeNode.classList.remove('highlighted');
+                activeNode = null;
+            }
+            document.querySelectorAll('.mini-node.dimmed').forEach(n => n.classList.remove('dimmed'));
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.mini-node') && !e.target.closest('.node-tooltip')) {
+                hideTooltip();
+            }
+        });
+
+        // ===== Network Layer Interactivity =====
+        document.querySelectorAll('[data-interactive-layers] .network-layer').forEach(layer => {
+            layer.addEventListener('mouseenter', () => {
+                const parent = layer.closest('[data-interactive-layers]');
+                parent.querySelectorAll('.network-layer').forEach(l => {
+                    if (l !== layer) l.classList.add('layer-dimmed');
+                });
+                layer.classList.add('layer-active');
+            });
+
+            layer.addEventListener('mouseleave', () => {
+                const parent = layer.closest('[data-interactive-layers]');
+                parent.querySelectorAll('.network-layer').forEach(l => {
+                    l.classList.remove('layer-dimmed');
+                    l.classList.remove('layer-active');
+                });
+            });
+        });
+
+        // ===== Flow Simulation (Horizontal) =====
+        function playFlow(btn) {
+            if (btn.classList.contains('playing')) return;
+
+            const container = btn.nextElementSibling;
+            const steps = container.querySelectorAll('.flow-step');
+            const arrows = container.querySelectorAll('.flow-arrow');
+
+            btn.classList.add('playing');
+            btn.textContent = '⏵ Running...';
+
+            // Reset
+            steps.forEach(s => { s.classList.remove('active-step', 'completed-step'); });
+            arrows.forEach(a => a.classList.remove('active-arrow'));
+
+            let i = 0;
+            const interval = setInterval(() => {
+                // Deactivate previous step
+                if (i > 0) {
+                    steps[i - 1].classList.remove('active-step');
+                    steps[i - 1].classList.add('completed-step');
+                }
+
+                // Activate arrow before this step
+                if (i > 0 && arrows[i - 1]) {
+                    arrows[i - 1].classList.remove('active-arrow');
+                }
+
+                if (i >= steps.length) {
+                    clearInterval(interval);
+                    btn.classList.remove('playing');
+                    btn.textContent = '▶ Simulate Flow';
+
+                    // Reset after delay
+                    setTimeout(() => {
+                        steps.forEach(s => s.classList.remove('active-step', 'completed-step'));
+                    }, 2000);
+                    return;
+                }
+
+                // Activate current arrow
+                if (i > 0 && arrows[i - 1]) {
+                    arrows[i - 1].classList.add('active-arrow');
+                }
+
+                steps[i].classList.add('active-step');
+                i++;
+            }, 800);
+        }
+
+        // ===== Flow Simulation (Vertical) =====
+        function playFlowVertical(btn) {
+            if (btn.classList.contains('playing')) return;
+
+            const container = btn.nextElementSibling;
+            const steps = container.querySelectorAll('.flow-step');
+            const arrows = container.querySelectorAll('.flow-arrow');
+
+            btn.classList.add('playing');
+            const origText = btn.textContent;
+            btn.textContent = '⏵ Running...';
+
+            // Reset
+            steps.forEach(s => { s.classList.remove('active-step', 'completed-step'); });
+            arrows.forEach(a => a.classList.remove('active-arrow'));
+
+            let i = 0;
+            const interval = setInterval(() => {
+                if (i > 0) {
+                    steps[i - 1].classList.remove('active-step');
+                    steps[i - 1].classList.add('completed-step');
+                }
+
+                if (i > 0 && arrows[i - 1]) {
+                    arrows[i - 1].classList.remove('active-arrow');
+                }
+
+                if (i >= steps.length) {
+                    clearInterval(interval);
+                    btn.classList.remove('playing');
+                    btn.textContent = origText;
+
+                    setTimeout(() => {
+                        steps.forEach(s => s.classList.remove('active-step', 'completed-step'));
+                    }, 2000);
+                    return;
+                }
+
+                if (i > 0 && arrows[i - 1]) {
+                    arrows[i - 1].classList.add('active-arrow');
+                }
+
+                steps[i].classList.add('active-step');
+                // Scroll step into view
+                steps[i].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                i++;
+            }, 1000);
+        }
+
+        // ===== Auto-animate first visible flow on tab switch =====
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Reset all flow states on tab switch
+                document.querySelectorAll('.flow-step').forEach(s => {
+                    s.classList.remove('active-step', 'completed-step');
+                });
+                document.querySelectorAll('.flow-arrow').forEach(a => {
+                    a.classList.remove('active-arrow');
+                });
+                hideTooltip();
+            });
+        });
+
+        // ===== Subservice card flow indicators =====
+        document.querySelectorAll('.subservice-card').forEach(card => {
+            const desc = card.querySelector('.subservice-card-desc');
+            if (desc) {
+                const indicator = document.createElement('div');
+                indicator.className = 'subservice-flow-indicator';
+                indicator.innerHTML = '<div class="subservice-flow-dot"></div><span>Active component</span>';
+                desc.after(indicator);
+            }
+        });
+
+        // ===== Keyboard navigation =====
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideTooltip();
+            }
+        });
+
+        // ===== Mini-node hover glow effect =====
+        document.querySelectorAll('.mini-node').forEach(node => {
+            node.addEventListener('mouseenter', () => {
+                if (!node.classList.contains('dimmed')) {
+                    node.style.boxShadow = '0 4px 16px -4px rgba(0, 237, 100, 0.25)';
+                }
+            });
+            node.addEventListener('mouseleave', () => {
+                if (!node.classList.contains('highlighted')) {
+                    node.style.boxShadow = '';
+                }
+            });
+        });
     </script>
 </body>
 </html>
