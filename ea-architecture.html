@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Enterprise Advanced - Architecture Deep Dive</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' fill='%23001E2B'/><path d='M16 4 L18 14 L16 28 L14 14 Z' fill='%2300ED64'/><ellipse cx='16' cy='14' rx='3' ry='5' fill='%2300ED64'/></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #161618;
+            --bg-card-hover: #1c1c1f;
+            --bg-inset: #0e0e10;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 237, 100, 0.2);
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1a6;
+            --text-muted: #6b6b70;
+            --accent: #00ed64;
+            --accent-dim: #00c853;
+            --accent-glow: rgba(0, 237, 100, 0.15);
+            --blue: #3b82f6;
+            --blue-glow: rgba(59, 130, 246, 0.15);
+            --purple: #a855f7;
+            --purple-glow: rgba(168, 85, 247, 0.15);
+            --orange: #f97316;
+            --orange-glow: rgba(249, 115, 22, 0.15);
+            --red: #ef4444;
+            --red-glow: rgba(239, 68, 68, 0.15);
+            --yellow: #eab308;
+            --yellow-glow: rgba(234, 179, 8, 0.15);
+            --cyan: #06b6d4;
+            --cyan-glow: rgba(6, 182, 212, 0.15);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-primary); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* Header */
+        .page-header {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 2rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+        }
+
+        .header-title-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-logo {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent-glow), transparent);
+            border: 1px solid var(--border-accent);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-logo svg { width: 24px; height: 24px; }
+
+        .page-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .page-title span {
+            background: linear-gradient(135deg, var(--accent), #00c853);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            transition: all 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+            border-color: var(--border-accent);
+        }
+
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0.25rem;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .tab-nav::-webkit-scrollbar { display: none; }
+
+        .tab-btn {
+            padding: 0.625rem 1.25rem;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 8px;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-secondary);
+            background: var(--bg-card);
+        }
+
+        .tab-btn.active {
+            color: var(--accent);
+            background: var(--accent-glow);
+            border-color: var(--border-accent);
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2.5rem 2rem;
+        }
+
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Section */
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-heading {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.02em;
+        }
+
+        .section-sub {
+            color: var(--text-muted);
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+            max-width: 800px;
+        }
+
+        /* Architecture Diagram Containers */
+        .arch-diagram {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .arch-diagram-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .arch-diagram-title::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        /* Architecture Boxes */
+        .arch-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            align-items: stretch;
+            flex-wrap: wrap;
+        }
+
+        .arch-box {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.25rem;
+            flex: 1;
+            min-width: 200px;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .arch-box:hover {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 30px -10px var(--accent-glow);
+        }
+
+        .arch-box.accent { border-color: var(--border-accent); }
+        .arch-box.blue { border-color: rgba(59, 130, 246, 0.3); }
+        .arch-box.purple { border-color: rgba(168, 85, 247, 0.3); }
+        .arch-box.orange { border-color: rgba(249, 115, 22, 0.3); }
+        .arch-box.red { border-color: rgba(239, 68, 68, 0.3); }
+        .arch-box.cyan { border-color: rgba(6, 182, 212, 0.3); }
+        .arch-box.yellow { border-color: rgba(234, 179, 8, 0.3); }
+
+        .arch-box-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .arch-box-icon {
+            font-size: 1.25rem;
+        }
+
+        .arch-box-title {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .arch-box-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: var(--accent-glow);
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-left: auto;
+        }
+
+        .arch-box-badge.blue { background: var(--blue-glow); color: var(--blue); }
+        .arch-box-badge.purple { background: var(--purple-glow); color: var(--purple); }
+        .arch-box-badge.orange { background: var(--orange-glow); color: var(--orange); }
+        .arch-box-badge.red { background: var(--red-glow); color: var(--red); }
+        .arch-box-badge.cyan { background: var(--cyan-glow); color: var(--cyan); }
+
+        .arch-box-desc {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .arch-box-list {
+            list-style: none;
+            margin-top: 0.75rem;
+        }
+
+        .arch-box-list li {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            padding: 0.25rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .arch-box-list li::before {
+            content: '›';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+        }
+
+        /* Flow Arrows */
+        .flow-connector {
+            text-align: center;
+            padding: 0.75rem 0;
+            color: var(--text-muted);
+            font-size: 1.25rem;
+        }
+
+        .flow-connector.horizontal {
+            writing-mode: horizontal-tb;
+            padding: 0 0.5rem;
+            display: flex;
+            align-items: center;
+            min-width: auto;
+            flex: 0;
+        }
+
+        .flow-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            text-align: center;
+            padding: 0.25rem 0;
+        }
+
+        /* Expandable Panels */
+        .expandable {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            margin-bottom: 0.75rem;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .expandable:hover {
+            border-color: var(--border-accent);
+        }
+
+        .expandable-header {
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .expandable-header:hover {
+            background: var(--bg-card-hover);
+        }
+
+        .expandable-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .expandable-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .expandable-subtitle {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        .expandable-chevron {
+            margin-left: auto;
+            color: var(--text-muted);
+            transition: transform 0.3s;
+            font-size: 1.25rem;
+        }
+
+        .expandable.open .expandable-chevron {
+            transform: rotate(180deg);
+        }
+
+        .expandable-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+
+        .expandable.open .expandable-body {
+            max-height: 5000px;
+        }
+
+        .expandable-content {
+            padding: 0 1.5rem 1.5rem;
+            border-top: 1px solid var(--border-subtle);
+            padding-top: 1.5rem;
+        }
+
+        /* Info Cards Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .info-card {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1.25rem;
+            transition: all 0.2s;
+        }
+
+        .info-card:hover {
+            border-color: var(--border-accent);
+        }
+
+        .info-card-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .info-card-text {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+
+        /* Comparison Table */
+        .comp-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-subtle);
+            margin-bottom: 1.5rem;
+        }
+
+        .comp-table th, .comp-table td {
+            padding: 1rem 1.25rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.8125rem;
+        }
+
+        .comp-table th {
+            background: var(--bg-card);
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+        }
+
+        .comp-table td {
+            background: var(--bg-inset);
+            color: var(--text-secondary);
+        }
+
+        .comp-table tr:last-child td { border-bottom: none; }
+
+        .comp-table tr:hover td {
+            background: var(--bg-card);
+        }
+
+        .comp-table .feature-col {
+            color: var(--text-primary);
+            font-weight: 500;
+            min-width: 200px;
+        }
+
+        .check { color: var(--accent); }
+        .cross { color: var(--red); }
+        .partial { color: var(--yellow); }
+
+        /* Code Block */
+        .code-block {
+            background: #0d0d0f;
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            padding: 1.25rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            line-height: 1.8;
+            color: var(--text-secondary);
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        .code-block .comment { color: #6b6b70; }
+        .code-block .keyword { color: var(--accent); }
+        .code-block .string { color: var(--orange); }
+        .code-block .param { color: var(--blue); }
+        .code-block .value { color: var(--purple); }
+
+        /* Visual Flow Diagram */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .flow-step {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            text-align: center;
+            min-width: 250px;
+            transition: all 0.2s;
+        }
+
+        .flow-step:hover {
+            border-color: var(--border-accent);
+        }
+
+        .flow-step-title {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .flow-step-desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .flow-arrow {
+            color: var(--accent);
+            font-size: 1.25rem;
+        }
+
+        /* Horizontal flow */
+        .flow-horizontal {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 1.5rem 0;
+        }
+
+        .flow-horizontal .flow-step {
+            min-width: 160px;
+            flex: 1;
+            max-width: 220px;
+        }
+
+        .flow-horizontal .flow-arrow {
+            transform: rotate(-90deg);
+        }
+
+        /* Callout */
+        .callout {
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            align-items: flex-start;
+        }
+
+        .callout.warning {
+            background: var(--orange-glow);
+            border: 1px solid rgba(249, 115, 22, 0.2);
+        }
+
+        .callout.info {
+            background: var(--blue-glow);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .callout.success {
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+        }
+
+        .callout-icon { font-size: 1.25rem; flex-shrink: 0; }
+
+        .callout-text {
+            font-size: 0.8125rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .callout-text strong {
+            color: var(--text-primary);
+        }
+
+        /* Tag */
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin: 0.125rem;
+        }
+
+        .tag.green { background: var(--accent-glow); color: var(--accent); }
+        .tag.blue { background: var(--blue-glow); color: var(--blue); }
+        .tag.purple { background: var(--purple-glow); color: var(--purple); }
+        .tag.orange { background: var(--orange-glow); color: var(--orange); }
+        .tag.red { background: var(--red-glow); color: var(--red); }
+        .tag.cyan { background: var(--cyan-glow); color: var(--cyan); }
+        .tag.yellow { background: var(--yellow-glow); color: var(--yellow); }
+
+        /* Interactive Diagram - Ops Manager */
+        .ops-diagram {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr auto 1fr;
+            gap: 1rem;
+            align-items: start;
+            margin: 2rem 0;
+        }
+
+        .ops-diagram-col {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .ops-diagram-arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-top: 3rem;
+            color: var(--text-muted);
+            font-size: 0.6875rem;
+            font-family: 'JetBrains Mono', monospace;
+            gap: 0.25rem;
+        }
+
+        .ops-diagram-arrow span {
+            writing-mode: vertical-lr;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+        }
+
+        /* Mini node */
+        .mini-node {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-subtle);
+            border-radius: 6px;
+            padding: 0.375rem 0.625rem;
+            font-size: 0.6875rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-secondary);
+        }
+
+        .mini-node-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+        }
+
+        .mini-node-dot.primary { background: var(--accent); }
+        .mini-node-dot.secondary { background: var(--blue); }
+        .mini-node-dot.arbiter { background: var(--yellow); }
+
+        /* Subservice interactive */
+        .subservice-map {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .subservice-card {
+            background: var(--bg-inset);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .subservice-card:hover,
+        .subservice-card.selected {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 30px -10px var(--accent-glow);
+        }
+
+        .subservice-card.selected {
+            background: var(--bg-card);
+        }
+
+        .subservice-card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .subservice-card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.125rem;
+        }
+
+        .subservice-card-icon.green { background: var(--accent-glow); }
+        .subservice-card-icon.blue { background: var(--blue-glow); }
+        .subservice-card-icon.purple { background: var(--purple-glow); }
+        .subservice-card-icon.orange { background: var(--orange-glow); }
+        .subservice-card-icon.red { background: var(--red-glow); }
+        .subservice-card-icon.cyan { background: var(--cyan-glow); }
+
+        .subservice-card-name {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .subservice-card-role {
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .subservice-card-desc {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .subservice-detail {
+            display: none;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .subservice-card.selected .subservice-detail {
+            display: block;
+        }
+
+        .subservice-detail-list {
+            list-style: none;
+        }
+
+        .subservice-detail-list li {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            padding: 0.3rem 0;
+            padding-left: 1rem;
+            position: relative;
+        }
+
+        .subservice-detail-list li::before {
+            content: '▸';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+        }
+
+        /* Network diagram */
+        .network-layers {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .network-layer {
+            border-radius: 12px;
+            padding: 1.25rem;
+            border: 1px solid;
+        }
+
+        .network-layer.client { border-color: rgba(59, 130, 246, 0.3); background: rgba(59, 130, 246, 0.03); }
+        .network-layer.app { border-color: rgba(0, 237, 100, 0.3); background: rgba(0, 237, 100, 0.03); }
+        .network-layer.data { border-color: rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.03); }
+        .network-layer.infra { border-color: rgba(249, 115, 22, 0.3); background: rgba(249, 115, 22, 0.03); }
+
+        .network-layer-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.75rem;
+        }
+
+        .network-layer.client .network-layer-label { color: var(--blue); }
+        .network-layer.app .network-layer-label { color: var(--accent); }
+        .network-layer.data .network-layer-label { color: var(--purple); }
+        .network-layer.infra .network-layer-label { color: var(--orange); }
+
+        .network-layer-content {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Config block */
+        .config-block {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .config-block-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .config-block-desc {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        /* Two column layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 900px) {
+            .two-col { grid-template-columns: 1fr; }
+            .ops-diagram { grid-template-columns: 1fr; }
+            .ops-diagram-arrow { flex-direction: row; padding-top: 0; }
+            .ops-diagram-arrow span { writing-mode: horizontal-tb; transform: none; }
+        }
+
+        /* Pulse animation */
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .pulse { animation: pulse 2s infinite; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-top { flex-direction: column; align-items: flex-start; gap: 1rem; }
+            .tab-nav { gap: 0.125rem; }
+            .tab-btn { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+            .main-content { padding: 1.5rem 1rem; }
+            .info-grid { grid-template-columns: 1fr; }
+            .subservice-map { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-inner">
+            <div class="header-top">
+                <div class="header-title-group">
+                    <div class="header-logo">
+                        <svg viewBox="0 0 32 32" fill="none"><path d="M16 4L18 14L16 28L14 14L16 4Z" fill="#00ED64"/><ellipse cx="16" cy="14" rx="3" ry="5" fill="#00ED64"/></svg>
+                    </div>
+                    <div>
+                        <div class="page-title">MongoDB <span>Enterprise Advanced</span></div>
+                        <div style="font-size: 0.8125rem; color: var(--text-muted);">Architecture Deep Dive</div>
+                    </div>
+                </div>
+                <a href="home.html" class="back-link">← Back to Home</a>
+            </div>
+            <nav class="tab-nav">
+                <button class="tab-btn active" data-tab="overview">EA Overview</button>
+                <button class="tab-btn" data-tab="opsmanager">Ops Manager Architecture</button>
+                <button class="tab-btn" data-tab="backup">Backup & Recovery</button>
+                <button class="tab-btn" data-tab="security">Security & Encryption</button>
+                <button class="tab-btn" data-tab="monitoring">Monitoring & Logging</button>
+                <button class="tab-btn" data-tab="ha">HA Architecture</button>
+                <button class="tab-btn" data-tab="deployment">Deployment Models</button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+
+        <!-- ==================== TAB 1: EA OVERVIEW ==================== -->
+        <div class="tab-panel active" id="tab-overview">
+            <div class="section">
+                <h2 class="section-heading">MongoDB Enterprise Advanced</h2>
+                <p class="section-sub">Enterprise-grade features for security, management, and support. Everything in Community plus advanced capabilities for mission-critical deployments.</p>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">MongoDB EA Component Stack</div>
+
+                    <div class="network-layers">
+                        <div class="network-layer client">
+                            <div class="network-layer-label">Application Layer</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🖥️ Application Drivers (all languages)</div>
+                                <div class="mini-node">🔌 BI Connector (SQL → MQL translation)</div>
+                                <div class="mini-node">🧭 Compass GUI</div>
+                                <div class="mini-node">🐚 mongosh</div>
+                            </div>
+                        </div>
+                        <div class="network-layer app">
+                            <div class="network-layer-label">Management Layer — Ops Manager</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">⚙️ Automation</div>
+                                <div class="mini-node">📊 Monitoring</div>
+                                <div class="mini-node">💾 Backup</div>
+                                <div class="mini-node">🔔 Alerting</div>
+                                <div class="mini-node">🔧 REST API</div>
+                                <div class="mini-node">🖥️ Web UI</div>
+                            </div>
+                        </div>
+                        <div class="network-layer data">
+                            <div class="network-layer-label">Database Layer — MongoDB Enterprise Server</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node"><span class="mini-node-dot primary"></span> WiredTiger (Encrypted)</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> In-Memory Engine</div>
+                                <div class="mini-node">🔐 LDAP / Kerberos / x.509</div>
+                                <div class="mini-node">📋 Auditing</div>
+                                <div class="mini-node">🔑 CSFLE / Queryable Encryption</div>
+                                <div class="mini-node">🔗 Cluster-to-Cluster Sync</div>
+                            </div>
+                        </div>
+                        <div class="network-layer infra">
+                            <div class="network-layer-label">Infrastructure Layer</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">☸️ Kubernetes Operator</div>
+                                <div class="mini-node">🐳 Container Support</div>
+                                <div class="mini-node">🖧 Bare Metal / VM</div>
+                                <div class="mini-node">☁️ Any Cloud (AWS, GCP, Azure)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading">EA vs Community Comparison</h2>
+                <p class="section-sub">Key differentiators that make Enterprise Advanced the choice for production workloads.</p>
+
+                <table class="comp-table">
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Community</th>
+                            <th>Enterprise Advanced</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td class="feature-col">Storage Engine - WiredTiger</td><td class="check">✓</td><td class="check">✓</td></tr>
+                        <tr><td class="feature-col">Encryption at Rest (Native)</td><td class="cross">✗</td><td class="check">✓ KMIP, AWS KMS, Azure Key Vault, GCP KMS</td></tr>
+                        <tr><td class="feature-col">In-Memory Storage Engine</td><td class="cross">✗</td><td class="check">✓</td></tr>
+                        <tr><td class="feature-col">LDAP Authentication & Authorization</td><td class="cross">✗</td><td class="check">✓</td></tr>
+                        <tr><td class="feature-col">Kerberos Authentication</td><td class="cross">✗</td><td class="check">✓</td></tr>
+                        <tr><td class="feature-col">Audit Logging</td><td class="cross">✗</td><td class="check">✓ Configurable filters</td></tr>
+                        <tr><td class="feature-col">Client-Side Field Level Encryption</td><td class="partial">⚠ Manual only</td><td class="check">✓ Automatic + Queryable</td></tr>
+                        <tr><td class="feature-col">Ops Manager</td><td class="cross">✗</td><td class="check">✓ Full management platform</td></tr>
+                        <tr><td class="feature-col">BI Connector</td><td class="cross">✗</td><td class="check">✓ SQL → MQL</td></tr>
+                        <tr><td class="feature-col">Kubernetes Operator</td><td class="partial">⚠ Community Operator</td><td class="check">✓ Enterprise Operator</td></tr>
+                        <tr><td class="feature-col">Enterprise Support</td><td class="cross">✗</td><td class="check">✓ 24/7 SLA-backed</td></tr>
+                        <tr><td class="feature-col">Cluster-to-Cluster Sync</td><td class="cross">✗</td><td class="check">✓ mongosync</td></tr>
+                        <tr><td class="feature-col">SNMP Monitoring</td><td class="cross">✗</td><td class="check">✓</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading">EA Product Components</h2>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-card-title">⚙️ Ops Manager</div>
+                        <div class="info-card-text">Self-hosted management platform. Deploy, monitor, back up, and scale MongoDB clusters. Includes automation, alerting, and a web UI. The on-premises equivalent of Atlas.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🔐 Enterprise Server</div>
+                        <div class="info-card-text">Enhanced mongod/mongos with encryption at rest, LDAP, Kerberos, auditing, in-memory engine, SNMP, FIPS 140-2 compliance, and Queryable Encryption.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">☸️ Kubernetes Operator</div>
+                        <div class="info-card-text">CustomResourceDefinitions for MongoDB, MongoDBOpsManager, MongoDBUser. Manages lifecycle via StatefulSets. Integrates with Ops Manager for automation.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🔌 BI Connector</div>
+                        <div class="info-card-text">Translates SQL queries to MQL. Enables BI tools (Tableau, Power BI, Looker) to query MongoDB directly via a MySQL-compatible wire protocol.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🔗 Cluster-to-Cluster Sync</div>
+                        <div class="info-card-text"><code style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: var(--accent);">mongosync</code> enables continuous data synchronization between clusters. Supports migrations, DR, and active-passive topologies.</div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🛡️ Enterprise Support</div>
+                        <div class="info-card-text">24/7 SLA-backed support with &lt;1 hour P1 response time. Access to MongoDB field engineers, proactive health checks, and upgrade advisory.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 2: OPS MANAGER ARCHITECTURE ==================== -->
+        <div class="tab-panel" id="tab-opsmanager">
+            <div class="section">
+                <h2 class="section-heading">Ops Manager Architecture</h2>
+                <p class="section-sub">Ops Manager is a self-hosted management platform. It consists of the Application Server, a backing Application Database, agents deployed on every managed host, and dedicated backup infrastructure.</p>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">High-Level Ops Manager Topology</div>
+                    <div class="network-layers">
+                        <div class="network-layer client">
+                            <div class="network-layer-label">Users & Integrations</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">👤 Ops Manager Web UI</div>
+                                <div class="mini-node">🔧 REST API v2.0</div>
+                                <div class="mini-node">🔗 Terraform Provider</div>
+                                <div class="mini-node">📧 Alert Webhooks / Email / PagerDuty / Slack</div>
+                            </div>
+                        </div>
+                        <div class="network-layer app">
+                            <div class="network-layer-label">Ops Manager Application Servers (2+ for HA)</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🖥️ HTTP Server (Jetty)</div>
+                                <div class="mini-node">💾 Backup Daemon</div>
+                                <div class="mini-node">🔔 Alert Engine</div>
+                                <div class="mini-node">⚙️ Goal State Engine</div>
+                                <div class="mini-node">📊 Metric Aggregator</div>
+                                <div class="mini-node">👥 Auth (LDAP/SAML/SCRAM)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer data">
+                            <div class="network-layer-label">Ops Manager Backing Databases</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node"><span class="mini-node-dot primary"></span> Application DB (3-node RS)</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Blockstore (snapshot chunks)</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Oplog Store (oplog slices)</div>
+                                <div class="mini-node"><span class="mini-node-dot arbiter"></span> Head DB (staging)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer infra">
+                            <div class="network-layer-label">Managed MongoDB Hosts (Agents)</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🤖 MongoDB Agent (unified)</div>
+                                <div class="mini-node">→ Automation Module</div>
+                                <div class="mini-node">→ Monitoring Module</div>
+                                <div class="mini-node">→ Backup Module</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading">Ops Manager Subservices — Deep Dive</h2>
+                <p class="section-sub">Click each subservice to expand its technical details, internal workings, and interaction patterns.</p>
+
+                <div class="subservice-map" id="subservice-map">
+                    <div class="subservice-card" onclick="toggleSubservice(this)">
+                        <div class="subservice-card-header">
+                            <div class="subservice-card-icon green">⚙️</div>
+                            <div>
+                                <div class="subservice-card-name">Automation Agent</div>
+                                <div class="subservice-card-role">Runs on every managed host</div>
+                            </div>
+                        </div>
+                        <div class="subservice-card-desc">Manages the entire lifecycle of MongoDB processes — provisioning, configuration, upgrades, and topology changes.</div>
+                        <div class="subservice-detail">
+                            <ul class="subservice-detail-list">
+                                <li><strong>Pull-based model:</strong> Agent polls Ops Manager every 10s (configurable) for the "goal state" — a JSON document describing desired topology</li>
+                                <li><strong>Convergence engine:</strong> Compares current state to goal state and takes actions: start/stop mongod, modify configs, initiate replica set reconfig, add shards</li>
+                                <li><strong>Upgrade orchestration:</strong> Rolling upgrades one member at a time. Steps down primary last. Waits for secondaries to catch up before proceeding</li>
+                                <li><strong>Process management:</strong> Starts mongod/mongos with correct flags. Monitors process health. Restarts on crash with backoff</li>
+                                <li><strong>Configuration:</strong> Generates mongod.conf from goal state. Handles TLS certs, keyfiles, LDAP config, audit config</li>
+                                <li><strong>Auth bootstrap:</strong> Creates first admin user, configures keyfile auth, enables auth on replica set</li>
+                                <li><strong>Port:</strong> Outbound HTTPS to Ops Manager (port 8443). No inbound ports required</li>
+                                <li><strong>Log:</strong> <code>/var/log/mongodb-mms-automation/automation-agent.log</code></li>
+                                <li><strong>Failure mode:</strong> If agent is down, existing MongoDB processes keep running. No new changes applied until agent reconnects</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="subservice-card" onclick="toggleSubservice(this)">
+                        <div class="subservice-card-header">
+                            <div class="subservice-card-icon blue">📊</div>
+                            <div>
+                                <div class="subservice-card-name">Monitoring Agent</div>
+                                <div class="subservice-card-role">Runs on every managed host</div>
+                            </div>
+                        </div>
+                        <div class="subservice-card-desc">Collects granular performance metrics from every MongoDB process and pushes them to Ops Manager for visualization and alerting.</div>
+                        <div class="subservice-detail">
+                            <ul class="subservice-detail-list">
+                                <li><strong>Data collection methods:</strong> Runs <code>serverStatus</code>, <code>replSetGetStatus</code>, <code>dbStats</code>, <code>collStats</code>, <code>top</code>, <code>currentOp</code>, <code>connPoolStats</code></li>
+                                <li><strong>Collection interval:</strong> Default every 60 seconds. Configurable down to 10 seconds</li>
+                                <li><strong>Hardware metrics:</strong> CPU usage, disk IOPS, disk utilization, memory (RSS, mapped, virtual), network I/O — collected via host agent</li>
+                                <li><strong>Replication lag:</strong> Measures optime difference between primary and each secondary. Alerts on configurable thresholds</li>
+                                <li><strong>Push model:</strong> Batches metrics and sends compressed payload to Ops Manager HTTP endpoint</li>
+                                <li><strong>Metric retention:</strong> 1-minute granularity for 48 hours → 5-min for 7 days → 1-hour for 90 days → daily for 2 years</li>
+                                <li><strong>Custom metrics:</strong> Can define custom serverStatus-based metrics for dashboards</li>
+                                <li><strong>Profiler integration:</strong> Can collect slow query logs (from profiler level 1/2) and display in Ops Manager</li>
+                                <li><strong>Data sent:</strong> ~2-5 KB per mongod per collection interval (compressed)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="subservice-card" onclick="toggleSubservice(this)">
+                        <div class="subservice-card-header">
+                            <div class="subservice-card-icon purple">💾</div>
+                            <div>
+                                <div class="subservice-card-name">Backup Agent</div>
+                                <div class="subservice-card-role">Runs on every managed host</div>
+                            </div>
+                        </div>
+                        <div class="subservice-card-desc">Handles oplog tailing for continuous backup and coordinates with the Backup Daemon for snapshot creation.</div>
+                        <div class="subservice-detail">
+                            <ul class="subservice-detail-list">
+                                <li><strong>Oplog tailing:</strong> Connects to each replica set member and tails the local.oplog.rs collection continuously</li>
+                                <li><strong>Initial sync:</strong> On first backup, performs a full data copy. Uses mongodump internally or filesystem snapshots</li>
+                                <li><strong>Oplog slicing:</strong> Divides oplog into time-based slices and sends compressed slices to the Oplog Store</li>
+                                <li><strong>Coordination:</strong> Reports status to Backup Daemon on Ops Manager. Daemon orchestrates when to take snapshots</li>
+                                <li><strong>Sharded cluster backup:</strong> Coordinates across all shard agents to create a consistent checkpoint using balancer pause + config server oplog position</li>
+                                <li><strong>Compression:</strong> Oplog and snapshot data compressed with zstd before transmission and storage</li>
+                                <li><strong>Bandwidth control:</strong> Configurable max oplog transfer rate per agent to avoid saturating network</li>
+                                <li><strong>Encryption:</strong> Data encrypted in transit (TLS). Optional encryption at rest in blockstore/oplog store</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="subservice-card" onclick="toggleSubservice(this)">
+                        <div class="subservice-card-header">
+                            <div class="subservice-card-icon orange">🏗️</div>
+                            <div>
+                                <div class="subservice-card-name">Backup Daemon</div>
+                                <div class="subservice-card-role">Runs on Ops Manager App Server</div>
+                            </div>
+                        </div>
+                        <div class="subservice-card-desc">Central coordinator for all backup operations. Manages snapshot scheduling, retention policies, and restore orchestration.</div>
+                        <div class="subservice-detail">
+                            <ul class="subservice-detail-list">
+                                <li><strong>Snapshot scheduling:</strong> Creates snapshots at configurable intervals (default: every 6 hours). Base + incremental approach</li>
+                                <li><strong>Head Database:</strong> Maintains a staging copy of each backed-up replica set. Applies oplog slices to keep it current. Used as the base for snapshots</li>
+                                <li><strong>Snapshot creation:</strong> Takes a point-in-time copy of the Head DB. Chunks the data and stores in the Blockstore</li>
+                                <li><strong>Incremental snapshots:</strong> After initial full snapshot, subsequent snapshots only store changed blocks (deduplication)</li>
+                                <li><strong>Retention policy:</strong> Configurable per-project. Example: 24 hourly, 7 daily, 4 weekly, 12 monthly snapshots</li>
+                                <li><strong>Restore types:</strong> Download snapshot (.tar.gz), Restore to another cluster (automated), Point-in-time restore (to any second), Queryable backup (mount as read-only)</li>
+                                <li><strong>HA:</strong> Only ONE active backup daemon per deployment. If the active Ops Manager node fails, another takes over automatically</li>
+                                <li><strong>Storage backends:</strong> Blockstore (MongoDB RS), S3-compatible (AWS S3, MinIO, etc.), Filesystem store (NFS/SAN)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="subservice-card" onclick="toggleSubservice(this)">
+                        <div class="subservice-card-header">
+                            <div class="subservice-card-icon red">🔔</div>
+                            <div>
+                                <div class="subservice-card-name">Alert Engine</div>
+                                <div class="subservice-card-role">Runs on Ops Manager App Server</div>
+                            </div>
+                        </div>
+                        <div class="subservice-card-desc">Evaluates alert conditions against collected metrics and triggers notifications via multiple integration channels.</div>
+                        <div class="subservice-detail">
+                            <ul class="subservice-detail-list">
+                                <li><strong>Alert conditions:</strong> Threshold-based (e.g., connections > 500), rate-based (e.g., page faults/sec), boolean (e.g., primary step-down)</li>
+                                <li><strong>Built-in alerts:</strong> Host down, replication lag, disk usage, oplog window, election events, backup delay, agent disconnect</li>
+                                <li><strong>Custom alerts:</strong> Create on any collected metric with AND/OR conditions</li>
+                                <li><strong>Integrations:</strong> Email, PagerDuty, Slack, OpsGenie, VictorOps, Webhook (custom), SNMP traps, HipChat</li>
+                                <li><strong>Evaluation cycle:</strong> Checks conditions every monitoring interval (default 60s)</li>
+                                <li><strong>Alert states:</strong> OPEN → ACKNOWLEDGED → CLOSED. Configurable auto-resolution</li>
+                                <li><strong>Maintenance windows:</strong> Suppress alerts during planned downtime</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="subservice-card" onclick="toggleSubservice(this)">
+                        <div class="subservice-card-header">
+                            <div class="subservice-card-icon cyan">🖥️</div>
+                            <div>
+                                <div class="subservice-card-name">HTTP Server & API</div>
+                                <div class="subservice-card-role">Runs on Ops Manager App Server</div>
+                            </div>
+                        </div>
+                        <div class="subservice-card-desc">Jetty-based HTTP server serving the Web UI and REST API. Handles authentication, authorization, and session management.</div>
+                        <div class="subservice-detail">
+                            <ul class="subservice-detail-list">
+                                <li><strong>Web UI:</strong> React-based SPA served by embedded Jetty. Provides dashboards, cluster management, user management, project settings</li>
+                                <li><strong>REST API v2.0:</strong> Full CRUD for all resources — organizations, projects, clusters, users, alerts, backup configs. Digest or API key auth</li>
+                                <li><strong>Default port:</strong> 8080 (HTTP) / 8443 (HTTPS). TLS strongly recommended for production</li>
+                                <li><strong>Authentication:</strong> Local accounts (SCRAM), LDAP bind, SAML 2.0 (SSO with Okta, ADFS, etc.), x.509 client certs</li>
+                                <li><strong>Authorization:</strong> RBAC with roles: Global Owner, Org Admin, Project Owner, Project Read Only, etc.</li>
+                                <li><strong>Session:</strong> HTTP sessions stored in Application Database. Configurable timeout (default 12 hours)</li>
+                                <li><strong>Rate limiting:</strong> Configurable per-user and per-API-key rate limits to protect against abuse</li>
+                                <li><strong>Load balancer:</strong> For HA, place 2+ Ops Manager app servers behind an L7 LB with sticky sessions</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading">Agent ↔ Ops Manager Interaction Flow</h2>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">Automation Agent Convergence Loop</div>
+                    <div class="flow-horizontal">
+                        <div class="flow-step">
+                            <div class="flow-step-title">1. Agent Polls</div>
+                            <div class="flow-step-desc">GET /api/agent/v1/goalState<br>Every 10s via HTTPS</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">2. Goal State Received</div>
+                            <div class="flow-step-desc">JSON describing desired<br>topology & config</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">3. Compare</div>
+                            <div class="flow-step-desc">Diff current state vs<br>goal state</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">4. Converge</div>
+                            <div class="flow-step-desc">Apply changes: start/stop<br>processes, reconfig RS</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">5. Report</div>
+                            <div class="flow-step-desc">POST status back to<br>Ops Manager</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">Monitoring Data Flow</div>
+                    <div class="flow-horizontal">
+                        <div class="flow-step">
+                            <div class="flow-step-title">mongod / mongos</div>
+                            <div class="flow-step-desc">serverStatus, replSetGetStatus<br>dbStats, currentOp</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">Monitoring Module</div>
+                            <div class="flow-step-desc">Collects every 60s<br>+ host hardware stats</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">Compressed Push</div>
+                            <div class="flow-step-desc">HTTPS POST to<br>Ops Manager</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">Metric Aggregator</div>
+                            <div class="flow-step-desc">Stores in App DB<br>with time-based rollup</div>
+                        </div>
+                        <div class="flow-arrow">→</div>
+                        <div class="flow-step">
+                            <div class="flow-step-title">UI / Alerts</div>
+                            <div class="flow-step-desc">Dashboards, charts<br>Alert evaluation</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-icon">💡</div>
+                    <div class="callout-text"><strong>Unified Agent (4.0+):</strong> Since Ops Manager 4.0, all three functions (Automation, Monitoring, Backup) are bundled into a single <code>mongodb-agent</code> binary. The agent runs as a single process and enables/disables modules based on Ops Manager configuration. This simplifies deployment from 3 agents to 1 per host.</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading">Ops Manager Backing Databases</h2>
+                <p class="section-sub">Ops Manager relies on several dedicated MongoDB instances for its own operation. These are critical infrastructure.</p>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-card-title"><span class="mini-node-dot primary" style="display:inline-block;width:8px;height:8px;margin-right:6px"></span> Application Database</div>
+                        <div class="info-card-text">
+                            <strong>Purpose:</strong> Stores all Ops Manager metadata — users, organizations, projects, cluster configs, alert definitions, metric data, automation goal states, audit logs.<br><br>
+                            <strong>Sizing:</strong> Requires 3+ node replica set. SSD recommended. Size depends on # of managed hosts: ~2 GB per 100 servers.<br><br>
+                            <strong>Requirements:</strong> Must use WiredTiger. Must have oplog sized for at least 24 hours. Dedicated hardware recommended (not co-located with managed clusters).
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title"><span class="mini-node-dot secondary" style="display:inline-block;width:8px;height:8px;margin-right:6px"></span> Blockstore</div>
+                        <div class="info-card-text">
+                            <strong>Purpose:</strong> Stores snapshot data as compressed, deduplicated chunks. Each snapshot is a series of blocks referencing a base snapshot plus deltas.<br><br>
+                            <strong>Sizing:</strong> Depends on total data being backed up. Rule of thumb: 2-3x the total dataset size (for retention + overhead).<br><br>
+                            <strong>Options:</strong> MongoDB replica set (default), S3-compatible (AWS S3, GCS, MinIO), filesystem (NFS/SAN). Can have multiple blockstores for distribution.
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title"><span class="mini-node-dot secondary" style="display:inline-block;width:8px;height:8px;margin-right:6px"></span> Oplog Store</div>
+                        <div class="info-card-text">
+                            <strong>Purpose:</strong> Stores oplog slices between snapshots. These slices enable point-in-time restore to any second between two snapshots.<br><br>
+                            <strong>Sizing:</strong> Grows based on write volume. Typically 10-20% of blockstore size. Oplog slices are compressed.<br><br>
+                            <strong>Retention:</strong> Slices are garbage-collected after the next snapshot covers that time range plus the retention window.
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title"><span class="mini-node-dot arbiter" style="display:inline-block;width:8px;height:8px;margin-right:6px"></span> Head Database</div>
+                        <div class="info-card-text">
+                            <strong>Purpose:</strong> Temporary staging database per backed-up replica set. The Backup Daemon applies oplog slices to keep it up-to-date, then takes periodic snapshots from it.<br><br>
+                            <strong>Lifecycle:</strong> Created automatically. One per backed-up replica set. Stored on Backup Daemon host or dedicated storage.<br><br>
+                            <strong>Note:</strong> High I/O component. Place on fast SSD. Size equals the dataset of the replica set being backed up.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 3: BACKUP & RECOVERY ==================== -->
+        <div class="tab-panel" id="tab-backup">
+            <div class="section">
+                <h2 class="section-heading">Backup & Recovery Architecture</h2>
+                <p class="section-sub">Ops Manager provides enterprise-grade backup with continuous point-in-time recovery, automated scheduling, and multiple restore options.</p>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">Backup Data Flow</div>
+                    <div class="network-layers">
+                        <div class="network-layer client">
+                            <div class="network-layer-label">Source: Managed MongoDB Clusters</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node"><span class="mini-node-dot primary"></span> Primary (initial sync source)</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Secondary (oplog tailing)</div>
+                                <div class="mini-node">📋 local.oplog.rs (capped collection)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer app">
+                            <div class="network-layer-label">Processing: Backup Agent + Daemon</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🤖 Backup Agent tails oplog continuously</div>
+                                <div class="mini-node">📦 Slices oplog into time-based chunks</div>
+                                <div class="mini-node">🏗️ Backup Daemon applies slices to Head DB</div>
+                                <div class="mini-node">📸 Takes periodic snapshots from Head DB</div>
+                            </div>
+                        </div>
+                        <div class="network-layer data">
+                            <div class="network-layer-label">Storage: Blockstore + Oplog Store</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">💾 Blockstore: Compressed snapshot chunks</div>
+                                <div class="mini-node">📋 Oplog Store: Oplog slices (PIT restore)</div>
+                                <div class="mini-node">☁️ Optional: S3-compatible backend</div>
+                                <div class="mini-node">📁 Optional: Filesystem (NFS/SAN)</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Snapshot Backup -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">📸</div>
+                    <div>
+                        <div class="expandable-title">Snapshot Backup</div>
+                        <div class="expandable-subtitle">Periodic full + incremental snapshots with configurable retention</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem;">How Snapshots Work</h4>
+
+                        <div class="flow-diagram">
+                            <div class="flow-step" style="border-color: var(--border-accent);">
+                                <div class="flow-step-title">1. Initial Sync</div>
+                                <div class="flow-step-desc">Full copy of dataset from primary to Head Database. Uses mongodump or filesystem snapshot.</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">2. Continuous Oplog Tailing</div>
+                                <div class="flow-step-desc">Backup Agent tails oplog from a secondary. Sends compressed slices to Oplog Store every few seconds.</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">3. Head DB Catch-up</div>
+                                <div class="flow-step-desc">Backup Daemon applies oplog slices to Head DB, keeping it within seconds of the live cluster.</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">4. Snapshot Creation</div>
+                                <div class="flow-step-desc">At scheduled intervals, Daemon snapshots the Head DB. First snapshot is full; subsequent ones are incremental (block-level dedup).</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">5. Storage in Blockstore</div>
+                                <div class="flow-step-desc">Snapshot chunks compressed with zstd and stored in Blockstore. Deduplication across snapshots saves 60-80% space.</div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: var(--text-primary); margin: 1.5rem 0 1rem;">Default Retention Policy</h4>
+                        <table class="comp-table">
+                            <thead><tr><th>Frequency</th><th>Retention</th><th>Example</th></tr></thead>
+                            <tbody>
+                                <tr><td class="feature-col">Every 6 hours</td><td>24 snapshots</td><td>6 days of 6-hourly snapshots</td></tr>
+                                <tr><td class="feature-col">Daily</td><td>7 snapshots</td><td>One week of daily snapshots</td></tr>
+                                <tr><td class="feature-col">Weekly</td><td>4 snapshots</td><td>One month of weekly snapshots</td></tr>
+                                <tr><td class="feature-col">Monthly</td><td>12 snapshots</td><td>One year of monthly snapshots</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="callout info">
+                            <div class="callout-icon">💡</div>
+                            <div class="callout-text"><strong>Sharded Cluster Snapshots:</strong> The Backup Daemon pauses the balancer, records the config server oplog position, and coordinates all shard agents to capture a <strong>consistent cluster-wide checkpoint</strong>. This ensures cross-shard consistency without stopping writes.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Continuous Backup -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">🔄</div>
+                    <div>
+                        <div class="expandable-title">Continuous Backup (Point-in-Time Recovery)</div>
+                        <div class="expandable-subtitle">Restore to any second within the oplog window</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem;">How Point-in-Time Recovery Works</h4>
+
+                        <div class="flow-diagram">
+                            <div class="flow-step" style="border-color: var(--blue); border-color: rgba(59, 130, 246, 0.3);">
+                                <div class="flow-step-title">Closest Prior Snapshot</div>
+                                <div class="flow-step-desc">System identifies the most recent snapshot before the target timestamp</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">Restore Snapshot Base</div>
+                                <div class="flow-step-desc">Reconstructs dataset from Blockstore chunks</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">Replay Oplog Slices</div>
+                                <div class="flow-step-desc">Applies stored oplog slices from Oplog Store up to the exact target timestamp</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">Deliver Restore</div>
+                                <div class="flow-step-desc">Download as archive or automated restore to a cluster</div>
+                            </div>
+                        </div>
+
+                        <div class="two-col">
+                            <div class="config-block">
+                                <div class="config-block-title">RPO (Recovery Point Objective)</div>
+                                <div class="config-block-desc">Depends on oplog tailing lag. Typically &lt;5 seconds under normal load. Worst case bounded by oplog window size.</div>
+                                <div class="code-block">
+                                    <span class="comment"># Oplog window requirements</span><br>
+                                    <span class="keyword">Minimum recommended:</span> <span class="value">24 hours</span><br>
+                                    <span class="keyword">Ideal for backup:</span> <span class="value">48+ hours</span><br>
+                                    <span class="keyword">Check with:</span> <span class="string">rs.printReplicationInfo()</span><br>
+                                </div>
+                            </div>
+                            <div class="config-block">
+                                <div class="config-block-title">RTO (Recovery Time Objective)</div>
+                                <div class="config-block-desc">Depends on dataset size and oplog volume. Automated restore provisions new cluster and streams data.</div>
+                                <div class="code-block">
+                                    <span class="comment"># Approximate restore times</span><br>
+                                    <span class="keyword">10 GB dataset:</span> <span class="value">~5-10 minutes</span><br>
+                                    <span class="keyword">100 GB dataset:</span> <span class="value">~30-60 minutes</span><br>
+                                    <span class="keyword">1 TB dataset:</span> <span class="value">~2-6 hours</span><br>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Restore Options -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">🔧</div>
+                    <div>
+                        <div class="expandable-title">Restore Options</div>
+                        <div class="expandable-subtitle">Four distinct methods for different recovery scenarios</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-card-title">📥 Download Snapshot</div>
+                                <div class="info-card-text">Download a compressed .tar.gz archive of a snapshot. Manually restore using <code>mongorestore</code>. Best for: dev/test environments, selective data recovery.</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">🔄 Automated Restore</div>
+                                <div class="info-card-text">Ops Manager provisions target cluster and streams snapshot data. Fully automated. Handles replica set initialization and shard configuration. Best for: DR, cluster rebuild.</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">⏱️ Point-in-Time Restore</div>
+                                <div class="info-card-text">Restore to any specific second within the PIT window. Combines closest snapshot + oplog replay. Best for: accidental data deletion, corruption recovery.</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">🔍 Queryable Backup</div>
+                                <div class="info-card-text">Mount any snapshot as a read-only MongoDB instance. Query it like a regular database without full restore. Best for: auditing, data verification, selective retrieval.</div>
+                            </div>
+                        </div>
+
+                        <div class="callout warning">
+                            <div class="callout-icon">⚠️</div>
+                            <div class="callout-text"><strong>Queryable Backup:</strong> Exposes a temporary read-only mongod on a configured port. TLS and auth are required for production use. Snapshot is mounted read-only — no writes possible. Automatically dismounts after configurable timeout.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Storage Backends -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">🗄️</div>
+                    <div>
+                        <div class="expandable-title">Storage Backend Options</div>
+                        <div class="expandable-subtitle">MongoDB RS, S3-compatible, or filesystem stores</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <table class="comp-table">
+                            <thead><tr><th>Backend</th><th>Best For</th><th>Pros</th><th>Cons</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td class="feature-col">MongoDB Replica Set</td>
+                                    <td>Default, most features</td>
+                                    <td>Deduplication, queryable backup, fast restore</td>
+                                    <td>Requires dedicated MongoDB infrastructure</td>
+                                </tr>
+                                <tr>
+                                    <td class="feature-col">S3-Compatible</td>
+                                    <td>Cloud, cost optimization</td>
+                                    <td>Cheap storage, AWS S3 / GCS / MinIO, scalable</td>
+                                    <td>No queryable backup, slower restore</td>
+                                </tr>
+                                <tr>
+                                    <td class="feature-col">Filesystem (NFS/SAN)</td>
+                                    <td>Air-gapped, on-prem</td>
+                                    <td>Works with existing storage infra, no extra MongoDB needed</td>
+                                    <td>No queryable backup, no dedup, manual capacity management</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 4: SECURITY & ENCRYPTION ==================== -->
+        <div class="tab-panel" id="tab-security">
+            <div class="section">
+                <h2 class="section-heading">Security & Encryption</h2>
+                <p class="section-sub">MongoDB Enterprise Advanced provides defense-in-depth security across authentication, authorization, encryption, and auditing.</p>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">Security Layers</div>
+                    <div class="network-layers">
+                        <div class="network-layer" style="border-color: rgba(239, 68, 68, 0.3); background: rgba(239, 68, 68, 0.03);">
+                            <div class="network-layer-label" style="color: var(--red);">Network Security</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🔒 TLS/SSL (all connections)</div>
+                                <div class="mini-node">🌐 VPC / VPN / Private Link</div>
+                                <div class="mini-node">🛡️ IP Allowlists</div>
+                                <div class="mini-node">🔗 x.509 mutual TLS</div>
+                            </div>
+                        </div>
+                        <div class="network-layer" style="border-color: rgba(249, 115, 22, 0.3); background: rgba(249, 115, 22, 0.03);">
+                            <div class="network-layer-label" style="color: var(--orange);">Authentication</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🔐 SCRAM-SHA-256</div>
+                                <div class="mini-node">📂 LDAP (Active Directory)</div>
+                                <div class="mini-node">🎫 Kerberos (GSSAPI)</div>
+                                <div class="mini-node">📜 x.509 Certificates</div>
+                                <div class="mini-node">🔑 AWS IAM (Atlas)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer" style="border-color: rgba(234, 179, 8, 0.3); background: rgba(234, 179, 8, 0.03);">
+                            <div class="network-layer-label" style="color: var(--yellow);">Authorization</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">👤 RBAC (100+ built-in roles)</div>
+                                <div class="mini-node">📂 LDAP Group → Role Mapping</div>
+                                <div class="mini-node">🔧 Custom Roles (collection-level)</div>
+                                <div class="mini-node">🔍 Privilege Actions (180+)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer" style="border-color: rgba(0, 237, 100, 0.3); background: rgba(0, 237, 100, 0.03);">
+                            <div class="network-layer-label" style="color: var(--accent);">Encryption</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">💽 Encryption at Rest (WiredTiger)</div>
+                                <div class="mini-node">🔑 KMIP / AWS KMS / Azure / GCP</div>
+                                <div class="mini-node">🔐 Client-Side FLE (CSFLE)</div>
+                                <div class="mini-node">🔍 Queryable Encryption</div>
+                            </div>
+                        </div>
+                        <div class="network-layer" style="border-color: rgba(168, 85, 247, 0.3); background: rgba(168, 85, 247, 0.03);">
+                            <div class="network-layer-label" style="color: var(--purple);">Auditing & Compliance</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">📋 Database Audit Log</div>
+                                <div class="mini-node">🔍 Configurable Audit Filters</div>
+                                <div class="mini-node">📜 FIPS 140-2</div>
+                                <div class="mini-node">🏛️ SOC2, HIPAA, PCI-DSS, GDPR</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encryption at Rest -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">💽</div>
+                    <div>
+                        <div class="expandable-title">Encryption at Rest</div>
+                        <div class="expandable-subtitle">WiredTiger native encryption with external key management</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Key Hierarchy</h4>
+
+                        <div class="flow-diagram">
+                            <div class="flow-step" style="border-color: rgba(239, 68, 68, 0.3);">
+                                <div class="flow-step-title">Master Key</div>
+                                <div class="flow-step-desc">Stored externally in KMIP server, AWS KMS, Azure Key Vault, or GCP KMS. Never stored on disk.</div>
+                            </div>
+                            <div class="flow-arrow">↓ wraps</div>
+                            <div class="flow-step" style="border-color: rgba(249, 115, 22, 0.3);">
+                                <div class="flow-step-title">Database Key</div>
+                                <div class="flow-step-desc">Per-database encryption key. Encrypted (wrapped) by the Master Key. Stored on disk alongside data.</div>
+                            </div>
+                            <div class="flow-arrow">↓ encrypts</div>
+                            <div class="flow-step" style="border-color: var(--border-accent);">
+                                <div class="flow-step-title">Data Files</div>
+                                <div class="flow-step-desc">WiredTiger data files, indexes, journal, oplog — all encrypted with AES-256-CBC or AES-256-GCM.</div>
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <span class="comment"># mongod.conf — Encryption at Rest with KMIP</span><br>
+                            <span class="keyword">security:</span><br>
+                            &nbsp;&nbsp;<span class="keyword">enableEncryption:</span> <span class="value">true</span><br>
+                            &nbsp;&nbsp;<span class="keyword">kmip:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">serverName:</span> <span class="string">"kmip.example.com"</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">port:</span> <span class="value">5696</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">clientCertificateFile:</span> <span class="string">"/etc/ssl/kmip-client.pem"</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">serverCAFile:</span> <span class="string">"/etc/ssl/kmip-ca.pem"</span><br>
+                            <br>
+                            <span class="comment"># Alternative: AWS KMS</span><br>
+                            <span class="keyword">security:</span><br>
+                            &nbsp;&nbsp;<span class="keyword">enableEncryption:</span> <span class="value">true</span><br>
+                            &nbsp;&nbsp;<span class="keyword">encryptionKeyFile:</span> <span class="string">""</span><br>
+                            &nbsp;&nbsp;<span class="keyword">kmip:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">serverName:</span> <span class="string">"kms.us-east-1.amazonaws.com"</span><br>
+                        </div>
+
+                        <div class="callout success">
+                            <div class="callout-icon">🔄</div>
+                            <div class="callout-text"><strong>Key Rotation:</strong> Master key rotation is online (no downtime). Use <code>db.adminCommand({rotateMasterKey: 1})</code>. The old master key decrypts database keys, which are then re-encrypted with the new master key. Data files are NOT re-encrypted (only the wrapping changes).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Encryption in Transit -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">🔒</div>
+                    <div>
+                        <div class="expandable-title">Encryption in Transit (TLS/SSL)</div>
+                        <div class="expandable-subtitle">All connections encrypted with TLS 1.2+</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-card-title">Client → mongod/mongos</div>
+                                <div class="info-card-text">Application drivers connect over TLS. Certificate validation, hostname verification, and optional client cert auth (x.509 mutual TLS).</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">Member → Member (Intra-cluster)</div>
+                                <div class="info-card-text">Replica set members and shards communicate over TLS with internal auth using keyFile or x.509 member certificates.</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">Agent → Ops Manager</div>
+                                <div class="info-card-text">All agent communication to Ops Manager over HTTPS (port 8443). Agent validates Ops Manager's TLS certificate.</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">mongod → KMIP Server</div>
+                                <div class="info-card-text">Key management traffic encrypted with mutual TLS. Client certificate authenticates the mongod to the KMIP server.</div>
+                            </div>
+                        </div>
+
+                        <div class="code-block">
+                            <span class="comment"># mongod.conf — TLS Configuration</span><br>
+                            <span class="keyword">net:</span><br>
+                            &nbsp;&nbsp;<span class="keyword">tls:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">mode:</span> <span class="value">requireTLS</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">certificateKeyFile:</span> <span class="string">"/etc/ssl/mongod.pem"</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">CAFile:</span> <span class="string">"/etc/ssl/ca.pem"</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">clusterFile:</span> <span class="string">"/etc/ssl/mongod-internal.pem"</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">disabledProtocols:</span> <span class="value">TLS1_0,TLS1_1</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">allowConnectionsWithoutCertificates:</span> <span class="value">false</span><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CSFLE & Queryable Encryption -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">🔐</div>
+                    <div>
+                        <div class="expandable-title">Client-Side Field Level Encryption (CSFLE) & Queryable Encryption</div>
+                        <div class="expandable-subtitle">Encrypt sensitive fields before they leave the application</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <div class="two-col">
+                            <div class="config-block">
+                                <div class="config-block-title">CSFLE (Client-Side Field Level Encryption)</div>
+                                <div class="config-block-desc">Fields encrypted/decrypted by the driver. Server never sees plaintext.</div>
+                                <ul class="arch-box-list">
+                                    <li><strong>Deterministic:</strong> Same input → same ciphertext. Supports equality queries</li>
+                                    <li><strong>Randomized:</strong> Same input → different ciphertext each time. No query support but stronger security</li>
+                                    <li><strong>Key vault:</strong> Collection storing Data Encryption Keys (DEKs), wrapped by a Customer Master Key (CMK)</li>
+                                    <li><strong>CMK providers:</strong> AWS KMS, Azure Key Vault, GCP KMS, KMIP, Local (dev only)</li>
+                                    <li><strong>Automatic mode:</strong> Schema map in driver config defines which fields to encrypt. Driver handles transparently</li>
+                                    <li><strong>mongocryptd:</strong> Enterprise-only helper process for automatic encryption schema validation</li>
+                                </ul>
+                            </div>
+                            <div class="config-block">
+                                <div class="config-block-title">Queryable Encryption</div>
+                                <div class="config-block-desc">Query encrypted data without the server ever decrypting it. Uses structured encryption.</div>
+                                <ul class="arch-box-list">
+                                    <li><strong>Equality queries:</strong> Find documents where encrypted field equals a value</li>
+                                    <li><strong>Range queries:</strong> (Preview) Query encrypted numeric/date fields with $gt, $lt</li>
+                                    <li><strong>Server-side:</strong> MongoDB stores encrypted index metadata. Queries evaluated on encrypted tokens</li>
+                                    <li><strong>Contention factor:</strong> Configurable trade-off between query performance and information leakage</li>
+                                    <li><strong>Compaction:</strong> Periodic metadata cleanup to reduce index overhead</li>
+                                    <li><strong>Use cases:</strong> PII, SSN, medical records, financial data — regulatory compliance</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="flow-horizontal">
+                            <div class="flow-step">
+                                <div class="flow-step-title">Application</div>
+                                <div class="flow-step-desc">{ ssn: "123-45-6789" }</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-step" style="border-color: rgba(249, 115, 22, 0.3);">
+                                <div class="flow-step-title">Driver + CMK</div>
+                                <div class="flow-step-desc">Encrypts ssn field</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-step" style="border-color: rgba(168, 85, 247, 0.3);">
+                                <div class="flow-step-title">MongoDB Server</div>
+                                <div class="flow-step-desc">{ ssn: Binary("encrypted...") }</div>
+                            </div>
+                            <div class="flow-arrow">→</div>
+                            <div class="flow-step" style="border-color: var(--border-accent);">
+                                <div class="flow-step-title">On Disk</div>
+                                <div class="flow-step-desc">Encrypted at field level<br>+ encrypted at rest</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auditing -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">📋</div>
+                    <div>
+                        <div class="expandable-title">Audit Logging</div>
+                        <div class="expandable-subtitle">Granular audit trail for compliance and forensics</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <div class="code-block">
+                            <span class="comment"># mongod.conf — Audit Configuration</span><br>
+                            <span class="keyword">auditLog:</span><br>
+                            &nbsp;&nbsp;<span class="param">destination:</span> <span class="value">file</span> <span class="comment"># file | syslog | console</span><br>
+                            &nbsp;&nbsp;<span class="param">format:</span> <span class="value">JSON</span> <span class="comment"># JSON | BSON</span><br>
+                            &nbsp;&nbsp;<span class="param">path:</span> <span class="string">"/var/log/mongodb/audit.json"</span><br>
+                            &nbsp;&nbsp;<span class="param">filter:</span> <span class="string">'{ atype: { $in: ["authenticate", "createCollection", "dropCollection", "createUser", "dropUser", "insert", "update", "delete"] } }'</span><br>
+                        </div>
+
+                        <h4 style="color: var(--text-primary); margin: 1rem 0;">Auditable Events</h4>
+                        <div class="info-grid">
+                            <div class="info-card">
+                                <div class="info-card-title">Auth Events</div>
+                                <div class="info-card-text"><code>authenticate</code>, <code>authCheck</code>, <code>createUser</code>, <code>dropUser</code>, <code>grantRolesToUser</code>, <code>revokeRolesFromUser</code>, <code>updateUser</code></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">CRUD Events</div>
+                                <div class="info-card-text"><code>insert</code>, <code>update</code>, <code>delete</code>, <code>find</code> — with audit filter to select specific databases/collections</div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">DDL Events</div>
+                                <div class="info-card-text"><code>createCollection</code>, <code>dropCollection</code>, <code>createIndex</code>, <code>dropIndex</code>, <code>createDatabase</code>, <code>dropDatabase</code></div>
+                            </div>
+                            <div class="info-card">
+                                <div class="info-card-title">Admin Events</div>
+                                <div class="info-card-text"><code>replSetReconfig</code>, <code>enableSharding</code>, <code>addShard</code>, <code>shutdown</code>, <code>applicationMessage</code></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 5: MONITORING & LOGGING ==================== -->
+        <div class="tab-panel" id="tab-monitoring">
+            <div class="section">
+                <h2 class="section-heading">Monitoring & Logging</h2>
+                <p class="section-sub">Ops Manager provides deep monitoring of every MongoDB process with real-time dashboards, alerting, and log management.</p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">Metrics Collected</h2>
+
+                <div class="expandable open" onclick="toggleExpandable(this)">
+                    <div class="expandable-header">
+                        <div class="expandable-icon">📊</div>
+                        <div>
+                            <div class="expandable-title">Server Metrics (from serverStatus)</div>
+                            <div class="expandable-subtitle">100+ metrics collected per mongod/mongos process</div>
+                        </div>
+                        <div class="expandable-chevron">▾</div>
+                    </div>
+                    <div class="expandable-body">
+                        <div class="expandable-content">
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <div class="info-card-title">🔗 Connections</div>
+                                    <div class="info-card-text"><code>connections.current</code>, <code>connections.available</code>, <code>connections.totalCreated</code> — Track connection pool usage, detect connection leaks or exhaustion.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">📝 Operations</div>
+                                    <div class="info-card-text"><code>opcounters.insert/query/update/delete/getmore/command</code> — Per-second operation rates. Baseline for capacity planning.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">🧠 Memory</div>
+                                    <div class="info-card-text"><code>mem.resident</code>, <code>mem.virtual</code>, <code>mem.mapped</code>, WiredTiger cache: <code>bytesCurrentlyInCache</code>, <code>bytesReadIntoCache</code>, <code>bytesWrittenFromCache</code>, cache eviction rates.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">🔒 Locks</div>
+                                    <div class="info-card-text"><code>globalLock.activeClients.readers/writers</code>, <code>locks.Global/Database/Collection</code> — Identify lock contention and concurrency bottlenecks.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">💾 WiredTiger</div>
+                                    <div class="info-card-text">Checkpoint duration, cache utilization %, eviction rates, bytes written to journal, log sync latency, concurrent transactions (read/write tickets).</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">🌐 Network</div>
+                                    <div class="info-card-text"><code>network.bytesIn/bytesOut</code>, <code>network.numRequests</code>, <code>network.compression.*.compressor</code> — Network throughput and compression efficiency.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable" onclick="toggleExpandable(this)">
+                    <div class="expandable-header">
+                        <div class="expandable-icon">🔄</div>
+                        <div>
+                            <div class="expandable-title">Replication Metrics</div>
+                            <div class="expandable-subtitle">Lag, oplog window, member state tracking</div>
+                        </div>
+                        <div class="expandable-chevron">▾</div>
+                    </div>
+                    <div class="expandable-body">
+                        <div class="expandable-content">
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <div class="info-card-title">⏱️ Replication Lag</div>
+                                    <div class="info-card-text">Time difference between primary optime and each secondary's optime. Measured in seconds. Alert threshold: typically 10-60 seconds.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">📋 Oplog Window</div>
+                                    <div class="info-card-text">Time span of operations in the oplog. If a secondary falls behind more than this, it needs a full resync. Alert if &lt; 24 hours.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">🔀 Member State</div>
+                                    <div class="info-card-text">PRIMARY, SECONDARY, ARBITER, RECOVERING, STARTUP2, DOWN, ROLLBACK. Track state transitions and election events.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">📊 Replication Throughput</div>
+                                    <div class="info-card-text">Oplog entries applied per second on secondaries. <code>replSetGetStatus.optimes</code>. Tracks how fast secondaries are catching up.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="expandable" onclick="toggleExpandable(this)">
+                    <div class="expandable-header">
+                        <div class="expandable-icon">🖥️</div>
+                        <div>
+                            <div class="expandable-title">Host Hardware Metrics</div>
+                            <div class="expandable-subtitle">System-level metrics from the agent host</div>
+                        </div>
+                        <div class="expandable-chevron">▾</div>
+                    </div>
+                    <div class="expandable-body">
+                        <div class="expandable-content">
+                            <div class="info-grid">
+                                <div class="info-card">
+                                    <div class="info-card-title">⚡ CPU</div>
+                                    <div class="info-card-text">User %, system %, iowait %, idle %. Per-core breakdown. Normalized to mongod process CPU usage.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">💾 Disk</div>
+                                    <div class="info-card-text">IOPS (read/write), throughput (MB/s), latency (ms/op), queue depth, disk utilization %, free space.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">🧠 System Memory</div>
+                                    <div class="info-card-text">Total, free, cached, buffers, swap usage. Compare with WiredTiger cache to detect memory pressure.</div>
+                                </div>
+                                <div class="info-card">
+                                    <div class="info-card-title">🌐 Network</div>
+                                    <div class="info-card-text">Bytes in/out per interface, packet errors, dropped packets. Critical for replica set and sharded cluster health.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">Metric Retention & Granularity</h2>
+                <table class="comp-table">
+                    <thead><tr><th>Time Range</th><th>Granularity</th><th>Retention</th></tr></thead>
+                    <tbody>
+                        <tr><td class="feature-col">Last 48 hours</td><td>1 minute</td><td>2 days</td></tr>
+                        <tr><td class="feature-col">Last 7 days</td><td>5 minutes</td><td>7 days</td></tr>
+                        <tr><td class="feature-col">Last 90 days</td><td>1 hour</td><td>90 days</td></tr>
+                        <tr><td class="feature-col">Last 2 years</td><td>1 day</td><td>730 days</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">Logging Architecture</h2>
+
+                <div class="info-grid">
+                    <div class="info-card">
+                        <div class="info-card-title">📄 MongoDB Server Logs</div>
+                        <div class="info-card-text">
+                            Structured JSON logs (since 4.4). Components: ACCESS, COMMAND, CONTROL, ELECTION, GEO, INDEX, NETWORK, QUERY, REPL, SHARDING, STORAGE, WRITE.<br><br>
+                            Configurable verbosity per component (0-5). Slow query logging via profiler or <code>slowOpThresholdMs</code> (default 100ms).
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🤖 Agent Logs</div>
+                        <div class="info-card-text">
+                            <code>/var/log/mongodb-mms-automation/</code><br><br>
+                            <strong>automation-agent.log</strong> — Goal state changes, process starts/stops, config changes.<br>
+                            <strong>monitoring-agent.log</strong> — Metric collection events, connection issues.<br>
+                            <strong>backup-agent.log</strong> — Oplog tailing status, sync progress.
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🖥️ Ops Manager Logs</div>
+                        <div class="info-card-text">
+                            <code>/opt/mongodb/mms/logs/</code><br><br>
+                            <strong>mms0.log</strong> — Application server logs (HTTP requests, API calls).<br>
+                            <strong>daemon.log</strong> — Backup daemon operations.<br>
+                            <strong>mms0-audit.log</strong> — Ops Manager user actions audit.
+                        </div>
+                    </div>
+                    <div class="info-card">
+                        <div class="info-card-title">🔗 External Integration</div>
+                        <div class="info-card-text">
+                            Forward logs to external systems via:<br><br>
+                            <strong>Syslog:</strong> <code>systemLog.destination: syslog</code><br>
+                            <strong>File → Fluentd/Logstash:</strong> Ship JSON logs to ELK/Splunk<br>
+                            <strong>SNMP:</strong> Enterprise SNMP traps for integration with Nagios, Zabbix
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 6: HA ARCHITECTURE ==================== -->
+        <div class="tab-panel" id="tab-ha">
+            <div class="section">
+                <h2 class="section-heading">HA Architecture</h2>
+                <p class="section-sub">Every component in the MongoDB EA stack can be made highly available. Here's how to eliminate single points of failure.</p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">Component HA Matrix</h2>
+
+                <table class="comp-table">
+                    <thead><tr><th>Component</th><th>HA Strategy</th><th>Min Nodes</th><th>Failover</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td class="feature-col">Ops Manager App Server</td>
+                            <td>2+ instances behind L7 load balancer (sticky sessions)</td>
+                            <td>2</td>
+                            <td>Load balancer routes to healthy instance. 0 downtime.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">Application Database</td>
+                            <td>Standard MongoDB replica set</td>
+                            <td>3</td>
+                            <td>Automatic election. ~5-10s failover.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">Backup Daemon</td>
+                            <td>Active-passive across Ops Manager instances</td>
+                            <td>2 (OM servers)</td>
+                            <td>Automatic failover to another OM instance. May take 1-2 min.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">Blockstore</td>
+                            <td>MongoDB replica set(s). Multiple blockstores for load.</td>
+                            <td>3 per RS</td>
+                            <td>RS automatic election. Multiple blockstores for load distribution.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">Oplog Store</td>
+                            <td>MongoDB replica set(s). Multiple oplog stores for load.</td>
+                            <td>3 per RS</td>
+                            <td>RS automatic election. Multiple stores for write distribution.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">MongoDB Agent</td>
+                            <td>Systemd auto-restart. Ops Manager alerts on disconnect.</td>
+                            <td>1 per host</td>
+                            <td>Agent down = no new automation. Existing processes unaffected.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">Managed MongoDB RS</td>
+                            <td>3+ member replica set, cross-AZ</td>
+                            <td>3</td>
+                            <td>Automatic election, ~5-10s. Priority-based preferred primary.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">mongos (Sharded)</td>
+                            <td>Stateless. Run multiple behind app-level LB.</td>
+                            <td>2+</td>
+                            <td>Driver reconnects to available mongos. No state to lose.</td>
+                        </tr>
+                        <tr>
+                            <td class="feature-col">Config Servers</td>
+                            <td>3-member replica set (CSRS)</td>
+                            <td>3</td>
+                            <td>Automatic election. Cluster read-only if primary lost during metadata ops.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">HA Ops Manager Deployment</h2>
+
+                <div class="arch-diagram">
+                    <div class="arch-diagram-title">Production HA Topology</div>
+
+                    <div class="network-layers">
+                        <div class="network-layer client">
+                            <div class="network-layer-label">Load Balancer (L7, sticky sessions)</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🌐 HAProxy / Nginx / AWS ALB / F5</div>
+                                <div class="mini-node">🔒 TLS termination or passthrough</div>
+                                <div class="mini-node">❤️ Health check: GET /user/login (HTTP 200)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer app">
+                            <div class="network-layer-label">Ops Manager Application Servers (2+)</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🖥️ OM Server 1 (HTTP + Backup Daemon ACTIVE)</div>
+                                <div class="mini-node">🖥️ OM Server 2 (HTTP + Backup Daemon STANDBY)</div>
+                                <div class="mini-node">🖥️ OM Server 3 (HTTP + Backup Daemon STANDBY)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer data">
+                            <div class="network-layer-label">Backing Databases (All Replica Sets)</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node"><span class="mini-node-dot primary"></span> App DB: P + S + S (3 nodes)</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Blockstore 1: P + S + S</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Blockstore 2: P + S + S (optional)</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Oplog Store 1: P + S + S</div>
+                                <div class="mini-node"><span class="mini-node-dot secondary"></span> Oplog Store 2: P + S + S (optional)</div>
+                            </div>
+                        </div>
+                        <div class="network-layer infra">
+                            <div class="network-layer-label">Managed MongoDB Infrastructure</div>
+                            <div class="network-layer-content">
+                                <div class="mini-node">🤖 Agent on every host (auto-restart via systemd)</div>
+                                <div class="mini-node">📦 MongoDB RS / Sharded across AZs</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout warning">
+                    <div class="callout-icon">⚠️</div>
+                    <div class="callout-text"><strong>Critical:</strong> The Ops Manager Application Database should <strong>never</strong> be managed by Ops Manager itself. It must be independently deployed and maintained. Use a dedicated 3-node replica set on separate hardware with its own backup strategy (e.g., filesystem snapshots or mongodump cron).</div>
+                </div>
+
+                <div class="callout info">
+                    <div class="callout-icon">💡</div>
+                    <div class="callout-text"><strong>Backup Daemon HA:</strong> Only one Backup Daemon is active at any time. If the active Ops Manager node goes down, another Ops Manager instance automatically takes over the Backup Daemon role within 1-2 minutes. Head DB files must be on shared storage (NFS/SAN) or the new daemon will rebuild from the blockstore.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB 7: DEPLOYMENT MODELS ==================== -->
+        <div class="tab-panel" id="tab-deployment">
+            <div class="section">
+                <h2 class="section-heading">Deployment Models</h2>
+                <p class="section-sub">MongoDB Enterprise Advanced supports both traditional bare metal/VM deployments and modern Kubernetes-native deployments via the Enterprise Operator.</p>
+            </div>
+
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">Comparison: Kubernetes vs Bare Metal / VM</h2>
+
+                <table class="comp-table">
+                    <thead><tr><th>Aspect</th><th>Bare Metal / VM</th><th>Kubernetes</th></tr></thead>
+                    <tbody>
+                        <tr><td class="feature-col">Deployment</td><td>RPM/DEB packages, manual or Ansible/Terraform</td><td>Enterprise Operator + CRDs (kubectl apply)</td></tr>
+                        <tr><td class="feature-col">Process Lifecycle</td><td>Automation Agent manages mongod processes</td><td>Operator manages StatefulSets → Pods → mongod</td></tr>
+                        <tr><td class="feature-col">Storage</td><td>Local SSD, SAN, NAS — full control</td><td>PersistentVolumeClaims (PVC) — StorageClass dependent</td></tr>
+                        <tr><td class="feature-col">Networking</td><td>Static IPs, DNS, direct port access</td><td>Kubernetes Services, Headless Services, optional Ingress/LoadBalancer</td></tr>
+                        <tr><td class="feature-col">Scaling</td><td>Provision new VMs, install agent, add to topology</td><td><code>kubectl patch</code> to change replica count. Operator handles the rest</td></tr>
+                        <tr><td class="feature-col">Upgrades</td><td>Ops Manager rolling upgrade via Automation Agent</td><td>Operator performs rolling update of StatefulSet pods</td></tr>
+                        <tr><td class="feature-col">HA / Anti-affinity</td><td>Manual rack/AZ placement</td><td>Pod anti-affinity rules, topology spread constraints</td></tr>
+                        <tr><td class="feature-col">Resource Isolation</td><td>Dedicated hardware, cgroups</td><td>Resource limits/requests, QoS classes, node selectors</td></tr>
+                        <tr><td class="feature-col">TLS/Cert Management</td><td>Manual cert deployment or Vault integration</td><td>cert-manager integration, automatic rotation</td></tr>
+                        <tr><td class="feature-col">Monitoring</td><td>Ops Manager Agent (native)</td><td>Ops Manager Agent in sidecar + Prometheus endpoints</td></tr>
+                        <tr><td class="feature-col">Backup</td><td>Ops Manager Backup Agent (native)</td><td>Ops Manager Backup Agent in sidecar</td></tr>
+                        <tr><td class="feature-col">Ops Manager itself</td><td>Installed on dedicated VMs</td><td>Can run in K8s via MongoDBOpsManager CRD</td></tr>
+                        <tr><td class="feature-col">Best For</td><td>Max control, air-gapped, regulatory, legacy infra</td><td>Cloud-native, GitOps, auto-scaling, dev/staging</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bare Metal -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">🖧</div>
+                    <div>
+                        <div class="expandable-title">Bare Metal / VM Deployment</div>
+                        <div class="expandable-subtitle">Traditional deployment with full infrastructure control</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Deployment Steps</h4>
+
+                        <div class="flow-diagram">
+                            <div class="flow-step" style="border-color: rgba(59, 130, 246, 0.3);">
+                                <div class="flow-step-title">1. Provision Infrastructure</div>
+                                <div class="flow-step-desc">Allocate VMs/bare metal for: Ops Manager (2+), App DB (3), Blockstore (3), Oplog Store (3), Managed hosts (N)</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">2. Install Ops Manager</div>
+                                <div class="flow-step-desc">RPM/DEB package. Configure gen.key, mms.conf. Point to Application DB connection string</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">3. Configure Backup Stores</div>
+                                <div class="flow-step-desc">Via Ops Manager UI: add Blockstore RS, Oplog Store RS, or S3 backend. Set retention policies</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">4. Install Agents on Managed Hosts</div>
+                                <div class="flow-step-desc">Download agent from Ops Manager. Install via RPM/DEB. Agent auto-registers with Ops Manager</div>
+                            </div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-step">
+                                <div class="flow-step-title">5. Deploy MongoDB Clusters</div>
+                                <div class="flow-step-desc">Via Ops Manager UI or API: define topology, agents converge to deploy RS/sharded clusters</div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: var(--text-primary); margin: 1.5rem 0 1rem;">Hardware Recommendations</h4>
+                        <table class="comp-table">
+                            <thead><tr><th>Component</th><th>CPU</th><th>RAM</th><th>Storage</th><th>Network</th></tr></thead>
+                            <tbody>
+                                <tr><td class="feature-col">Ops Manager Server</td><td>8+ cores</td><td>16+ GB</td><td>100 GB SSD</td><td>1 Gbps+</td></tr>
+                                <tr><td class="feature-col">Application DB node</td><td>4+ cores</td><td>16+ GB</td><td>SSD, sized by metadata</td><td>1 Gbps+</td></tr>
+                                <tr><td class="feature-col">Blockstore node</td><td>4+ cores</td><td>16+ GB</td><td>SSD, 2-3x total backup data</td><td>10 Gbps</td></tr>
+                                <tr><td class="feature-col">Oplog Store node</td><td>4+ cores</td><td>8+ GB</td><td>SSD, ~10-20% of blockstore</td><td>1 Gbps+</td></tr>
+                                <tr><td class="feature-col">Managed mongod host</td><td>Per workload</td><td>Per workload</td><td>SSD/NVMe recommended</td><td>10 Gbps</td></tr>
+                            </tbody>
+                        </table>
+
+                        <div class="code-block">
+                            <span class="comment"># /opt/mongodb/mms/conf/conf-mms.properties (key settings)</span><br>
+                            <span class="param">mongo.mongoUri</span>=<span class="string">mongodb://appdb1:27017,appdb2:27017,appdb3:27017/?replicaSet=appdbRS</span><br>
+                            <span class="param">mms.centralUrl</span>=<span class="string">https://opsmanager.example.com:8443</span><br>
+                            <span class="param">mms.fromEmailAddr</span>=<span class="string">ops-manager@example.com</span><br>
+                            <span class="param">mms.adminEmailAddr</span>=<span class="string">admin@example.com</span><br>
+                            <span class="param">mms.mail.transport</span>=<span class="string">smtp</span><br>
+                            <span class="param">mms.mail.hostname</span>=<span class="string">smtp.example.com</span><br>
+                            <span class="param">mms.mail.port</span>=<span class="value">587</span><br>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Kubernetes -->
+            <div class="expandable" onclick="toggleExpandable(this)">
+                <div class="expandable-header">
+                    <div class="expandable-icon">☸️</div>
+                    <div>
+                        <div class="expandable-title">Kubernetes Deployment</div>
+                        <div class="expandable-subtitle">Cloud-native deployment with MongoDB Enterprise Kubernetes Operator</div>
+                    </div>
+                    <div class="expandable-chevron">▾</div>
+                </div>
+                <div class="expandable-body">
+                    <div class="expandable-content">
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Operator Architecture</h4>
+
+                        <div class="arch-diagram" style="margin-bottom: 1.5rem;">
+                            <div class="arch-diagram-title">Kubernetes Operator Components</div>
+                            <div class="network-layers">
+                                <div class="network-layer" style="border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.03);">
+                                    <div class="network-layer-label" style="color: var(--cyan);">Custom Resource Definitions (CRDs)</div>
+                                    <div class="network-layer-content">
+                                        <div class="mini-node">📦 MongoDB — Replica sets and sharded clusters</div>
+                                        <div class="mini-node">⚙️ MongoDBOpsManager — Ops Manager itself in K8s</div>
+                                        <div class="mini-node">👤 MongoDBUser — Database user management</div>
+                                        <div class="mini-node">🔗 MongoDBMultiCluster — Multi-K8s clusters</div>
+                                    </div>
+                                </div>
+                                <div class="network-layer app">
+                                    <div class="network-layer-label">Operator Controller (Deployment)</div>
+                                    <div class="network-layer-content">
+                                        <div class="mini-node">🎯 Watches CRDs for changes</div>
+                                        <div class="mini-node">🔄 Reconciliation loop</div>
+                                        <div class="mini-node">📋 Creates/updates StatefulSets, Services, ConfigMaps, Secrets</div>
+                                        <div class="mini-node">🔗 Communicates with Ops Manager API</div>
+                                    </div>
+                                </div>
+                                <div class="network-layer data">
+                                    <div class="network-layer-label">Kubernetes Resources Created</div>
+                                    <div class="network-layer-content">
+                                        <div class="mini-node">📦 StatefulSet (one per RS / shard)</div>
+                                        <div class="mini-node">💾 PersistentVolumeClaim per pod</div>
+                                        <div class="mini-node">🌐 Headless Service (member discovery)</div>
+                                        <div class="mini-node">🔐 Secrets (certs, keyfiles, credentials)</div>
+                                        <div class="mini-node">🤖 Init containers (agent setup)</div>
+                                        <div class="mini-node">📊 Sidecar containers (agent process)</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4 style="color: var(--text-primary); margin-bottom: 1rem;">Example: Deploy a 3-Node Replica Set</h4>
+                        <div class="code-block">
+                            <span class="comment"># mongodb-rs.yaml</span><br>
+                            <span class="keyword">apiVersion:</span> <span class="string">mongodb.com/v1</span><br>
+                            <span class="keyword">kind:</span> <span class="string">MongoDB</span><br>
+                            <span class="keyword">metadata:</span><br>
+                            &nbsp;&nbsp;<span class="param">name:</span> <span class="string">my-replica-set</span><br>
+                            &nbsp;&nbsp;<span class="param">namespace:</span> <span class="string">mongodb</span><br>
+                            <span class="keyword">spec:</span><br>
+                            &nbsp;&nbsp;<span class="param">members:</span> <span class="value">3</span><br>
+                            &nbsp;&nbsp;<span class="param">version:</span> <span class="string">"7.0.12-ent"</span><br>
+                            &nbsp;&nbsp;<span class="param">type:</span> <span class="string">ReplicaSet</span><br>
+                            &nbsp;&nbsp;<span class="keyword">opsManager:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">configMapRef:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">name:</span> <span class="string">ops-manager-connection</span><br>
+                            &nbsp;&nbsp;<span class="keyword">credentials:</span> <span class="string">ops-manager-org-credentials</span><br>
+                            &nbsp;&nbsp;<span class="keyword">persistent:</span> <span class="value">true</span><br>
+                            &nbsp;&nbsp;<span class="keyword">podSpec:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">podTemplate:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">spec:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">affinity:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">podAntiAffinity:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">requiredDuringSchedulingIgnoredDuringExecution:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="keyword">labelSelector:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">matchExpressions:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="param">key:</span> <span class="string">app</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">operator:</span> <span class="string">In</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">values:</span> [<span class="string">"my-replica-set"</span>]<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">topologyKey:</span> <span class="string">"topology.kubernetes.io/zone"</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">persistence:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">single:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">storage:</span> <span class="value">50Gi</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">storageClass:</span> <span class="string">gp3-encrypted</span><br>
+                            &nbsp;&nbsp;<span class="keyword">security:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">tls:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">enabled:</span> <span class="value">true</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">authentication:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">modes:</span> [<span class="string">"SCRAM"</span>]<br>
+                        </div>
+
+                        <h4 style="color: var(--text-primary); margin: 1.5rem 0 1rem;">Ops Manager in Kubernetes</h4>
+                        <div class="code-block">
+                            <span class="comment"># ops-manager.yaml — Deploy Ops Manager itself in K8s</span><br>
+                            <span class="keyword">apiVersion:</span> <span class="string">mongodb.com/v1</span><br>
+                            <span class="keyword">kind:</span> <span class="string">MongoDBOpsManager</span><br>
+                            <span class="keyword">metadata:</span><br>
+                            &nbsp;&nbsp;<span class="param">name:</span> <span class="string">ops-manager</span><br>
+                            <span class="keyword">spec:</span><br>
+                            &nbsp;&nbsp;<span class="param">replicas:</span> <span class="value">2</span> <span class="comment"># HA: 2 Ops Manager instances</span><br>
+                            &nbsp;&nbsp;<span class="param">version:</span> <span class="string">"7.0.4"</span><br>
+                            &nbsp;&nbsp;<span class="keyword">adminCredentials:</span> <span class="string">ops-manager-admin</span><br>
+                            &nbsp;&nbsp;<span class="keyword">applicationDatabase:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">members:</span> <span class="value">3</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">podSpec:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">persistence:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">single:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">storage:</span> <span class="value">20Gi</span><br>
+                            &nbsp;&nbsp;<span class="keyword">backup:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="param">enabled:</span> <span class="value">true</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;<span class="keyword">s3Stores:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;- <span class="param">name:</span> <span class="string">s3-backup</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">s3BucketEndpoint:</span> <span class="string">s3.amazonaws.com</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">s3BucketName:</span> <span class="string">mongodb-backups</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">s3SecretRef:</span><br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="param">name:</span> <span class="string">s3-credentials</span><br>
+                        </div>
+
+                        <div class="callout info">
+                            <div class="callout-icon">☸️</div>
+                            <div class="callout-text"><strong>Multi-Kubernetes Cluster:</strong> The Enterprise Operator supports deploying a single MongoDB replica set across multiple Kubernetes clusters (e.g., one member per AZ/region). Uses <code>MongoDBMultiCluster</code> CRD. Requires network connectivity between clusters (e.g., VPC peering, service mesh).</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Decision Framework -->
+            <div class="section">
+                <h2 class="section-heading" style="font-size: 1.25rem;">When to Use Which?</h2>
+
+                <div class="two-col">
+                    <div class="config-block">
+                        <div class="config-block-title">Choose Bare Metal / VM when...</div>
+                        <ul class="arch-box-list">
+                            <li>Air-gapped / disconnected environments</li>
+                            <li>Strict regulatory requirements (gov, financial)</li>
+                            <li>Maximum control over hardware and networking</li>
+                            <li>Existing VM infrastructure (VMware, OpenStack)</li>
+                            <li>Very high-performance workloads needing NVMe/local SSD</li>
+                            <li>Team has limited Kubernetes expertise</li>
+                        </ul>
+                    </div>
+                    <div class="config-block">
+                        <div class="config-block-title">Choose Kubernetes when...</div>
+                        <ul class="arch-box-list">
+                            <li>Cloud-native infrastructure strategy</li>
+                            <li>GitOps / Infrastructure-as-Code workflows</li>
+                            <li>Rapid provisioning of dev/staging/test clusters</li>
+                            <li>Auto-healing and self-service for developers</li>
+                            <li>Multi-cloud or hybrid deployments</li>
+                            <li>Integration with service mesh (Istio, Linkerd)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div><!-- /main-content -->
+
+    <script>
+        // Tab Navigation
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        // Expandable Panels
+        function toggleExpandable(el) {
+            el.classList.toggle('open');
+        }
+
+        // Subservice Cards
+        function toggleSubservice(el) {
+            if (el.classList.contains('selected')) {
+                el.classList.remove('selected');
+            } else {
+                el.classList.add('selected');
+            }
+        }
+    </script>
+</body>
+</html>
