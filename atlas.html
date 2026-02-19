@@ -343,6 +343,161 @@
             color: #000;
             font-weight: 600;
         }
+
+        /* Overview section */
+        .ov-wrapper { position: relative; }
+        .ov-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 600px; height: 600px;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ov-hub {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 24px 32px 18px;
+            background: linear-gradient(145deg, rgba(22,101,52,0.35), rgba(5,46,22,0.55));
+            border: 1.5px solid rgba(34,197,94,0.45);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(34,197,94,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .ov-hub-title { font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .ov-hub-title span { color: #4ade80; }
+        .ov-hub-sub { font-size: 0.7rem; color: #86efac; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600; }
+
+        @keyframes ov-orbit { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .ov-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 200px; height: 200px;
+            margin: -100px 0 0 -100px;
+            border: 1px dashed rgba(34,197,94,0.18);
+            border-radius: 50%;
+            animation: ov-orbit 40s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ov-ring:nth-child(2) { width: 320px; height: 320px; margin: -160px 0 0 -160px; animation-duration: 55s; animation-direction: reverse; }
+
+        .ov-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px 14px 16px;
+            background: linear-gradient(160deg, rgba(17,24,39,0.95), rgba(10,15,25,0.98));
+            border: 1px solid rgba(55,65,81,0.6);
+            border-radius: 16px;
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+            cursor: default;
+        }
+        .ov-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(160deg, rgba(34,197,94,0.06), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.35s;
+            pointer-events: none;
+        }
+        .ov-card:hover {
+            border-color: rgba(34,197,94,0.5) !important;
+            transform: translateY(-6px) !important;
+            box-shadow: 0 12px 32px rgba(34,197,94,0.12), 0 0 0 1px rgba(34,197,94,0.15) !important;
+        }
+        .ov-card:hover::before { opacity: 1; }
+        .ov-card-icon {
+            width: 40px; height: 40px;
+            padding: 8px;
+            border-radius: 12px;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.2);
+            margin-bottom: 10px;
+            color: #4ade80;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .ov-card:hover .ov-card-icon {
+            background: rgba(34,197,94,0.18);
+            border-color: rgba(34,197,94,0.4);
+        }
+        .ov-card h4 { font-size: 0.82rem; font-weight: 700; color: #f1f5f9; margin-bottom: 3px; line-height: 1.3; }
+        .ov-card p { font-size: 0.68rem; color: #9ca3af; line-height: 1.4; }
+
+        .ov-card-tooltip {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            max-width: 340px;
+            width: max-content;
+            padding: 14px 18px;
+            background: rgba(10, 20, 30, 0.97);
+            border: 1px solid rgba(34,197,94,0.35);
+            border-radius: 14px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,197,94,0.1);
+        }
+        .ov-card-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .ov-card-tooltip-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #4ade80;
+            margin-bottom: 6px;
+        }
+        .ov-card-tooltip-desc {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            line-height: 1.55;
+            margin-bottom: 10px;
+        }
+        .ov-card-tooltip-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #4ade80;
+            text-decoration: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.25);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .ov-card-tooltip-link:hover {
+            background: rgba(34,197,94,0.2);
+            border-color: rgba(34,197,94,0.5);
+        }
+
+        .ov-footer-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #166534, #15803d);
+            border: 1px solid rgba(34,197,94,0.3);
+            color: #dcfce7;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 999px;
+            letter-spacing: 0.03em;
+        }
     </style>
 </head>
 
@@ -373,9 +528,7 @@
     <div class="container mx-auto px-4 py-8 md:py-12">
 
         <header class="text-center mb-16">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">MongoDB Atlas Advanced Deployment Guide</h1>
-            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">An interactive exploration of multi-cloud
-                networking, global deployments, and resilience.</p>
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4"><U>MongoDB Atlas DeveloperGuide</U></h1>
         </header>
 
         <main class="space-y-20">
@@ -385,121 +538,93 @@
 
                         <section id="Platform">
                             <h2 class="section-heading">Overview</h2>
-                            
                         </section>
-                        <div class="grid grid-cols-12 gap-y-28 lg:gap-x-8">
 
-                    <!-- Left Column: Embedding Model -->
-                    <div class="col-span-12 lg:col-span-3 flex justify-center items-center">
-                        <div id="embedding-model"
-                            class="relative component border-2 border-green-500 rounded-2xl p-6 text-center w-full max-w-xs">
-                            <svg class="w-10 h-10 mx-auto mb-3 icon-green" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                            </svg>
-                            <h3 class="text-lg font-bold text-white">VoyageAI</h3>
-                            <p class="text-sm text-gray-400">Embedding, Contextual and Reranking Models</p>
-                        </div>
-                    </div>
+                        <div class="ov-wrapper">
+                            <div class="ov-ring"></div>
+                            <div class="ov-ring"></div>
 
-                    <!-- Center Column: MongoDB Atlas -->
-                    <div class="col-span-12 lg:col-span-6">
-                        <div id="atlas-main" class="relative component rounded-2xl p-6 w-full">
-                            <h2
-                                class="text-2xl font-bold text-center text-white bg-green-600 rounded-full py-2 px-6 w-max mx-auto -mt-12 mb-6">
-                                MongoDB Atlas</h2>
-                            <div class="grid grid-cols-3 gap-4">
-                                <!-- Atlas Services -->
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Multi-cloud, fully managed MongoDB with 99.995% SLA">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Atlas Database</p>
-                                    <p class="text-xs text-gray-400">for data storage</p>
+                            <div class="relative z-10 max-w-3xl mx-auto">
+                                <!-- Centered Atlas Hub -->
+                                <div class="flex flex-col items-center mb-8">
+                                    <div class="ov-hub">
+                                        <div class="ov-hub-sub">Developer Data Platform</div>
+                                        <div class="ov-hub-title">MongoDB <span>Atlas</span></div>
+                                    </div>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Query encrypted fields without decrypting on the server">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Queryable Encryption</p>
-                                    <p class="text-xs text-gray-400">for PII protection</p>
+
+                                <!-- 5-column grid: row 1 = 5 cards, row 2 = 5 cards -->
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                                    <div class="ov-card" data-desc="Multi-cloud, fully managed MongoDB with 99.995% SLA. Deploy replica sets and sharded clusters on AWS, GCP, or Azure with automated backups and point-in-time recovery." data-docs="https://www.mongodb.com/docs/atlas/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg></div>
+                                        <h4>Atlas Database</h4>
+                                        <p>Fully managed multi-cloud storage</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Industry-first technology to run expressive queries — including equality, range, prefix, and more — on fully encrypted data. The server never sees plaintext." data-docs="https://www.mongodb.com/docs/manual/core/queryable-encryption/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                                        <h4>Queryable Encryption</h4>
+                                        <p>Query encrypted fields in-place</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Automatically scale compute and storage based on real-time utilization. Storage scales at 90% usage; compute scales with configurable min/max cluster tiers." data-docs="https://www.mongodb.com/docs/atlas/cluster-autoscaling/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg></div>
+                                        <h4>Auto-scaling</h4>
+                                        <p>Compute &amp; storage on demand</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Store and query high-dimensional vector embeddings alongside operational data. Build semantic search, RAG pipelines, and recommendation engines with HNSW and IVF indexes." data-docs="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/">
+                                        <div class="ov-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18.26L4.947 22.208l1.575-7.928L.588 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.934 5.488 1.575 7.928z"/></svg></div>
+                                        <h4>Vector Search</h4>
+                                        <p>HNSW &amp; IVF on embeddings</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Lucene-powered full-text search with fuzzy matching, autocomplete, facets, highlights, and scoring — all using the same MongoDB Query API. No separate search engine needed." data-docs="https://www.mongodb.com/docs/atlas/atlas-search/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
+                                        <h4>Atlas Search</h4>
+                                        <p>Lucene full-text, fuzzy, facets</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Pin data to specific regions using zone sharding for GDPR compliance and data sovereignty. Users read and write locally with single-digit ms latency — data never leaves the zone." data-docs="https://www.mongodb.com/docs/atlas/global-clusters/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.737 11a4 4 0 016.526 0M6 15a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z"/></svg></div>
+                                        <h4>Global Clusters</h4>
+                                        <p>Zone sharding for sovereignty</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Execute serverless functions in response to database events, user authentication, or schedules. Atlas Stream Processing adds Apache Kafka-compatible real-time data pipelines." data-docs="https://www.mongodb.com/docs/atlas/app-services/triggers/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg></div>
+                                        <h4>Triggers &amp; Streams</h4>
+                                        <p>Event-driven + stream processing</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Multi-document, multi-collection ACID transactions with snapshot isolation — even across sharded clusters. Same consistency guarantees as relational databases." data-docs="https://www.mongodb.com/docs/manual/core/transactions/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"/></svg></div>
+                                        <h4>ACID Transactions</h4>
+                                        <p>Multi-doc distributed guarantees</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Automatically tier aged data to low-cost S3-backed cloud storage based on rules you define. Archived data remains fully queryable through the same Atlas connection." data-docs="https://www.mongodb.com/docs/atlas/online-archive/manage-online-archive/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
+                                        <h4>Online Archive</h4>
+                                        <p>Tier cold data, still queryable</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="MongoDB's native embedding and reranking models. Generate high-quality vector embeddings and contextual reranking directly within your Atlas pipeline — no external ML infra required." data-docs="https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/reciprocal-rank-fusion/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div>
+                                        <h4>VoyageAI</h4>
+                                        <p>Embeddings &amp; reranking models</p>
+                                    </div>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Compute & storage scale automatically based on load">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Auto-scaling</p>
-                                    <p class="text-xs text-gray-400">to respond to traffic bursts</p>
+
+                                <!-- Shared hover tooltip for overview cards -->
+                                <div id="ov-card-tip" class="ov-card-tooltip">
+                                    <div class="ov-card-tooltip-title"></div>
+                                    <div class="ov-card-tooltip-desc"></div>
+                                    <a class="ov-card-tooltip-link" href="#" target="_blank">
+                                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        View Documentation
+                                    </a>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Semantic search with HNSW & IVF indexes on embeddings">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
-                                        class="w-10 h-10 mx-auto mb-2 icon-green">
-                                        <path
-                                            d="M12.0006 18.26L4.94715 22.2082L6.52248 14.2799L0.587891 8.7918L8.61493 7.84006L12.0006 0.5L15.3862 7.84006L23.4132 8.7918L17.4787 14.2799L19.054 22.2082L12.0006 18.26Z" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Atlas Vector Search</p>
-                                    <p class="text-xs text-gray-400">for similarity (K-NN) search</p>
-                                </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Lucene-based full-text search with fuzzy, autocomplete, facets">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Atlas Search</p>
-                                    <p class="text-xs text-gray-400">for keyword search</p>
-                                </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Zone sharding pins data to regions for GDPR, sovereignty">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.737 11a4 4 0 016.526 0M6 15a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Global clusters</p>
-                                    <p class="text-xs text-gray-400">for data sovereignty</p>
-                                </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Event-driven functions + Apache Kafka-based stream processing">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M8 9l4-4 4 4m0 6l-4 4-4-4" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Atlas Triggers and StreamProcessing</p>
-                                    <p class="text-xs text-gray-400">for real time streaming and actions</p>
-                                </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Multi-document, multi-collection distributed transactions">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">ACID transactions</p>
-                                    <p class="text-xs text-gray-400">for data integrity guarantees</p>
-                                </div>
-                                <div class="relative text-center component p-2 rounded-lg" data-tip="Auto-archive cold data to S3-backed storage, still queryable">
-                                    <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
-                                        stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                    </svg>
-                                    <p class="font-semibold text-sm text-white">Atlas Online Archive</p>
-                                    <p class="text-xs text-gray-400">for tiering aged data</p>
+
+                                <div class="flex justify-center mt-8">
+                                    <div class="ov-footer-pill">
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        Flexible document model &amp; unified query API
+                                    </div>
                                 </div>
                             </div>
-                            <div
-                                class="absolute -bottom-5 left-1/2 -translate-x-1/2 bg-green-600 text-white text-[10px] font-semibold px-4 py-2 rounded-full">
-                                Flexible data model and unified query API
-                            </div>
                         </div>
-                    </div>
-                </div>
 
                         <div class="p-4 sm:p-6 lg:p-8 mt-12">
                             <div>
@@ -983,6 +1108,79 @@
 
         document.addEventListener('DOMContentLoaded', function () {
 
+            // Overview card hover: lift effect + tooltip with description & docs link
+            const ovTip = document.getElementById('ov-card-tip');
+            const ovTipTitle = ovTip.querySelector('.ov-card-tooltip-title');
+            const ovTipDesc = ovTip.querySelector('.ov-card-tooltip-desc');
+            const ovTipLink = ovTip.querySelector('.ov-card-tooltip-link');
+            let ovTipTimer = null;
+
+            document.querySelectorAll('.ov-card').forEach(card => {
+                card.style.cursor = 'pointer';
+                card.addEventListener('mouseenter', function(e) {
+                    this.style.transform = 'translateY(-6px)';
+                    this.style.borderColor = 'rgba(34,197,94,0.5)';
+                    this.style.boxShadow = '0 12px 32px rgba(34,197,94,0.15), 0 0 0 1px rgba(34,197,94,0.2)';
+                    const icon = this.querySelector('.ov-card-icon');
+                    if (icon) {
+                        icon.style.background = 'rgba(34,197,94,0.2)';
+                        icon.style.borderColor = 'rgba(34,197,94,0.45)';
+                    }
+
+                    const desc = this.dataset.desc;
+                    const docs = this.dataset.docs;
+                    if (!desc) return;
+
+                    clearTimeout(ovTipTimer);
+                    const title = this.querySelector('h4');
+                    ovTipTitle.textContent = title ? title.textContent : '';
+                    ovTipDesc.textContent = desc;
+                    if (docs) {
+                        ovTipLink.href = docs;
+                        ovTipLink.style.display = '';
+                    } else {
+                        ovTipLink.style.display = 'none';
+                    }
+
+                    ovTip.classList.add('visible');
+
+                    const rect = this.getBoundingClientRect();
+                    const tipW = ovTip.offsetWidth;
+                    const tipH = ovTip.offsetHeight;
+                    let left = rect.left + rect.width / 2 - tipW / 2;
+                    let top = rect.bottom + 10;
+
+                    if (top + tipH > window.innerHeight - 12) {
+                        top = rect.top - tipH - 10;
+                    }
+                    if (left < 8) left = 8;
+                    if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
+
+                    ovTip.style.left = left + 'px';
+                    ovTip.style.top = top + 'px';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                    const icon = this.querySelector('.ov-card-icon');
+                    if (icon) {
+                        icon.style.background = '';
+                        icon.style.borderColor = '';
+                    }
+                    ovTipTimer = setTimeout(() => ovTip.classList.remove('visible'), 150);
+                });
+
+                card.addEventListener('click', function() {
+                    const docs = this.dataset.docs;
+                    if (docs) window.open(docs, '_blank');
+                });
+            });
+
+            ovTip.addEventListener('mouseenter', () => clearTimeout(ovTipTimer));
+            ovTip.addEventListener('mouseleave', () => {
+                ovTipTimer = setTimeout(() => ovTip.classList.remove('visible'), 150);
+            });
             // Overview grid tooltip (single shared element, positioned via JS)
             const overviewTip = document.getElementById('overview-tooltip');
             document.querySelectorAll('.component[data-tip]').forEach(el => {
