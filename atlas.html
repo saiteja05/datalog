@@ -37,7 +37,7 @@
         }
 
         .flow-line-solid {
-            stroke-dasharray: none;
+            stroke-dasharray: 0;
         }
 
         .icon-green {
@@ -120,22 +120,22 @@
 
         .connection-line {
             stroke-dasharray: 5;
-            animation: dash 1s linear infinite;
+            animation: dashFlow 1s linear infinite;
         }
 
-        @keyframes dash {
+        @keyframes dashFlow {
             to {
                 stroke-dashoffset: -10;
             }
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .diagram-component {
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
+        @keyframes dash {
+            from {
+                stroke-dashoffset: 100;
+            }
+            to {
+                stroke-dashoffset: 0;
+            }
         }
 
         .diagram-component:hover>rect,
@@ -154,14 +154,194 @@
             animation: dash 1s linear forwards;
         }
 
-        @keyframes dash {
-            from {
-                stroke-dashoffset: 100;
-            }
+        /* Tooltip for overview components — shown via JS to avoid overlap */
+        #overview-tooltip {
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            color: #d1d5db;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.15s;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        }
+        #overview-tooltip.visible {
+            opacity: 1;
+        }
+        #overview-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-bottom-color: #22c55e;
+        }
 
-            to {
-                stroke-dashoffset: 0;
-            }
+        /* Failover timeline */
+        .failover-timeline {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-top: 1.5rem;
+            padding: 0 1rem;
+        }
+        .timeline-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            opacity: 0.3;
+            transition: all 0.5s;
+        }
+        .timeline-step.active {
+            opacity: 1;
+        }
+        .timeline-step.completed {
+            opacity: 0.7;
+        }
+        .timeline-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #374151;
+            border: 2px solid #4b5563;
+            margin: 0 auto 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.5s;
+        }
+        .timeline-step.active .timeline-dot {
+            background: #22c55e;
+            border-color: #22c55e;
+            color: #000;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+        }
+        .timeline-step.completed .timeline-dot {
+            background: #065f46;
+            border-color: #22c55e;
+            color: #22c55e;
+        }
+        .timeline-step.failed .timeline-dot {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+        }
+        .timeline-label {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            max-width: 100px;
+            margin: 0 auto;
+            line-height: 1.3;
+        }
+        .timeline-connector {
+            flex: 0.5;
+            height: 2px;
+            background: #374151;
+            transition: background 0.5s;
+        }
+        .timeline-connector.active {
+            background: #22c55e;
+        }
+
+        /* Replication pulse */
+        @keyframes replicationPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .replicating-node {
+            animation: replicationPulse 0.6s ease-in-out;
+        }
+
+        /* Oplog replication indicator */
+        .oplog-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #22c55e;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .oplog-indicator.syncing {
+            opacity: 1;
+            animation: replicationPulse 1s infinite;
+        }
+
+        /* Global cluster animated lines */
+        @keyframes globalFlow {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .global-flow-line {
+            stroke-dasharray: 5 5;
+            animation: globalFlow 0.8s linear infinite;
+        }
+        .global-region {
+            transition: all 0.3s;
+        }
+        .global-region:hover {
+            transform: translateY(-3px);
+        }
+        .global-region.region-active {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Write/Read badges */
+        .io-badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .io-badge.write { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .io-badge.read { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+
+        /* Latency counter */
+        .latency-badge {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #fbbf24;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .latency-badge.visible { opacity: 1; }
+
+        /* Network mode toggle */
+        .net-toggle {
+            display: inline-flex;
+            background: #1f2937;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            overflow: hidden;
+        }
+        .net-toggle-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            background: transparent;
+            color: #9ca3af;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .net-toggle-btn.active {
+            background: #22c55e;
+            color: #000;
+            font-weight: 600;
         }
     </style>
 </head>
@@ -203,14 +383,10 @@
 
             <div id="diagram-container" class="relative w-full max-w-7xl mx-auto">
 
-                        <div>
-                            <section id="Platform">
-                                <h2 class="section-heading">Overview</h2>
-                                <p class="max-w-3xl mx-auto mt-4 text-lg text-gray-400">
-                                Encompassing the features of MongoDB Atlas Platform and it's newest addition VoyageAI.
-                                </p>
-                                <br>
-                        </div>
+                        <section id="Platform">
+                            <h2 class="section-heading">Overview</h2>
+                            
+                        </section>
                         <div class="grid grid-cols-12 gap-y-28 lg:gap-x-8">
 
                     <!-- Left Column: Embedding Model -->
@@ -235,7 +411,7 @@
                                 MongoDB Atlas</h2>
                             <div class="grid grid-cols-3 gap-4">
                                 <!-- Atlas Services -->
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Multi-cloud, fully managed MongoDB with 99.995% SLA">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -244,7 +420,7 @@
                                     <p class="font-semibold text-sm text-white">Atlas Database</p>
                                     <p class="text-xs text-gray-400">for data storage</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Query encrypted fields without decrypting on the server">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -253,7 +429,7 @@
                                     <p class="font-semibold text-sm text-white">Queryable Encryption</p>
                                     <p class="text-xs text-gray-400">for PII protection</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Compute & storage scale automatically based on load">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -262,7 +438,7 @@
                                     <p class="font-semibold text-sm text-white">Auto-scaling</p>
                                     <p class="text-xs text-gray-400">to respond to traffic bursts</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Semantic search with HNSW & IVF indexes on embeddings">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
                                         class="w-10 h-10 mx-auto mb-2 icon-green">
                                         <path
@@ -271,7 +447,7 @@
                                     <p class="font-semibold text-sm text-white">Atlas Vector Search</p>
                                     <p class="text-xs text-gray-400">for similarity (K-NN) search</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Lucene-based full-text search with fuzzy, autocomplete, facets">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -280,7 +456,7 @@
                                     <p class="font-semibold text-sm text-white">Atlas Search</p>
                                     <p class="text-xs text-gray-400">for keyword search</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Zone sharding pins data to regions for GDPR, sovereignty">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -289,7 +465,7 @@
                                     <p class="font-semibold text-sm text-white">Global clusters</p>
                                     <p class="text-xs text-gray-400">for data sovereignty</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Event-driven functions + Apache Kafka-based stream processing">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -298,7 +474,7 @@
                                     <p class="font-semibold text-sm text-white">Atlas Triggers and StreamProcessing</p>
                                     <p class="text-xs text-gray-400">for real time streaming and actions</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Multi-document, multi-collection distributed transactions">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -307,7 +483,7 @@
                                     <p class="font-semibold text-sm text-white">ACID transactions</p>
                                     <p class="text-xs text-gray-400">for data integrity guarantees</p>
                                 </div>
-                                <div class="relative text-center component p-2 rounded-lg">
+                                <div class="relative text-center component p-2 rounded-lg" data-tip="Auto-archive cold data to S3-backed storage, still queryable">
                                     <svg class="w-10 h-10 mx-auto mb-2 icon-green" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -325,16 +501,11 @@
                     </div>
                 </div>
 
-                 <br> 
-                        <main class="p-4 sm:p-6 lg:p-8">
+                        <div class="p-4 sm:p-6 lg:p-8 mt-12">
                             <div>
                                 <section id="home">
-                                    <h2 class="section-heading">Grantual Details</h2>
-                                    <p class="max-w-3xl mx-auto mt-4 text-lg text-gray-400">
-                                        Click on any component of the componet below to learn more about its function.
-                                        The details will appear in the panel on the right (or at the bottom on smaller
-                                        screens).
-                                    </p>
+                                    <h2 class="section-heading">Granular Details</h2>
+                                   
                             </div>
                             <div class="flex flex-col lg:flex-row gap-8">
                                 <!-- Main Diagram Area -->
@@ -456,10 +627,9 @@
                                     </div>
                                 </div>
                             </div>
-                        </main>
+                        </div>
 
-                        <br> 
-                        <section id="disaster-recovery">
+                        <section id="disaster-recovery" class="mt-16">
                             <h2 class="section-heading">Disaster Recovery & Automated Failover</h2>
                             <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">High availability is built into
                                 the core of MongoDB's replica set architecture. In the event of a primary node failure,
@@ -469,21 +639,43 @@
                                 <div id="failover-diagram"
                                     class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
                                     <div id="node-1"
-                                        class="failover-node diagram-component p-4 rounded-lg border db-color-mongo primary">
+                                        class="failover-node diagram-component p-4 rounded-lg border db-color-mongo primary relative">
+                                        <div id="oplog-1" class="oplog-indicator syncing"></div>
                                         <h4 class="font-bold"><span class="status-dot"></span>Node 1 (Primary)</h4>
                                         <p class="text-sm">Region: us-east-1</p>
+                                        <div class="mt-2"><span class="io-badge write">Writes</span> <span class="io-badge read">Reads</span></div>
                                     </div>
                                     <div id="node-2"
-                                        class="failover-node diagram-component p-4 rounded-lg border secondary">
+                                        class="failover-node diagram-component p-4 rounded-lg border secondary relative">
+                                        <div id="oplog-2" class="oplog-indicator syncing"></div>
                                         <h4 class="font-bold"><span class="status-dot"></span>Node 2 (Secondary)</h4>
                                         <p class="text-sm">Region: us-east-2</p>
+                                        <div class="mt-2"><span class="io-badge read">Reads</span></div>
                                     </div>
                                     <div id="node-3"
-                                        class="failover-node diagram-component p-4 rounded-lg border secondary">
+                                        class="failover-node diagram-component p-4 rounded-lg border secondary relative">
+                                        <div id="oplog-3" class="oplog-indicator syncing"></div>
                                         <h4 class="font-bold"><span class="status-dot"></span>Node 3 (Secondary)</h4>
                                         <p class="text-sm">Region: us-west-1</p>
+                                        <div class="mt-2"><span class="io-badge read">Reads</span></div>
                                     </div>
                                 </div>
+
+                                <!-- Failover Timeline -->
+                                <div id="failover-timeline" class="failover-timeline" style="display:none;">
+                                    <div class="timeline-step" id="ts-1"><div class="timeline-dot">1</div><div class="timeline-label">Primary fails</div></div>
+                                    <div class="timeline-connector" id="tc-1"></div>
+                                    <div class="timeline-step" id="ts-2"><div class="timeline-dot">2</div><div class="timeline-label">Heartbeat timeout (10s)</div></div>
+                                    <div class="timeline-connector" id="tc-2"></div>
+                                    <div class="timeline-step" id="ts-3"><div class="timeline-dot">3</div><div class="timeline-label">Election called</div></div>
+                                    <div class="timeline-connector" id="tc-3"></div>
+                                    <div class="timeline-step" id="ts-4"><div class="timeline-dot">4</div><div class="timeline-label">Votes cast</div></div>
+                                    <div class="timeline-connector" id="tc-4"></div>
+                                    <div class="timeline-step" id="ts-5"><div class="timeline-dot">5</div><div class="timeline-label">New primary elected</div></div>
+                                    <div class="timeline-connector" id="tc-5"></div>
+                                    <div class="timeline-step" id="ts-6"><div class="timeline-dot">6</div><div class="timeline-label">Drivers reconnect</div></div>
+                                </div>
+
                                 <div class="text-center mt-6">
                                     <button id="failover-btn"
                                         class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Simulate
@@ -493,7 +685,7 @@
                                 <p class="text-center mt-4 text-slate-400">This automated failover ensures your
                                     application remains available with minimal disruption. For disaster recovery,
                                     placing a secondary node in a separate geographic region (like Node 2 and 3) ensures
-                                    data durability and avalibility for reads and writes even in the event of a full
+                                    data durability and availability for reads and writes even in the event of a full
                                     regional outage. <a href="https://www.mongodb.com/docs/manual/replication/"
                                         target="_blank" class="text-indigo-400 hover:underline">[Ref: Replication
                                         Docs]</a></p>
@@ -501,8 +693,7 @@
                         </section>
 
 
-                        <br> 
-                        <section id="sharding">
+                        <section id="sharding" class="mt-16">
                             <h2 class="section-heading">Sharding for Horizontal Scaling</h2>
                             <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">When a dataset outgrows the
                                 capacity of a single server (vertical scaling), MongoDB uses sharding to distribute data
@@ -597,8 +788,7 @@
                                 </div>
                             </div>
                         </section>
-                        <br> 
-                        <div class="space-y-8">
+                        <div class="space-y-8 mt-8">
 
                             <!-- Section 1: Interactive Sharding Example -->
                             <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
@@ -619,58 +809,80 @@
 
                         </div>
 
-                        <br>
-                        <section id="multi-region">
+                        <section id="multi-region" class="mt-16">
                             <h2 class="section-heading">Global Deployments</h2>
-                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters allow you
-                                to deploy a single database across multiple cloud regions and providers, enabling
-                                low-latency reads and writes for a global user base in an active-active configuration.
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters use
+                                <strong class="text-green-400">zone sharding</strong> to partition data across regions
+                                by a location field in the shard key. Each region owns its shard — writes are local to that
+                                zone and never cross the network. This gives you data sovereignty and single-digit
+                                millisecond latency for every user, everywhere.
                             </p>
                             <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <p class="text-center text-sm text-gray-500 mb-4">Click a region to simulate a local write to that zone's shard</p>
                                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
-                                    <!-- Region 1 -->
-                                    <div class="diagram-component p-4 rounded-lg border cloud-aws">
+                                    <!-- Zone 1: US -->
+                                    <div class="global-region diagram-component p-4 rounded-lg border cloud-aws cursor-pointer" onclick="simulateGlobalWrite('aws')" id="region-aws">
                                         <h4 class="font-bold cloud-aws">AWS (us-east-1)</h4>
+                                        <p class="text-xs text-gray-500 mb-1">Zone: US</p>
                                         <p class="text-sm">App Server</p>
-                                        <svg class="w-full h-16">
-                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#ff9900" stroke-width="2"
-                                                stroke-dasharray="4" />
+                                        <div class="mt-1"><span class="io-badge write">Local Write</span> <span class="io-badge read">Local Read</span></div>
+                                        <svg class="w-full h-12">
+                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#ff9900" stroke-width="2" class="global-flow-line" />
                                         </svg>
-                                        <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 1)</div>
+                                        <div class="p-2 bg-gray-800 rounded text-sm">Shard 1 <span class="text-gray-500">(3-node RS)</span></div>
+                                        <p class="text-[10px] text-gray-500 mt-1">location: "US"</p>
+                                        <div class="latency-badge mt-2" id="latency-aws">~2ms local</div>
                                     </div>
-                                    <!-- Region 2 -->
-                                    <div class="diagram-component p-4 rounded-lg border cloud-gcp">
+                                    <!-- Zone 2: EU -->
+                                    <div class="global-region diagram-component p-4 rounded-lg border cloud-gcp cursor-pointer" onclick="simulateGlobalWrite('gcp')" id="region-gcp">
                                         <h4 class="font-bold cloud-gcp">GCP (europe-west1)</h4>
+                                        <p class="text-xs text-gray-500 mb-1">Zone: EU</p>
                                         <p class="text-sm">App Server</p>
-                                        <svg class="w-full h-16">
-                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#4285f4" stroke-width="2"
-                                                stroke-dasharray="4" />
+                                        <div class="mt-1"><span class="io-badge write">Local Write</span> <span class="io-badge read">Local Read</span></div>
+                                        <svg class="w-full h-12">
+                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#4285f4" stroke-width="2" class="global-flow-line" />
                                         </svg>
-                                        <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 2)</div>
+                                        <div class="p-2 bg-gray-800 rounded text-sm">Shard 2 <span class="text-gray-500">(3-node RS)</span></div>
+                                        <p class="text-[10px] text-gray-500 mt-1">location: "EU"</p>
+                                        <div class="latency-badge mt-2" id="latency-gcp">~2ms local</div>
                                     </div>
-                                    <!-- Region 3 -->
-                                    <div class="diagram-component p-4 rounded-lg border cloud-azure">
+                                    <!-- Zone 3: APAC -->
+                                    <div class="global-region diagram-component p-4 rounded-lg border cloud-azure cursor-pointer" onclick="simulateGlobalWrite('azure')" id="region-azure">
                                         <h4 class="font-bold cloud-azure">Azure (japaneast)</h4>
+                                        <p class="text-xs text-gray-500 mb-1">Zone: APAC</p>
                                         <p class="text-sm">App Server</p>
-                                        <svg class="w-full h-16">
-                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#0078d4" stroke-width="2"
-                                                stroke-dasharray="4" />
+                                        <div class="mt-1"><span class="io-badge write">Local Write</span> <span class="io-badge read">Local Read</span></div>
+                                        <svg class="w-full h-12">
+                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#0078d4" stroke-width="2" class="global-flow-line" />
                                         </svg>
-                                        <div class="p-2 bg-gray-800 rounded">Atlas Node (Shard 3)</div>
+                                        <div class="p-2 bg-gray-800 rounded text-sm">Shard 3 <span class="text-gray-500">(3-node RS)</span></div>
+                                        <p class="text-[10px] text-gray-500 mt-1">location: "APAC"</p>
+                                        <div class="latency-badge mt-2" id="latency-azure">~2ms local</div>
                                     </div>
                                 </div>
-                                <p class="text-center mt-6 text-slate-400">In this active-active scenario, an
-                                    application server in any region can handle write operations. Atlas intelligently
-                                    routes writes to the primary node in each shard while allowing local secondary nodes
-                                    to serve low-latency reads. This setup provides global data locality and resilience.
+
+                                <!-- No cross-region lines — shards are independent -->
+                                <div class="mt-4 text-center">
+                                    <span class="inline-block bg-gray-800 text-gray-400 text-xs px-4 py-2 rounded-full border border-gray-700">
+                                        ✕ No cross-region replication — each shard is independent, data stays in its zone
+                                    </span>
+                                </div>
+
+                                <p id="global-write-status" class="text-center mt-2 text-green-400 text-sm h-6"></p>
+
+                                <p class="text-center mt-4 text-slate-400">
+                                    The <code class="text-green-400 text-xs">mongos</code> router uses the
+                                    <code class="text-green-400 text-xs">location</code> field in the shard key to route
+                                    each document to the correct zone's shard. A user in the EU writes to Shard 2 locally
+                                    (~2ms); that data never leaves Europe. Each shard is a 3-member replica set for HA
+                                    within the zone.
                                     <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank"
                                         class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a>
                                 </p>
                             </div>
                         </section>
-                        <br> 
                         <!-- Section 2: From 4NF to Document Model -->
-                        <section id="documentmodel">
+                        <section id="documentmodel" class="mt-16">
                             <h2 class="section-heading">Simplicity of Document Model</h2>
                             <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
                                 <div class="p-8">
@@ -688,13 +900,12 @@
                                 </div>
                             </div>
                         </section>
-                        <br> 
-                        <section id="private-networking">
+                        <section id="private-networking" class="mt-16">
                             <h2 class="section-heading">Private Network Routing Across Clouds</h2>
                             <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas enables secure, private
                                 connections between your application's virtual network and your Atlas cluster, even
-                                across different cloud providers. This is achieved primarily through VPC/VNet Peering
-                                and AWS PrivateLink.</p>
+                                across different cloud providers. This is achieved through VPC/VNet Peering
+                                and cloud-native Private Endpoints (AWS PrivateLink, Azure Private Link, GCP Private Service Connect).</p>
                             <div class="grid md:grid-cols-2 gap-12">
                                 <!-- VPC Peering Diagram -->
                                 <div>
@@ -702,37 +913,38 @@
                                     <div
                                         class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
                                         <div class="flex justify-around items-center">
-                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC
                                             </div>
                                             <div class="text-2xl font-bold text-white">↔</div>
-                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-gcp">Atlas VPC
-                                                (AWS)</div>
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border" style="color: #22c55e; border-color: #22c55e;">Atlas VPC</div>
                                         </div>
-                                        <p class="text-sm mt-4 text-slate-400">Creates a direct, private network
-                                            connection between your application's VPC and the Atlas VPC. Traffic does
-                                            not traverse the public internet. This is supported for peering between the
-                                            same or different cloud providers.</p>
-                                        <a href="https://www.mongodb.com/docs/atlas/security-network-peering/"
+                                        <p class="text-sm mt-4 text-slate-400">Creates a direct, bi-directional private network
+                                            connection between your application's VPC/VNet and the Atlas VPC. Traffic does
+                                            not traverse the public internet. Supported on <strong>AWS, Azure, and GCP</strong>.</p>
+                                        <a href="https://www.mongodb.com/docs/atlas/security-vpc-peering/"
                                             target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
                                             Peering Docs]</a>
                                     </div>
                                 </div>
-                                <!-- PrivateLink Diagram -->
+                                <!-- Private Endpoints Diagram -->
                                 <div>
-                                    <h3 class="text-xl font-bold text-center mb-4 text-white">AWS PrivateLink</h3>
+                                    <h3 class="text-xl font-bold text-center mb-4 text-white">Private Endpoints</h3>
                                     <div
                                         class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
                                         <div class="flex justify-around items-center">
-                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC (AWS)
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border border-gray-500">Your VPC/VNet
                                             </div>
                                             <div class="text-2xl font-bold text-white">→</div>
-                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">Atlas VPC
-                                                (AWS)</div>
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border" style="color: #22c55e; border-color: #22c55e;">Atlas Cluster</div>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2 mt-4">
+                                            <div class="p-2 bg-gray-800 rounded text-xs border cloud-aws">AWS PrivateLink</div>
+                                            <div class="p-2 bg-gray-800 rounded text-xs border cloud-azure">Azure Private Link</div>
+                                            <div class="p-2 bg-gray-800 rounded text-xs border cloud-gcp">GCP Private Service Connect</div>
                                         </div>
                                         <p class="text-sm mt-4 text-slate-400">Creates a secure, one-way endpoint from
-                                            your VPC to the Atlas cluster. This simplifies network security as it
-                                            doesn't require opening firewall ports or managing CIDR blocks, but it is
-                                            specific to AWS.</p>
+                                            your network to the Atlas cluster. No CIDR management or firewall rules needed.
+                                            Each cloud provider offers its native private endpoint service.</p>
                                         <a href="https://www.mongodb.com/docs/atlas/security-private-endpoint/"
                                             target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
                                             Private Endpoint Docs]</a>
@@ -740,8 +952,7 @@
                                 </div>
                             </div>
                         </section>
-                        <br> 
-                        <section id="trial-env">
+                        <section id="trial-env" class="mt-16">
                             <h2 class="section-heading">Getting Started: Trial Environment</h2>
                             <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 max-w-2xl mx-auto">
                                 <h3 class="text-2xl font-bold mb-4 text-white">M0 Free Tier</h3>
@@ -766,65 +977,34 @@
         </footer>
     </div>
 
+    <div id="overview-tooltip"></div>
+
     <script>
 
-        function drawLine(options) {
-            const { fromId, toId, text, isDotted = true, textOffset = { x: 0, y: -15 }, anchor = 'middle' } = options;
-            const from = document.getElementById(fromId);
-            const to = document.getElementById(toId);
-            const svg = document.querySelector('#svg-container svg');
-            const container = document.getElementById('diagram-container');
-
-            if (!from || !to || !svg || !container) return;
-
-            const containerRect = container.getBoundingClientRect();
-            const fromRect = from.getBoundingClientRect();
-            const toRect = to.getBoundingClientRect();
-
-            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-            path.setAttribute('d', options.path(fromRect, toRect, containerRect));
-            path.setAttribute('stroke', '#E5E7EB');
-            path.setAttribute('stroke-width', '2');
-            path.setAttribute('fill', 'none');
-            path.setAttribute('marker-end', 'url(#arrowhead)');
-            path.classList.add(isDotted ? 'flow-line' : 'flow-line-solid');
-            svg.appendChild(path);
-
-            const textEl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-            const textPos = options.textPosition(fromRect, toRect, containerRect);
-            textEl.setAttribute('x', textPos.x + textOffset.x);
-            textEl.setAttribute('y', textPos.y + textOffset.y);
-            textEl.setAttribute('fill', '#F7FAFC');
-            textEl.setAttribute('font-size', '14');
-            textEl.setAttribute('font-weight', '500');
-            textEl.setAttribute('text-anchor', anchor);
-
-            if (Array.isArray(text)) {
-                text.forEach((line, index) => {
-                    const tspan = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
-                    tspan.setAttribute('x', textPos.x + textOffset.x);
-                    tspan.setAttribute('dy', index === 0 ? 0 : '1.2em');
-                    tspan.textContent = line;
-                    textEl.appendChild(tspan);
-                });
-            } else {
-                textEl.textContent = text;
-            }
-            svg.appendChild(textEl);
-        }
-
-        window.addEventListener('resize', () => {
-            const svg = document.querySelector('#svg-container svg');
-            svg.innerHTML = `<defs>
-                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto">
-                        <polygon points="0 0, 10 3.5, 0 7" fill="#E5E7EB" />
-                    </marker>
-                </defs>`;
-            drawAllLines();
-        });
-
-
         document.addEventListener('DOMContentLoaded', function () {
+
+            // Overview grid tooltip (single shared element, positioned via JS)
+            const overviewTip = document.getElementById('overview-tooltip');
+            document.querySelectorAll('.component[data-tip]').forEach(el => {
+                el.addEventListener('mouseenter', (e) => {
+                    overviewTip.textContent = el.dataset.tip;
+                    overviewTip.classList.add('visible');
+                    const rect = el.getBoundingClientRect();
+                    overviewTip.style.left = (rect.left + rect.width / 2 - overviewTip.offsetWidth / 2) + 'px';
+                    overviewTip.style.top = (rect.bottom + 8) + 'px';
+                    // Keep within viewport
+                    const tipRect = overviewTip.getBoundingClientRect();
+                    if (tipRect.right > window.innerWidth - 8) {
+                        overviewTip.style.left = (window.innerWidth - tipRect.width - 8) + 'px';
+                    }
+                    if (tipRect.left < 8) {
+                        overviewTip.style.left = '8px';
+                    }
+                });
+                el.addEventListener('mouseleave', () => {
+                    overviewTip.classList.remove('visible');
+                });
+            });
 
             const components = document.querySelectorAll('.diagram-component');
             const detailsTitle = document.getElementById('details-title');
@@ -896,49 +1076,117 @@
 
             const failoverBtn = document.getElementById('failover-btn');
             const failoverStatus = document.getElementById('failover-status');
+            const failoverTimeline = document.getElementById('failover-timeline');
             const node1 = document.getElementById('node-1');
             const node2 = document.getElementById('node-2');
             const node3 = document.getElementById('node-3');
 
             let isFailedOver = false;
+            let failoverRunning = false;
 
-            failoverBtn.addEventListener('click', () => {
+            function resetTimeline() {
+                failoverTimeline.style.display = 'none';
+                for (let i = 1; i <= 6; i++) {
+                    const step = document.getElementById('ts-' + i);
+                    step.classList.remove('active', 'completed', 'failed');
+                }
+                for (let i = 1; i <= 5; i++) {
+                    const conn = document.getElementById('tc-' + i);
+                    conn.classList.remove('active');
+                }
+            }
+
+            function activateStep(stepNum, isFailed) {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        if (stepNum > 1) {
+                            document.getElementById('ts-' + (stepNum - 1)).classList.remove('active');
+                            document.getElementById('ts-' + (stepNum - 1)).classList.add(stepNum === 2 && isFailed ? 'failed' : 'completed');
+                            document.getElementById('tc-' + (stepNum - 1)).classList.add('active');
+                        }
+                        document.getElementById('ts-' + stepNum).classList.add('active');
+                        resolve();
+                    }, stepNum === 1 ? 0 : 700);
+                });
+            }
+
+            failoverBtn.addEventListener('click', async () => {
+                if (failoverRunning) return;
+
                 if (isFailedOver) {
-                    // Reset state
+                    resetTimeline();
                     failoverStatus.textContent = '';
                     node1.classList.remove('failed');
                     node1.classList.add('primary');
                     node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Primary)';
+                    node1.querySelector('.mt-2').innerHTML = '<span class="io-badge write">Writes</span> <span class="io-badge read">Reads</span>';
+                    document.getElementById('oplog-1').classList.add('syncing');
 
                     node2.classList.remove('primary');
                     node2.classList.add('secondary');
                     node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Secondary)';
+                    node2.querySelector('.mt-2').innerHTML = '<span class="io-badge read">Reads</span>';
+                    document.getElementById('oplog-2').classList.add('syncing');
+                    document.getElementById('oplog-3').classList.add('syncing');
 
                     failoverBtn.textContent = 'Simulate Primary Failure';
                     failoverBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
                     failoverBtn.classList.add('bg-red-600', 'hover:bg-red-700');
                     isFailedOver = false;
-                } else {
-                    // Simulate failure
-                    failoverStatus.textContent = 'Primary node failed! Initiating election...';
-                    node1.classList.add('failed');
-                    node1.classList.remove('primary');
-                    node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Failed)';
-
-                    setTimeout(() => {
-                        failoverStatus.textContent = 'Election complete. Node 2 is the new primary!';
-                        node2.classList.remove('secondary');
-                        node2.classList.add('primary');
-                        node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Primary)';
-
-                        failoverBtn.textContent = 'Restore System';
-                        failoverBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
-                        failoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
-                        isFailedOver = true;
-                    }, 2000);
+                    return;
                 }
 
+                failoverRunning = true;
+                failoverBtn.disabled = true;
+                failoverBtn.style.opacity = '0.5';
+                failoverTimeline.style.display = 'flex';
 
+                // Step 1: Primary fails
+                await activateStep(1, true);
+                failoverStatus.textContent = '⚠ Primary node failed!';
+                node1.classList.add('failed');
+                node1.classList.remove('primary');
+                node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Failed)';
+                node1.querySelector('.mt-2').innerHTML = '<span class="io-badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">DOWN</span>';
+                document.getElementById('oplog-1').classList.remove('syncing');
+
+                // Step 2: Heartbeat timeout
+                await activateStep(2);
+                failoverStatus.textContent = '⏱ Heartbeat timeout — secondaries detect primary is unreachable...';
+
+                // Step 3: Election called
+                await activateStep(3);
+                failoverStatus.textContent = '🗳 Election initiated by Node 2 (highest priority survivor)...';
+                node2.classList.add('replicating-node');
+                node3.classList.add('replicating-node');
+
+                // Step 4: Votes cast
+                await activateStep(4);
+                failoverStatus.textContent = '✓ Node 3 votes for Node 2. Majority achieved (2 of 3).';
+                setTimeout(() => { node2.classList.remove('replicating-node'); node3.classList.remove('replicating-node'); }, 300);
+
+                // Step 5: New primary
+                await activateStep(5);
+                node2.classList.remove('secondary');
+                node2.classList.add('primary');
+                node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Primary)';
+                node2.querySelector('.mt-2').innerHTML = '<span class="io-badge write">Writes</span> <span class="io-badge read">Reads</span>';
+                failoverStatus.textContent = '✅ Node 2 elected as new primary!';
+
+                // Step 6: Drivers reconnect
+                await activateStep(6);
+                failoverStatus.textContent = '🔗 Drivers reconnected. Writes flowing to Node 2. Total time: ~12s.';
+                document.getElementById('ts-6').classList.remove('active');
+                document.getElementById('ts-6').classList.add('completed');
+                document.getElementById('tc-5').classList.add('active');
+
+                failoverBtn.textContent = 'Restore System';
+                failoverBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                failoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                failoverBtn.disabled = false;
+                failoverBtn.style.opacity = '1';
+                isFailedOver = true;
+                failoverRunning = false;
             });
 
             // Active nav link scrolling
@@ -1077,6 +1325,44 @@
             }
 
         });
+
+        // --- Global Write Simulation ---
+        let globalWriteRunning = false;
+        function simulateGlobalWrite(region) {
+            if (globalWriteRunning) return;
+            globalWriteRunning = true;
+
+            const regions = ['aws', 'gcp', 'azure'];
+            const zones = { aws: 'US', gcp: 'EU', azure: 'APAC' };
+            const names = { aws: 'AWS us-east-1', gcp: 'GCP europe-west1', azure: 'Azure japaneast' };
+            const shards = { aws: 'Shard 1', gcp: 'Shard 2', azure: 'Shard 3' };
+            const latencies = { aws: '~2ms', gcp: '~3ms', azure: '~2ms' };
+            const statusEl = document.getElementById('global-write-status');
+
+            const activeRegion = document.getElementById('region-' + region);
+            activeRegion.classList.add('region-active');
+
+            const latBadge = document.getElementById('latency-' + region);
+            latBadge.textContent = latencies[region] + ' local write';
+            latBadge.classList.add('visible');
+
+            statusEl.textContent = '🔀 mongos routes { location: "' + zones[region] + '" } → ' + shards[region] + ' at ' + names[region];
+
+            setTimeout(() => {
+                statusEl.textContent = '✍ Write acknowledged locally on ' + shards[region] + ' in ' + latencies[region] + ' — data stays in ' + zones[region] + ' zone';
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Done. No cross-region hop. ' + shards[region] + ' replica set handles HA within ' + zones[region] + '.';
+                    activeRegion.classList.remove('region-active');
+                    setTimeout(() => {
+                        latBadge.classList.remove('visible');
+                        statusEl.textContent = '';
+                        globalWriteRunning = false;
+                    }, 2500);
+                }, 1200);
+            }, 800);
+        }
+        window.simulateGlobalWrite = simulateGlobalWrite;
     </script>
 </body>
 

@@ -8272,72 +8272,55 @@
         <div class="demo-narration-step" id="narration-step">Step 1 of 8</div>
     </div>
 
-    <!-- Feedback Footer -->
-    <div class="feedback-footer">
-        <div class="feedback-content">
-            <span class="feedback-text">Found a bug or have feedback?</span>
-            <a href="https://forms.gle/edNQUdwyfqSQCjFw5" target="_blank" class="feedback-btn">
-                <span class="feedback-icon">📝</span>
-                <span>Submit Feedback</span>
-            </a>
-        </div>
-    </div>
+    <!-- Feedback Button -->
+    <a href="https://forms.gle/edNQUdwyfqSQCjFw5" target="_blank" class="feedback-fab" title="Found a bug or have feedback?">
+        <span class="feedback-fab-icon">📝</span>
+        <span class="feedback-fab-label">Feedback</span>
+    </a>
 
     <style>
-        .feedback-footer {
+        .feedback-fab {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: linear-gradient(135deg, rgba(0, 30, 43, 0.95), rgba(0, 45, 60, 0.95));
-            border-top: 1px solid rgba(0, 237, 100, 0.3);
-            padding: 10px 20px;
-            z-index: 100;
-            backdrop-filter: blur(10px);
-        }
-
-        .feedback-content {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 15px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .feedback-text {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 0.85rem;
-        }
-
-        .feedback-btn {
+            bottom: 20px;
+            right: 20px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            background: linear-gradient(135deg, var(--mongo-green), #00c853);
-            color: var(--mongo-forest);
-            padding: 8px 16px;
-            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(0, 30, 43, 0.95), rgba(0, 45, 60, 0.95));
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
             font-size: 0.85rem;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(0, 237, 100, 0.3);
+            overflow: hidden;
+            max-width: 48px;
+            white-space: nowrap;
         }
-
-        .feedback-btn:hover {
+        .feedback-fab:hover {
+            max-width: 200px;
+            padding: 10px 18px;
+            background: linear-gradient(135deg, var(--mongo-green), #00c853);
+            color: var(--mongo-forest);
+            border-color: var(--mongo-green);
+            box-shadow: 0 4px 20px rgba(0, 237, 100, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(0, 237, 100, 0.4);
-            background: linear-gradient(135deg, #00ff6a, #00ed64);
         }
-
-        .feedback-icon {
-            font-size: 1rem;
+        .feedback-fab-icon {
+            font-size: 1.1rem;
+            flex-shrink: 0;
         }
-
-        /* Adjust event log panel to account for feedback footer */
-        .event-log-panel {
-            margin-bottom: 50px;
+        .feedback-fab-label {
+            opacity: 0;
+            transition: opacity 0.2s 0.1s;
+        }
+        .feedback-fab:hover .feedback-fab-label {
+            opacity: 1;
         }
     </style>
 </body>

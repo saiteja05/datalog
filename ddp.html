@@ -68,6 +68,23 @@
             transform: scale(1.02);
             border-color: #13aa52;
         }
+
+        /* Mobile nav menu */
+        @media (max-width: 767px) {
+            #nav-links.mobile-open {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: rgba(0, 0, 0, 0.95);
+                backdrop-filter: blur(12px);
+                border-bottom: 1px solid #374151;
+                padding: 16px 24px;
+                gap: 12px;
+            }
+        }
     </style>
 </head>
 
@@ -75,23 +92,28 @@
 
     <!-- Header -->
     <header class="fixed top-0 left-0 right-0 z-50 bg-black/50 backdrop-blur-lg border-b border-gray-800">
-        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center relative">
             <div class="flex items-center">
                 <img src="https://webimages.mongodb.com/_com_assets/cms/kusbhnrd813qmv46m-MongoDBLeaf1.png"
                     alt="MongoDB Logo" class="h-8 w-auto mr-4">
                 <span class="text-2xl font-bold text-white">MongoDB Atlas</span>
             </div>
+            <button id="mobile-menu-btn" class="md:hidden text-white p-2" aria-label="Toggle menu">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path id="menu-icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                </svg>
+            </button>
             <div id="nav-links" class="hidden md:flex items-center space-x-6 lg:space-x-8">
-                <a href="#platform" class="text-gray-300 hover:text-mongodb-green transition-colors">Platform</a>
-                <a href="#features" class="text-gray-300 hover:text-mongodb-green transition-colors">Features</a>
-                <a href="#scalability" class="text-gray-300 hover:text-mongodb-green transition-colors">Global Scale</a>
-                <a href="#automation" class="text-gray-300 hover:text-mongodb-green transition-colors">Automation</a>
-                <a href="#security" class="text-gray-300 hover:text-mongodb-green transition-colors">Security</a>
-                <a href="#data-protection" class="text-gray-300 hover:text-mongodb-green transition-colors">Backup</a>
-                <a href="#tools" class="text-gray-300 hover:text-mongodb-green transition-colors">Tools</a>
-                <a href="#migrate" class="text-gray-300 hover:text-mongodb-green transition-colors">Migration</a>
+                <a href="#platform" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Platform</a>
+                <a href="#features" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Features</a>
+                <a href="#scalability" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Global Scale</a>
+                <a href="#automation" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Automation</a>
+                <a href="#security" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Security</a>
+                <a href="#data-protection" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Backup</a>
+                <a href="#tools" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Tools</a>
+                <a href="#migrate" class="nav-link text-gray-300 hover:text-mongodb-green transition-colors">Migration</a>
             </div>
-            <a href="#cta"
+            <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank"
                 class="bg-mongodb-green text-white font-semibold px-5 py-2 rounded-lg hover:bg-opacity-90 transition-all">Start
                 Free</a>
         </nav>
@@ -113,10 +135,10 @@
                     for a new generation of user experiences.
                 </p>
                 <div class="flex justify-center space-x-4">
-                    <a href="#cta"
+                    <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank"
                         class="bg-mongodb-green text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-opacity-90 transform hover:scale-105 transition-all">Try
                         Atlas Free</a>
-                    <a href="#"
+                    <a href="https://www.mongodb.com/company/contact" target="_blank"
                         class="bg-gray-800 text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-gray-700 transform hover:scale-105 transition-all">Contact
                         Sales</a>
                 </div>
@@ -572,7 +594,7 @@ COMMIT;</code></pre>
         </section>
 
         <!-- Developer Tools Section -->
-        <section id="tools" class="py-24 bg-dark-gradient">
+        <section id="dev-tools" class="py-24 bg-dark-gradient">
             <div class="container mx-auto px-6">
                 <div class="text-center mb-16">
                     <h2 class="text-4xl md:text-5xl font-bold text-white scroll-reveal">Tools You'll Love to Use</h2>
@@ -775,7 +797,7 @@ exports = function(changeEvent) {
                     <h2 class="text-4xl md:text-5xl font-bold text-white mb-6">Become a MongoDB Expert.</h2>
                     <p class="text-lg text-gray-300 mb-8">Accelerate your learning with MongoDB University. Access free
                         online courses, tutorials, and certification paths to master the developer data platform.</p>
-                    <a href="#" class="text-mongodb-green font-bold text-lg hover:underline">Start Learning Now
+                    <a href="https://learn.mongodb.com/" target="_blank" class="text-mongodb-green font-bold text-lg hover:underline">Start Learning Now
                         &rarr;</a>
                 </div>
             </div>
@@ -806,11 +828,11 @@ exports = function(changeEvent) {
                         started with a perpetual free tier on Atlas, or talk to our experts to design the perfect
                         solution for your enterprise.</p>
                     <div class="flex flex-col sm:flex-row justify-center items-center gap-4 scroll-reveal">
-                        <a href="#"
+                        <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank"
                             class="w-full sm:w-auto bg-mongodb-green text-white font-bold px-8 py-4 rounded-lg text-lg hover:bg-opacity-90 transform hover:scale-105 transition-all">
                             Sign Up Free
                         </a>
-                        <a href="#"
+                        <a href="https://www.mongodb.com/docs/atlas/" target="_blank"
                             class="w-full sm:w-auto bg-transparent border-2 border-mongodb-green text-mongodb-green font-bold px-8 py-4 rounded-lg text-lg hover:bg-mongodb-green hover:text-white transition-all">
                             Explore Documentation
                         </a>
@@ -823,16 +845,15 @@ exports = function(changeEvent) {
     <!-- Footer -->
     <footer class="bg-black border-t border-gray-800">
         <div class="container mx-auto px-6 py-8 text-center text-gray-500">
-            <p>&copy; 2025 MongoDB, Inc. All rights reserved.</p>
+            <p>&copy; MongoDB, Inc. All rights reserved.</p>
             <div class="mt-4 flex justify-center space-x-6">
-                <a href="#" class="hover:text-white">Privacy Policy</a>
-                <a href="#" class="hover:text-white">Terms of Service</a>
+                <a href="https://www.mongodb.com/legal/privacy/privacy-policy" target="_blank" class="hover:text-white">Privacy Policy</a>
+                <a href="https://www.mongodb.com/legal/terms-of-use" target="_blank" class="hover:text-white">Terms of Service</a>
             </div>
         </div>
     </footer>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // Simple scroll reveal animation
             const revealElements = document.querySelectorAll('.scroll-reveal');
             const revealObserver = new IntersectionObserver((entries) => {
                 entries.forEach(entry => {
@@ -842,6 +863,22 @@ exports = function(changeEvent) {
                 });
             }, { threshold: 0.1 });
             revealElements.forEach(el => revealObserver.observe(el));
+
+            const mobileBtn = document.getElementById('mobile-menu-btn');
+            const navLinks = document.getElementById('nav-links');
+            const menuIcon = document.getElementById('menu-icon');
+            mobileBtn.addEventListener('click', () => {
+                const isOpen = navLinks.classList.toggle('mobile-open');
+                menuIcon.setAttribute('d', isOpen
+                    ? 'M6 18L18 6M6 6l12 12'
+                    : 'M4 6h16M4 12h16M4 18h16');
+            });
+            navLinks.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.classList.remove('mobile-open');
+                    menuIcon.setAttribute('d', 'M4 6h16M4 12h16M4 18h16');
+                });
+            });
         });
     </script>
 
