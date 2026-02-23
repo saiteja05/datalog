@@ -12,15 +12,15 @@
     
     <style>
         :root {
-            --bg-primary: #0a0a0b;
-            --bg-secondary: #111113;
-            --bg-card: #161618;
-            --bg-card-hover: #1c1c1f;
+            --bg-primary: #001E2B;
+            --bg-secondary: #002838;
+            --bg-card: #003345;
+            --bg-card-hover: #004058;
             --border-subtle: rgba(255, 255, 255, 0.06);
             --border-accent: rgba(0, 237, 100, 0.2);
             --text-primary: #fafafa;
-            --text-secondary: #a1a1a6;
-            --text-muted: #6b6b70;
+            --text-secondary: #b8d8e8;
+            --text-muted: #7fa8bc;
             --accent: #00ed64;
             --accent-dim: #00c853;
             --accent-glow: rgba(0, 237, 100, 0.15);
@@ -90,7 +90,9 @@
         header {
             text-align: center;
             margin-bottom: 5rem;
+            padding-top: 2rem;
             animation: fadeIn 0.8s ease-out;
+            position: relative;
         }
 
         @keyframes fadeIn {
@@ -98,40 +100,225 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Hero visual wrapper */
+        .hero-visual {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Pulsing glow behind logo */
+        .hero-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0,237,100,0.15) 0%, rgba(0,237,100,0.05) 40%, transparent 70%);
+            animation: pulseGlow 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.7; }
+            50% { transform: translate(-50%, -50%) scale(1.3); opacity: 1; }
+        }
+
+        /* Orbital rings */
+        .hero-orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            border: 1px dashed rgba(0,237,100,0.15);
+            pointer-events: none;
+        }
+
+        .hero-orbit-1 {
+            width: 140px;
+            height: 140px;
+            margin-top: -70px;
+            margin-left: -70px;
+            animation: orbitSpin 12s linear infinite;
+        }
+
+        .hero-orbit-2 {
+            width: 200px;
+            height: 200px;
+            margin-top: -100px;
+            margin-left: -100px;
+            animation: orbitSpin 20s linear infinite reverse;
+            border-style: dotted;
+            border-color: rgba(0,237,100,0.08);
+        }
+
+        @keyframes orbitSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Floating particles on the orbits */
+        .hero-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(0,237,100,0.6);
+        }
+
+        .hero-orbit-1 .hero-particle { top: -3px; left: calc(50% - 3px); }
+        .hero-orbit-2 .hero-particle { bottom: -3px; right: calc(50% - 3px); }
+
         .logo-mark {
+            position: relative;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 64px;
-            height: 64px;
-            background: linear-gradient(135deg, var(--accent-glow), transparent);
-            border: 1px solid var(--border-accent);
-            border-radius: 16px;
-            margin-bottom: 2rem;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(0,237,100,0.12), rgba(0,237,100,0.03));
+            border: 1px solid rgba(0,237,100,0.25);
+            border-radius: 20px;
+            z-index: 2;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 40px rgba(0,237,100,0.1), inset 0 0 20px rgba(0,237,100,0.05);
         }
 
         .logo-mark svg {
-            width: 32px;
-            height: 32px;
+            width: 38px;
+            height: 38px;
+        }
+
+        /* Title wrapper with flanking sparkles and underline glow */
+        .hero-title-wrap {
+            position: relative;
+            display: inline-block;
+            padding: 0 1rem;
         }
 
         h1 {
+            position: relative;
             font-size: clamp(2.5rem, 5vw, 4rem);
             font-weight: 700;
             color: var(--text-primary);
             letter-spacing: -0.03em;
-            margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 50%, var(--text-primary) 100%);
+            background-size: 200% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { background-position: 0% center; }
+            50% { background-position: 100% center; }
+        }
+
+        /* Glowing underline beneath the title */
+        .hero-title-underline {
+            display: block;
+            margin: 0 auto 1.25rem;
+            width: 70%;
+            height: 2px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
+            opacity: 0.5;
+            position: relative;
+        }
+
+        .hero-title-underline::after {
+            content: '';
+            position: absolute;
+            inset: -3px 20%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, transparent, rgba(0,237,100,0.3), transparent);
+            filter: blur(4px);
+        }
+
+        /* Flanking sparkle/star decorations */
+        .hero-sparkle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+            opacity: 0.7;
+            animation: sparklePulse 2s ease-in-out infinite;
+        }
+
+        .hero-sparkle-left {
+            left: -32px;
+            animation-delay: 0s;
+        }
+
+        .hero-sparkle-right {
+            right: -32px;
+            animation-delay: 1s;
+        }
+
+        @keyframes sparklePulse {
+            0%, 100% { opacity: 0.3; transform: translateY(-50%) scale(0.8); }
+            50% { opacity: 1; transform: translateY(-50%) scale(1.1); }
+        }
+
+        /* Floating accent dots near title */
+        .hero-dot {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--accent);
+            pointer-events: none;
+        }
+
+        .hero-dot-1 {
+            width: 4px; height: 4px;
+            top: 0; left: -16px;
+            opacity: 0.5;
+            animation: floatDot 3s ease-in-out infinite;
+        }
+
+        .hero-dot-2 {
+            width: 3px; height: 3px;
+            bottom: 2px; right: -12px;
+            opacity: 0.4;
+            animation: floatDot 3.5s ease-in-out infinite reverse;
+        }
+
+        .hero-dot-3 {
+            width: 5px; height: 5px;
+            top: -8px; right: 20%;
+            opacity: 0.3;
+            animation: floatDot 4s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes floatDot {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
         }
 
         .subtitle {
             font-size: 1.125rem;
             color: var(--text-muted);
-            margin-bottom: 0.5rem;
+            margin-bottom: 1.25rem;
         }
+
+        /* Decorative divider line */
+        .hero-divider {
+            display: inline-block;
+            width: 60px;
+            height: 3px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin-bottom: 1.25rem;
+            opacity: 0.6;
+        }
+
 
         .author-link {
             display: inline-flex;
@@ -145,7 +332,7 @@
             background: var(--bg-card);
             border: 1px solid var(--border-subtle);
             transition: all 0.2s ease;
-            margin-top: 1rem;
+            margin-top: 0.5rem;
         }
 
         .author-link:hover {
@@ -534,13 +721,23 @@
 
     <div class="container">
         <header>
-            <div class="logo-mark">
-                <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M16 4L18 14L16 28L14 14L16 4Z" fill="#00ED64"/>
-                    <ellipse cx="16" cy="14" rx="3" ry="5" fill="#00ED64"/>
-                </svg>
+            <div class="hero-visual">
+                <div class="hero-glow"></div>
+                <div class="hero-orbit hero-orbit-1"><span class="hero-particle"></span></div>
+                <div class="hero-orbit hero-orbit-2"><span class="hero-particle"></span></div>
+                <div class="logo-mark">
+                    <img src="assets/mongodb-leaf.png" alt="MongoDB" style="width:44px;height:44px;border-radius:6px;">
+                </div>
             </div>
-            <h1>MongoDB Unpacked</h1>
+            <div class="hero-title-wrap">
+                <svg class="hero-sparkle hero-sparkle-left" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg>
+                <svg class="hero-sparkle hero-sparkle-right" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z"/></svg>
+                <span class="hero-dot hero-dot-1"></span>
+                <span class="hero-dot hero-dot-2"></span>
+                <span class="hero-dot hero-dot-3"></span>
+                <h1>MongoDB Unpacked</h1>
+            </div>
+            <span class="hero-title-underline"></span>
             <p class="subtitle">The interactive guide to understand what makes MongoDB tick.</p>
             <a href="https://www.linkedin.com/in/saitejab/" target="_blank" class="author-link">
                 <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"/></svg>
