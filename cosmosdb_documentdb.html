@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Atlas vs Cosmos DB vs DocumentDB</title>
+    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #001E2B;
+            --bg-secondary: #002838;
+            --bg-card: #003345;
+            --bg-card-hover: #004058;
+            --accent: #00ED64;
+            --accent-dim: #00684a;
+            --accent-glow: rgba(0, 237, 100, 0.12);
+            --text-primary: #fafafa;
+            --text-secondary: #b8d8e8;
+            --text-muted: #7fa8bc;
+            --border: #1a3a4a;
+            --border-accent: rgba(0, 237, 100, 0.3);
+            --danger: #ff6b6b;
+            --warning: #fbbf24;
+            --info: #38bdf8;
+            --cosmos-color: #0078d4;
+            --cosmos-vcore: #5b5fc7;
+            --docdb-color: #ff9900;
+            --atlas-color: #00ED64;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+        .header {
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #002a3a 100%);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .header-logo {
+            width: 36px; height: 36px;
+        }
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .header h1 span { color: var(--accent); }
+
+        .hero {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 4rem 2rem 2rem;
+            text-align: center;
+        }
+        .hero h2 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .hero p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 800px;
+            margin: 0 auto 3rem;
+        }
+
+        /* Architecture Cards */
+        .arch-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+            max-width: 1400px;
+            margin: 0 auto 3rem;
+            padding: 0 2rem;
+        }
+        .arch-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 1.75rem;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        .arch-card:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+        }
+        .arch-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+        }
+        .arch-card.atlas::before { background: var(--atlas-color); }
+        .arch-card.cosmos-vcore::before { background: var(--cosmos-vcore); }
+        .arch-card.cosmos-ru::before { background: var(--cosmos-color); }
+        .arch-card.docdb::before { background: var(--docdb-color); }
+        .arch-card .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 99px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.75rem;
+        }
+        .arch-card.atlas .badge { background: rgba(0,237,100,0.15); color: var(--accent); }
+        .arch-card.cosmos-vcore .badge { background: rgba(91,95,199,0.2); color: #a5a8ff; }
+        .arch-card.cosmos-ru .badge { background: rgba(0,120,212,0.2); color: #60b5ff; }
+        .arch-card.docdb .badge { background: rgba(255,153,0,0.2); color: #ffbe55; }
+        .arch-card h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .arch-card .engine {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .arch-card ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .arch-card ul li {
+            padding: 0.25rem 0;
+            padding-left: 1.2rem;
+            position: relative;
+        }
+        .arch-card ul li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: var(--text-muted);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Tabs */
+        .tab-nav {
+            display: flex;
+            gap: 0.25rem;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 2rem;
+            overflow-x: auto;
+            padding-bottom: 0;
+        }
+        .tab-btn {
+            padding: 0.85rem 1.5rem;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover { color: var(--text-secondary); }
+        .tab-btn.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+            font-weight: 600;
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* Section styling */
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        .section-subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        /* Comparison table */
+        .cmp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.88rem;
+        }
+        .cmp-table thead th {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+            position: sticky;
+            top: 0;
+        }
+        .cmp-table thead th:first-child {
+            border-radius: 8px 0 0 0;
+            width: 22%;
+        }
+        .cmp-table thead th:last-child {
+            border-radius: 0 8px 0 0;
+        }
+        .cmp-table thead th.atlas-col { border-top: 3px solid var(--atlas-color); }
+        .cmp-table thead th.cosmos-vcore-col { border-top: 3px solid var(--cosmos-vcore); }
+        .cmp-table thead th.cosmos-ru-col { border-top: 3px solid var(--cosmos-color); }
+        .cmp-table thead th.docdb-col { border-top: 3px solid var(--docdb-color); }
+        .cmp-table td {
+            padding: 0.85rem 1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+        .cmp-table tbody tr:hover td {
+            background: var(--bg-card);
+        }
+        .cmp-table td:first-child {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .cmp-table .check { color: var(--accent); font-weight: 700; }
+        .cmp-table .partial { color: var(--warning); font-weight: 600; }
+        .cmp-table .none { color: var(--danger); opacity: 0.7; }
+
+        /* Limitation cards */
+        .limit-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+        .limit-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--danger);
+        }
+        .limit-card.warn { border-left-color: var(--warning); }
+        .limit-card.info { border-left-color: var(--info); }
+        .limit-card h4 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .limit-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        .limit-card .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            margin-top: 0.75rem;
+        }
+        .tag-cosmos { background: rgba(0,120,212,0.15); color: #60b5ff; }
+        .tag-docdb { background: rgba(255,153,0,0.15); color: #ffbe55; }
+        .tag-both { background: rgba(255,107,107,0.15); color: #ff8a8a; }
+
+        /* Charts */
+        .chart-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        .chart-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+        .chart-box h3 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        /* Callout boxes */
+        .callout {
+            background: var(--accent-glow);
+            border: 1px solid var(--border-accent);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+        }
+        .callout.danger {
+            background: rgba(255,107,107,0.08);
+            border-color: rgba(255,107,107,0.3);
+        }
+        .callout h4 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+        .callout p, .callout li {
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+        }
+        .callout ul { padding-left: 1.25rem; margin-top: 0.5rem; }
+
+        /* Feature pills */
+        .pill-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin: 1rem 0;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 99px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            border: 1px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+        }
+        .pill.yes { border-color: rgba(0,237,100,0.3); color: var(--accent); }
+        .pill.no { border-color: rgba(255,107,107,0.3); color: var(--danger); opacity: 0.8; }
+        .pill.partial { border-color: rgba(251,191,36,0.3); color: var(--warning); }
+
+        /* References */
+        .ref-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0 3rem;
+        }
+        .ref-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            transition: border-color 0.2s;
+        }
+        .ref-card:hover { border-color: var(--border-accent); }
+        .ref-card h4 {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+        .ref-card a {
+            display: block;
+            color: var(--accent);
+            font-size: 0.8rem;
+            text-decoration: none;
+            padding: 0.2rem 0;
+            transition: opacity 0.2s;
+        }
+        .ref-card a:hover { opacity: 0.8; text-decoration: underline; }
+
+        /* Takeaway */
+        .takeaway-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+            margin: 2rem 0;
+        }
+        .takeaway-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 1.75rem;
+            text-align: center;
+        }
+        .takeaway-card .icon {
+            font-size: 2rem;
+            margin-bottom: 0.75rem;
+        }
+        .takeaway-card h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .takeaway-card p {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .footer {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border);
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 1024px) {
+            .arch-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .arch-grid { grid-template-columns: 1fr; }
+            .hero h2 { font-size: 2rem; }
+            .limit-grid { grid-template-columns: 1fr; }
+            .tab-btn { padding: 0.7rem 1rem; font-size: 0.8rem; }
+        }
+
+        /* === Hero Stats === */
+        .hero-stats { display: flex; justify-content: center; gap: 3rem; margin-top: 2.5rem; flex-wrap: wrap; }
+        .hero-stat { text-align: center; }
+        .hero-stat .number { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+        .hero-stat .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem; }
+        .hero-stat.atlas .number { color: var(--accent); }
+        .hero-stat.cosmos .number { color: var(--cosmos-color); }
+        .hero-stat.docdb .number { color: var(--docdb-color); }
+
+        /* === Architecture Diagrams === */
+        .arch-diagrams { margin: 2.5rem 0 1rem; }
+        .arch-diagrams > h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; }
+        .shard-toggle { display: inline-flex; gap: 0.25rem; margin-bottom: 1.75rem; background: var(--bg-secondary); padding: 0.3rem; border-radius: 10px; }
+        .shard-btn { padding: 0.55rem 1.25rem; border: none; border-radius: 8px; background: transparent; color: var(--text-muted); font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.3s; }
+        .shard-btn.active { background: var(--bg-card); color: var(--accent); box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+        .diagram-view { display: none; animation: fadeIn 0.4s ease; }
+        .diagram-view.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .diagram-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+        .diagram-col { display: flex; flex-direction: column; align-items: center; }
+        .d-label { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.75rem; padding-bottom: 0.4rem; width: 100%; text-align: center; }
+        .d-label.atlas { color: var(--atlas-color); border-bottom: 2px solid var(--atlas-color); }
+        .d-label.cosmos-v { color: var(--cosmos-vcore); border-bottom: 2px solid var(--cosmos-vcore); }
+        .d-label.cosmos-r { color: var(--cosmos-color); border-bottom: 2px solid var(--cosmos-color); }
+        .d-label.docdb { color: var(--docdb-color); border-bottom: 2px solid var(--docdb-color); }
+        .d-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.6rem; font-size: 0.72rem; text-align: center; width: 100%; color: var(--text-secondary); transition: all 0.3s; }
+        .d-box:hover { border-color: var(--border-accent); transform: scale(1.02); }
+        .d-box strong { color: var(--text-primary); font-weight: 600; }
+        .d-line { width: 1px; height: 16px; background: var(--border); margin: 0 auto; }
+        .d-line-fork { display: flex; justify-content: center; align-items: flex-end; height: 24px; position: relative; width: 100%; }
+        .d-line-fork::before { content: ''; position: absolute; top: 0; left: 50%; width: 1px; height: 12px; background: var(--border); }
+        .d-line-fork::after { content: ''; position: absolute; top: 12px; left: 15%; right: 15%; height: 1px; background: var(--border); }
+        .d-line-down-pair { display: flex; justify-content: space-around; width: 100%; padding: 0 12%; }
+        .d-line-down-pair .d-line { height: 12px; }
+        .d-group { border: 1px dashed var(--border); border-radius: 10px; padding: 0.5rem; width: 100%; margin: 2px 0; }
+        .d-group-label { font-size: 0.62rem; color: var(--text-muted); text-align: center; margin-bottom: 0.25rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+        .d-nodes { display: flex; gap: 3px; width: 100%; }
+        .d-node { flex: 1; background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 5px; padding: 0.3rem 0.15rem; text-align: center; font-size: 0.58rem; line-height: 1.2; transition: all 0.2s; }
+        .d-node:hover { border-color: var(--border-accent); }
+        .d-node.primary { border-color: var(--accent); }
+        .d-node .n-label { font-weight: 700; display: block; }
+        .d-node .n-sub { color: var(--text-muted); font-size: 0.55rem; }
+        .d-split { display: flex; gap: 6px; width: 100%; }
+        .d-shard { flex: 1; display: flex; flex-direction: column; align-items: center; }
+        .d-warn { font-size: 0.62rem; color: var(--danger); text-align: center; margin-top: 4px; font-weight: 600; }
+        .d-note { font-size: 0.62rem; color: var(--text-muted); text-align: center; margin-top: 4px; font-style: italic; }
+        .d-storage { background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-card-hover) 100%); border: 1px solid var(--border); border-radius: 8px; padding: 0.4rem; width: 100%; text-align: center; font-size: 0.62rem; color: var(--text-muted); }
+        .d-storage strong { color: var(--text-secondary); font-weight: 600; }
+        .d-partitions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; width: 100%; }
+        .d-partition { background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px; padding: 0.25rem; text-align: center; font-size: 0.55rem; color: var(--text-muted); }
+        .d-partition .cap { color: var(--warning); font-weight: 600; font-size: 0.58rem; }
+
+        /* === Scenario Picker === */
+        .scenario-section { margin: 2.5rem 0 2rem; }
+        .scenario-section > h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .scenario-section > p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem; }
+        .scenario-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
+        .scenario-pill { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 99px; background: var(--bg-card); color: var(--text-secondary); font-family: inherit; font-size: 0.82rem; cursor: pointer; transition: all 0.25s; }
+        .scenario-pill:hover { border-color: var(--border-accent); color: var(--text-primary); }
+        .scenario-pill.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+        .scenario-results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+        .scenario-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; opacity: 0; transform: translateY(10px); animation: fadeSlideIn 0.4s ease forwards; }
+        @keyframes fadeSlideIn { to { opacity: 1; transform: translateY(0); } }
+        .scenario-result:nth-child(2) { animation-delay: 0.07s; }
+        .scenario-result:nth-child(3) { animation-delay: 0.14s; }
+        .scenario-result:nth-child(4) { animation-delay: 0.21s; }
+        .scenario-result h5 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .scenario-result p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
+        .scenario-result .verdict { display: inline-block; margin-top: 0.5rem; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+        .verdict-works { background: rgba(0,237,100,0.15); color: var(--accent); }
+        .verdict-fails { background: rgba(255,107,107,0.15); color: var(--danger); }
+        .verdict-partial { background: rgba(251,191,36,0.15); color: var(--warning); }
+
+        /* === Code Comparison === */
+        .code-compare { margin: 2rem 0; }
+        .code-compare > h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
+        .code-tabs { display: flex; gap: 0.25rem; margin-bottom: 0; }
+        .code-tab { padding: 0.5rem 1rem; border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; background: var(--bg-secondary); color: var(--text-muted); font-family: inherit; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+        .code-tab.active { background: var(--bg-card); color: var(--accent); border-color: var(--border-accent); font-weight: 600; }
+        .code-panel { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0 12px 12px 12px; overflow: hidden; }
+        .code-panel.active { display: block; animation: fadeIn 0.3s ease; }
+        .code-output-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
+        .code-output { padding: 1rem; border-right: 1px solid var(--border); font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 0.72rem; line-height: 1.6; overflow-x: auto; white-space: pre; }
+        .code-output:last-child { border-right: none; }
+        .code-output .platform-tag { display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.7rem; margin-bottom: 0.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); white-space: normal; }
+        .code-output .platform-tag.atlas { color: var(--atlas-color); }
+        .code-output .platform-tag.cosmos-v { color: var(--cosmos-vcore); }
+        .code-output .platform-tag.cosmos-r { color: var(--cosmos-color); }
+        .code-output .platform-tag.docdb { color: var(--docdb-color); }
+        .code-kw { color: var(--accent); }
+        .code-str { color: #fbbf24; }
+        .code-err { color: var(--danger); }
+        .code-ok { color: var(--accent); }
+        .code-comment { color: var(--text-muted); font-style: italic; }
+
+        @media (max-width: 1024px) {
+            .diagram-grid { grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+            .scenario-results { grid-template-columns: repeat(2, 1fr); }
+            .code-output-grid { grid-template-columns: repeat(2, 1fr); }
+            .code-output:nth-child(2) { border-right: none; }
+        }
+        @media (max-width: 768px) {
+            .diagram-grid { grid-template-columns: 1fr; }
+            .scenario-results { grid-template-columns: 1fr; }
+            .code-output-grid { grid-template-columns: 1fr; }
+            .code-output { border-right: none !important; border-bottom: 1px solid var(--border); }
+            .hero-stats { gap: 1.5rem; }
+        }
+
+        /* === Platform Filter Toggle === */
+        .filter-bar {
+            max-width: 1400px;
+            margin: 0 auto 1.5rem;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        .filter-bar .filter-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .filter-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0.9rem;
+            border-radius: 99px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            cursor: pointer;
+            transition: all 0.25s;
+            user-select: none;
+        }
+        .filter-toggle:hover { border-color: var(--border-accent); }
+        .filter-toggle.active { border-color: currentColor; }
+        .filter-toggle .ft-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            transition: all 0.25s;
+        }
+        .filter-toggle .ft-label {
+            font-size: 0.82rem;
+            font-weight: 500;
+            transition: all 0.25s;
+        }
+        .filter-toggle.active .ft-dot { box-shadow: 0 0 6px currentColor; }
+        .filter-toggle:not(.active) .ft-dot { opacity: 0.3; }
+        .filter-toggle:not(.active) .ft-label { color: var(--text-muted); opacity: 0.5; }
+        .filter-toggle[data-platform="cosmos-vcore"] { color: var(--cosmos-vcore); }
+        .filter-toggle[data-platform="cosmos-ru"] { color: var(--cosmos-color); }
+        .filter-toggle[data-platform="docdb"] { color: var(--docdb-color); }
+
+        /* Hide rules: architecture cards */
+        body.hide-cosmos-vcore .arch-card.cosmos-vcore,
+        body.hide-cosmos-ru .arch-card.cosmos-ru,
+        body.hide-docdb .arch-card.docdb { display: none; }
+
+        /* Hide rules: table columns (col order: 1=feature, 2=atlas, 3=vcore, 4=ru, 5=docdb) */
+        body.hide-cosmos-vcore .cmp-table th:nth-child(3),
+        body.hide-cosmos-vcore .cmp-table td:nth-child(3) { display: none; }
+        body.hide-cosmos-ru .cmp-table th:nth-child(4),
+        body.hide-cosmos-ru .cmp-table td:nth-child(4) { display: none; }
+        body.hide-docdb .cmp-table th:nth-child(5),
+        body.hide-docdb .cmp-table td:nth-child(5) { display: none; }
+
+        /* Hide rules: diagram columns (col order: 1=atlas, 2=vcore, 3=ru, 4=docdb) */
+        body.hide-cosmos-vcore .diagram-grid > .diagram-col:nth-child(2) { display: none; }
+        body.hide-cosmos-ru .diagram-grid > .diagram-col:nth-child(3) { display: none; }
+        body.hide-docdb .diagram-grid > .diagram-col:nth-child(4) { display: none; }
+
+        /* Hide rules: code comparison outputs */
+        body.hide-cosmos-vcore .code-output-grid > .code-output:nth-child(2) { display: none; }
+        body.hide-cosmos-ru .code-output-grid > .code-output:nth-child(3) { display: none; }
+        body.hide-docdb .code-output-grid > .code-output:nth-child(4) { display: none; }
+
+        /* Hide rules: missing stages pills (3-col grid: 1=vcore, 2=ru, 3=docdb) */
+        body.hide-cosmos-vcore .missing-stages > div:nth-child(1) { display: none; }
+        body.hide-cosmos-ru .missing-stages > div:nth-child(2) { display: none; }
+        body.hide-docdb .missing-stages > div:nth-child(3) { display: none; }
+
+        /* Hide rules: limitation sections */
+        body.hide-cosmos-vcore .limits-cosmos-vcore,
+        body.hide-cosmos-ru .limits-cosmos-ru { display: none; }
+        body.hide-docdb .limits-docdb { display: none; }
+        body.hide-cosmos-vcore.hide-cosmos-ru .limits-cosmos { display: none; }
+
+        /* Responsive grid adjustments when columns hidden */
+        body.hide-cosmos-vcore .arch-grid,
+        body.hide-cosmos-ru .arch-grid,
+        body.hide-docdb .arch-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+        body.hide-cosmos-vcore .diagram-grid,
+        body.hide-cosmos-ru .diagram-grid,
+        body.hide-docdb .diagram-grid { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        body.hide-cosmos-vcore .code-output-grid,
+        body.hide-cosmos-ru .code-output-grid,
+        body.hide-docdb .code-output-grid { grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); }
+
+        /* === Expandable Explainer === */
+        .explainer { margin: 1.5rem 0; }
+        .explainer-toggle {
+            display: flex; align-items: center; gap: 0.6rem;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 10px; padding: 0.85rem 1.25rem;
+            cursor: pointer; width: 100%; font-family: inherit;
+            color: var(--accent); font-size: 0.9rem; font-weight: 600;
+            transition: all 0.25s;
+        }
+        .explainer-toggle:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
+        .explainer-toggle .arrow { transition: transform 0.3s; font-size: 0.75rem; }
+        .explainer-toggle.open .arrow { transform: rotate(90deg); }
+        .explainer-body {
+            max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-top: none; border-radius: 0 0 10px 10px;
+            padding: 0 1.25rem;
+        }
+        .explainer-body.open { max-height: 600px; padding: 1.25rem; }
+        .explainer-body p { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.65; }
+        .explainer-body strong { color: var(--text-primary); }
+        .explainer-body .analogy {
+            background: var(--accent-glow); border: 1px solid var(--border-accent);
+            border-radius: 8px; padding: 0.85rem 1rem; margin-top: 0.5rem;
+            font-size: 0.85rem; color: var(--text-secondary);
+        }
+        .explainer-body .analogy strong { color: var(--accent); }
+
+        /* === Workload Picker === */
+        .workload-section { margin: 3rem 0; }
+        .workload-section > h2 { text-align: center; }
+        .workload-section > p { text-align: center; }
+        .workload-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin: 1.5rem 0; }
+        .wl-pill {
+            padding: 0.55rem 1.15rem; border: 1px solid var(--border);
+            border-radius: 99px; background: var(--bg-card); color: var(--text-secondary);
+            font-family: inherit; font-size: 0.85rem; cursor: pointer; transition: all 0.25s;
+        }
+        .wl-pill:hover { border-color: var(--border-accent); color: var(--text-primary); }
+        .wl-pill.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+        .wl-result {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 2rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;
+            animation: fadeIn 0.4s ease;
+        }
+        .wl-card {
+            text-align: center; padding: 1.25rem; border-radius: 12px;
+            border: 2px solid var(--border); transition: all 0.3s;
+        }
+        .wl-card.best { border-color: var(--accent); background: rgba(0,237,100,0.06); }
+        .wl-card.good { border-color: var(--warning); }
+        .wl-card.poor { border-color: var(--danger); opacity: 0.7; }
+        .wl-card .wl-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .wl-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .wl-card .wl-verdict { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block; margin-bottom: 0.5rem; }
+        .wl-card .wl-verdict.best { background: rgba(0,237,100,0.15); color: var(--accent); }
+        .wl-card .wl-verdict.good { background: rgba(251,191,36,0.15); color: var(--warning); }
+        .wl-card .wl-verdict.poor { background: rgba(255,107,107,0.15); color: var(--danger); }
+        .wl-card p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+
+        /* === Decision Card === */
+        .decision-card {
+            max-width: 900px; margin: 3rem auto;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border); border-radius: 20px;
+            padding: 2.5rem; text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .decision-card h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
+        .decision-card .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
+        .decision-verdicts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: left; }
+        .decision-item { padding: 1rem; border-radius: 10px; border: 1px solid var(--border); }
+        .decision-item h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .decision-item p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+        .decision-item.atlas { border-top: 3px solid var(--atlas-color); }
+        .decision-item.cosmos-v { border-top: 3px solid var(--cosmos-vcore); }
+        .decision-item.cosmos-r { border-top: 3px solid var(--cosmos-color); }
+        .decision-item.docdb { border-top: 3px solid var(--docdb-color); }
+        .decision-bottom { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-secondary); }
+        .decision-bottom strong { color: var(--accent); }
+
+        /* === Migration Risk === */
+        .migration-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 1.5rem 0; }
+        .migration-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;
+        }
+        .migration-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
+        .migration-card .risk-bar { height: 6px; border-radius: 3px; margin: 0.75rem 0; background: var(--bg-secondary); overflow: hidden; }
+        .migration-card .risk-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
+        .migration-card .risk-label { font-size: 0.72rem; font-weight: 600; }
+        .migration-card p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+
+        @media (max-width: 1024px) {
+            .wl-result, .decision-verdicts { grid-template-columns: repeat(2, 1fr); }
+            .migration-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .wl-result, .decision-verdicts { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="header-inner">
+        <img src="assets/mongodb-leaf.png" alt="MongoDB" class="header-logo">
+        <h1>MongoDB Atlas <span>—</span> The Imitation Game</h1>
+    </div>
+</div>
+
+<div class="hero">
+    <h2>Native Engine vs Wire-Protocol Emulation</h2>
+    <p>A deep technical analysis of MongoDB Atlas, Azure Cosmos DB (vCore &amp; RU), and Amazon DocumentDB — from architecture internals to real-world operational gotchas.</p>
+    <div class="hero-stats">
+        <div class="hero-stat atlas">
+            <div class="number" data-target="100" data-suffix="%">0%</div>
+            <div class="label">MongoDB Feature Parity<br>(Atlas)</div>
+        </div>
+        <div class="hero-stat cosmos">
+            <div class="number" data-target="10" data-suffix=" max">0</div>
+            <div class="label">Physical Shard Ceiling<br>(Cosmos vCore)</div>
+        </div>
+        <div class="hero-stat docdb">
+            <div class="number" data-target="20" data-suffix="GB">0</div>
+            <div class="label">Partition Size Limit<br>(Cosmos RU)</div>
+        </div>
+        <div class="hero-stat atlas">
+            <div class="number" data-target="3" data-suffix="">0</div>
+            <div class="label">Cloud Providers<br>(Atlas Multi-Cloud)</div>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="filter-bar">
+    <span class="filter-label">Compare with:</span>
+    <div class="filter-toggle active" data-platform="cosmos-vcore">
+        <div class="ft-dot" style="background:var(--cosmos-vcore);"></div>
+        <span class="ft-label">Cosmos DB vCore</span>
+    </div>
+    <div class="filter-toggle active" data-platform="cosmos-ru">
+        <div class="ft-dot" style="background:var(--cosmos-color);"></div>
+        <span class="ft-label">Cosmos DB RU</span>
+    </div>
+    <div class="filter-toggle active" data-platform="docdb">
+        <div class="ft-dot" style="background:var(--docdb-color);"></div>
+        <span class="ft-label">DocumentDB</span>
+    </div>
+</div>
+
+<!-- Architecture Overview Cards -->
+<div class="arch-grid">
+    <div class="arch-card atlas">
+        <span class="badge">Native MongoDB</span>
+        <h3>MongoDB Atlas</h3>
+        <div class="engine">WiredTiger Engine &middot; B+ tree &middot; MVCC</div>
+        <ul>
+            <li>Runs the actual MongoDB server binary</li>
+            <li>Document-level concurrency control</li>
+            <li>Snappy/zstd/zlib compression</li>
+            <li>Replica sets + sharded clusters</li>
+            <li>Multi-cloud: AWS, Azure, GCP</li>
+        </ul>
+    </div>
+    <div class="arch-card cosmos-vcore">
+        <span class="badge">Azure &middot; vCore</span>
+        <h3>Cosmos DB for MongoDB (vCore)</h3>
+        <div class="engine">Custom Engine &middot; Wire protocol adapter &middot; Managed disk</div>
+        <ul>
+            <li>vCore-based compute (not RUs)</li>
+            <li>MongoDB 5.0 / 6.0 / 7.0 wire compat</li>
+            <li>Up to 10 physical shards</li>
+            <li>Single-collection transactions only</li>
+            <li>Azure-only deployment</li>
+        </ul>
+    </div>
+    <div class="arch-card cosmos-ru">
+        <span class="badge">Azure &middot; Serverless</span>
+        <h3>Cosmos DB for MongoDB (RU)</h3>
+        <div class="engine">ARS Engine &middot; Multi-model &middot; Request Units</div>
+        <ul>
+            <li>Atom-Record-Sequence storage format</li>
+            <li>Global distribution built-in</li>
+            <li>5 tunable consistency levels</li>
+            <li>20 GB logical partition ceiling</li>
+            <li>Azure-only deployment</li>
+        </ul>
+    </div>
+    <div class="arch-card docdb">
+        <span class="badge">AWS</span>
+        <h3>Amazon DocumentDB</h3>
+        <div class="engine">Aurora-style Engine &middot; Log-structured storage &middot; Compute–storage split</div>
+        <ul>
+            <li>Emulates MongoDB wire protocol</li>
+            <li>6 copies across 3 AZs (storage)</li>
+            <li>Elastic Clusters for sharding</li>
+            <li>Instance-class based sizing</li>
+            <li>AWS-only deployment</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Main Content Tabs -->
+<div class="container">
+    <nav class="tab-nav" id="mainTabs">
+        <button class="tab-btn active" data-tab="architecture">Architecture &amp; Storage</button>
+        <button class="tab-btn" data-tab="scalability">Scalability</button>
+        <button class="tab-btn" data-tab="platform">Platform Features</button>
+        <button class="tab-btn" data-tab="api">API &amp; Compatibility</button>
+        <button class="tab-btn" data-tab="limitations">The Fine Print</button>
+        <button class="tab-btn" data-tab="observability">Observability</button>
+        <button class="tab-btn" data-tab="enterprise">Enterprise Readiness</button>
+    </nav>
+
+    <!-- ═══════════ ARCHITECTURE & STORAGE ═══════════ -->
+    <div class="tab-panel active" id="panel-architecture">
+        <h2 class="section-title">Architecture &amp; Storage Engine</h2>
+        <p class="section-subtitle">The engine underneath determines everything — concurrency, compression, feature parity, and upgrade path.</p>
+
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th>Dimension</th>
+                    <th class="atlas-col">MongoDB Atlas</th>
+                    <th class="cosmos-vcore-col">Cosmos DB vCore</th>
+                    <th class="cosmos-ru-col">Cosmos DB RU</th>
+                    <th class="docdb-col">DocumentDB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Storage Engine</td>
+                    <td>WiredTiger (B+ tree, MVCC, document-level locking)</td>
+                    <td>Custom engine behind MongoDB wire protocol adapter</td>
+                    <td>Atom-Record-Sequence (ARS) — multi-model engine shared across SQL, Cassandra, Gremlin APIs</td>
+                    <td>Aurora-style log-structured distributed storage; compute layer emulates wire protocol</td>
+                </tr>
+                <tr>
+                    <td>JSON/BSON Handling</td>
+                    <td>Native BSON throughout — storage, wire protocol, indexes. Full type fidelity (128-bit Decimal128, BinData, etc.)</td>
+                    <td>Wire protocol translates BSON to internal format. Most BSON types supported; some edge cases differ</td>
+                    <td>Stores data in ARS format. BSON types mapped internally; some type coercions (e.g., Decimal128 precision differences reported)</td>
+                    <td>Internal JSON-like representation. Most BSON types supported but behavior around NaN, Infinity, and rare types may differ</td>
+                </tr>
+                <tr>
+                    <td>Concurrency</td>
+                    <td>Document-level (WiredTiger tickets, read/write intent locks). True multi-granularity locking</td>
+                    <td>Managed by internal engine; less granular control exposed. No equivalent of WiredTiger tickets or server status concurrency metrics</td>
+                    <td>Request-unit scheduler. No concept of locks — throughput governed by provisioned RUs per partition</td>
+                    <td>Instance-level compute resources. No document-level locking semantics exposed; relies on compute-storage separation</td>
+                </tr>
+                <tr>
+                    <td>Compression</td>
+                    <td>Snappy (default), zstd, zlib — configurable per collection and index. Typically 3–5x reduction</td>
+                    <td>Managed internally; no user control over compression algorithm</td>
+                    <td>Automatic — not user configurable</td>
+                    <td>Zstandard dictionary-based compression (v8.0). Up to 5x ratio reported</td>
+                </tr>
+                <tr>
+                    <td>Replication</td>
+                    <td>Replica set with oplog-based replication. Configurable write concern (w:1, majority, etc.), read preference (primary, secondary, nearest)</td>
+                    <td>HA replicas managed by Azure. No direct oplog access. No read preference control</td>
+                    <td>Multi-region replication with 5 consistency levels. Change feed (not change streams). No oplog</td>
+                    <td>6 storage copies across 3 AZs. Up to 15 read replicas. Change streams supported (with behavioral differences)</td>
+                </tr>
+                <tr>
+                    <td>Upgrade Path</td>
+                    <td>In-place major version upgrades (7.0 → 8.0). Rolling upgrades with zero downtime on Atlas. Full access to every new MongoDB release</td>
+                    <td>Compatibility version bumps managed by Azure. Feature availability lags MongoDB releases by months to years</td>
+                    <td>Compatibility versions set per account. Significant feature gaps vs native MongoDB at same version</td>
+                    <td>Engine versions (5.0, 8.0) are DocumentDB releases, not actual MongoDB binaries. Features are re-implemented, so "8.0 compat" ≠ MongoDB 8.0</td>
+                </tr>
+            </tbody>
+        </table>
+
+
+        <div class="explainer">
+            <button class="explainer-toggle" onclick="this.classList.toggle('open'); this.nextElementSibling.classList.toggle('open');">
+                <span class="arrow">&#9654;</span>
+                What exactly is "Wire Protocol Emulation"?
+            </button>
+            <div class="explainer-body">
+                <p><strong>Wire protocol</strong> is the binary format MongoDB drivers use to communicate with a MongoDB server over TCP. When your app calls <code>db.orders.find({status: "active"})</code>, the driver serializes it into an OP_MSG binary message, sends it over the wire, and expects a binary response in the same format.</p>
+                <p><strong>MongoDB Atlas</strong> runs the actual MongoDB server binary. The driver talks to the real engine. Every command, operator, and edge case works because the server <em>defined</em> the protocol.</p>
+                <p><strong>Cosmos DB and DocumentDB</strong> built entirely different database engines and then wrote a translation layer that <em>accepts</em> MongoDB wire protocol messages and <em>returns</em> responses in the expected format. It's putting a MongoDB-shaped mask on a fundamentally different database.</p>
+                <p>The consequences are real:</p>
+                <p><strong>1. Feature gaps are inevitable</strong> &mdash; every operator and aggregation stage must be individually reimplemented. If they haven't built it, you get a runtime error.</p>
+                <p><strong>2. Behavioral differences are silent</strong> &mdash; for "supported" operations, results can differ subtly: sort order for mixed types, null handling, Decimal128 precision. Tests pass; production reveals the divergence.</p>
+                <p><strong>3. Explain plans diverge</strong> &mdash; <code>explain()</code> output looks similar, but the underlying optimizer is completely different. An index that performs well on MongoDB might be ignored entirely.</p>
+                <p><strong>4. Version numbers mislead</strong> &mdash; "DocumentDB 8.0 compatible" means their layer accepts connections from MongoDB 8.0 <em>drivers</em>. It does not mean they support MongoDB 8.0 <em>features</em>.</p>
+                <div class="analogy"><strong>Analogy:</strong> It's like Google Docs claiming "Microsoft Word compatible" because it opens .docx files. Basic documents render fine. Complex macros, tracked changes, and advanced formatting break silently. The file format is the same; the engine is not.</div>
+            </div>
+        </div>
+
+        <div class="callout">
+            <h4>Why the engine matters</h4>
+            <p>Cosmos DB and DocumentDB do not run the MongoDB server. They implement the wire protocol on top of fundamentally different storage engines. This means every MongoDB feature must be explicitly re-implemented &mdash; and many aren't. When your application hits an unsupported operator, the error surfaces at runtime, not at deployment time.</p>
+        </div>
+
+        <div class="arch-diagrams">
+            <h3>Deployment Topology &mdash; How They Actually Work</h3>
+            <div class="shard-toggle">
+                <button class="shard-btn active" data-view="single">Single Replica Set / Cluster</button>
+                <button class="shard-btn" data-view="sharded">Sharded &mdash; 2 Shards</button>
+            </div>
+
+            <div class="diagram-view active" id="view-single">
+                <div class="diagram-grid">
+                    <div class="diagram-col">
+                        <div class="d-label atlas">MongoDB Atlas</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>MongoDB Driver</strong><br>Native BSON wire protocol</div>
+                        <div class="d-line"></div>
+                        <div class="d-group">
+                            <div class="d-group-label">Replica Set</div>
+                            <div class="d-nodes">
+                                <div class="d-node primary"><span class="n-label">Primary</span><span class="n-sub">WiredTiger</span></div>
+                                <div class="d-node"><span class="n-label">Secondary</span><span class="n-sub">WiredTiger</span></div>
+                                <div class="d-node"><span class="n-label">Secondary</span><span class="n-sub">WiredTiger</span></div>
+                            </div>
+                        </div>
+                        <div class="d-note">Oplog replication &middot; Doc-level locks</div>
+                        <div class="d-note" style="color:var(--accent); font-style:normal; font-weight:600;">AWS / Azure / GCP</div>
+                    </div>
+                    <div class="diagram-col">
+                        <div class="d-label cosmos-v">Cosmos DB vCore</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>Wire Protocol Adapter</strong><br>Translates to internal engine</div>
+                        <div class="d-line"></div>
+                        <div class="d-group">
+                            <div class="d-group-label">vCore Cluster</div>
+                            <div class="d-nodes">
+                                <div class="d-node primary"><span class="n-label">Primary</span><span class="n-sub">Custom Engine</span></div>
+                                <div class="d-node"><span class="n-label">HA Standby</span><span class="n-sub">Managed</span></div>
+                            </div>
+                        </div>
+                        <div class="d-line"></div>
+                        <div class="d-storage"><strong>Azure Managed Disk</strong><br>No oplog &middot; No read preference</div>
+                        <div class="d-note" style="color:var(--cosmos-vcore);">Azure only</div>
+                    </div>
+                    <div class="diagram-col">
+                        <div class="d-label cosmos-r">Cosmos DB RU</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>Gateway / REST</strong><br>RU-metered access</div>
+                        <div class="d-line"></div>
+                        <div class="d-group">
+                            <div class="d-group-label">ARS Storage Engine</div>
+                            <div class="d-partitions">
+                                <div class="d-partition">Partition 1<br><span class="cap">&le;20 GB</span></div>
+                                <div class="d-partition">Partition 2<br><span class="cap">&le;20 GB</span></div>
+                                <div class="d-partition">Partition 3<br><span class="cap">&le;20 GB</span></div>
+                            </div>
+                        </div>
+                        <div class="d-warn">&le;20 GB per logical partition</div>
+                        <div class="d-note">Partition key = immutable</div>
+                        <div class="d-note" style="color:var(--cosmos-color);">Azure only</div>
+                    </div>
+                    <div class="diagram-col">
+                        <div class="d-label docdb">Amazon DocumentDB</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>Wire Protocol Emulation</strong><br>Aurora-style compute layer</div>
+                        <div class="d-line"></div>
+                        <div class="d-group">
+                            <div class="d-group-label">Compute Instances</div>
+                            <div class="d-nodes">
+                                <div class="d-node primary"><span class="n-label">Writer</span><span class="n-sub">Instance</span></div>
+                                <div class="d-node"><span class="n-label">Reader</span><span class="n-sub">Replica</span></div>
+                                <div class="d-node"><span class="n-label">Reader</span><span class="n-sub">Replica</span></div>
+                            </div>
+                        </div>
+                        <div class="d-line"></div>
+                        <div class="d-storage"><strong>Shared Distributed Storage</strong><br>6 copies &middot; 3 AZs &middot; Log-structured</div>
+                        <div class="d-note" style="color:var(--docdb-color);">AWS only</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="diagram-view" id="view-sharded">
+                <div class="diagram-grid">
+                    <div class="diagram-col">
+                        <div class="d-label atlas">MongoDB Atlas</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box" style="border-color:var(--accent);"><strong>mongos Router</strong><br>Query routing &middot; Merge</div>
+                        <div class="d-line-fork"></div>
+                        <div class="d-line-down-pair"><div class="d-line"></div><div class="d-line"></div></div>
+                        <div class="d-split">
+                            <div class="d-shard">
+                                <div class="d-group"><div class="d-group-label">Shard 1</div>
+                                    <div class="d-nodes">
+                                        <div class="d-node primary"><span class="n-label">P</span><span class="n-sub">WT</span></div>
+                                        <div class="d-node"><span class="n-label">S</span><span class="n-sub">WT</span></div>
+                                        <div class="d-node"><span class="n-label">S</span><span class="n-sub">WT</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-shard">
+                                <div class="d-group"><div class="d-group-label">Shard 2</div>
+                                    <div class="d-nodes">
+                                        <div class="d-node primary"><span class="n-label">P</span><span class="n-sub">WT</span></div>
+                                        <div class="d-node"><span class="n-label">S</span><span class="n-sub">WT</span></div>
+                                        <div class="d-node"><span class="n-label">S</span><span class="n-sub">WT</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-note">+ Config Servers (auto on Atlas)</div>
+                        <div class="d-note" style="color:var(--accent); font-style:normal; font-weight:600;">No shard limit &middot; Online resharding</div>
+                    </div>
+                    <div class="diagram-col">
+                        <div class="d-label cosmos-v">Cosmos DB vCore</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>Managed Router</strong><br>Azure-managed routing</div>
+                        <div class="d-line-fork"></div>
+                        <div class="d-line-down-pair"><div class="d-line"></div><div class="d-line"></div></div>
+                        <div class="d-split">
+                            <div class="d-shard">
+                                <div class="d-group"><div class="d-group-label">Shard 1</div>
+                                    <div class="d-nodes">
+                                        <div class="d-node primary"><span class="n-label">vCore</span><span class="n-sub">Custom</span></div>
+                                        <div class="d-node"><span class="n-label">HA</span><span class="n-sub">Standby</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-shard">
+                                <div class="d-group"><div class="d-group-label">Shard 2</div>
+                                    <div class="d-nodes">
+                                        <div class="d-node primary"><span class="n-label">vCore</span><span class="n-sub">Custom</span></div>
+                                        <div class="d-node"><span class="n-label">HA</span><span class="n-sub">Standby</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-line"></div>
+                        <div class="d-storage"><strong>Azure Managed Disk</strong> per shard</div>
+                        <div class="d-warn">Max 10 physical shards</div>
+                        <div class="d-note">Shard key immutable at creation</div>
+                    </div>
+                    <div class="diagram-col">
+                        <div class="d-label cosmos-r">Cosmos DB RU</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>Gateway / REST</strong><br>RU-metered &middot; Fan-out queries</div>
+                        <div class="d-line"></div>
+                        <div class="d-group">
+                            <div class="d-group-label">ARS Engine &mdash; Auto-Partitioned</div>
+                            <div class="d-split">
+                                <div class="d-shard">
+                                    <div class="d-storage" style="font-size:0.55rem;"><strong>Phys Part 1</strong><br>Logical parts&hellip;<br><span style="color:var(--warning);">&le;20 GB each</span></div>
+                                </div>
+                                <div class="d-shard">
+                                    <div class="d-storage" style="font-size:0.55rem;"><strong>Phys Part 2</strong><br>Logical parts&hellip;<br><span style="color:var(--warning);">&le;20 GB each</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-warn">No manual shard control</div>
+                        <div class="d-warn">Cross-partition = fan-out</div>
+                        <div class="d-note">Partition key chosen once &mdash; forever</div>
+                    </div>
+                    <div class="diagram-col">
+                        <div class="d-label docdb">DocumentDB Elastic</div>
+                        <div class="d-box"><strong>Application</strong></div>
+                        <div class="d-line"></div>
+                        <div class="d-box"><strong>Elastic Cluster Router</strong><br>Shard-aware routing</div>
+                        <div class="d-line-fork"></div>
+                        <div class="d-line-down-pair"><div class="d-line"></div><div class="d-line"></div></div>
+                        <div class="d-split">
+                            <div class="d-shard">
+                                <div class="d-group"><div class="d-group-label">Shard 1</div>
+                                    <div class="d-node" style="width:100%;"><span class="n-label">Compute</span></div>
+                                </div>
+                                <div class="d-line" style="height:8px;"></div>
+                                <div class="d-storage" style="font-size:0.55rem;"><strong>Storage</strong><br>6 copies / 3 AZs</div>
+                            </div>
+                            <div class="d-shard">
+                                <div class="d-group"><div class="d-group-label">Shard 2</div>
+                                    <div class="d-node" style="width:100%;"><span class="n-label">Compute</span></div>
+                                </div>
+                                <div class="d-line" style="height:8px;"></div>
+                                <div class="d-storage" style="font-size:0.55rem;"><strong>Storage</strong><br>6 copies / 3 AZs</div>
+                            </div>
+                        </div>
+                        <div class="d-warn">Shard key immutable</div>
+                        <div class="d-note">Separate tier from standard DocDB</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════ SCALABILITY ═══════════ -->
+    <div class="tab-panel" id="panel-scalability">
+        <h2 class="section-title">Scalability — Horizontal &amp; Vertical</h2>
+        <p class="section-subtitle">How each platform grows with your workload, and where the ceilings are.</p>
+
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th>Capability</th>
+                    <th class="atlas-col">MongoDB Atlas</th>
+                    <th class="cosmos-vcore-col">Cosmos DB vCore</th>
+                    <th class="cosmos-ru-col">Cosmos DB RU</th>
+                    <th class="docdb-col">DocumentDB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Horizontal Scaling</td>
+                    <td>Native sharding — hash, range, zone-based. Add shards on-the-fly. Auto-balancer redistributes chunks. No hard shard limit</td>
+                    <td>Sharding supported (M60+ tier). Max <strong>10 physical shards</strong>. Automatic rebalancing. Shard key selection at creation</td>
+                    <td>Automatic partitioning by partition key. Transparent split when partition exceeds threshold. No shard management, but no control either</td>
+                    <td>Elastic Clusters for sharding (separate tier). Standard instances scale vertically only — no native sharding</td>
+                </tr>
+                <tr>
+                    <td>Vertical Scaling</td>
+                    <td>M10 → M700 (768 GB RAM). Scale with zero downtime via rolling process</td>
+                    <td>Up to 128 vCores / 2 TB RAM. Burstable and general-purpose tiers. Scaling requires potential downtime</td>
+                    <td>N/A — throughput governed by RUs, not instance size. Autoscale between 10% and 100% of provisioned max</td>
+                    <td>Instance classes from db.t3.medium to db.r6g.16xlarge. Scaling requires reboot</td>
+                </tr>
+                <tr>
+                    <td>Storage Ceiling</td>
+                    <td>No hard cap (sharded clusters scale to petabytes). Per-replica up to 4 TB default, extendable</td>
+                    <td>Up to 32 TB across cluster (configurable). 2 TB per shard for certain tiers</td>
+                    <td><strong>20 GB per logical partition</strong>. Unlimited storage overall but data modeled around this constraint</td>
+                    <td>128 TB per cluster. Auto-grows in 10 GB increments</td>
+                </tr>
+                <tr>
+                    <td>Geo-Distribution</td>
+                    <td>Global Clusters with zone sharding. Pin data to specific regions. Workload isolation across clouds (AWS, Azure, GCP simultaneously)</td>
+                    <td>Azure-region replicas for HA. No multi-region write support. No cross-cloud</td>
+                    <td>Multi-region writes built-in. 5 consistency levels for global reads. Azure-only</td>
+                    <td>Global Clusters for cross-region replication. Single-region writes. AWS-only</td>
+                </tr>
+                <tr>
+                    <td>Auto-Scaling</td>
+                    <td>Atlas auto-scaling adjusts cluster tier based on CPU/memory utilization. Configurable thresholds and limits</td>
+                    <td>Burstable tier available. No auto-scaling of compute tier</td>
+                    <td>RU autoscale between 10–100% of max provisioned. Serverless mode for intermittent workloads</td>
+                    <td>No native auto-scaling of instances. Pair with AWS Auto Scaling for read replicas</td>
+                </tr>
+                <tr>
+                    <td>Online Resharding</td>
+                    <td>Live resharding (MongoDB 5.0+). Change shard key without downtime. Automatic chunk migration</td>
+                    <td>Shard key changes require re-creating the collection</td>
+                    <td>Partition key is <strong>immutable</strong> after creation. Requires data migration to change</td>
+                    <td>Elastic Cluster shard key immutable after creation</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout danger">
+            <h4>The 20 GB Trap (Cosmos DB RU)</h4>
+            <p>Each logical partition in Cosmos DB RU mode caps at 20 GB. If your data model concentrates writes on a single partition key value beyond 20 GB, you hit a hard wall. Rearchitecting an immutable partition key in production is one of the most painful migrations in cloud databases — it typically requires a parallel deployment and full data copy.</p>
+        </div>
+    </div>
+
+    <!-- ═══════════ PLATFORM FEATURES ═══════════ -->
+    <div class="tab-panel" id="panel-platform">
+        <h2 class="section-title">Platform Features</h2>
+        <p class="section-subtitle">Beyond basic CRUD — the integrated capabilities that determine whether you need additional infrastructure.</p>
+
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th class="atlas-col">Atlas</th>
+                    <th class="cosmos-vcore-col">Cosmos vCore</th>
+                    <th class="cosmos-ru-col">Cosmos RU</th>
+                    <th class="docdb-col">DocumentDB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Full-Text Search</td>
+                    <td><span class="check">&#10003; Atlas Search</span> — Lucene-based. Fuzzy, autocomplete, facets, scoring, highlights, compound queries. Integrated in aggregation pipeline via <code>$search</code></td>
+                    <td><span class="partial">&#9673; Basic</span> — Simple text indexes. No fuzzy, no facets, no scoring functions</td>
+                    <td><span class="none">&#10007;</span> No native text search. Requires external service (Azure AI Search)</td>
+                    <td><span class="partial">&#9673; Text Index v2</span> (8.0). Basic search. No fuzzy matching, no scoring, no facets</td>
+                </tr>
+                <tr>
+                    <td>Vector Search</td>
+                    <td><span class="check">&#10003; Atlas Vector Search</span> — HNSW + IVF indexes, <code>$vectorSearch</code> stage, pre-filter support, up to 4096 dims, integrated with search pipeline</td>
+                    <td><span class="partial">&#9673; Vector search</span> — HNSW and IVF indexes, up to 16,000 dims. <code>$search</code> with vector queries</td>
+                    <td><span class="partial">&#9673; Vector search</span> via DiskANN-based indexes. Integrated with Cosmos DB API</td>
+                    <td><span class="partial">&#9673; Vector search</span> (8.0) — <code>$vectorSearch</code> stage. HNSW indexes. 30x faster parallel index builds claimed</td>
+                </tr>
+                <tr>
+                    <td>Embedding &amp; Reranking Models</td>
+                    <td><span class="check">&#10003;</span> Atlas hosts embedding models (e.g., Nomic) and reranking models (e.g., Cohere) directly — vectorize at query/index time without external calls</td>
+                    <td><span class="none">&#10007;</span> External Azure OpenAI / AI service required</td>
+                    <td><span class="none">&#10007;</span> External Azure OpenAI / AI service required</td>
+                    <td><span class="none">&#10007;</span> External Bedrock / SageMaker required</td>
+                </tr>
+                <tr>
+                    <td>Time Series Collections</td>
+                    <td><span class="check">&#10003;</span> Native time-series engine with automatic bucketing, columnar compression, windowed inserts/reads. Purpose-built storage</td>
+                    <td><span class="none">&#10007;</span> Not supported</td>
+                    <td><span class="none">&#10007;</span> Not supported</td>
+                    <td><span class="none">&#10007;</span> Not supported</td>
+                </tr>
+                <tr>
+                    <td>Change Streams</td>
+                    <td><span class="check">&#10003;</span> Full change streams — watch database, collection, or deployment. Resume tokens. Pre- and post-images. Filters with match expressions</td>
+                    <td><span class="partial">&#9673; Preview</span> — Change streams with wallTime support (gated preview, Sep 2024). Not GA</td>
+                    <td><span class="partial">&#9673; Change Feed</span> — Different API than MongoDB change streams. No resume token interop. Pull model only</td>
+                    <td><span class="partial">&#9673; Supported</span> with differences — 24-hr retention default, no pre-image support, limited filtering</td>
+                </tr>
+                <tr>
+                    <td>Aggregation Pipeline</td>
+                    <td><span class="check">&#10003; Full</span> — All stages including <code>$graphLookup</code>, <code>$facet</code>, <code>$bucket</code>, <code>$setWindowFields</code>, <code>$densify</code>, <code>$fill</code>, <code>$merge</code>, <code>$unionWith</code></td>
+                    <td><span class="partial">&#9673; Most stages</span> — Adds <code>$setWindowFields</code>, <code>$merge</code>, <code>$fill</code> in recent updates. No <code>$accumulator</code>, <code>$function</code></td>
+                    <td><span class="partial">&#9673; Partial</span> — Many stages missing. Cross-partition <code>$lookup</code> limited. No <code>$out</code>/<code>$merge</code> across partitions</td>
+                    <td><span class="partial">&#9673; Partial</span> — Missing <code>$facet</code>, <code>$bucket</code>Auto, <code>$setWindowFields</code>, <code>$graphLookup</code>, <code>$unionWith</code>, <code>$sortByCount</code>. <code>$merge</code> added in 8.0</td>
+                </tr>
+                <tr>
+                    <td>Queryable Encryption</td>
+                    <td><span class="check">&#10003;</span> Client-side Field Level Encryption (CSFLE) + Queryable Encryption. Encrypted fields remain queryable (equality, range) without server-side decryption</td>
+                    <td><span class="none">&#10007;</span> Azure-level encryption (TDE, CMK). No CSFLE. No encrypted query support</td>
+                    <td><span class="none">&#10007;</span> Azure-level encryption. No CSFLE</td>
+                    <td><span class="none">&#10007;</span> AWS-level encryption (KMS, TDE). No CSFLE. No queryable encryption</td>
+                </tr>
+                <tr>
+                    <td>Atlas Stream Processing</td>
+                    <td><span class="check">&#10003;</span> Continuous processing of streaming data using MongoDB aggregation syntax. Connect Kafka, Atlas triggers, and other sources</td>
+                    <td><span class="none">&#10007;</span></td>
+                    <td><span class="none">&#10007;</span></td>
+                    <td><span class="none">&#10007;</span></td>
+                </tr>
+                <tr>
+                    <td>Charts &amp; Visualization</td>
+                    <td><span class="check">&#10003; Atlas Charts</span> — Native, embedded dashboards directly on your data. No ETL required</td>
+                    <td><span class="none">&#10007;</span> Use Power BI or third-party</td>
+                    <td><span class="none">&#10007;</span> Use Power BI or third-party</td>
+                    <td><span class="none">&#10007;</span> Use QuickSight or third-party</td>
+                </tr>
+                <tr>
+                    <td>Online Archive</td>
+                    <td><span class="check">&#10003;</span> Automated tiering of cold data to cheaper storage. Queryable via federated queries alongside hot data</td>
+                    <td><span class="none">&#10007;</span></td>
+                    <td><span class="none">&#10007;</span></td>
+                    <td><span class="none">&#10007;</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="callout">
+            <h4>The Platform Gap</h4>
+            <p>Atlas Search, Vector Search, embedded ML models, time series, stream processing, queryable encryption, and online archive are integrated features that run co-located with your data. With Cosmos DB or DocumentDB, each of these requires stitching in a separate service — Azure AI Search + Azure OpenAI + Event Hubs, or OpenSearch + Bedrock + Kinesis — adding latency, operational overhead, and data synchronization complexity.</p>
+        </div>
+    </div>
+
+    <!-- ═══════════ API & COMPATIBILITY ═══════════ -->
+    <div class="tab-panel" id="panel-api">
+        <h2 class="section-title">API Compatibility &amp; Wire Protocol</h2>
+        <p class="section-subtitle">Claiming "MongoDB compatible" and being MongoDB are fundamentally different things.</p>
+
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th>Dimension</th>
+                    <th class="atlas-col">Atlas</th>
+                    <th class="cosmos-vcore-col">Cosmos vCore</th>
+                    <th class="cosmos-ru-col">Cosmos RU</th>
+                    <th class="docdb-col">DocumentDB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Server Version</td>
+                    <td>Actual MongoDB 7.0 / 8.0 binary (current release)</td>
+                    <td>Wire protocol compat: 5.0, 6.0, 7.0. Not the MongoDB binary — features reimplemented</td>
+                    <td>Wire protocol compat: 3.6, 4.0, 4.2, 6.0. Major feature gaps at every level</td>
+                    <td>"Compatibility version" 5.0, 8.0. Not MongoDB — Aurora-based reimplementation</td>
+                </tr>
+                <tr>
+                    <td>Driver Support</td>
+                    <td>All official MongoDB drivers fully supported and tested. Community drivers work</td>
+                    <td>Official drivers work with caveats. Some features (like CSFLE, sessions) may not work</td>
+                    <td>Official drivers work. Many advanced features return errors or behave differently</td>
+                    <td>Official drivers work for basic operations. <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" style="color:var(--accent)">See MongoDB's DocumentDB compat matrix</a></td>
+                </tr>
+                <tr>
+                    <td>mongosh / Compass</td>
+                    <td><span class="check">&#10003;</span> Full support</td>
+                    <td><span class="partial">&#9673;</span> Connects but some commands fail</td>
+                    <td><span class="partial">&#9673;</span> Connects but many admin commands unsupported</td>
+                    <td><span class="partial">&#9673;</span> Connects but explain plans and profiler differ</td>
+                </tr>
+                <tr>
+                    <td>mongodump / mongorestore</td>
+                    <td><span class="check">&#10003;</span> Full support. Also: Cloud Backup with PIT restore</td>
+                    <td><span class="partial">&#9673;</span> Works for data; metadata and options may not round-trip</td>
+                    <td><span class="none">&#10007;</span> Not supported. Use Azure Data Factory or custom migration</td>
+                    <td><span class="partial">&#9673;</span> Partially works. Some index types and options lost</td>
+                </tr>
+                <tr>
+                    <td>Transactions (multi-doc)</td>
+                    <td><span class="check">&#10003;</span> Multi-document ACID across collections, databases, and shards. Snapshot isolation. 60s default lifetime (configurable)</td>
+                    <td><span class="partial">&#9673;</span> Single non-sharded collection only. No cross-collection. Max 30s lifetime</td>
+                    <td><span class="partial">&#9673;</span> Supported within a single logical partition only</td>
+                    <td><span class="check">&#10003;</span> Supported across statements within a single cluster. 1-minute timeout</td>
+                </tr>
+                <tr>
+                    <td>Indexes</td>
+                    <td>Compound, multikey, text, geospatial (2d, 2dsphere), hashed, wildcard, partial, TTL, unique, hidden, clustered, columnstore</td>
+                    <td>Compound, multikey, geospatial (GA 2024), wildcard, unique, TTL. No hashed, limited text, limited sparse</td>
+                    <td>Auto-indexed by default. Limited control. No compound index creation. Wildcard policy</td>
+                    <td>Compound, multikey, TTL, unique, sparse. No partial indexes. No geospatial (2dsphere limited). No hashed. No wildcard</td>
+                </tr>
+                <tr>
+                    <td>Index Builds</td>
+                    <td>Background/foreground (hybrid builds in 4.2+). Online, no lock on collection</td>
+                    <td>Online index builds supported. Long-running builds may impact performance</td>
+                    <td>Automatic — indexes created asynchronously. May consume RUs during build</td>
+                    <td>Background supported. 30x faster parallel builds claimed (8.0)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3 style="margin: 2rem 0 1rem; font-size: 1.15rem;">Unsupported Aggregation Stages</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem; font-size: 0.9rem;">Stages available in MongoDB 7.0+ that are absent or limited in compatibility layers:</p>
+
+        <div class="missing-stages" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+            <div>
+                <h4 style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--cosmos-vcore);">Cosmos DB vCore — Missing</h4>
+                <div class="pill-grid">
+                    <span class="pill no">$accumulator</span>
+                    <span class="pill no">$function</span>
+                    <span class="pill no">$where</span>
+                    <span class="pill no">$searchMeta</span>
+                </div>
+            </div>
+            <div>
+                <h4 style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--cosmos-color);">Cosmos DB RU — Missing</h4>
+                <div class="pill-grid">
+                    <span class="pill no">$facet</span>
+                    <span class="pill no">$graphLookup</span>
+                    <span class="pill no">$merge</span>
+                    <span class="pill no">$out</span>
+                    <span class="pill no">$unionWith</span>
+                    <span class="pill no">$setWindowFields</span>
+                    <span class="pill no">$bucket</span>
+                    <span class="pill no">$densify</span>
+                </div>
+            </div>
+            <div>
+                <h4 style="font-size: 0.85rem; margin-bottom: 0.75rem; color: var(--docdb-color);">DocumentDB — Missing</h4>
+                <div class="pill-grid">
+                    <span class="pill no">$facet</span>
+                    <span class="pill no">$graphLookup</span>
+                    <span class="pill no">$bucketAuto</span>
+                    <span class="pill no">$sortByCount</span>
+                    <span class="pill no">$setWindowFields</span>
+                    <span class="pill no">$unionWith</span>
+                    <span class="pill no">$collStats</span>
+                    <span class="pill no">$planCacheStats</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="code-compare">
+            <h3>See the Difference: Same Query, Four Platforms</h3>
+            <div class="code-tabs" id="codeTabs">
+                <button class="code-tab active" data-code="graphlookup">$graphLookup</button>
+                <button class="code-tab" data-code="facet">$facet</button>
+                <button class="code-tab" data-code="vectorsearch">$vectorSearch</button>
+                <button class="code-tab" data-code="transaction">Cross-Collection Txn</button>
+            </div>
+            <div class="code-panel active" id="code-graphlookup"><div class="code-output-grid">
+                <div class="code-output"><span class="platform-tag atlas">MongoDB Atlas</span>
+<span class="code-kw">db.employees.</span>aggregate([
+  { <span class="code-kw">$graphLookup</span>: {
+      from: <span class="code-str">"employees"</span>,
+      startWith: <span class="code-str">"$managerId"</span>,
+      connectFromField: <span class="code-str">"managerId"</span>,
+      connectToField: <span class="code-str">"_id"</span>,
+      as: <span class="code-str">"reportingChain"</span>
+  }}
+])
+<span class="code-ok">// &#10003; Full reporting chain returned</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-v">Cosmos DB vCore</span>
+<span class="code-kw">db.employees.</span>aggregate([
+  { <span class="code-kw">$graphLookup</span>: { ... } }
+])
+
+<span class="code-err">// &#10007; MongoCommandException:
+// Unrecognized pipeline stage
+//   name: '$graphLookup'</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-r">Cosmos DB RU</span>
+<span class="code-kw">db.employees.</span>aggregate([
+  { <span class="code-kw">$graphLookup</span>: { ... } }
+])
+
+<span class="code-err">// &#10007; Unsupported stage:
+//   $graphLookup</span></div>
+                <div class="code-output"><span class="platform-tag docdb">DocumentDB</span>
+<span class="code-kw">db.employees.</span>aggregate([
+  { <span class="code-kw">$graphLookup</span>: { ... } }
+])
+
+<span class="code-err">// &#10007; Unrecognized expression:
+//   '$graphLookup'</span></div>
+            </div></div>
+            <div class="code-panel" id="code-facet"><div class="code-output-grid">
+                <div class="code-output"><span class="platform-tag atlas">MongoDB Atlas</span>
+<span class="code-kw">db.orders.</span>aggregate([
+  { <span class="code-kw">$facet</span>: {
+    byStatus: [
+      { $sortByCount: <span class="code-str">"$status"</span> }],
+    byRegion: [
+      { $group: {_id: <span class="code-str">"$region"</span>,
+          n: {$sum: 1}}}],
+    priceRanges: [
+      { $bucket: {groupBy: <span class="code-str">"$total"</span>,
+          boundaries: [0,100,500]}}]
+  }}
+])
+<span class="code-ok">// &#10003; All 3 facets, one round-trip</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-v">Cosmos DB vCore</span>
+<span class="code-kw">db.orders.</span>aggregate([
+  { <span class="code-kw">$facet</span>: { ... } }
+])
+
+<span class="code-ok">// &#10003; Works in recent versions</span>
+<span class="code-comment">// Some sub-pipeline stages
+// may have restrictions</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-r">Cosmos DB RU</span>
+<span class="code-kw">db.orders.</span>aggregate([
+  { <span class="code-kw">$facet</span>: { ... } }
+])
+
+<span class="code-err">// &#10007; Unsupported: $facet</span>
+<span class="code-comment">// Must split into 3 queries
+// 3x RU consumption</span></div>
+                <div class="code-output"><span class="platform-tag docdb">DocumentDB</span>
+<span class="code-kw">db.orders.</span>aggregate([
+  { <span class="code-kw">$facet</span>: { ... } }
+])
+
+<span class="code-err">// &#10007; Unsupported: '$facet'</span>
+<span class="code-comment">// 3 separate queries +
+// client-side merge</span></div>
+            </div></div>
+            <div class="code-panel" id="code-vectorsearch"><div class="code-output-grid">
+                <div class="code-output"><span class="platform-tag atlas">MongoDB Atlas</span>
+<span class="code-kw">db.products.</span>aggregate([
+  { <span class="code-kw">$vectorSearch</span>: {
+    index: <span class="code-str">"vec_idx"</span>,
+    path: <span class="code-str">"embedding"</span>,
+    queryVector: [0.12, -0.45, ...],
+    numCandidates: 100,
+    limit: 10,
+    filter: {category: <span class="code-str">"electronics"</span>}
+  }},
+  { <span class="code-kw">$project</span>: {
+    score: {$meta: <span class="code-str">"vectorSearchScore"</span>},
+    name: 1, description: 1
+  }}
+])
+<span class="code-ok">// &#10003; Pre-filtered vector search
+// with relevance scoring</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-v">Cosmos DB vCore</span>
+<span class="code-comment">// Different API syntax:</span>
+<span class="code-kw">db.products.</span>aggregate([
+  { $search: {
+    <span class="code-str">"cosmosSearch"</span>: {
+      vector: [0.12, -0.45,...],
+      path: <span class="code-str">"embedding"</span>,
+      k: 10
+    }
+  }}
+])
+<span class="code-err">// &#10007; Different syntax than Atlas
+// No hybrid text+vector
+// No pre-filter in same stage</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-r">Cosmos DB RU</span>
+<span class="code-comment">// DiskANN-based vector:</span>
+<span class="code-kw">db.products.</span>aggregate([
+  { $search: {
+    <span class="code-str">"cosmosSearch"</span>: {
+      vector: [0.12, ...],
+      path: <span class="code-str">"embedding"</span>,
+      k: 10
+    }
+  }}
+])
+<span class="code-err">// &#10007; No text search at all
+// Partition-scoped only</span></div>
+                <div class="code-output"><span class="platform-tag docdb">DocumentDB</span>
+<span class="code-kw">db.products.</span>aggregate([
+  { <span class="code-kw">$vectorSearch</span>: {
+    queryVector: [0.12, ...],
+    path: <span class="code-str">"embedding"</span>,
+    limit: 10
+  }}
+])
+<span class="code-err">// &#10007; Basic vector only (8.0)
+// No hybrid text+vector
+// No pre-filter, no scoring</span></div>
+            </div></div>
+            <div class="code-panel" id="code-transaction"><div class="code-output-grid">
+                <div class="code-output"><span class="platform-tag atlas">MongoDB Atlas</span>
+<span class="code-kw">const</span> session = client.startSession();
+session.startTransaction();
+
+<span class="code-kw">await</span> orders.insertOne(
+  {orderId: 123, ...}, {session});
+<span class="code-kw">await</span> inventory.updateOne(
+  {sku: <span class="code-str">"A1"</span>},
+  {$inc: {qty: -1}}, {session});
+<span class="code-kw">await</span> payments.insertOne(
+  {orderId: 123, ...}, {session});
+
+<span class="code-kw">await</span> session.commitTransaction();
+<span class="code-ok">// &#10003; ACID across 3 collections
+// Works on sharded clusters too</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-v">Cosmos DB vCore</span>
+<span class="code-kw">const</span> session = client.startSession();
+session.startTransaction();
+
+<span class="code-kw">await</span> orders.insertOne(...,{session});
+<span class="code-kw">await</span> inventory.updateOne(
+  ..., {session});
+
+<span class="code-err">// &#10007; Error: transactions across
+// multiple collections are
+// not supported.
+//
+// Max lifetime: 30 seconds
+// Single collection only.</span></div>
+                <div class="code-output"><span class="platform-tag cosmos-r">Cosmos DB RU</span>
+<span class="code-kw">const</span> session = client.startSession();
+session.startTransaction();
+
+<span class="code-kw">await</span> orders.insertOne(...,{session});
+<span class="code-kw">await</span> inventory.updateOne(
+  ..., {session});
+
+<span class="code-err">// &#10007; Transactions limited to
+// single logical partition.
+//
+// Cross-partition or cross-
+// collection = not supported.</span></div>
+                <div class="code-output"><span class="platform-tag docdb">DocumentDB</span>
+<span class="code-kw">const</span> session = client.startSession();
+session.startTransaction();
+
+<span class="code-kw">await</span> orders.insertOne(...,{session});
+<span class="code-kw">await</span> inventory.updateOne(
+  ..., {session});
+<span class="code-kw">await</span> payments.insertOne(
+  ..., {session});
+
+<span class="code-kw">await</span> session.commitTransaction();
+<span class="code-ok">// &#10003; Cross-collection supported</span>
+<span class="code-comment">// 1-minute timeout limit</span></div>
+            </div></div>
+        </div>
+
+    </div>
+
+    <!-- ═══════════ THE FINE PRINT ═══════════ -->
+    <div class="tab-panel" id="panel-limitations">
+        <h2 class="section-title">The Fine Print — Real Limitations</h2>
+        <p class="section-subtitle">The things you discover in production, not in proof-of-concept. Each of these has caused real migration decisions.</p>
+
+        <div class="limits-cosmos">
+        <h3 style="margin: 1.5rem 0 1rem; color: var(--cosmos-color);">Azure Cosmos DB</h3>
+        <div class="limit-grid">
+            <div class="limit-card">
+                <h4>Immutable Partition Key (RU)</h4>
+                <p>Once you choose a partition key on a Cosmos DB RU container, it cannot be changed. If your access patterns evolve (and they will), the only fix is creating a new container and migrating all data. This is a fundamental architectural constraint, not a missing feature.</p>
+                <span class="tag tag-cosmos">Cosmos DB RU</span>
+            </div>
+            <div class="limit-card">
+                <h4>20 GB Logical Partition Ceiling (RU)</h4>
+                <p>Each unique partition key value can hold a maximum of 20 GB. For workloads with hot keys — e.g., a high-volume tenant in a SaaS app — this creates a hard ceiling that can't be solved by adding throughput. Your only option is rearchitecting the partition key.</p>
+                <span class="tag tag-cosmos">Cosmos DB RU</span>
+            </div>
+            <div class="limit-card warn">
+                <h4>Cross-Partition Queries Are Fan-Out (RU)</h4>
+                <p>Any query that doesn't specify the partition key fans out to every physical partition in parallel. A 5 RU query on 10 partitions becomes 50+ RUs. This makes analytics, reporting, and ad-hoc queries disproportionately expensive in throughput.</p>
+                <span class="tag tag-cosmos">Cosmos DB RU</span>
+            </div>
+            <div class="limit-card">
+                <h4>No Cross-Collection Transactions (vCore)</h4>
+                <p>Multi-document transactions in Cosmos DB vCore are limited to a single, non-sharded collection. If your business logic requires atomic operations across orders, inventory, and payments — a common pattern — you must redesign into a single-collection schema or accept eventual consistency.</p>
+                <span class="tag tag-cosmos">Cosmos DB vCore</span>
+            </div>
+            <div class="limit-card warn">
+                <h4>Maximum 10 Physical Shards (vCore)</h4>
+                <p>Horizontal scaling caps at 10 physical shards. For workloads that grow beyond what 10 shards can serve, there is no path forward without rearchitecting. MongoDB Atlas has no hard shard limit.</p>
+                <span class="tag tag-cosmos">Cosmos DB vCore</span>
+            </div>
+            <div class="limit-card info">
+                <h4>Change Streams Still in Preview (vCore)</h4>
+                <p>As of late 2024, change streams in Cosmos DB vCore are in "gated preview" — not GA. Production CDC pipelines cannot rely on a preview feature with no SLA guarantee.</p>
+                <span class="tag tag-cosmos">Cosmos DB vCore</span>
+            </div>
+        </div>
+        </div>
+
+        <div class="limits-docdb">
+        <h3 style="margin: 2rem 0 1rem; color: var(--docdb-color);">Amazon DocumentDB</h3>
+        <div class="limit-grid">
+            <div class="limit-card">
+                <h4>Indexes Not Used for Common Operators</h4>
+                <p>DocumentDB does not leverage indexes for queries using <code>$ne</code>, <code>$nin</code>, <code>$nor</code>, <code>$not</code>, <code>$exists</code>, or <code>$distinct</code>. These queries result in full collection scans — even with an index on the queried field. This is a fundamental engine limitation, not a configuration issue.</p>
+                <span class="tag tag-docdb">DocumentDB</span>
+            </div>
+            <div class="limit-card">
+                <h4>No Client-Side Field Level Encryption</h4>
+                <p>CSFLE and Queryable Encryption are MongoDB features that encrypt data before it leaves the driver. DocumentDB doesn't support them. For regulated industries (finance, healthcare) that require application-layer encryption, this is a disqualifier.</p>
+                <span class="tag tag-docdb">DocumentDB</span>
+            </div>
+            <div class="limit-card warn">
+                <h4>Missing Aggregation Stages</h4>
+                <p>Even in version 8.0, DocumentDB lacks <code>$facet</code>, <code>$graphLookup</code>, <code>$setWindowFields</code>, <code>$unionWith</code>, <code>$bucketAuto</code>, and <code>$sortByCount</code>. Applications using these stages for analytics, graph traversal, or windowed operations cannot migrate without rewriting queries.</p>
+                <span class="tag tag-docdb">DocumentDB</span>
+            </div>
+            <div class="limit-card">
+                <h4>No Geospatial Query Support</h4>
+                <p><code>$near</code>, <code>$geoWithin</code> with <code>$center</code>/<code>$polygon</code>/<code>$box</code>, and <code>$geoIntersects</code> are unsupported. Location-based applications (delivery, ride-sharing, store locators) cannot run natively on DocumentDB.</p>
+                <span class="tag tag-docdb">DocumentDB</span>
+            </div>
+            <div class="limit-card warn">
+                <h4>No Time Series, No Capped Collections</h4>
+                <p>Time series collections, capped collections, and GridFS are all absent. IoT ingestion pipelines, log stores, and file-serving applications need alternative architectures or external services.</p>
+                <span class="tag tag-docdb">DocumentDB</span>
+            </div>
+            <div class="limit-card info">
+                <h4>"8.0 Compatible" ≠ MongoDB 8.0</h4>
+                <p>DocumentDB version numbers refer to its own releases, not MongoDB releases. "8.0 compatible" means it supports some MongoDB 8.0 driver features, but many 8.0 features (compound wildcard indexes, encrypted range queries, cluster-to-cluster sync) are absent. Always test against the <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" style="color:var(--accent)">compatibility matrix</a>.</p>
+                <span class="tag tag-docdb">DocumentDB</span>
+            </div>
+        </div>
+        </div>
+
+
+        <div class="scenario-section">
+            <h3>Interactive: What Happens When&hellip;</h3>
+            <p>Click a scenario to see the real impact across all four platforms.</p>
+            <div class="scenario-pills" id="scenarioPills">
+                <button class="scenario-pill active" data-scenario="facet">You need $facet for analytics</button>
+                <button class="scenario-pill" data-scenario="partition">A partition exceeds 20 GB</button>
+                <button class="scenario-pill" data-scenario="csfle">You need client-side encryption</button>
+                <button class="scenario-pill" data-scenario="reshard">You need to change your shard key</button>
+                <button class="scenario-pill" data-scenario="ne-query">You query with $ne on indexed field</button>
+                <button class="scenario-pill" data-scenario="timeseries">You need time series data</button>
+            </div>
+            <div class="scenario-results" id="scenarioResults"></div>
+        </div>
+
+        <h3 style="margin: 2rem 0 1rem; color: var(--danger);">Shared Limitations (Both)</h3>
+        <div class="limit-grid">
+            <div class="limit-card">
+                <h4>Silent Behavioral Differences</h4>
+                <p>Because neither runs the actual MongoDB engine, edge cases in sorting, type coercion, collation, and null handling may differ silently. Your test suite passes, but production data with unexpected types or Unicode reveals divergent behavior. There is no compatibility test suite that covers all edge cases.</p>
+                <span class="tag tag-both">Both</span>
+            </div>
+            <div class="limit-card">
+                <h4>No mongodump/mongorestore Round-Trip Guarantee</h4>
+                <p>Backup and restore with native MongoDB tools may lose index options, validation rules, or collection-level settings. You're dependent on each vendor's proprietary backup mechanism, making cross-platform migration harder, not easier.</p>
+                <span class="tag tag-both">Both</span>
+            </div>
+            <div class="limit-card warn">
+                <h4>Vendor Lock-In</h4>
+                <p>Cosmos DB runs only on Azure. DocumentDB runs only on AWS. MongoDB Atlas runs on AWS, Azure, and GCP — often simultaneously in the same cluster. If your multi-cloud or exit strategy matters, compatibility layers lock you to a single cloud provider.</p>
+                <span class="tag tag-both">Both</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════ OBSERVABILITY ═══════════ -->
+    <div class="tab-panel" id="panel-observability">
+        <h2 class="section-title">Observability &amp; Monitoring</h2>
+        <p class="section-subtitle">What you can see determines what you can fix.</p>
+
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th>Capability</th>
+                    <th class="atlas-col">Atlas</th>
+                    <th class="cosmos-vcore-col">Cosmos vCore</th>
+                    <th class="cosmos-ru-col">Cosmos RU</th>
+                    <th class="docdb-col">DocumentDB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Real-Time Performance Panel</td>
+                    <td><span class="check">&#10003;</span> Live view of operations, latency, connections, opcounters. Drill into slow queries in real time</td>
+                    <td><span class="partial">&#9673;</span> Azure Monitor metrics with lag. No live operation inspector</td>
+                    <td><span class="partial">&#9673;</span> RU consumption metrics in Azure Portal. Partition-level heat maps</td>
+                    <td><span class="partial">&#9673;</span> CloudWatch metrics. Performance Insights for top queries</td>
+                </tr>
+                <tr>
+                    <td>Query Profiler</td>
+                    <td><span class="check">&#10003;</span> Database Profiler captures all operations above a threshold. Accessible via <code>db.system.profile</code>. Atlas UI auto-detects slow queries and suggests indexes</td>
+                    <td><span class="partial">&#9673;</span> <code>$explain</code> supported. No centralized profiler or index advisor</td>
+                    <td><span class="partial">&#9673;</span> RU charge per operation visible. Limited query plan detail</td>
+                    <td><span class="partial">&#9673;</span> Profiler supported. Explain plans work but differ from MongoDB's optimizer output</td>
+                </tr>
+                <tr>
+                    <td>Index Recommendations</td>
+                    <td><span class="check">&#10003;</span> Atlas Performance Advisor analyzes slow queries and recommends optimal indexes with 1-click creation</td>
+                    <td><span class="none">&#10007;</span> Manual analysis required</td>
+                    <td><span class="none">&#10007;</span> N/A — auto-indexed</td>
+                    <td><span class="none">&#10007;</span> Manual analysis required</td>
+                </tr>
+                <tr>
+                    <td>Audit Logging</td>
+                    <td><span class="check">&#10003;</span> Granular audit filters: authentication, CRUD, DDL, admin operations. Output to Atlas, file, or syslog. JSON structured</td>
+                    <td><span class="partial">&#9673;</span> Azure diagnostic logging. Less granular than MongoDB audit</td>
+                    <td><span class="partial">&#9673;</span> Azure diagnostic logging to Log Analytics or Event Hub</td>
+                    <td><span class="partial">&#9673;</span> CloudWatch-based audit logs. DML and DDL operations. Adds latency when enabled</td>
+                </tr>
+                <tr>
+                    <td>Alerting</td>
+                    <td><span class="check">&#10003;</span> Built-in alert conditions: replication lag, oplog window, disk %, connections, slow queries. PagerDuty/Slack/webhook integrations</td>
+                    <td><span class="partial">&#9673;</span> Azure Monitor alerts on standard metrics</td>
+                    <td><span class="partial">&#9673;</span> Azure Monitor alerts. RU-based threshold alerts</td>
+                    <td><span class="partial">&#9673;</span> CloudWatch alarms. EventBridge for operational events</td>
+                </tr>
+                <tr>
+                    <td>Third-Party Integration</td>
+                    <td><span class="check">&#10003;</span> Datadog, New Relic, Prometheus/Grafana, Splunk, PagerDuty — native integrations via Atlas Admin API and MongoDB metrics endpoint</td>
+                    <td><span class="partial">&#9673;</span> Azure ecosystem only (Monitor, Log Analytics, Grafana via Azure Managed Grafana)</td>
+                    <td><span class="partial">&#9673;</span> Azure ecosystem</td>
+                    <td><span class="partial">&#9673;</span> CloudWatch → Datadog/Grafana possible but indirect</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ═══════════ ENTERPRISE READINESS ═══════════ -->
+    <div class="tab-panel" id="panel-enterprise">
+        <h2 class="section-title">Enterprise Readiness</h2>
+        <p class="section-subtitle">SLAs, compliance, high availability, and operational maturity.</p>
+
+        <table class="cmp-table">
+            <thead>
+                <tr>
+                    <th>Dimension</th>
+                    <th class="atlas-col">Atlas</th>
+                    <th class="cosmos-vcore-col">Cosmos vCore</th>
+                    <th class="cosmos-ru-col">Cosmos RU</th>
+                    <th class="docdb-col">DocumentDB</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>SLA</td>
+                    <td>99.995% for multi-region. 99.99% for single-region multi-node</td>
+                    <td>99.99% with HA enabled</td>
+                    <td>99.999% for multi-region with multi-write</td>
+                    <td>99.99%</td>
+                </tr>
+                <tr>
+                    <td>Compliance</td>
+                    <td>SOC 2, ISO 27001, HIPAA, PCI DSS, FedRAMP, GDPR, CSA STAR. 30+ certifications</td>
+                    <td>Inherits Azure compliance: SOC, ISO, HIPAA, FedRAMP, etc.</td>
+                    <td>Same Azure compliance portfolio</td>
+                    <td>Inherits AWS compliance: SOC, ISO, HIPAA, PCI, FedRAMP</td>
+                </tr>
+                <tr>
+                    <td>Backup &amp; Point-in-Time Restore</td>
+                    <td>Continuous cloud backup with PIT restore (1-second granularity). Configurable retention. Snapshot backups. Queryable backups</td>
+                    <td>Azure Backup with configurable retention. PIT restore at hours/daily granularity</td>
+                    <td>Continuous backup with PIT restore (configurable retention: 7–30 days). Per-account granularity</td>
+                    <td>Continuous backup with PIT restore (5-min granularity, 35-day retention). Cluster-level snapshots</td>
+                </tr>
+                <tr>
+                    <td>HA &amp; Failover</td>
+                    <td>Automatic failover within replica set (typically &lt;10 seconds). Retryable writes/reads ensure client-side resilience. Test failover via Atlas UI</td>
+                    <td>HA replicas with automatic failover. Failover time varies by tier</td>
+                    <td>Automatic failover across regions. Switchover transparent with session consistency</td>
+                    <td>Automatic failover across read replicas. Typically 30–60 seconds. No test-failover command</td>
+                </tr>
+                <tr>
+                    <td>Multi-Region &amp; Active-Active</td>
+                    <td><span class="check">&#10003;</span> Global Clusters with zone-based sharding. Pin data to regions for sovereignty. <strong>Active-active writes across regions</strong> via zone sharding — each region owns a slice of the keyspace and serves local reads/writes with single-digit-ms latency. Bi-directional replication across zones. Workload isolation by region or cloud</td>
+                    <td>Zone-redundant HA within a single Azure region. Cross-region read replicas possible. <strong>No multi-region writes.</strong> No active-active. Failover to secondary region is manual</td>
+                    <td><span class="check">&#10003;</span> Multi-region writes with 5 consistency levels. Closest to active-active, but with conflict resolution (last-writer-wins by default). <strong>No zone-based data pinning</strong> — all regions hold all data</td>
+                    <td>Global Clusters for cross-region read replication. <strong>Single-region writes only.</strong> Readers in other regions serve eventually consistent reads. No active-active. Failover promotes a secondary region</td>
+                </tr>
+                <tr>
+                    <td>Multi-Cloud</td>
+                    <td><span class="check">&#10003;</span> AWS, Azure, GCP in same cluster. 125+ regions. Workload isolation by cloud</td>
+                    <td><span class="none">&#10007;</span> Azure-only</td>
+                    <td><span class="none">&#10007;</span> Azure-only</td>
+                    <td><span class="none">&#10007;</span> AWS-only</td>
+                </tr>
+                <tr>
+                    <td>Encryption</td>
+                    <td>At rest (AES-256), in transit (TLS), CSFLE (driver-level), Queryable Encryption, KMIP and AWS/Azure/GCP KMS integration</td>
+                    <td>At rest (Azure SSE, CMK), in transit (TLS). No CSFLE</td>
+                    <td>At rest (Azure SSE, CMK), in transit (TLS). No CSFLE</td>
+                    <td>At rest (AWS KMS), in transit (TLS). No CSFLE</td>
+                </tr>
+                <tr>
+                    <td>Developer Experience</td>
+                    <td><span class="check">&#10003;</span> Full mongosh, Compass, VS Code extension. MongoDB University (free). 60K+ Stack Overflow questions. Native aggregation builder in Atlas UI. Data Explorer with in-browser CRUD</td>
+                    <td>mongosh connects with caveats. Azure Data Studio integration. Smaller community. Some admin commands return errors in Compass</td>
+                    <td>mongosh connects. Azure Portal UI for collection browsing. Limited community resources specific to RU+MongoDB API. Must learn RU capacity model</td>
+                    <td>mongosh connects. AWS Cloud9 / CLI integration. Community resources often outdated. Explain plans differ from MongoDB &mdash; debugging requires learning DocumentDB-specific behavior</td>
+                </tr>
+                <tr>
+                    <td>Migration Tooling</td>
+                    <td><span class="check">&#10003;</span> mongodump/mongorestore, mongomirror for live migration, Atlas Live Migrate (zero-downtime, built into Atlas UI), Cluster-to-Cluster Sync (C2C)</td>
+                    <td>Azure DMS for migration to vCore. mongodump/mongorestore partially works. No live migration equivalent</td>
+                    <td>Azure Data Factory, custom scripts. No mongodump support. No live migration tool</td>
+                    <td>AWS DMS for migration. mongodump partially works (some index options lost). No zero-downtime live migration built in</td>
+                </tr>
+                <tr>
+                    <td>Network Isolation</td>
+                    <td>VPC Peering, Private Link (AWS/Azure/GCP), IP Access List, LDAP, SCIM</td>
+                    <td>Azure Private Link, VNet integration</td>
+                    <td>Azure Private Link, VNet integration, IP firewall</td>
+                    <td>VPC only. PrivateLink supported. No public endpoint option</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Charts Section -->
+    <div style="margin: 3rem 0;">
+        <h2 class="section-title" style="text-align:center;">Capability Comparison</h2>
+        <p class="section-subtitle" style="text-align:center;">Relative capability across key dimensions (higher = stronger)</p>
+
+        <div class="chart-row">
+            <div class="chart-box">
+                <h3>Feature Breadth &amp; Depth</h3>
+                <canvas id="radarChart"></canvas>
+            </div>
+            <div class="chart-box">
+                <h3>Platform Integration Score</h3>
+                <canvas id="barChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Takeaways -->
+    <div style="margin: 3rem 0;">
+        <h2 class="section-title" style="text-align:center;">Key Takeaways</h2>
+        <div class="takeaway-grid">
+            <div class="takeaway-card">
+                <div class="icon" style="color: var(--atlas-color);">&#9881;</div>
+                <h4>Atlas = The Real Engine</h4>
+                <p>Atlas runs the actual MongoDB binary — every feature, every operator, every release. Compatibility layers are approximations that lag behind and fail silently at the edges.</p>
+            </div>
+            <div class="takeaway-card">
+                <div class="icon" style="color: var(--cosmos-color);">&#9888;</div>
+                <h4>Partition Key Lock-In</h4>
+                <p>Cosmos DB RU's immutable partition key + 20 GB ceiling creates a design-time decision with irreversible production consequences. Atlas's resharding is online and non-destructive.</p>
+            </div>
+            <div class="takeaway-card">
+                <div class="icon" style="color: var(--accent);">&#128270;</div>
+                <h4>Integrated Search &amp; AI</h4>
+                <p>Atlas Search, Vector Search, and hosted embedding models eliminate the need for separate search infrastructure. No sync pipelines, no eventual consistency between stores.</p>
+            </div>
+            <div class="takeaway-card">
+                <div class="icon" style="color: var(--docdb-color);">&#128274;</div>
+                <h4>Cloud Lock-In</h4>
+                <p>Cosmos DB = Azure only. DocumentDB = AWS only. Atlas = AWS + Azure + GCP, simultaneously in a single cluster with zone-based data pinning.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- References -->
+    <div style="margin: 3rem 0;">
+        <h2 class="section-title">References &amp; Further Reading</h2>
+        <div class="ref-grid">
+            <div class="ref-card">
+                <h4 style="color: var(--atlas-color);">MongoDB Atlas</h4>
+                <a href="https://www.mongodb.com/docs/atlas/" target="_blank">Atlas Documentation</a>
+                <a href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/" target="_blank">Aggregation Pipeline Reference</a>
+                <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank">Atlas Search Overview</a>
+                <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank">Atlas Vector Search</a>
+                <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank">Queryable Encryption</a>
+                <a href="https://www.mongodb.com/docs/atlas/stream-processing/overview/" target="_blank">Atlas Stream Processing</a>
+            </div>
+            <div class="ref-card">
+                <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore</h4>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/introduction" target="_blank">vCore Introduction</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/compatibility" target="_blank">Compatibility &amp; Feature Support</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/limits" target="_blank">Service Limits &amp; Quotas</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search" target="_blank">Vector Search (vCore)</a>
+            </div>
+            <div class="ref-card">
+                <h4 style="color: var(--cosmos-color);">Cosmos DB RU</h4>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/feature-support-60" target="_blank">6.0 Feature Support</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview" target="_blank">Partitioning &amp; Horizontal Scaling</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels" target="_blank">Consistency Levels</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/concepts-limits" target="_blank">Service Quotas &amp; Limits</a>
+            </div>
+            <div class="ref-card">
+                <h4 style="color: var(--docdb-color);">Amazon DocumentDB</h4>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html" target="_blank">DocumentDB Developer Guide</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html" target="_blank">Functional Differences vs MongoDB</a>
+                <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank">MongoDB Driver Compatibility Matrix</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/limits.html" target="_blank">Quotas &amp; Limits</a>
+            </div>
+            <div class="ref-card">
+                <h4>Competitive Analysis</h4>
+                <a href="https://www.mongodb.com/resources/compare/mongodb-vs-cosmos-db" target="_blank">MongoDB vs Cosmos DB (MongoDB.com)</a>
+                <a href="https://www.mongodb.com/resources/compare/compare-documentdb-cosmosdb" target="_blank">Atlas vs DocumentDB vs Cosmos DB</a>
+                <a href="https://www.mongodb.com/resources/compare/documentdb-vs-mongodb" target="_blank">DocumentDB vs MongoDB</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════ WORKLOAD FIT PICKER ═══════════ -->
+<div class="container">
+    <div class="workload-section">
+        <h2 class="section-title">Which Platform Fits Your Workload?</h2>
+        <p class="section-subtitle">Select your workload type to see a fit assessment across all platforms.</p>
+        <div class="workload-pills" id="workloadPills">
+            <button class="wl-pill active" data-wl="ecommerce">E-Commerce</button>
+            <button class="wl-pill" data-wl="iot">IoT / Time Series</button>
+            <button class="wl-pill" data-wl="cms">Content Management</button>
+            <button class="wl-pill" data-wl="finreg">Financial / Regulated</button>
+            <button class="wl-pill" data-wl="analytics">Real-time Analytics</button>
+            <button class="wl-pill" data-wl="airag">AI / RAG</button>
+            <button class="wl-pill" data-wl="multicloud">Multi-Cloud / Portable</button>
+        </div>
+        <div class="wl-result" id="workloadResult"></div>
+    </div>
+</div>
+
+<!-- ═══════════ MIGRATION RISK ═══════════ -->
+<div class="container" style="margin-top: 3rem;">
+    <h2 class="section-title" style="text-align:center;">Migration Risk: What If You Need to Leave?</h2>
+    <p class="section-subtitle" style="text-align:center;">Starting on a compatibility layer and migrating to real MongoDB later isn't free. Here's what it takes.</p>
+    <div class="migration-grid">
+        <div class="migration-card">
+            <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore &rarr; Atlas</h4>
+            <div class="risk-bar"><div class="risk-fill" style="width:55%; background: var(--warning);"></div></div>
+            <div class="risk-label" style="color: var(--warning);">Medium Risk</div>
+            <p>mongodump/mongorestore works for basic data. Index options and validation rules may not transfer cleanly. Biggest risk: application code that worked around vCore limitations (single-collection transactions, missing stages) may need refactoring. Change streams that relied on preview behavior need revalidation.</p>
+        </div>
+        <div class="migration-card">
+            <h4 style="color: var(--cosmos-color);">Cosmos DB RU &rarr; Atlas</h4>
+            <div class="risk-bar"><div class="risk-fill" style="width:85%; background: var(--danger);"></div></div>
+            <div class="risk-label" style="color: var(--danger);">High Risk</div>
+            <p>No mongodump/mongorestore. Data modeled around 20 GB partition limits and RU-optimized access patterns (partition key in every query) likely doesn't match MongoDB's sharding model. Application code is deeply coupled to RU-specific patterns. Change feed &ne; change streams. Essentially a rewrite of the data layer.</p>
+        </div>
+        <div class="migration-card">
+            <h4 style="color: var(--docdb-color);">DocumentDB &rarr; Atlas</h4>
+            <div class="risk-bar"><div class="risk-fill" style="width:45%; background: var(--warning);"></div></div>
+            <div class="risk-label" style="color: var(--warning);">Medium Risk</div>
+            <p>mongodump/mongorestore partially works. Queries that avoided unsupported operators ($facet, $graphLookup, geospatial) may have been rewritten as application logic &mdash; that code can often be simplified back to native MongoDB. Biggest win: features like Atlas Search, Vector Search, and time series become available without external services.</p>
+        </div>
+    </div>
+    <div class="callout" style="text-align:center;">
+        <h4>The asymmetry</h4>
+        <p>Migrating <em>from</em> MongoDB Atlas to any other platform requires giving up features. Migrating <em>to</em> MongoDB Atlas from a compatibility layer means gaining features and removing workarounds. The migration risk is fundamentally asymmetric &mdash; starting on Atlas keeps all doors open.</p>
+    </div>
+</div>
+
+<!-- ═══════════ DECISION CARD ═══════════ -->
+<div class="container">
+    <div class="decision-card">
+        <h2>The Bottom Line</h2>
+        <p class="subtitle">One card. Four verdicts. Share this.</p>
+        <div class="decision-verdicts">
+            <div class="decision-item atlas">
+                <h4 style="color: var(--atlas-color);">MongoDB Atlas</h4>
+                <p>The real MongoDB. Every feature, every operator, every release. Multi-cloud, active-active, integrated search and AI. Zero compatibility risk. The platform your application will never outgrow.</p>
+            </div>
+            <div class="decision-item cosmos-v">
+                <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore</h4>
+                <p>The closest emulation. Reasonable for Azure-locked teams with simple CRUD workloads. Falls short on transactions, search, and the aggregation long tail. 10-shard ceiling limits growth.</p>
+            </div>
+            <div class="decision-item cosmos-r">
+                <h4 style="color: var(--cosmos-color);">Cosmos DB RU</h4>
+                <p>Strong for global distribution with simple key-value patterns. The 20 GB partition ceiling, immutable partition key, and vast feature gaps make it a poor fit for MongoDB workloads that use the query language.</p>
+            </div>
+            <div class="decision-item docdb">
+                <h4 style="color: var(--docdb-color);">Amazon DocumentDB</h4>
+                <p>An AWS convenience play. Familiar wire protocol, but missing aggregation stages, geospatial, CSFLE, and time series. Index blind spots ($ne/$nin) create silent performance cliffs. Acceptable for basic CRUD; risky for anything beyond.</p>
+            </div>
+        </div>
+        <div class="decision-bottom">
+            <strong>If you're building on MongoDB's query language, build on MongoDB's engine.</strong><br>
+            Everything else is an approximation.
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    MongoDB Atlas vs Cosmos DB vs DocumentDB &mdash; Technical Deep Dive &mdash; For internal competitive enablement
+</footer>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+    });
+});
+
+// Radar Chart
+const radarCtx = document.getElementById('radarChart').getContext('2d');
+window.radarChartInst = new Chart(radarCtx, {
+    type: 'radar',
+    data: {
+        labels: [
+            'Aggregation Pipeline',
+            'Search & Text',
+            'Vector / AI',
+            'Transactions',
+            'Scalability',
+            'Geo-Distribution',
+            'Observability',
+            'Security & Encryption',
+            'Index Types',
+            'Upgrade & Compat'
+        ],
+        datasets: [
+            {
+                label: 'MongoDB Atlas',
+                data: [5, 5, 5, 5, 5, 5, 5, 5, 5, 5],
+                borderColor: '#00ED64',
+                backgroundColor: 'rgba(0, 237, 100, 0.12)',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#00ED64'
+            },
+            {
+                label: 'Cosmos DB vCore',
+                data: [4, 2, 3, 2, 3, 2, 3, 3, 3, 3],
+                borderColor: '#5b5fc7',
+                backgroundColor: 'rgba(91, 95, 199, 0.08)',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#5b5fc7'
+            },
+            {
+                label: 'Cosmos DB RU',
+                data: [2, 1, 3, 2, 3, 5, 3, 3, 2, 2],
+                borderColor: '#0078d4',
+                backgroundColor: 'rgba(0, 120, 212, 0.08)',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#0078d4'
+            },
+            {
+                label: 'DocumentDB',
+                data: [2, 2, 3, 3, 3, 2, 3, 3, 2, 2],
+                borderColor: '#ff9900',
+                backgroundColor: 'rgba(255, 153, 0, 0.08)',
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: '#ff9900'
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            r: {
+                beginAtZero: true,
+                max: 5,
+                ticks: {
+                    stepSize: 1,
+                    color: '#7fa8bc',
+                    backdropColor: 'transparent',
+                    font: { size: 10 }
+                },
+                grid: { color: 'rgba(26, 58, 74, 0.6)' },
+                angleLines: { color: 'rgba(26, 58, 74, 0.6)' },
+                pointLabels: {
+                    color: '#b8d8e8',
+                    font: { size: 11, weight: '500' }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#b8d8e8',
+                    padding: 20,
+                    usePointStyle: true,
+                    font: { size: 12 }
+                }
+            }
+        }
+    }
+});
+
+// Bar Chart — Platform Integration Score
+const barCtx = document.getElementById('barChart').getContext('2d');
+window.barChartInst = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Full-Text\nSearch', 'Vector\nSearch', 'Embedding\nModels', 'Time\nSeries', 'Stream\nProcessing', 'Change\nStreams', 'Queryable\nEncryption', 'Charts /\nBI', 'Online\nArchive'],
+        datasets: [
+            {
+                label: 'MongoDB Atlas',
+                data: [5, 5, 5, 5, 5, 5, 5, 5, 5],
+                backgroundColor: 'rgba(0, 237, 100, 0.7)',
+                borderColor: '#00ED64',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: 'Cosmos DB vCore',
+                data: [2, 3, 0, 0, 0, 1, 0, 0, 0],
+                backgroundColor: 'rgba(91, 95, 199, 0.6)',
+                borderColor: '#5b5fc7',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: 'Cosmos DB RU',
+                data: [0, 3, 0, 0, 0, 2, 0, 0, 0],
+                backgroundColor: 'rgba(0, 120, 212, 0.6)',
+                borderColor: '#0078d4',
+                borderWidth: 1,
+                borderRadius: 4
+            },
+            {
+                label: 'DocumentDB',
+                data: [2, 3, 0, 0, 0, 3, 0, 0, 0],
+                backgroundColor: 'rgba(255, 153, 0, 0.6)',
+                borderColor: '#ff9900',
+                borderWidth: 1,
+                borderRadius: 4
+            }
+        ]
+    },
+    options: {
+        responsive: true,
+        scales: {
+            x: {
+                ticks: { color: '#b8d8e8', font: { size: 10 } },
+                grid: { color: 'rgba(26, 58, 74, 0.3)' }
+            },
+            y: {
+                beginAtZero: true,
+                max: 5,
+                ticks: {
+                    stepSize: 1,
+                    color: '#7fa8bc',
+                    callback: v => ['None','Basic','Partial','Good','Strong','Full'][v]
+                },
+                grid: { color: 'rgba(26, 58, 74, 0.3)' }
+            }
+        },
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    color: '#b8d8e8',
+                    padding: 16,
+                    usePointStyle: true,
+                    font: { size: 12 }
+                }
+            }
+        }
+    }
+});
+
+
+// === Hero Stat Counter Animation ===
+function animateCounters() {
+    document.querySelectorAll('.hero-stat .number').forEach(el => {
+        const target = parseInt(el.dataset.target);
+        const suffix = el.dataset.suffix || '';
+        const duration = 1500;
+        const start = performance.now();
+        function step(now) {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            el.textContent = Math.round(eased * target) + suffix;
+            if (progress < 1) requestAnimationFrame(step);
+        }
+        requestAnimationFrame(step);
+    });
+}
+const heroObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { animateCounters(); heroObs.disconnect(); } });
+}, { threshold: 0.5 });
+const hs = document.querySelector('.hero-stats');
+if (hs) heroObs.observe(hs);
+
+// === Architecture Diagram Toggle ===
+document.querySelectorAll('.shard-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.shard-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.diagram-view').forEach(v => v.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    });
+});
+
+// === Scenario Picker ===
+const scenarioData = {
+    facet: [
+        { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', verdict: 'works', vt: 'Full Support', text: '<code>$facet</code> runs natively. Combine multiple aggregation pipelines in a single stage \u2014 sort by count, group by region, and bucket by price range, all in one round-trip.' },
+        { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', verdict: 'partial', vt: 'Partial', text: '<code>$facet</code> supported in recent versions. Sub-pipelines may have restrictions on which stages can be nested inside.' },
+        { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', verdict: 'fails', vt: 'Not Supported', text: '<code>$facet</code> is unsupported. You must split into separate queries, each consuming its own RUs. Three facets = 3x throughput.' },
+        { platform: 'DocumentDB', color: 'var(--docdb-color)', verdict: 'fails', vt: 'Not Supported', text: '<code>$facet</code>, <code>$bucket</code>, and <code>$sortByCount</code> are all absent. Every facet becomes a separate query with client-side merging.' }
+    ],
+    partition: [
+        { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', verdict: 'works', vt: 'Non-Issue', text: 'No partition size limit. Sharded collections distribute data via the balancer. Chunks split automatically. Online resharding available.' },
+        { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', verdict: 'works', vt: 'Non-Issue', text: 'vCore uses managed disks, not the RU partition model. No 20 GB logical partition limit.' },
+        { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', verdict: 'fails', vt: 'Hard Wall', text: '<strong>20 GB hard limit per logical partition.</strong> If one key exceeds this, the only fix is a new container with a different partition key + full data migration. The partition key is immutable.' },
+        { platform: 'DocumentDB', color: 'var(--docdb-color)', verdict: 'works', vt: 'Non-Issue', text: 'Shared distributed storage with no per-partition limit. Auto-grows up to 128 TB per cluster.' }
+    ],
+    csfle: [
+        { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', verdict: 'works', vt: 'Full Support', text: 'Client-Side Field Level Encryption (CSFLE) and Queryable Encryption. Data encrypted before leaving the driver. Supports equality and range queries on encrypted fields.' },
+        { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', verdict: 'fails', vt: 'Not Supported', text: 'No CSFLE. Only Azure-managed TDE + TLS. Application-layer encryption must be built manually with no query support on encrypted data.' },
+        { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', verdict: 'fails', vt: 'Not Supported', text: 'No CSFLE. Same Azure-level encryption only. Regulated industries requiring app-layer encryption face a hard gap.' },
+        { platform: 'DocumentDB', color: 'var(--docdb-color)', verdict: 'fails', vt: 'Not Supported', text: 'No CSFLE, no Queryable Encryption. Only AWS KMS encryption at rest. Compliance-heavy workloads may need supplemental tooling.' }
+    ],
+    reshard: [
+        { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', verdict: 'works', vt: 'Online Resharding', text: 'Live resharding since MongoDB 5.0. Change shard key without downtime. The system migrates data in the background while serving traffic.' },
+        { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', verdict: 'fails', vt: 'Recreate Required', text: 'Shard key set at collection creation. Changing requires creating a new collection, migrating data, then switching. Involves downtime.' },
+        { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', verdict: 'fails', vt: 'Immutable', text: '<strong>Partition key cannot be changed \u2014 ever.</strong> Wrong choice at design time = full container migration in production.' },
+        { platform: 'DocumentDB', color: 'var(--docdb-color)', verdict: 'fails', vt: 'Immutable', text: 'Elastic Cluster shard keys are immutable after creation. Changing requires create-migrate-switch workflow with downtime.' }
+    ],
+    "ne-query": [
+        { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', verdict: 'works', vt: 'Index Used', text: '<code>db.users.find({status: {$ne: "deleted"}})</code> uses the index on <code>status</code>. The query planner leverages indexes for negation operators.' },
+        { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', verdict: 'partial', vt: 'Check Plan', text: 'Behavior depends on internal engine optimization. May or may not use indexes for <code>$ne</code>. Always verify with <code>explain()</code>.' },
+        { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', verdict: 'partial', vt: 'RU Impact', text: '<code>$ne</code> queries may scan more data, consuming higher RUs. Cross-partition negation queries are especially expensive.' },
+        { platform: 'DocumentDB', color: 'var(--docdb-color)', verdict: 'fails', vt: 'Full Collection Scan', text: '<strong>DocumentDB does not use indexes for <code>$ne</code>, <code>$nin</code>, <code>$nor</code>, <code>$not</code>, or <code>$exists</code>.</strong> Even with a perfect index, these trigger a full scan.' }
+    ],
+    timeseries: [
+        { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', verdict: 'works', vt: 'Native Support', text: 'Native time-series collections with automatic bucketing, columnar compression, and optimized queries. Insert millions of points/sec.' },
+        { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', verdict: 'fails', vt: 'Not Supported', text: 'No time-series collections. Must model manually with TTL indexes and manual bucketing. No columnar compression.' },
+        { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', verdict: 'fails', vt: 'Not Supported', text: 'No time-series. High-frequency IoT on RU model risks hot partitions. Often requires Azure Time Series Insights as separate service.' },
+        { platform: 'DocumentDB', color: 'var(--docdb-color)', verdict: 'fails', vt: 'Not Supported', text: 'No time-series, no capped collections. Must implement manual bucketing. AWS recommends Timestream \u2014 a separate service.' }
+    ]
+};
+function renderScenario(key) {
+    const c = document.getElementById('scenarioResults');
+    const d = scenarioData[key];
+    c.innerHTML = d.map(s => '<div class="scenario-result" style="border-top:3px solid '+s.color+'"><h5 style="color:'+s.color+'">'+s.platform+'</h5><p>'+s.text+'</p><span class="verdict verdict-'+s.verdict+'">'+s.vt+'</span></div>').join('');
+}
+renderScenario('facet');
+document.querySelectorAll('.scenario-pill').forEach(p => {
+    p.addEventListener('click', () => {
+        document.querySelectorAll('.scenario-pill').forEach(x => x.classList.remove('active'));
+        p.classList.add('active');
+        renderScenario(p.dataset.scenario);
+    });
+});
+
+// === Code Comparison Tabs ===
+document.querySelectorAll('.code-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+        document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('code-' + tab.dataset.code).classList.add('active');
+    });
+});
+
+
+// === Platform Filter Toggles ===
+const platformState = { 'cosmos-vcore': true, 'cosmos-ru': true, 'docdb': true };
+
+document.querySelectorAll('.filter-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+        const p = toggle.dataset.platform;
+        platformState[p] = !platformState[p];
+        toggle.classList.toggle('active', platformState[p]);
+        document.body.classList.toggle('hide-' + p, !platformState[p]);
+        updateChartsVisibility();
+        // Re-render scenario if visible
+        const activeScenario = document.querySelector('.scenario-pill.active');
+        if (activeScenario) renderScenario(activeScenario.dataset.scenario);
+    });
+});
+
+function updateChartsVisibility() {
+    const charts = [window.radarChartInst, window.barChartInst];
+    charts.forEach(chart => {
+        if (!chart) return;
+        // Dataset order: 0=Atlas(always), 1=Cosmos vCore, 2=Cosmos RU, 3=DocumentDB
+        chart.data.datasets[1].hidden = !platformState['cosmos-vcore'];
+        chart.data.datasets[2].hidden = !platformState['cosmos-ru'];
+        chart.data.datasets[3].hidden = !platformState['docdb'];
+        chart.update();
+    });
+}
+
+// Patch scenario renderer to respect filters
+const _origRenderScenario = renderScenario;
+renderScenario = function(key) {
+    const container = document.getElementById('scenarioResults');
+    const data = scenarioData[key];
+    const platformMap = [null, 'cosmos-vcore', 'cosmos-ru', 'docdb'];
+    container.innerHTML = data
+        .filter((s, i) => i === 0 || platformState[platformMap[i]])
+        .map(s => '<div class="scenario-result" style="border-top:3px solid '+s.color+'"><h5 style="color:'+s.color+'">'+s.platform+'</h5><p>'+s.text+'</p><span class="verdict verdict-'+s.verdict+'">'+s.vt+'</span></div>')
+        .join('');
+};
+// Re-render initial scenario with filter awareness
+renderScenario('facet');
+
+
+// === Workload Fit Picker ===
+const workloads = {
+    ecommerce: {
+        title: 'E-Commerce',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Ideal Fit', reason: 'Multi-document transactions across orders, inventory, payments. Atlas Search for product catalog. Change streams for real-time inventory sync. Flexible schema for varied product types.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'poor', verdict: 'Risky', reason: 'Single-collection-only transactions break the order-inventory-payment pattern. No integrated search for catalog. Basic text only.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'poor', verdict: 'Poor Fit', reason: 'Immutable partition key is dangerous for evolving product catalogs. 20 GB limit per category/tenant. No $facet for analytics. No text search for product discovery.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'good', verdict: 'Partial Fit', reason: 'Cross-collection transactions work. But no Atlas Search equivalent for catalog. No $facet or $graphLookup for product recommendations. No geospatial for store locators.' }
+        ]
+    },
+    iot: {
+        title: 'IoT / Time Series',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Ideal Fit', reason: 'Native time-series collections with automatic bucketing and columnar compression. Atlas Stream Processing for real-time ingestion. Window functions ($setWindowFields) for aggregation.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'poor', verdict: 'Poor Fit', reason: 'No time-series collections. No $setWindowFields. Must implement manual bucketing. No stream processing integration.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'poor', verdict: 'Poor Fit', reason: 'No time-series. High-frequency ingestion risks hot partitions and 20 GB limits. RU model penalizes bursty write patterns. Microsoft recommends separate Azure services.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'poor', verdict: 'Poor Fit', reason: 'No time-series, no capped collections, no $setWindowFields. AWS recommends Timestream for time series \u2014 a separate service with separate query language.' }
+        ]
+    },
+    cms: {
+        title: 'Content Management',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Ideal Fit', reason: 'Flexible document model for heterogeneous content. Atlas Search with facets, autocomplete, and scoring for content discovery. GridFS for file storage. Change streams for content syndication.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'good', verdict: 'Workable', reason: 'Flexible schema works. Basic text search available but no facets, autocomplete, or relevance scoring. No GridFS. Adequate for simpler content use cases.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'poor', verdict: 'Poor Fit', reason: 'No text search. 20 GB partition limit problematic for rich media metadata. Cross-partition queries for content browsing are expensive.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'good', verdict: 'Basic CMS', reason: 'Flexible schema works. Text Index v2 in 8.0 is basic. No facets, no autocomplete. No GridFS. Viable for structured content; weak for content discovery.' }
+        ]
+    },
+    finreg: {
+        title: 'Financial / Regulated',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Ideal Fit', reason: 'Multi-document ACID transactions. Client-Side Field Level Encryption (CSFLE) and Queryable Encryption for PII/PCI. 30+ compliance certifications. Granular audit logging. Multi-cloud for regulatory portability.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'poor', verdict: 'Gaps', reason: 'Single-collection transactions only \u2014 breaks financial workflows. No CSFLE or Queryable Encryption. Azure-only limits regulatory flexibility.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'poor', verdict: 'Gaps', reason: 'Partition-scoped transactions. No CSFLE. Immutable partition key is a compliance risk if data residency requirements change. Azure-only.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'good', verdict: 'Partial Fit', reason: 'Cross-collection transactions work. But no CSFLE, no Queryable Encryption. AWS-only. Audit logging adds latency. Missing $facet limits regulatory reporting.' }
+        ]
+    },
+    analytics: {
+        title: 'Real-time Analytics',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Ideal Fit', reason: 'Full aggregation pipeline: $facet, $bucket, $setWindowFields, $graphLookup, $unionWith, $merge. Atlas Charts for embedded dashboards. Online Archive for cost-effective historical queries.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'good', verdict: 'Partial', reason: '$setWindowFields and $merge added recently. No $graphLookup. $facet works in some versions. Viable for moderate analytics; heavy pipelines may hit gaps.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'poor', verdict: 'Poor Fit', reason: 'Missing $facet, $bucket, $setWindowFields, $merge. Cross-partition aggregations are expensive. Analytics queries fan out to every partition. Fundamentally at odds with the RU model.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'poor', verdict: 'Poor Fit', reason: 'Missing $facet, $graphLookup, $setWindowFields, $bucketAuto, $unionWith. $ne/$nin queries bypass indexes. Real-time analytics requires stages that DocumentDB hasn\u2019t implemented.' }
+        ]
+    },
+    airag: {
+        title: 'AI / RAG',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Ideal Fit', reason: 'Atlas Vector Search with pre-filtering. Hosted embedding and reranking models (no external API calls). Hybrid vector + text search in one query. Single database for source docs + vectors + metadata.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'good', verdict: 'Workable', reason: 'Vector search (HNSW/IVF) available. But different query syntax than Atlas. No hybrid text+vector. No hosted models \u2014 requires Azure OpenAI as external dependency.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'good', verdict: 'Basic', reason: 'DiskANN-based vector search. Partition-scoped. No text search at all, so no hybrid queries. No hosted models. Must stitch Azure AI Search + Azure OpenAI externally.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'good', verdict: 'Basic', reason: 'Vector search added in 8.0. Basic only \u2014 no pre-filtering, no hybrid with text, no scoring/reranking. Must pair with Bedrock/SageMaker for embeddings. Separate search service for text.' }
+        ]
+    },
+    multicloud: {
+        title: 'Multi-Cloud / Portable',
+        cards: [
+            { platform: 'MongoDB Atlas', color: 'var(--atlas-color)', fit: 'best', verdict: 'Only Option', reason: 'AWS, Azure, and GCP in a single cluster. Zone-based sharding pins data by cloud/region. Workload isolation across providers. Global Clusters with active-active. No vendor lock-in.' },
+            { platform: 'Cosmos DB vCore', color: 'var(--cosmos-vcore)', fit: 'poor', verdict: 'Azure Locked', reason: 'Azure-only. No path to AWS or GCP. Data sovereignty requires Azure region availability.' },
+            { platform: 'Cosmos DB RU', color: 'var(--cosmos-color)', fit: 'poor', verdict: 'Azure Locked', reason: 'Azure-only. Multi-region within Azure, but no cross-cloud. RU-specific data model is not portable to any other database.' },
+            { platform: 'DocumentDB', color: 'var(--docdb-color)', fit: 'poor', verdict: 'AWS Locked', reason: 'AWS-only. No Azure or GCP option. Elastic Clusters are proprietary. Data model workarounds are AWS-specific and don\u2019t transfer.' }
+        ]
+    }
+};
+
+function renderWorkload(key) {
+    const d = workloads[key];
+    const platformMap = { 'Cosmos DB vCore': 'cosmos-vcore', 'Cosmos DB RU': 'cosmos-ru', 'DocumentDB': 'docdb' };
+    document.getElementById('workloadResult').innerHTML = d.cards
+        .filter(card => {
+            const pk = platformMap[card.platform];
+            return !pk || (typeof platformState !== 'undefined' ? platformState[pk] : true);
+        })
+        .map(card => '<div class="wl-card ' + card.fit + '"><div class="wl-icon" style="color:' + card.color + ';">' +
+            (card.fit === 'best' ? '&#9733;' : card.fit === 'good' ? '&#9673;' : '&#9675;') +
+            '</div><h4 style="color:' + card.color + ';">' + card.platform + '</h4>' +
+            '<div class="wl-verdict ' + card.fit + '">' + card.verdict + '</div>' +
+            '<p>' + card.reason + '</p></div>').join('');
+}
+renderWorkload('ecommerce');
+document.querySelectorAll('.wl-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+        document.querySelectorAll('.wl-pill').forEach(p => p.classList.remove('active'));
+        pill.classList.add('active');
+        renderWorkload(pill.dataset.wl);
+    });
+});
+
+// Patch platform toggles to also update workload
+const _origUpdateCharts = updateChartsVisibility;
+updateChartsVisibility = function() {
+    _origUpdateCharts();
+    const activeWl = document.querySelector('.wl-pill.active');
+    if (activeWl) renderWorkload(activeWl.dataset.wl);
+};
+
+</script>
+
+</body>
+</html>
