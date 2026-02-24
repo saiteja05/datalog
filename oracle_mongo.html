@@ -101,16 +101,16 @@
                 </div>
                 <!-- Card 3: Licensing & TCO (Original) -->
                 <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Total Cost of Ownership (TCO)</h3>
+                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Operational Simplicity</h3>
                     <p class="text-slate-400 text-sm">
-                        Oracle’s complex, capacity-based licensing (EULA & PULA) and reliance on proprietary features drive high TCO. MongoDB offers a flexible, subscription-based model, enabling **significant cost reductions** and scaling efficiencies on commodity infrastructure.
+                        Oracle requires dedicated DBA teams for patching, tuning, and complex capacity-based management (EULA & PULA). MongoDB Atlas provides a **fully managed platform** with automated scaling, backups, and upgrades — reducing operational burden and letting teams focus on building features.
                     </p>
                 </div>
                 <!-- Card 4: Cloud & Vendor Flexibility (New) -->
                 <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
                     <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Cloud & Vendor Flexibility</h3>
                     <p class="text-slate-400 text-sm">
-                        Oracle often leads to vendor lock-in and high cost migration to cloud. MongoDB Atlas provides a fully managed service that is **multi-cloud by design** (AWS, Azure, GCP), ensuring portability, avoiding vendor lock-in, and leveraging best-of-breed cloud features.
+                        Oracle often leads to vendor lock-in and complex migration paths to cloud. MongoDB Atlas provides a fully managed service that is **multi-cloud by design** (AWS, Azure, GCP), ensuring portability, avoiding vendor lock-in, and leveraging best-of-breed cloud features.
                     </p>
                 </div>
                 <!-- Card 5: AI Readiness & Vector Search (NEW) -->
@@ -157,6 +157,40 @@
                     <p class="text-slate-400 text-sm">
                         MongoDB offers several tools: **Relational Migrator** (for schema and stored procedure rewrite), **Code Analyzer** (for documentation), and **Code Modernizing Tool** (converts legacy code, often requiring breaking down large blocks for LLM context windows).
                     </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- References & Further Reading -->
+        <section class="mt-12 pt-8 border-t border-mongo-blue">
+            <h2 class="text-3xl font-bold mb-6 text-mongo-light">References & Further Reading</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="p-5 bg-slate-800 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-lg mb-3 text-mongo-accent">Migration Tools</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="https://www.mongodb.com/docs/relational-migrator/" target="_blank" class="text-indigo-400 hover:underline">Relational Migrator Documentation</a></li>
+                        <li><a href="https://www.mongodb.com/docs/relational-migrator/getting-started/" target="_blank" class="text-indigo-400 hover:underline">Getting Started with Relational Migrator</a></li>
+                        <li><a href="https://www.mongodb.com/resources/products/capabilities/rdbms-migration" target="_blank" class="text-indigo-400 hover:underline">RDBMS to MongoDB Migration Guide</a></li>
+                    </ul>
+                </div>
+                <div class="p-5 bg-slate-800 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-lg mb-3 text-mongo-accent">Schema & Data Modeling</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="https://www.mongodb.com/docs/manual/core/data-modeling-introduction/" target="_blank" class="text-indigo-400 hover:underline">Data Modeling Introduction</a></li>
+                        <li><a href="https://www.mongodb.com/docs/manual/core/schema-validation/" target="_blank" class="text-indigo-400 hover:underline">Schema Validation (JSON Schema)</a></li>
+                        <li><a href="https://www.mongodb.com/docs/manual/applications/data-models-relationships/" target="_blank" class="text-indigo-400 hover:underline">Model Relationships Between Documents</a></li>
+                        <li><a href="https://www.mongodb.com/docs/manual/indexes/" target="_blank" class="text-indigo-400 hover:underline">Indexes — Strategy & Best Practices</a></li>
+                    </ul>
+                </div>
+                <div class="p-5 bg-slate-800 rounded-xl border border-slate-700">
+                    <h4 class="font-bold text-lg mb-3 text-mongo-accent">Transactions & Operations</h4>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="https://www.mongodb.com/docs/manual/core/transactions/" target="_blank" class="text-indigo-400 hover:underline">Transactions Documentation</a></li>
+                        <li><a href="https://www.mongodb.com/docs/manual/changeStreams/" target="_blank" class="text-indigo-400 hover:underline">Change Streams</a></li>
+                        <li><a href="https://www.mongodb.com/docs/manual/core/aggregation-pipeline/" target="_blank" class="text-indigo-400 hover:underline">Aggregation Pipeline</a></li>
+                        <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank" class="text-indigo-400 hover:underline">Atlas Vector Search Overview</a></li>
+                        <li><a href="https://www.mongodb.com/docs/atlas/backup/cloud-backup/overview/" target="_blank" class="text-indigo-400 hover:underline">Atlas Cloud Backup & PITR</a></li>
+                    </ul>
                 </div>
             </div>
         </section>
@@ -272,7 +306,7 @@ db.employees.aggregate([
     {
         "$group": {
             "_id": "$dept", 
-            "employeeCount": { "$count": {} }
+            "employeeCount": { "$sum": 1 }
         }
     }
 ])`,
@@ -553,7 +587,7 @@ spec:
                         language: 'yaml'
                     }
                 ],
-                note: 'This decoupling eliminates database license costs associated with dedicated scheduling features.'
+                note: 'This decoupling removes dependency on database-specific scheduling features and leverages modern infrastructure orchestration.'
             },
             {
                 id: 'integrity',
@@ -721,6 +755,112 @@ db.users.createIndex(
                     }
                 ],
                 restriction: 'Read permissions must be restricted on the original collection to enforce all access through the new view.'
+            },
+            {
+                id: 'reporting',
+                title: 'Reporting & Analytics (Materialized Views / BI Tools)',
+                behaviour: 'Oracle provides Materialized Views for pre-computed aggregations, Oracle BI tools, and direct SQL access for reporting teams. Many organizations have dedicated reporting databases.',
+                solution: 'MongoDB offers multiple approaches: the **Aggregation Pipeline** for real-time analytics, **Atlas Charts** for built-in visualization, and **Atlas Data Federation** for querying across Atlas clusters, S3, and HTTP endpoints. For warehouse-style reporting, use **Atlas connectors** for BI tools (Tableau, Power BI) via the MongoDB BI Connector or Atlas SQL Interface.',
+                details: [
+                    {
+                        type: 'Aggregation Pipeline (Real-Time Report)',
+                        code: `// Monthly revenue report
+db.orders.aggregate([
+    { $match: { status: "completed", orderDate: { $gte: ISODate("2025-01-01") } } },
+    { $group: {
+        _id: { month: { $month: "$orderDate" }, year: { $year: "$orderDate" } },
+        totalRevenue: { $sum: "$amount" },
+        orderCount: { $sum: 1 },
+        avgOrderValue: { $avg: "$amount" }
+    }},
+    { $sort: { "_id.year": 1, "_id.month": 1 } }
+])`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Atlas Data Federation (Cross-Source Query)',
+                        code: `// Query across Atlas cluster and S3 archive
+db.aggregate([
+    { $unionWith: { coll: "archived_orders", pipeline: [] } },
+    { $group: { _id: "$customerId", lifetimeValue: { $sum: "$amount" } } },
+    { $sort: { lifetimeValue: -1 } },
+    { $limit: 100 }
+])`,
+                        language: 'javascript'
+                    }
+                ],
+                restriction: 'For heavy reporting workloads, consider using **Analytics Nodes** (read-only secondaries) to isolate reporting queries from the operational workload.'
+            },
+            {
+                id: 'connectionpooling',
+                title: 'Connection Pooling & Resource Limits',
+                behaviour: 'Oracle manages connections through Oracle Net (TNS), Universal Connection Pool (UCP), and connection limits configured at the database and listener level. Connection storms and pool exhaustion are common issues.',
+                solution: 'MongoDB drivers include **built-in connection pooling** with configurable pool sizes, timeouts, and retry logic. Atlas enforces connection limits per tier (e.g., M30 supports 1,500 connections). For serverless or Lambda workloads, the driver\'s connection pool is often sufficient without a separate pooler.',
+                details: [
+                    {
+                        type: 'Node.js Driver (Connection Pool Config)',
+                        code: `const { MongoClient } = require('mongodb');
+const client = new MongoClient(uri, {
+    maxPoolSize: 50,
+    minPoolSize: 5,
+    maxIdleTimeMS: 30000,
+    waitQueueTimeoutMS: 5000,
+    retryWrites: true,
+    retryReads: true
+});
+await client.connect();`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Java Driver (Connection Pool Config)',
+                        code: `MongoClientSettings settings = MongoClientSettings.builder()
+    .applyConnectionString(new ConnectionString(uri))
+    .applyToConnectionPoolSettings(builder ->
+        builder.maxSize(50)
+               .minSize(5)
+               .maxWaitTime(5, TimeUnit.SECONDS)
+               .maxConnectionIdleTime(30, TimeUnit.SECONDS))
+    .retryWrites(true)
+    .retryReads(true)
+    .build();
+MongoClient client = MongoClients.create(settings);`,
+                        language: 'java'
+                    }
+                ],
+                restriction: 'Monitor connection usage via Atlas Metrics. If connections are a bottleneck, consider upgrading the cluster tier or optimizing connection reuse in your application.'
+            },
+            {
+                id: 'monitoring',
+                title: 'Monitoring & Performance Diagnosis (Oracle EM / AWR)',
+                behaviour: 'Oracle provides Enterprise Manager (EM), Automatic Workload Repository (AWR), Statspack, and ADDM for comprehensive database monitoring, wait-event analysis, and performance tuning.',
+                solution: 'MongoDB Atlas provides **Atlas Metrics** (real-time dashboards), **Performance Advisor** (index recommendations), **Real-Time Performance Panel**, and **Query Profiler** (slow query analysis). For self-managed deployments, use `mongostat`, `mongotop`, and the `db.currentOp()` command. The `explain()` method provides detailed query execution plans.',
+                details: [
+                    {
+                        type: 'Query Profiling (Shell)',
+                        code: `// Enable profiling for slow queries (>100ms)
+db.setProfilingLevel(1, { slowms: 100 })
+
+// Review slow queries
+db.system.profile.find().sort({ ts: -1 }).limit(5).pretty()
+
+// Analyze a specific query's execution plan
+db.orders.find({ customerId: "C123", status: "pending" })
+    .explain("executionStats")`,
+                        language: 'javascript'
+                    },
+                    {
+                        type: 'Atlas CLI (Check Metrics)',
+                        code: `# List available metrics for a cluster
+atlas metrics processes list --projectId <projectId>
+
+# Get specific metric data
+atlas metrics processes describe <hostname:port> \\
+    --granularity PT1H --period P1D \\
+    --type OPCOUNTER_CMD`,
+                        language: 'text'
+                    }
+                ],
+                restriction: 'Atlas Performance Advisor requires M10+ tiers. For production workloads, always use Atlas Alerts to proactively monitor connections, replication lag, and disk I/O.'
             }
         ];
 

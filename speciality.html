@@ -20,7 +20,7 @@
     2. Atlas Search vs. Pinecone
     3. Atlas Search vs. Qdrant
     Each report is self-contained and follows a consistent multi-section layout: 
-    At a Glance, Deep Dive (with inner tabs), Scaling Challenges, Pricing, and Use Cases.
+    At a Glance, Deep Dive (with inner tabs), Scaling Challenges, Enterprise Readiness, and Use Cases.
     This provides a familiar navigation model while presenting distinct comparative content.
     -->
     <style>
@@ -121,7 +121,7 @@
                         <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
                             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
                                 <h3 class="text-2xl font-bold text-[#00ED64] mb-4">MongoDB Atlas Search</h3>
-                                <p class="text-slate-400">The <span class="font-semibold text-[#00ED64]">Integrated Data Platform</span>. Embeds Lucene-based search directly within MongoDB to reduce complexity, eliminate data sync pipelines, and lower TCO.</p>
+                                <p class="text-slate-400">The <span class="font-semibold text-[#00ED64]">Integrated Data Platform</span>. Embeds Lucene-based search directly within MongoDB to reduce complexity, eliminate data sync pipelines, and simplify operations.</p>
                             </div>
                             <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
                                 <h3 class="text-2xl font-bold db-color-elastic mb-4">Elasticsearch / OpenSearch</h3>
@@ -296,7 +296,7 @@
                                         <h5 class="font-bold text-lg db-color-pinecone">Pinecone</h5>
                                         <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
                                             <li>**Full-Text:** Implemented via sparse vectors (BM25). Lacks native linguistic processing.</li>
-                                            <li>**Hybrid Search:** Requires querying two separate indexes and performing fusion in the application layer.</li>
+                                            <li>**Hybrid Search:** Supports sparse-dense vectors in a single index, enabling native hybrid queries without client-side fusion.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -428,7 +428,7 @@
                                 </div>
                             </div>
                             <div id="deep-dive-tab-features-qdrant" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Beyond core search, the platforms differ in key features like vector compression (quantization), deployment flexibility, and pricing models. Click on a feature card below to see a detailed comparison.</p>
+                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Beyond core search, the platforms differ in key features like vector compression (quantization), deployment flexibility, and operational models. Click on a feature card below to see a detailed comparison.</p>
                                 <div id="feature-grid-qdrant" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
                                 <div id="feature-details-qdrant" class="mt-6 bg-slate-800 p-4 rounded-lg border border-slate-700 min-h-[100px] text-slate-400">
                                     <p class="text-center">Select a feature to see details.</p>
@@ -456,7 +456,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-lg text-white">1TB to 10TB+: The Sharded Search Cluster</h4>
-                                    <p class="mt-2 text-slate-400">At multi-terabyte scale, vertical scaling becomes cost-prohibitive. The challenges mirror those of scaling the core database: sharding the primary collection and dealing with scatter-gather overhead for queries that cannot be targeted to a single shard.</p>
+                                    <p class="mt-2 text-slate-400">At multi-terabyte scale, vertical scaling reaches its limits. The challenges mirror those of scaling the core database: sharding the primary collection and dealing with scatter-gather overhead for queries that cannot be targeted to a single shard.</p>
                                 </div>
                             </div>
                         </div>
@@ -469,7 +469,7 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Cluster Coordination & Data Tiers</h4>
-                                    <p class="mt-2 text-slate-400">At this scale, managing cluster state and inter-node communication becomes a significant burden. To manage cost, implementing <span class="font-bold text-white">data tiers</span> (hot, warm, cold) becomes essential, adding operational complexity.</p>
+                                    <p class="mt-2 text-slate-400">At this scale, managing cluster state and inter-node communication becomes a significant burden. Implementing <span class="font-bold text-white">data tiers</span> (hot, warm, cold) becomes essential for efficiency, adding operational complexity.</p>
                                 </div>
                             </div>
                         </div>
@@ -478,11 +478,11 @@
                             <div class="space-y-6">
                                 <div>
                                     <h4 class="font-semibold text-lg text-white">10GB to 1TB: Pods, Replicas, and Metadata</h4>
-                                    <p class="mt-2 text-slate-400">Pinecone's scaling is managed by selecting pod types and sizes. The main challenge is <span class="font-bold text-white">cost-performance tuning</span>. Inefficient metadata filtering can degrade performance significantly as the dataset grows.</p>
+                                    <p class="mt-2 text-slate-400">Pinecone's scaling is managed by selecting pod types and sizes. The main challenge is <span class="font-bold text-white">performance tuning</span>. Inefficient metadata filtering can degrade performance significantly as the dataset grows.</p>
                                 </div>
                                 <div>
-                                    <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Advanced Quantization and Cost Control</h4>
-                                    <p class="mt-2 text-slate-400">At massive scale, the cost of storing full-precision vectors in RAM becomes prohibitive. The primary challenge is implementing an effective <span class="font-bold text-white">quantization strategy</span> to dramatically reduce memory footprint and cost.</p>
+                                    <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Advanced Quantization and Memory Management</h4>
+                                    <p class="mt-2 text-slate-400">At massive scale, storing full-precision vectors in RAM becomes impractical. The primary challenge is implementing an effective <span class="font-bold text-white">quantization strategy</span> to dramatically reduce memory footprint while maintaining acceptable recall accuracy.</p>
                                 </div>
                             </div>
                         </div>
@@ -495,51 +495,67 @@
                                 </div>
                                 <div>
                                     <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Quantization and Operational Tuning</h4>
-                                    <p class="mt-2 text-slate-400">At massive scale, using <span class="font-bold text-white">Product Quantization (PQ)</span> and on-disk <code>memmap</code> storage becomes essential to manage memory costs and operational overhead, trading a small amount of accuracy for massive efficiency gains.</p>
+                                    <p class="mt-2 text-slate-400">At massive scale, using <span class="font-bold text-white">Product Quantization (PQ)</span> and on-disk <code>memmap</code> storage becomes essential to manage memory requirements and operational overhead, trading a small amount of accuracy for massive efficiency gains.</p>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="pricing-analysis" class="mt-16">
+                <div id="operational-comparison" class="mt-16">
                     <div class="text-center mb-10">
-                        <h2 class="text-3xl font-bold text-white">Enterprise-Ready Pricing Analysis</h2>
-                        <p class="text-slate-400 mt-2 max-w-3xl mx-auto">A comparative TCO analysis for a minimum, enterprise-grade deployment.</p>
+                        <h2 class="text-3xl font-bold text-white">Enterprise Readiness Comparison</h2>
+                        <p class="text-slate-400 mt-2 max-w-3xl mx-auto">Key enterprise considerations beyond core search functionality.</p>
                     </div>
                     <div class="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 p-2">
                         <table class="w-full text-sm text-left">
                             <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
                                 <tr>
-                                    <th class="px-6 py-4">Platform</th>
-                                    <th class="px-6 py-4">Estimated Monthly Cost (USD)</th>
-                                    <th class="px-6 py-4">Key Cost Drivers & Licensing Model</th>
+                                    <th class="px-6 py-4">Capability</th>
+                                    <th class="px-6 py-4">Atlas Search</th>
+                                    <th class="px-6 py-4">Elasticsearch / OpenSearch</th>
+                                    <th class="px-6 py-4">Pinecone</th>
+                                    <th class="px-6 py-4">Qdrant</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-700">
                                 <tr>
-                                    <td class="px-6 py-4 font-bold db-color-mongo">MongoDB Atlas Search</td>
-                                    <td class="px-6 py-4 font-bold text-lg">~$1,000 - $1,400</td>
-                                    <td class="px-6 py-4">Sum of DB cluster tier <span class="font-bold text-white">plus separate Search Node tier</span>. License bundled.</td>
+                                    <td class="px-6 py-4 font-bold text-white">SLA</td>
+                                    <td class="px-6 py-4">99.995% (Atlas)</td>
+                                    <td class="px-6 py-4">99.95% (Elastic Cloud)</td>
+                                    <td class="px-6 py-4">99.95% (Enterprise)</td>
+                                    <td class="px-6 py-4">99.5% (Qdrant Cloud)</td>
                                 </tr>
                                 <tr>
-                                    <td class="px-6 py-4 font-bold db-color-elastic">Elastic Cloud / OpenSearch</td>
-                                    <td class="px-6 py-4 font-bold text-lg">~$300 - $500</td>
-                                    <td class="px-6 py-4">Driven by RAM, storage, instance type. <span class="font-bold text-white">OpenSearch has no license fee.</span></td>
+                                    <td class="px-6 py-4 font-bold text-white">Security & Compliance</td>
+                                    <td class="px-6 py-4">SOC 2, HIPAA, PCI DSS, GDPR, ISO 27001, FedRAMP; Field-Level Encryption, RBAC, VPC Peering, PrivateLink</td>
+                                    <td class="px-6 py-4">SOC 2, HIPAA, PCI DSS; TLS, RBAC, Field-Level Security</td>
+                                    <td class="px-6 py-4">SOC 2 Type II, GDPR; API-key auth, encryption at rest/transit</td>
+                                    <td class="px-6 py-4">SOC 2 (Cloud); API-key/JWT auth, TLS, encryption at rest</td>
                                 </tr>
                                 <tr>
-                                    <td class="px-6 py-4 font-bold db-color-pinecone">Pinecone</td>
-                                    <td class="px-6 py-4 font-bold text-lg">~$70 - $150</td>
-                                    <td class="px-6 py-4">Driven by pod type, size, and replicas. <span class="font-bold text-white">Requires separate primary DB.</span></td>
+                                    <td class="px-6 py-4 font-bold text-white">Operational Complexity</td>
+                                    <td class="px-6 py-4">Single platform — no sync pipeline to manage. Atlas handles upgrades, patching, and backups.</td>
+                                    <td class="px-6 py-4">Separate cluster — requires sync pipeline (Kafka/Logstash), JVM tuning, shard management, and index lifecycle.</td>
+                                    <td class="px-6 py-4">Serverless API — minimal ops for vector layer. Still requires a separate primary database.</td>
+                                    <td class="px-6 py-4">Self-managed or cloud — requires cluster management, tuning, and a separate primary database.</td>
                                 </tr>
-                                 <tr>
-                                    <td class="px-6 py-4 font-bold db-color-qdrant">Qdrant Cloud</td>
-                                    <td class="px-6 py-4 font-bold text-lg">~$600 - $900</td>
-                                    <td class="px-6 py-4">Driven by vCPU and RAM per node. <span class="font-bold text-white">Requires separate primary DB.</span> Open-source option available.</td>
+                                <tr>
+                                    <td class="px-6 py-4 font-bold text-white">Multi-Cloud</td>
+                                    <td class="px-6 py-4">AWS, Azure, GCP — 100+ regions</td>
+                                    <td class="px-6 py-4">AWS, Azure, GCP (Elastic Cloud)</td>
+                                    <td class="px-6 py-4">AWS, Azure, GCP</td>
+                                    <td class="px-6 py-4">AWS, Azure, GCP (Cloud); any infra (self-hosted)</td>
+                                </tr>
+                                <tr>
+                                    <td class="px-6 py-4 font-bold text-white">Backup & DR</td>
+                                    <td class="px-6 py-4">Continuous cloud backup with point-in-time recovery; search indexes rebuilt automatically from source data.</td>
+                                    <td class="px-6 py-4">Snapshot API; requires separate backup strategy and restore procedures.</td>
+                                    <td class="px-6 py-4">Managed backups with collections; restore creates a new index.</td>
+                                    <td class="px-6 py-4">Snapshot-based backups; self-managed restore process for self-hosted.</td>
                                 </tr>
                             </tbody>
                         </table>
-                        <p class="text-xs text-slate-500 p-4"><strong>Disclaimer:</strong> These are order-of-magnitude estimates based on publicly available pricing calculators as of mid-2024 for small production clusters. Actual costs will vary.</p>
                     </div>
                 </div>
 
@@ -550,11 +566,13 @@
                     <div class="grid md:grid-cols-2 gap-8">
                         <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-mongo">
                             <h5 class="font-bold text-xl mb-3">Choose Atlas Search for...</h5>
-                            <p class="mb-4 font-semibold">Integrated Simplicity and Developer Velocity.</p>
+                            <p class="mb-4 font-semibold">One Platform — Zero Sync Lag — Full Developer Experience.</p>
                             <ul class="list-disc list-inside space-y-2 text-slate-300">
-                                <li>**Existing MongoDB Users:** Leverage your current stack to add search without a new system.</li>
-                                <li>**Unified Data Platforms:** When reducing architectural complexity is a primary goal.</li>
-                                <li>**Balanced Workloads:** For apps needing a strong document DB with "good enough" search.</li>
+                                <li>**Real-Time Search:** Search indexes update in near real-time via Change Streams — no sync pipeline lag or stale results.</li>
+                                <li>**Single-Query Power:** Combine <code>$search</code>, <code>$vectorSearch</code>, <code>$lookup</code>, and transformations in one aggregation pipeline — one round-trip, one API.</li>
+                                <li>**AI & RAG-Ready:** Full-text search + vector search + transactional data in one platform — no separate vector DB to manage.</li>
+                                <li>**Operational Simplicity:** No Kafka, Logstash, or external sync pipeline. One vendor, one billing, one security model.</li>
+                                <li>**Existing MongoDB Teams:** Add enterprise search to your current stack without learning a new system or managing new infrastructure.</li>
                             </ul>
                         </div>
                          <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-elastic">
@@ -595,33 +613,37 @@
                         <div>
                             <h4 class="font-bold text-lg mb-3 db-color-mongo">MongoDB Atlas</h4>
                             <ul class="space-y-2 text-sm">
-                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-search/" class="text-indigo-400 hover:underline">Official Atlas Search Documentation</a></li>
-                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" class="text-indigo-400 hover:underline">Official Atlas Vector Search Documentation</a></li>
-                                <li><a href="https://www.mongodb.com/products/platform/atlas-search" class="text-indigo-400 hover:underline">Atlas Search Product Page</a></li>
+                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-search/" target="_blank" class="text-indigo-400 hover:underline">Official Atlas Search Documentation</a></li>
+                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" target="_blank" class="text-indigo-400 hover:underline">Official Atlas Vector Search Documentation</a></li>
+                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank" class="text-indigo-400 hover:underline">Atlas Search Architecture Overview</a></li>
+                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/" target="_blank" class="text-indigo-400 hover:underline">Vector Search Tutorials</a></li>
+                                <li><a href="https://www.mongodb.com/resources/products/capabilities/semantic-search" target="_blank" class="text-indigo-400 hover:underline">Semantic Search with MongoDB</a></li>
                             </ul>
                         </div>
                         <div>
-                            <h4 class="font-bold text-lg mb-3 db-color-elastic">Elasticsearch</h4>
+                            <h4 class="font-bold text-lg mb-3 db-color-elastic">Elasticsearch / OpenSearch</h4>
                             <ul class="space-y-2 text-sm">
-                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html" class="text-indigo-400 hover:underline">Official Elasticsearch Documentation</a></li>
-                                <li><a href="https://opensearch.org/docs/latest/" class="text-indigo-400 hover:underline">Official OpenSearch Documentation</a></li>
-                                 <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-your-data.html" class="text-indigo-400 hover:underline">Elasticsearch Query DSL</a></li>
+                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html" target="_blank" class="text-indigo-400 hover:underline">Official Elasticsearch Documentation</a></li>
+                                <li><a href="https://opensearch.org/docs/latest/" target="_blank" class="text-indigo-400 hover:underline">Official OpenSearch Documentation</a></li>
+                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-your-data.html" target="_blank" class="text-indigo-400 hover:underline">Elasticsearch Query DSL</a></li>
+                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html" target="_blank" class="text-indigo-400 hover:underline">Elasticsearch kNN Vector Search</a></li>
                             </ul>
                         </div>
                         <div>
                             <h4 class="font-bold text-lg mb-3 db-color-pinecone">Pinecone</h4>
                             <ul class="space-y-2 text-sm">
-                                <li><a href="https://docs.pinecone.io/" class="text-indigo-400 hover:underline">Official Pinecone Documentation</a></li>
-                                <li><a href="https://www.pinecone.io/learn/vector-database/" class="text-indigo-400 hover:underline">What is a Vector Database?</a></li>
-                                <li><a href="https://www.pinecone.io/learn/hybrid-search/" class="text-indigo-400 hover:underline">Pinecone on Hybrid Search</a></li>
+                                <li><a href="https://docs.pinecone.io/" target="_blank" class="text-indigo-400 hover:underline">Official Pinecone Documentation</a></li>
+                                <li><a href="https://docs.pinecone.io/guides/data/understanding-hybrid-search" target="_blank" class="text-indigo-400 hover:underline">Understanding Hybrid Search</a></li>
+                                <li><a href="https://docs.pinecone.io/guides/indexes/understanding-indexes" target="_blank" class="text-indigo-400 hover:underline">Understanding Pinecone Indexes</a></li>
                             </ul>
                         </div>
                         <div>
                             <h4 class="font-bold text-lg mb-3 db-color-qdrant">Qdrant</h4>
                             <ul class="space-y-2 text-sm">
-                                <li><a href="https://qdrant.tech/documentation/" class="text-indigo-400 hover:underline">Official Qdrant Documentation</a></li>
-                                <li><a href="https://qdrant.tech/articles/filtrable-hnsw/" class="text-indigo-400 hover:underline">Filterable HNSW Explained</a></li>
-                                <li><a href="https://qdrant.tech/benchmarks/" class="text-indigo-400 hover:underline">Qdrant Performance Benchmarks</a></li>
+                                <li><a href="https://qdrant.tech/documentation/" target="_blank" class="text-indigo-400 hover:underline">Official Qdrant Documentation</a></li>
+                                <li><a href="https://qdrant.tech/articles/filtrable-hnsw/" target="_blank" class="text-indigo-400 hover:underline">Filterable HNSW Explained</a></li>
+                                <li><a href="https://qdrant.tech/benchmarks/" target="_blank" class="text-indigo-400 hover:underline">Qdrant Performance Benchmarks</a></li>
+                                <li><a href="https://qdrant.tech/documentation/concepts/quantization/" target="_blank" class="text-indigo-400 hover:underline">Qdrant Quantization Guide</a></li>
                             </ul>
                         </div>
                     </div>
@@ -647,7 +669,7 @@
 
             // --- Data for Feature Grids ---
             const featuresDataElastic = {
-                tco: { title: 'TCO', icon: '💰', content: `<strong>Atlas:</strong> Lower TCO due to integrated architecture.<br><strong>Elasticsearch:</strong> Higher TCO due to needing a primary DB, search cluster, and sync pipeline.` },
+                tco: { title: 'Architecture', icon: '🏗️', content: `<strong>Atlas:</strong> Integrated platform — single vendor, no sync pipeline, fewer moving parts to manage.<br><strong>Elasticsearch:</strong> Requires a separate primary DB, a dedicated search cluster, and a sync pipeline (Kafka/Logstash) to keep data in sync.` },
                 licensing: { title: 'Licensing', icon: '📜', content: `<strong>Atlas:</strong> Proprietary (SSPL).<br><strong>OpenSearch:</strong> Permissive Apache 2.0 license.<br><strong>Elasticsearch:</strong> Restrictive SSPL/Elastic License.` },
                 ecosystem: { title: 'Ecosystem', icon: '🌐', content: `<strong>Atlas:</strong> Broad data platform (DB, Search, Mobile, etc.).<br><strong>Elasticsearch:</strong> Focused on observability and security (ELK Stack, SIEM).` },
                 dev_exp: { title: 'Dev Experience', icon: '🧑‍💻', content: `<strong>Atlas:</strong> Unified via MQL Aggregations. Familiar for Mongo users.<br><strong>Elasticsearch:</strong> Separate, powerful Query DSL. Requires learning a new system.` },
@@ -657,16 +679,16 @@
 
             const featuresDataPinecone = {
                 quantization: { title: 'Quantization', icon: '⚡️', content: `<strong>Atlas:</strong> Simple, automatic Scalar & Binary quantization.<br><strong>Pinecone:</strong> Offers more advanced options like Product Quantization for higher compression.` },
-                filtering: { title: 'Filtering', icon: '�', content: `<strong>Atlas:</strong> Uses pre-filtering, which can impact accuracy.<br><strong>Pinecone:</strong> Advanced single-stage filtering provides superior performance and accuracy.` },
+                filtering: { title: 'Filtering', icon: '🔍', content: `<strong>Atlas:</strong> Uses pre-filtering to narrow the candidate set before vector search.<br><strong>Pinecone:</strong> Single-stage filtering evaluates metadata and vectors together for efficient filtered queries.` },
                 deployment: { title: 'Deployment', icon: '☁️', content: `<strong>Atlas:</strong> Managed multi-cloud DBaaS.<br><strong>Pinecone:</strong> Cloud-only, proprietary, serverless API.` },
                 dev_exp: { title: 'Dev Experience', icon: '🧑‍💻', content: `<strong>Atlas:</strong> Unified API within MongoDB ecosystem.<br><strong>Pinecone:</strong> Simple, clean Python-first SDK for AI/ML workflows.`},
                 data_model: { title: 'Data Model', icon: '📦', content: `<strong>Atlas:</strong> Vector is an attribute within a rich BSON document.<br><strong>Pinecone:</strong> Vector is the primary entity with attached metadata.`},
-                hybrid_search: { title: 'Hybrid Search', icon: '🧬', content: `<strong>Atlas:</strong> Native, server-side fusion with $rankFusion.<br><strong>Pinecone:</strong> Requires client-side logic to query two indexes and fuse results.`}
+                hybrid_search: { title: 'Hybrid Search', icon: '🧬', content: `<strong>Atlas:</strong> Native, server-side fusion with $rankFusion within the aggregation pipeline.<br><strong>Pinecone:</strong> Supports sparse-dense vectors in a single index for native hybrid queries.`}
             };
 
             const featuresDataQdrant = {
                 quantization: { title: 'Quantization', icon: '⚡️', content: `<strong>Atlas:</strong> Offers simplified Scalar & Binary quantization.<br><strong>Qdrant:</strong> Provides granular control with Scalar, Binary, and advanced Product Quantization.`},
-                deployment: { title: 'Deployment', icon: '☁️', content: `<strong>Atlas:</strong> A fully managed, multi-cloud DaaS.<br><strong>Qdrant:</strong> Maximum flexibility with Cloud, Hybrid, and open-source self-hosted options.`},
+                deployment: { title: 'Deployment', icon: '☁️', content: `<strong>Atlas:</strong> A fully managed, multi-cloud DBaaS.<br><strong>Qdrant:</strong> Maximum flexibility with Cloud, Hybrid, and open-source self-hosted options.`},
                 filtering: { title: 'Filtering', icon: '🔍', content: `<strong>Atlas:</strong> Uses pre-filtering before the search.<br><strong>Qdrant:</strong> Advanced "Filterable HNSW" provides superior performance and accuracy on filtered queries.`},
                 dev_exp: { title: 'Dev Experience', icon: '🧑‍💻', content: `<strong>Atlas:</strong> Unified via MQL. Low barrier for existing users.<br><strong>Qdrant:</strong> Feature-rich SDKs (Python, Rust, etc.) with a powerful Query API.`},
                 scalability: { title: 'Scalability', icon: '🚀', content: `<strong>Atlas:</strong> Vertical scaling of Search Nodes, horizontal via DB sharding.<br><strong>Qdrant:</strong> Designed for horizontal scaling by adding nodes to a distributed cluster.`},

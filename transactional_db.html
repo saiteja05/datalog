@@ -21,7 +21,7 @@
         - Deployment Models -> Side-by-side lists -> Clearly presents options for each database.
         - Performance -> Bar Chart (Chart.js) -> Uses benchmark data to starkly illustrate performance differences where applicable.
         - Key Takeaways & Use Cases -> Bulleted lists -> Synthesizes the analysis into actionable advice.
-        - Pricing -> Detailed HTML table -> Breaks down estimated costs for enterprise-ready deployments.
+        - Enterprise Readiness -> Detailed HTML table -> Compares key enterprise capabilities across databases.
     -->
     <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
@@ -61,6 +61,7 @@
         .db-color-cockroach { color: #60a5fa; border-color: #60a5fa; }
         .db-color-scylla { color: #f97316; border-color: #f97316; }
         .db-color-edb { color: #8b5cf6; border-color: #8b5cf6; }
+        .db-color-dynamo { color: #f59e0b; border-color: #f59e0b; }
         
         .section-heading {
             border-bottom: 1px solid #374151;
@@ -197,10 +198,10 @@ COMMIT;</code></pre>
                                     </ul>
                                 </div>
                                 <div>
-                                    <h5 class="font-bold text-lg mb-3 db-color-cockroach">CockroachDB: SQL-Standard & Interleaving</h5>
-                                    <p class="text-slate-400 mb-4">CockroachDB uses standard SQL indexing (B-Trees). Its unique feature is `INTERLEAVE IN PARENT` which physically co-locates child rows with parent rows.</p>
+                                    <h5 class="font-bold text-lg mb-3 db-color-cockroach">CockroachDB: SQL-Standard & Locality-Optimized</h5>
+                                    <p class="text-slate-400 mb-4">CockroachDB uses standard SQL indexing (B-Trees). It supports locality-based strategies like <code>REGIONAL BY ROW</code> and table locality settings to co-locate related data within the same region for low-latency access.</p>
                                     <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
-                                        <li><span class="font-semibold text-white">Merits:</span> Interleaving provides extremely efficient joins for hierarchical data. Standard SQL indexing is familiar and powerful.</li>
+                                        <li><span class="font-semibold text-white">Merits:</span> Locality-optimized tables provide efficient access for geo-distributed workloads. Standard SQL indexing is familiar and powerful.</li>
                                         <li><span class="font-semibold text-white">Limitations:</span> Poor index design (e.g., on a sequential key) can create "hot spots" in a distributed environment, bottlenecking performance.</li>
                                     </ul>
                                 </div>
@@ -235,7 +236,7 @@ COMMIT;</code></pre>
                                         </tr>
                                         <tr class="border-b border-gray-700">
                                             <td class="px-6 py-4 font-medium">Geo-Distribution</td>
-                                            <td class="px-6 py-4">Global Clusters via sharding (complex setup)</td>
+                                            <td class="px-6 py-4">Global Clusters via Atlas — managed multi-region sharding</td>
                                             <td class="px-6 py-4">Native Geo-Partitioning (core feature)</td>
                                         </tr>
                                         <tr>
@@ -398,8 +399,8 @@ IF email = 'old@email.com';</code></pre>
                         
                         <!-- Performance -->
                         <section>
-                            <h4 class="section-heading">Performance Profile (YCSB Benchmark)</h4>
-                            <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Benchmark data consistently shows ScyllaDB's architectural advantage in high-throughput workloads, achieving significantly more operations per second at lower latencies.</p>
+                            <h4 class="section-heading">Performance Profile (Illustrative)</h4>
+                            <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">ScyllaDB's shard-per-core architecture is purpose-built for high-throughput workloads. The chart below is illustrative — actual throughput varies significantly by workload type, data model, hardware, and tuning. Always benchmark with your own workload.</p>
                             <div class="chart-container mx-auto" style="height: 300px; max-height: 350px;">
                                 <canvas id="performanceBarChart"></canvas>
                             </div>
@@ -480,7 +481,7 @@ IF email = 'old@email.com';</code></pre>
                         <!-- Architecture -->
                         <section>
                             <h4 class="section-heading">Core Philosophy & Architecture</h4>
-                             <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">This comparison is less about competing architectures and more about different strategic goals. MongoDB targets new, agile application development, while EDB provides a powerful, cost-effective path for enterprises to modernize legacy Oracle systems.</p>
+                             <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">This comparison is less about competing architectures and more about different strategic goals. MongoDB targets new, agile application development, while EDB provides a powerful, lower-risk path for enterprises to modernize legacy Oracle systems.</p>
                             <div class="grid md:grid-cols-2 gap-8">
                                 <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
                                     <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB's Value: Developer Velocity</h5>
@@ -493,8 +494,8 @@ IF email = 'old@email.com';</code></pre>
                                 <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
                                     <h5 class="font-bold text-lg mb-3 db-color-edb">EDB Postgres's Value: Oracle Modernization</h5>
                                     <ul class="list-disc list-inside space-y-2 text-slate-300">
-                                        <li>**Deep Oracle Compatibility:** Native support for PL/SQL, data types, and syntax minimizes rewrite costs.</li>
-                                        <li>**Risk Reduction:** Provides a proven, low-risk path to migrate off expensive proprietary licenses.</li>
+                                        <li>**Deep Oracle Compatibility:** Native support for PL/SQL, data types, and syntax minimizes rewrite effort and risk.</li>
+                                        <li>**Risk Reduction:** Provides a proven, low-risk path to migrate off proprietary platforms with minimal application changes.</li>
                                         <li>**Enterprise-Grade Postgres:** Enhances open-source PostgreSQL with security, performance, and management tools.</li>
                                     </ul>
                                 </div>
@@ -615,7 +616,7 @@ COMMIT;</code></pre>
                                     <p class="mb-4 font-semibold">Modernizing the Enterprise Core.</p>
                                     <ul class="list-disc list-inside space-y-2 text-slate-300">
                                         <li>Migrating legacy Oracle databases to the cloud</li>
-                                        <li>Reducing TCO and escaping proprietary vendor lock-in</li>
+                                        <li>Reducing operational complexity and escaping proprietary vendor lock-in</li>
                                         <li>Applications requiring strict relational integrity and enterprise support</li>
                                     </ul>
                                 </div>
@@ -705,7 +706,7 @@ await client.send(command);</code></pre>
                                     <h6 class="font-bold text-white mt-4 mb-2">Key Considerations:</h6>
                                     <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
                                         <li>Transactions are limited to a maximum of 100 items.It does not support multi statement transactions.</li>
-                                        <li>They consume twice the capacity units of a standard write, making them more expensive.</li>
+                                        <li>They consume twice the capacity units of a standard write, adding overhead for transactional workloads.</li>
                                         <li>The API-based approach can be more verbose than the session-based model in MongoDB.</li>
                                     </ul>
                                 </div>
@@ -727,7 +728,83 @@ await client.send(command);</code></pre>
                                     <p class="text-slate-400 mb-4">DynamoDB's query capabilities are strictly defined by its indexes: the Primary Key, Local Secondary Indexes (LSIs), and Global Secondary Indexes (GSIs).</p>
                                     <ul class="list-disc list-inside space-y-2 text-sm text-slate-400">
                                         <li><span class="font-semibold text-white">Merits:</span> Extremely fast and predictable performance for queries that use the defined indexes.</li>
-                                        <li><span class="font-semibold text-white">Limitations:</span> Very little ad-hoc query capability. GSIs are eventually consistent, have their own provisioned capacity (cost), and you are limited to 20 per table. You must know your access patterns in advance.</li>
+                                        <li><span class="font-semibold text-white">Limitations:</span> Very little ad-hoc query capability. GSIs are eventually consistent, have their own provisioned throughput, and you are limited to 20 per table. You must know your access patterns in advance.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Feature Comparison Table -->
+                        <section>
+                            <h4 class="section-heading">Feature Comparison</h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-sm text-left bg-gray-900 rounded-lg border border-gray-700">
+                                    <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
+                                        <tr>
+                                            <th class="px-6 py-3">Feature</th>
+                                            <th class="px-6 py-3 db-color-mongo">MongoDB</th>
+                                            <th class="px-6 py-3 db-color-dynamo">DynamoDB</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-700 text-slate-300">
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Data Model</td><td class="px-6 py-3">Rich BSON documents with nesting, arrays</td><td class="px-6 py-3">Key-value / flat documents (max 400KB)</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Query Language</td><td class="px-6 py-3">Expressive MQL + Aggregation Pipeline</td><td class="px-6 py-3">GetItem, Query, Scan (PartiQL for SQL-like)</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Ad-Hoc Queries</td><td class="px-6 py-3">Full — any field, any combination</td><td class="px-6 py-3">Limited — must use defined keys/GSIs</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Transactions</td><td class="px-6 py-3">Session-based, multi-document ACID</td><td class="px-6 py-3">API-based, max 100 items, 2× throughput</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Secondary Indexes</td><td class="px-6 py-3">Unlimited; compound, multikey, text, geo</td><td class="px-6 py-3">Max 20 GSIs; eventually consistent reads</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Multi-Cloud</td><td class="px-6 py-3">AWS, Azure, GCP (Atlas)</td><td class="px-6 py-3">AWS only</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Full-Text Search</td><td class="px-6 py-3">Built-in Atlas Search (Lucene)</td><td class="px-6 py-3">None — requires OpenSearch integration</td></tr>
+                                        <tr><td class="px-6 py-3 font-semibold text-white">Vector Search</td><td class="px-6 py-3">Built-in Atlas Vector Search</td><td class="px-6 py-3">None — requires external service</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
+
+                        <!-- Deployment Models -->
+                        <section>
+                            <h4 class="section-heading">Deployment Models</h4>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                                    <h5 class="font-bold text-lg mb-3 db-color-mongo">MongoDB Atlas</h5>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-300">
+                                        <li><span class="font-semibold text-white">Multi-Cloud DBaaS:</span> Deploy on AWS, Azure, or GCP from one control plane</li>
+                                        <li><span class="font-semibold text-white">Self-Managed:</span> Enterprise Advanced or Community Edition on any infrastructure</li>
+                                        <li><span class="font-semibold text-white">Serverless:</span> Atlas Serverless instances for variable workloads</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border border-gray-700">
+                                    <h5 class="font-bold text-lg mb-3 db-color-dynamo">Amazon DynamoDB</h5>
+                                    <ul class="list-disc list-inside space-y-2 text-sm text-slate-300">
+                                        <li><span class="font-semibold text-white">AWS Managed:</span> Fully serverless — no servers to provision or manage</li>
+                                        <li><span class="font-semibold text-white">Global Tables:</span> Multi-region active-active replication within AWS</li>
+                                        <li><span class="font-semibold text-white">Vendor Lock-In:</span> Tightly coupled to AWS ecosystem with no multi-cloud or self-hosted option</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- Takeaways & Use Cases -->
+                        <section>
+                            <h4 class="section-heading">Key Takeaways & Use Cases</h4>
+                            <div class="grid md:grid-cols-2 gap-8">
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-mongo">
+                                    <h5 class="font-bold text-xl mb-3">Choose MongoDB for...</h5>
+                                    <p class="mb-4 font-semibold">Query Flexibility and Multi-Cloud Freedom.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>Applications where query patterns evolve or aren't known upfront</li>
+                                        <li>Multi-cloud or hybrid-cloud strategies requiring vendor independence</li>
+                                        <li>Workloads needing built-in search, vector search, or complex aggregations</li>
+                                        <li>Teams wanting a unified platform (DB + Search + Analytics + Mobile) from one vendor</li>
+                                    </ul>
+                                </div>
+                                <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-dynamo">
+                                    <h5 class="font-bold text-xl mb-3">Choose DynamoDB for...</h5>
+                                    <p class="mb-4 font-semibold">Serverless Simplicity on AWS.</p>
+                                    <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                        <li>Simple key-value access patterns with predictable, high throughput</li>
+                                        <li>AWS-native architectures deeply integrated with Lambda, API Gateway, and Step Functions</li>
+                                        <li>Workloads that benefit from zero operational overhead and auto-scaling</li>
+                                        <li>Event-driven microservices with DynamoDB Streams</li>
                                     </ul>
                                 </div>
                             </div>
@@ -761,9 +838,9 @@ await client.send(command);</code></pre>
                                 <p class="mt-2 text-slate-400">At this scale, the system is fully sharded. Challenges become more operational and complex:</p>
                                 <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
                                     <li><span class="font-bold text-white">Shard Key Immutability:</span> Once a collection is sharded, changing the shard key is extremely difficult, often requiring a full data migration. An early mistake becomes a massive future liability.</li>
-                                    <li><span class="font-bold text-white">Cross-Shard Queries:</span> Queries that cannot be targeted to a single shard (scatter-gather queries) become increasingly expensive as they must be broadcast to all shards, increasing latency and network traffic.</li>
+                                    <li><span class="font-bold text-white">Cross-Shard Queries:</span> Queries that cannot be targeted to a single shard (scatter-gather queries) become increasingly slow as they must be broadcast to all shards, increasing latency and network traffic.</li>
                                     <li><span class="font-bold text-white">Rebalancing:</span> The cluster's balancer is constantly working to keep data chunks evenly distributed. This process consumes I/O and can impact application performance, requiring careful management of balancing windows.</li>
-                                    <li><span class="font-bold text-white">Infrastructure Cost:</span> A 10TB cluster requires numerous shards, config servers, and `mongos` routers, leading to significant infrastructure and management overhead, especially if self-hosted.</li>
+                                    <li><span class="font-bold text-white">Infrastructure Scale:</span> A 10TB cluster requires numerous shards, config servers, and <code>mongos</code> routers, leading to significant infrastructure and management overhead. Atlas simplifies this with fully managed sharding.</li>
                                 </ul>
                             </div>
                         </div>
@@ -781,7 +858,7 @@ await client.send(command);</code></pre>
                                 <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Geo-Distribution & Latency</h4>
                                 <p class="mt-2 text-slate-400">At a global scale, the challenges shift from capacity to latency and topology:</p>
                                 <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
-                                    <li><span class="font-bold text-white">Topology Patterns:</span> Correctly configuring geo-partitioning and leaseholder preferences becomes critical. A misconfigured topology can place data far from its users, negating the benefits of geo-distribution and increasing cross-region network costs.</li>
+                                    <li><span class="font-bold text-white">Topology Patterns:</span> Correctly configuring geo-partitioning and leaseholder preferences becomes critical. A misconfigured topology can place data far from its users, negating the benefits of geo-distribution and increasing cross-region latency.</li>
                                     <li><span class="font-bold text-white">Transaction Latency:</span> While writes are consistent, they are subject to the speed of light. A write that requires consensus from nodes in New York, London, and Tokyo will have a minimum latency dictated by physics. Designing applications to tolerate this is a crucial architectural challenge.</li>
                                     <li><span class="font-bold text-white">"Noisy Neighbor" Issues:</span> In a large, multi-tenant cluster, a single poorly optimized query can consume disproportionate resources. CockroachDB provides observability tools to identify these, but it requires active monitoring.</li>
                                 </ul>
@@ -795,7 +872,7 @@ await client.send(command);</code></pre>
                         <div class="space-y-6">
                             <div>
                                 <h4 class="font-semibold text-lg text-white">10GB to 1TB: Data Modeling is Everything</h4>
-                                <p class="mt-2 text-slate-400">Like CockroachDB, ScyllaDB scales horizontally by <span class="font-bold text-white">adding nodes to the ring</span>. The process is seamless. The single greatest challenge is <span class="font-bold text-white">data modeling</span>. Because ScyllaDB lacks joins, data must be denormalized for your query patterns. An incorrect data model at 1TB can lead to massive, expensive data migration efforts later. The pitfall is thinking you can "fix the queries later"; in ScyllaDB, the queries dictate the schema.</p>
+                                <p class="mt-2 text-slate-400">Like CockroachDB, ScyllaDB scales horizontally by <span class="font-bold text-white">adding nodes to the ring</span>. The process is seamless. The single greatest challenge is <span class="font-bold text-white">data modeling</span>. Because ScyllaDB lacks joins, data must be denormalized for your query patterns. An incorrect data model at 1TB can lead to massive, complex data migration efforts later. The pitfall is thinking you can "fix the queries later"; in ScyllaDB, the queries dictate the schema.</p>
                             </div>
                             <div>
                                 <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Compaction & Operational Tuning</h4>
@@ -819,7 +896,7 @@ await client.send(command);</code></pre>
                             </div>
                             <div>
                                 <h4 class="font-semibold text-lg text-white">1TB to 10TB+: The Sharding Dilemma</h4>
-                                <p class="mt-2 text-slate-400">Scaling a single Postgres instance beyond a few terabytes becomes extremely expensive and technically challenging. At this scale, horizontal scaling (sharding) becomes necessary, but it is <span class="font-bold text-white">not a native feature</span>. This presents major pitfalls:</p>
+                                <p class="mt-2 text-slate-400">Scaling a single Postgres instance beyond a few terabytes becomes extremely difficult and technically challenging. At this scale, horizontal scaling (sharding) becomes necessary, but it is <span class="font-bold text-white">not a native feature</span>. This presents major pitfalls:</p>
                                 <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
                                     <li><span class="font-bold text-white">Sharding Complexity:</span> Sharding must be implemented either at the application level (a huge undertaking) or using third-party extensions like Citus Data (now part of Microsoft). This adds significant architectural and operational complexity not present in natively distributed databases.</li>
                                     <li><span class="font-bold text-white">Cross-Shard Joins:</span> Performing joins across different shards is either impossible or extremely inefficient, forcing significant application rewrites and data model changes.</li>
@@ -841,12 +918,12 @@ await client.send(command);</code></pre>
                                 <p class="mt-2 text-slate-400">DynamoDB scales by automatically distributing data across partitions based on the hash of the <span class="font-bold text-white">partition key</span>. The primary challenge is designing a high-cardinality partition key that evenly distributes requests. A poor key (e.g., using `status` where most items are `active`) creates a "hot partition," throttling performance for the entire table, as each partition has a fixed capacity limit.</p>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Cost Management & Query Patterns</h4>
-                                <p class="mt-2 text-slate-400">At this scale, DynamoDB's fully managed nature handles the operational load, but challenges shift to cost and query flexibility:</p>
+                                <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Capacity Management & Query Patterns</h4>
+                                <p class="mt-2 text-slate-400">At this scale, DynamoDB's fully managed nature handles the operational load, but challenges shift to capacity planning and query flexibility:</p>
                                 <ul class="list-disc list-inside mt-2 space-y-2 text-slate-400">
-                                    <li><span class="font-bold text-white">Cost Optimization:</span> The on-demand model is convenient but can be expensive at high, sustained throughput. Optimizing TCO requires careful capacity planning with Provisioned Capacity and Reserved Capacity, which demands a deep understanding of workload patterns.</li>
+                                    <li><span class="font-bold text-white">Capacity Planning:</span> The on-demand model is convenient but may not suit high, sustained throughput. Choosing between On-Demand and Provisioned Capacity requires a deep understanding of workload patterns and traffic predictability.</li>
                                     <li><span class="font-bold text-white">Query Rigidity:</span> DynamoDB is not a general-purpose query engine. Access patterns are limited to the defined primary key and secondary indexes. Any new query requirement that cannot be served by an existing index often requires creating a new Global Secondary Index (GSI) and backfilling it, or duplicating data into a different table structure.</li>
-                                    <li><span class="font-bold text-white">Secondary Index Limitations:</span> While powerful, GSIs are eventually consistent and have their own provisioned throughput, adding another layer of cost and performance management.</li>
+                                    <li><span class="font-bold text-white">Secondary Index Limitations:</span> While powerful, GSIs are eventually consistent and have their own provisioned throughput, adding another layer of configuration and performance management.</li>
                                 </ul>
                             </div>
                         </div>
@@ -854,55 +931,116 @@ await client.send(command);</code></pre>
                 </div>
             </section>
             
-            <section id="pricing-analysis" class="mt-16">
+            <section id="enterprise-readiness" class="mt-16">
                 <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold text-white"> Enterprise-Ready Pricing Analysis</h2>
-                    <p class="text-slate-400 mt-2 max-w-3xl mx-auto">A comparative TCO analysis for a minimum, enterprise-grade deployment with HA, DR, and backups.</p>
+                    <h2 class="text-3xl font-bold text-white">Enterprise Readiness Comparison</h2>
+                    <p class="text-slate-400 mt-2 max-w-3xl mx-auto">Key enterprise considerations for production deployments.</p>
                 </div>
                 <div class="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 p-2">
                     <table class="w-full text-sm text-left">
                         <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
                             <tr>
-                                <th class="px-6 py-4">Database</th>
-                                <th class="px-6 py-4">Minimum Enterprise-Ready Cluster</th>
-                                <th class="px-6 py-4">Estimated Monthly Cost (USD)</th>
-                                <th class="px-6 py-4">Key Cost Drivers & Licensing Model</th>
+                                <th class="px-4 py-4">Capability</th>
+                                <th class="px-4 py-4">MongoDB Atlas</th>
+                                <th class="px-4 py-4">CockroachDB</th>
+                                <th class="px-4 py-4">ScyllaDB</th>
+                                <th class="px-4 py-4">EDB Postgres</th>
+                                <th class="px-4 py-4">DynamoDB</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-700">
                             <tr>
-                                <td class="px-6 py-4 font-bold db-color-mongo">MongoDB Atlas</td>
-                                <td class="px-6 py-4">3-node M30 Replica Set (Multi-AZ) with 2vCPU, 8GB RAM per node. Includes managed backups with PITR.</td>
-                                <td class="px-6 py-4 font-bold text-lg">~$400 - $600</td>
-                                <td class="px-6 py-4">Cost is driven by the cluster tier (M30+). <span class="font-bold text-white">The software license for enterprise features is bundled into the managed service fee.</span> Additional costs for storage, data transfer, and separate Atlas Search nodes apply.</td>
+                                <td class="px-4 py-4 font-bold text-white">SLA</td>
+                                <td class="px-4 py-4">99.995%</td>
+                                <td class="px-4 py-4">99.95% (Dedicated)</td>
+                                <td class="px-4 py-4">99.99% (Cloud)</td>
+                                <td class="px-4 py-4">99.95% (HA)</td>
+                                <td class="px-4 py-4">99.999% (Global Tables)</td>
                             </tr>
                             <tr>
-                                <td class="px-6 py-4 font-bold db-color-cockroach">CockroachDB Cloud</td>
-                                <td class="px-6 py-4">3-node Dedicated Standard cluster (Multi-AZ), each node with 2 vCPU and 8GB RAM. Includes managed backups with PITR.</td>
-                                <td class="px-6 py-4 font-bold text-lg">~$400 - $600</td>
-                                <td class="px-6 py-4">Cost is driven by vCPU count per node. <span class="font-bold text-white">The enterprise software license is bundled into the cloud service fee.</span> DR via multi-region clusters increases node count and data transfer costs.</td>
+                                <td class="px-4 py-4 font-bold text-white">Security & Compliance</td>
+                                <td class="px-4 py-4">SOC 2, HIPAA, PCI DSS, ISO 27001, FedRAMP; CSFLE, RBAC, VPC Peering, PrivateLink</td>
+                                <td class="px-4 py-4">SOC 2, HIPAA; RBAC, TLS, encryption at rest, single-region CMEK</td>
+                                <td class="px-4 py-4">SOC 2; TLS, encryption at rest, RBAC, VPC Peering</td>
+                                <td class="px-4 py-4">SOC 2, HIPAA; pgAudit, TDE, row-level security, LDAP</td>
+                                <td class="px-4 py-4">SOC, HIPAA, PCI, FedRAMP; IAM, KMS encryption, VPC endpoints</td>
                             </tr>
                             <tr>
-                                <td class="px-6 py-4 font-bold db-color-scylla">ScyllaDB Cloud</td>
-                                <td class="px-6 py-4">3-node cluster on performance-oriented instances (e.g., AWS i4i.large), 3 vCPU / 24GB RAM per node. Includes backups.</td>
-                                <td class="px-6 py-4 font-bold text-lg">~$800 - $1,200</td>
-                                <td class="px-6 py-4">Cost is driven by high-performance instance types. <span class="font-bold text-white">The enterprise license is bundled into the service fee.</span> The value proposition is superior price-performance for high-throughput workloads.</td>
+                                <td class="px-4 py-4 font-bold text-white">HA & DR</td>
+                                <td class="px-4 py-4">Automatic failover, multi-AZ replica sets, multi-region clusters, continuous cloud backup with PITR</td>
+                                <td class="px-4 py-4">Built-in via Raft consensus, multi-region survivability, geo-partitioning, automatic PITR</td>
+                                <td class="px-4 py-4">Multi-datacenter replication, tunable consistency, repair-based anti-entropy</td>
+                                <td class="px-4 py-4">Streaming replication, EFM for failover, Barman for backups; Citus for sharding</td>
+                                <td class="px-4 py-4">Global Tables for multi-region active-active, automatic PITR, fully managed</td>
                             </tr>
                             <tr>
-                                <td class="px-6 py-4 font-bold db-color-edb">EDB Postgres AI</td>
-                                <td class="px-6 py-4">"Standard" HA Cluster: 1 Primary + 1 Replica (e.g., 4 vCPU, 16GB RAM each). EDB Postgres Advanced Server edition. Includes PITR.</td>
-                                <td class="px-6 py-4 font-bold text-lg">~$750 - $1,000</td>
-                                <td class="px-6 py-4">Total cost is a combination of the underlying cloud infrastructure cost <span class="font-bold text-white">plus a separate EDB software subscription fee</span>, which acts as the license for enterprise features and Oracle compatibility.</td>
+                                <td class="px-4 py-4 font-bold text-white">Multi-Cloud</td>
+                                <td class="px-4 py-4">AWS, Azure, GCP — 100+ regions</td>
+                                <td class="px-4 py-4">AWS, Azure, GCP (Cloud); any infra (self-hosted)</td>
+                                <td class="px-4 py-4">AWS, GCP (Cloud); any infra (self-hosted)</td>
+                                <td class="px-4 py-4">AWS, Azure, GCP (BigAnimal); any infra (self-hosted)</td>
+                                <td class="px-4 py-4">AWS only</td>
                             </tr>
                             <tr>
-                                <td class="px-6 py-4 font-bold db-color-dynamo">Amazon DynamoDB</td>
-                                <td class="px-6 py-4">On-Demand capacity with Global Tables for Multi-AZ/Multi-Region HA/DR. Includes PITR.</td>
-                                <td class="px-6 py-4 font-bold text-lg">Highly Variable</td>
-                                <td class="px-6 py-4">Cost is purely usage-based, driven by Read/Write Request Units (RRU/WRU) and storage. <span class="font-bold text-white">There is no separate license fee.</span> Predictable workloads can use cheaper Provisioned Capacity.</td>
+                                <td class="px-4 py-4 font-bold text-white">Developer Ecosystem</td>
+                                <td class="px-4 py-4">Official drivers for 12+ languages, Compass GUI, Atlas CLI, Realm Mobile SDK, Charts</td>
+                                <td class="px-4 py-4">PostgreSQL wire-compatible, standard SQL drivers, DB Console</td>
+                                <td class="px-4 py-4">CQL drivers (Cassandra-compatible), limited ad-hoc tooling</td>
+                                <td class="px-4 py-4">Full PostgreSQL ecosystem, pgAdmin, thousands of extensions</td>
+                                <td class="px-4 py-4">AWS SDK, NoSQL Workbench, tightly coupled to AWS ecosystem</td>
                             </tr>
                         </tbody>
                     </table>
-                    <p class="text-xs text-slate-500 p-4"><strong>Disclaimer:</strong> These are order-of-magnitude estimates based on publicly available pricing calculators as of mid-2024 for a small production cluster with ~100GB storage on AWS (us-east-1). Actual costs will vary significantly based on cloud provider, region, storage, data transfer, specific software editions, and workload. This table is for comparative purposes only.</p>
+                </div>
+            </section>
+
+            <section id="references" class="mt-16">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-white">References & Further Reading</h2>
+                </div>
+                <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 db-color-mongo">MongoDB</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="https://www.mongodb.com/docs/manual/core/transactions/" target="_blank" class="text-indigo-400 hover:underline">Transactions Documentation</a></li>
+                            <li><a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" class="text-indigo-400 hover:underline">Sharding Architecture</a></li>
+                            <li><a href="https://www.mongodb.com/docs/manual/indexes/" target="_blank" class="text-indigo-400 hover:underline">Indexes — Types & Strategies</a></li>
+                            <li><a href="https://www.mongodb.com/docs/manual/replication/" target="_blank" class="text-indigo-400 hover:underline">Replica Sets & High Availability</a></li>
+                            <li><a href="https://www.mongodb.com/docs/atlas/reference/amazon-aws/" target="_blank" class="text-indigo-400 hover:underline">Atlas on AWS Reference</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 db-color-cockroach">CockroachDB</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="https://www.cockroachlabs.com/docs/stable/architecture/overview.html" target="_blank" class="text-indigo-400 hover:underline">Architecture Overview</a></li>
+                            <li><a href="https://www.cockroachlabs.com/docs/stable/transactions.html" target="_blank" class="text-indigo-400 hover:underline">Transactions Documentation</a></li>
+                            <li><a href="https://www.cockroachlabs.com/docs/stable/topology-patterns.html" target="_blank" class="text-indigo-400 hover:underline">Multi-Region Topology Patterns</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 db-color-scylla">ScyllaDB</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="https://opensource.docs.scylladb.com/stable/architecture/" target="_blank" class="text-indigo-400 hover:underline">Architecture Documentation</a></li>
+                            <li><a href="https://opensource.docs.scylladb.com/stable/using-scylla/lwt.html" target="_blank" class="text-indigo-400 hover:underline">Lightweight Transactions (LWT)</a></li>
+                            <li><a href="https://opensource.docs.scylladb.com/stable/operating-scylla/compaction/" target="_blank" class="text-indigo-400 hover:underline">Compaction Strategies</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 db-color-edb">EDB Postgres</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="https://www.enterprisedb.com/docs/epas/latest/" target="_blank" class="text-indigo-400 hover:underline">EDB Postgres Advanced Server Docs</a></li>
+                            <li><a href="https://www.postgresql.org/docs/current/mvcc.html" target="_blank" class="text-indigo-400 hover:underline">PostgreSQL MVCC & Isolation</a></li>
+                            <li><a href="https://www.citusdata.com/product/community" target="_blank" class="text-indigo-400 hover:underline">Citus — Distributed PostgreSQL</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 text-amber-400">Amazon DynamoDB</h4>
+                        <ul class="space-y-2 text-sm">
+                            <li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Introduction.html" target="_blank" class="text-indigo-400 hover:underline">DynamoDB Developer Guide</a></li>
+                            <li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/transaction-apis.html" target="_blank" class="text-indigo-400 hover:underline">DynamoDB Transactions</a></li>
+                            <li><a href="https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/globaltables_HowItWorks.html" target="_blank" class="text-indigo-400 hover:underline">Global Tables</a></li>
+                        </ul>
+                    </div>
                 </div>
             </section>
 
@@ -926,7 +1064,7 @@ await client.send(command);</code></pre>
                     labels: ['Flexibility', 'Consistency', 'Performance', 'Scalability', 'Ecosystem'],
                     datasets: [{
                         label: 'MongoDB',
-                        data: [5, 3, 3, 4, 5],
+                        data: [5, 4, 3, 4, 5],
                         backgroundColor: 'rgba(34, 197, 94, 0.2)',
                         borderColor: 'rgba(34, 197, 94, 1)',
                         pointBackgroundColor: 'rgba(34, 197, 94, 1)',
@@ -1005,7 +1143,7 @@ await client.send(command);</code></pre>
                             legend: { display: false },
                             title: {
                                 display: true,
-                                text: 'YCSB Caching Workload Throughput (Higher is Better)',
+                                text: 'Illustrative Throughput Comparison (Higher is Better)',
                                 color: '#f9fafb',
                                 font: { size: 16 }
                             }
