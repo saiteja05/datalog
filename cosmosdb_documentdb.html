@@ -753,7 +753,7 @@
 <div class="header">
     <div class="header-inner">
         <img src="assets/mongodb-leaf.png" alt="MongoDB" class="header-logo">
-        <h1>MongoDB Atlas <span>—</span> The Imitation Game</h1>
+        <h1> <span>—</span> The Imitation Game <span>—</span> </h1>
     </div>
 </div>
 
@@ -1864,8 +1864,8 @@ session.startTransaction();
                 </tr>
                 <tr>
                     <td>Migration Tooling</td>
-                    <td><span class="check">&#10003;</span> mongodump/mongorestore, mongomirror for live migration, Atlas Live Migrate (zero-downtime, built into Atlas UI), Cluster-to-Cluster Sync (C2C)</td>
-                    <td>Azure DMS for migration to vCore. mongodump/mongorestore partially works. No live migration equivalent</td>
+                    <td><span class="check">&#10003;</span> mongodump/mongorestore, mongomirror for live migration, Atlas Live Migrate (zero-downtime, built into Atlas UI), Cluster-to-Cluster Sync (C2C), and <strong>Relational Migrator</strong> &mdash; translates relational schemas (Oracle, SQL Server, Postgres, MySQL) to document models, generates migration code, and supports continuous sync</td>
+                    <td>Azure Database Migration Service for migration to vCore. mongodump/mongorestore partially works. No live migration equivalent</td>
                     <td>Azure Data Factory, custom scripts. No mongodump support. No live migration tool</td>
                     <td>AWS DMS for migration. mongodump partially works (some index options lost). No zero-downtime live migration built in</td>
                 </tr>
@@ -1923,51 +1923,7 @@ session.startTransaction();
             </div>
         </div>
     </div>
-
-    <!-- References -->
-    <div style="margin: 3rem 0;">
-        <h2 class="section-title">References &amp; Further Reading</h2>
-        <div class="ref-grid">
-            <div class="ref-card">
-                <h4 style="color: var(--atlas-color);">MongoDB Atlas</h4>
-                <a href="https://www.mongodb.com/docs/atlas/" target="_blank">Atlas Documentation</a>
-                <a href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/" target="_blank">Aggregation Pipeline Reference</a>
-                <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank">Atlas Search Overview</a>
-                <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank">Atlas Vector Search</a>
-                <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank">Queryable Encryption</a>
-                <a href="https://www.mongodb.com/docs/atlas/stream-processing/overview/" target="_blank">Atlas Stream Processing</a>
-            </div>
-            <div class="ref-card">
-                <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore</h4>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/introduction" target="_blank">vCore Introduction</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/compatibility" target="_blank">Compatibility &amp; Feature Support</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/limits" target="_blank">Service Limits &amp; Quotas</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search" target="_blank">Vector Search (vCore)</a>
-            </div>
-            <div class="ref-card">
-                <h4 style="color: var(--cosmos-color);">Cosmos DB RU</h4>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/feature-support-60" target="_blank">6.0 Feature Support</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview" target="_blank">Partitioning &amp; Horizontal Scaling</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels" target="_blank">Consistency Levels</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/concepts-limits" target="_blank">Service Quotas &amp; Limits</a>
-            </div>
-            <div class="ref-card">
-                <h4 style="color: var(--docdb-color);">Amazon DocumentDB</h4>
-                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html" target="_blank">DocumentDB Developer Guide</a>
-                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html" target="_blank">Functional Differences vs MongoDB</a>
-                <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank">MongoDB Driver Compatibility Matrix</a>
-                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/limits.html" target="_blank">Quotas &amp; Limits</a>
-            </div>
-            <div class="ref-card">
-                <h4>Competitive Analysis</h4>
-                <a href="https://www.mongodb.com/resources/compare/mongodb-vs-cosmos-db" target="_blank">MongoDB vs Cosmos DB (MongoDB.com)</a>
-                <a href="https://www.mongodb.com/resources/compare/compare-documentdb-cosmosdb" target="_blank">Atlas vs DocumentDB vs Cosmos DB</a>
-                <a href="https://www.mongodb.com/resources/compare/documentdb-vs-mongodb" target="_blank">DocumentDB vs MongoDB</a>
-            </div>
-        </div>
-    </div>
 </div>
-
 
 <!-- ═══════════ WORKLOAD FIT PICKER ═══════════ -->
 <div class="container">
@@ -2043,6 +1999,52 @@ session.startTransaction();
         <div class="decision-bottom">
             <strong>If you're building on MongoDB's query language, build on MongoDB's engine.</strong><br>
             Everything else is an approximation.
+        </div>
+    </div>
+</div>
+
+
+<!-- ═══════════ REFERENCES (moved to end) ═══════════ -->
+<div class="container">
+    <div style="margin: 3rem 0 2rem;">
+        <h2 class="section-title">References &amp; Further Reading</h2>
+        <div class="ref-grid">
+            <div class="ref-card">
+                <h4 style="color: var(--atlas-color);">MongoDB Atlas</h4>
+                <a href="https://www.mongodb.com/docs/atlas/" target="_blank">Atlas Documentation</a>
+                <a href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/" target="_blank">Aggregation Pipeline Reference</a>
+                <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank">Atlas Search Overview</a>
+                <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank">Atlas Vector Search</a>
+                <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank">Queryable Encryption</a>
+                <a href="https://www.mongodb.com/docs/atlas/stream-processing/overview/" target="_blank">Atlas Stream Processing</a>
+            </div>
+            <div class="ref-card">
+                <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore</h4>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/introduction" target="_blank">vCore Introduction</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/compatibility" target="_blank">Compatibility &amp; Feature Support</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/limits" target="_blank">Service Limits &amp; Quotas</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search" target="_blank">Vector Search (vCore)</a>
+            </div>
+            <div class="ref-card">
+                <h4 style="color: var(--cosmos-color);">Cosmos DB RU</h4>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/feature-support-60" target="_blank">6.0 Feature Support</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview" target="_blank">Partitioning &amp; Horizontal Scaling</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels" target="_blank">Consistency Levels</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/concepts-limits" target="_blank">Service Quotas &amp; Limits</a>
+            </div>
+            <div class="ref-card">
+                <h4 style="color: var(--docdb-color);">Amazon DocumentDB</h4>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html" target="_blank">DocumentDB Developer Guide</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html" target="_blank">Functional Differences vs MongoDB</a>
+                <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank">MongoDB Driver Compatibility Matrix</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/limits.html" target="_blank">Quotas &amp; Limits</a>
+            </div>
+            <div class="ref-card">
+                <h4>Competitive Analysis</h4>
+                <a href="https://www.mongodb.com/resources/compare/mongodb-vs-cosmos-db" target="_blank">MongoDB vs Cosmos DB (MongoDB.com)</a>
+                <a href="https://www.mongodb.com/resources/compare/compare-documentdb-cosmosdb" target="_blank">Atlas vs DocumentDB vs Cosmos DB</a>
+                <a href="https://www.mongodb.com/resources/compare/documentdb-vs-mongodb" target="_blank">DocumentDB vs MongoDB</a>
+            </div>
         </div>
     </div>
 </div>
