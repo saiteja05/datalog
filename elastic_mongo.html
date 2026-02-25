@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elasticsearch vs MongoDB — Competitive Intelligence Briefing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #080c14;
+  --bg2: #0d1219;
+  --bg-card: #111923;
+  --bg-card-h: #16202e;
+  --border: #1a2538;
+  --border2: #243348;
+  --tx: #e4e9f2;
+  --tx2: #8694a8;
+  --tx3: #4f5e72;
+  --mg: #00ed64;
+  --mg-d: #00a847;
+  --mg-g: rgba(0,237,100,0.10);
+  --ey: #fed10a;
+  --ep: #f04e98;
+  --eb: #0077cc;
+  --cy: #22d3ee;
+  --rd: #f87171;
+  --pr: #a78bfa;
+  --or: #fb923c;
+}
+
+html {
+  scroll-snap-type: y mandatory;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--tx);
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.65;
+  overflow-x: hidden;
+}
+
+/* ====== SLIDE SYSTEM ====== */
+.slide {
+  min-height: 100vh;
+  height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 2.5rem 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+.slide-inner {
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+}
+/* allow scrolling within slide if content overflows */
+.slide.scrollable {
+  align-items: flex-start;
+  overflow-y: auto;
+  scroll-snap-align: start;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.slide.scrollable::-webkit-scrollbar { display: none; }
+.slide.scrollable .slide-inner { padding: 2rem 0 3rem; }
+
+/* ====== NAV ====== */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+  background: rgba(8,12,20,0.88); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-in {
+  max-width: 1100px; margin: 0 auto; padding: 0 2.5rem;
+  height: 52px; display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { font-weight: 700; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tx3); display: flex; align-items: center; gap: 0.6rem; }
+.nav-brand svg { flex-shrink: 0; }
+.nav-links { display: flex; gap: 0.15rem; }
+.nav-links a {
+  color: var(--tx2); text-decoration: none; font-size: 0.72rem; font-weight: 500;
+  padding: 0.35rem 0.65rem; border-radius: 6px; transition: all 0.2s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--tx); background: var(--bg-card); }
+
+/* ====== SLIDE COUNTER ====== */
+.slide-counter {
+  position: fixed; bottom: 1.5rem; right: 2rem; z-index: 1000;
+  font-family: 'JetBrains Mono', monospace; font-size: 0.7rem;
+  color: var(--tx3); background: rgba(8,12,20,0.8); backdrop-filter: blur(12px);
+  padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);
+}
+.slide-counter span { color: var(--mg); }
+
+/* ====== PROGRESS DOTS ====== */
+.progress-dots {
+  position: fixed; right: 1rem; top: 50%; transform: translateY(-50%); z-index: 1000;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.progress-dots .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--tx3); transition: all 0.3s; cursor: pointer;
+  opacity: 0.4;
+}
+.progress-dots .dot.active {
+  background: var(--mg); opacity: 1; transform: scale(1.4);
+}
+
+/* ====== TYPOGRAPHY ====== */
+h1 {
+  font-family: 'Playfair Display', serif; font-weight: 800;
+  font-size: clamp(2.6rem, 5.5vw, 4.5rem); line-height: 1.08;
+}
+h2 {
+  font-family: 'Playfair Display', serif; font-weight: 700;
+  font-size: clamp(1.8rem, 3.5vw, 2.6rem); line-height: 1.12;
+}
+h3 { font-size: 1.1rem; font-weight: 700; }
+.label {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  padding: 0.25rem 0.75rem; border-radius: 100px; border: 1px solid;
+  margin-bottom: 0.75rem;
+}
+.l-e { color: var(--ey); border-color: rgba(254,209,10,0.2); background: rgba(254,209,10,0.05); }
+.l-m { color: var(--mg); border-color: rgba(0,237,100,0.2); background: rgba(0,237,100,0.05); }
+.l-v { color: var(--cy); border-color: rgba(34,211,238,0.2); background: rgba(34,211,238,0.05); }
+
+/* ====== SHARED COMPONENTS ====== */
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.5rem; transition: all 0.3s;
+}
+.card:hover { border-color: var(--border2); }
+.tag {
+  font-size: 0.65rem; padding: 0.18rem 0.5rem; border-radius: 100px;
+  background: rgba(255,255,255,0.04); border: 1px solid var(--border);
+  color: var(--tx3); font-weight: 500; display: inline-block;
+}
+.callout {
+  background: var(--bg-card); border-radius: 0 10px 10px 0; padding: 1.1rem 1.3rem;
+  font-size: 0.85rem; color: var(--tx2); line-height: 1.55;
+}
+.callout strong { color: var(--tx); }
+.callout-e { border-left: 3px solid var(--ey); }
+.callout-m { border-left: 3px solid var(--mg); }
+.callout-r { border-left: 3px solid var(--rd); }
+
+/* ====== ANIMATIONS ====== */
+@keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes drawLine { from { stroke-dashoffset: 1000; } to { stroke-dashoffset: 0; } }
+@keyframes pulse { 0%,100%{ opacity:0.4; } 50%{ opacity:1; } }
+
+.reveal { opacity: 0; transform: translateY(28px); transition: all 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal.vis { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+.reveal-d4 { transition-delay: 0.4s; }
+.reveal-d5 { transition-delay: 0.5s; }
+
+/* ====== TABLE ====== */
+.tw { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { text-align:left; padding:0.75rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--tx3); background:var(--bg-card); border-bottom:1px solid var(--border); }
+td { padding:0.65rem 1rem; border-bottom:1px solid var(--border); color:var(--tx2); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+td:first-child { color:var(--tx); font-weight:500; }
+td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:rgba(255,255,255,0.06); padding:0.12rem 0.35rem; border-radius:4px; color:var(--cy); }
+.ck { color:var(--mg); font-weight:700; }
+.cx { color:var(--rd); font-weight:700; opacity:0.7; }
+.pt { color:var(--ey); font-weight:500; }
+
+/* ====== SVG ILLUSTRATIONS ====== */
+.illust { display: flex; justify-content: center; align-items: center; }
+.illust svg { max-width: 100%; height: auto; }
+
+/* ====== GRID HELPERS ====== */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+.flex-c { display: flex; align-items: center; gap: 1rem; }
+
+@media (max-width: 900px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .progress-dots { display: none; }
+  .slide { padding: 3.5rem 1.25rem 2rem; }
+}
+
+/* ====== SPECIFIC SLIDES ====== */
+.hero-glow {
+  position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px);
+}
+.icon-circle {
+  width: 44px; height: 44px; border-radius: 11px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.stack-row {
+  display: grid; grid-template-columns: 44px 1fr; gap: 1rem; align-items: start;
+  padding: 0.9rem 0; border-bottom: 1px solid var(--border);
+}
+.stack-row:last-child { border-bottom: none; }
+.stack-row h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.15rem; }
+.stack-row p { font-size: 0.78rem; color: var(--tx2); line-height: 1.5; }
+
+.adv-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1.3rem; border-left: 3px solid var(--mg);
+}
+.adv-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+.adv-card p { font-size: 0.8rem; color: var(--tx2); line-height: 1.5; }
+
+.battle-item {
+  font-size: 0.82rem; color: var(--tx2); line-height: 1.5;
+  padding: 0.55rem 0.8rem; border-radius: 8px;
+  background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04);
+  margin-bottom: 0.4rem;
+}
+.battle-item strong { color: var(--tx); }
+
+.pos-card {
+  border-radius: 12px; padding: 1.75rem;
+}
+.pos-card ul { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+.pos-card li { font-size:0.82rem; color:var(--tx2); line-height:1.5; padding-left:1.2rem; position:relative; }
+.pos-card li::before { content:'→'; position:absolute; left:0; font-weight:600; }
+.pos-e { background:linear-gradient(135deg,rgba(254,209,10,0.05),rgba(240,78,152,0.03)); border:1px solid rgba(254,209,10,0.12); }
+.pos-e li::before { color:var(--ey); }
+.pos-m { background:linear-gradient(135deg,rgba(0,237,100,0.05),rgba(34,211,238,0.03)); border:1px solid rgba(0,237,100,0.12); }
+.pos-m li::before { color:var(--mg); }
+
+/* agg pills */
+.agg-pills { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.5rem; }
+.agg-pill {
+  font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+  padding: 0.2rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg-card); color: var(--tx2);
+}
+
+/* ILM phases */
+.ilm-flow { display: flex; gap: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
+.ilm-ph { flex:1; padding:1rem; border-right:1px solid var(--border); background:var(--bg-card); text-align:center; }
+.ilm-ph:last-child { border-right:none; }
+.ilm-ph h4 { font-size:0.78rem; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.25rem; }
+.ilm-ph p { font-size:0.7rem; color:var(--tx2); line-height:1.4; }
+.ilm-arrow { color:var(--tx3); display:flex; align-items:center; font-size:0.6rem; padding: 0 0.15rem; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-in">
+    <div class="nav-brand">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+        <path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/>
+      </svg>
+      <span>MongoDB</span> — Competitive Intel
+    </div>
+    <div class="nav-links">
+      <a href="#s-eco">Ecosystem</a>
+      <a href="#s-stack">Stack</a>
+      <a href="#s-fields">Fields</a>
+      <a href="#s-agg">Aggs</a>
+      <a href="#s-vec">Vectors</a>
+      <a href="#s-wins">MongoDB Wins</a>
+      <a href="#s-pos">Positioning</a>
+    </div>
+  </div>
+</nav>
+
+<!-- PROGRESS DOTS -->
+<div class="progress-dots" id="progDots"></div>
+<!-- SLIDE COUNTER -->
+<div class="slide-counter" id="slideCounter"><span>1</span> / <span id="totalSlides">—</span></div>
+
+<!-- ════════════ SLIDE 1: TITLE ════════════ -->
+<div class="slide" id="s-title" data-title="Title">
+  <div class="hero-glow" style="width:60vw;height:60vw;top:-25%;left:-15%;background:radial-gradient(circle,rgba(0,237,100,0.05),transparent 65%);"></div>
+  <div class="hero-glow" style="width:50vw;height:50vw;bottom:-20%;right:-10%;background:radial-gradient(circle,rgba(254,209,10,0.04),transparent 65%);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal" style="margin-bottom:2rem;">
+      <svg width="120" height="48" viewBox="0 0 120 48" fill="none" style="opacity:0.6;">
+        <!-- Elastic E mark -->
+        <rect x="0" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#FED10A" stroke-width="1.5"/>
+        <path d="M9 18h14M9 24h10M9 30h14" stroke="#FED10A" stroke-width="2" stroke-linecap="round"/>
+        <text x="42" y="30" font-family="DM Sans" font-weight="600" font-size="11" fill="#5a6578">vs</text>
+        <!-- MongoDB leaf -->
+        <rect x="60" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#00ED64" stroke-width="1.5"/>
+        <path d="M76 14c0 0-0.3 4-0.3 5.5c0 1.5 0.8 2.8 1.7 3.8c0.9 1 1.3 2 1.3 3.2c0 2.5-1.6 4.8-3.4 5.5c0 0 0.3-2.5 0.3-3.5c0-0.8-0.7-1.8-1.5-2.8c-0.8-1-1.5-2.2-1.5-4c0-2.8 1.5-5.3 3.4-7.7z" fill="#00ED64"/>
+        <text x="98" y="30" font-family="DM Sans" font-weight="600" font-size="9" fill="#5a6578" letter-spacing="0.5"></text>
+      </svg>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--mg);margin-bottom:1.5rem;">Solutions Architect Competitive Briefing</p>
+    <h1 class="reveal reveal-d2" style="margin-bottom:1.25rem;">Elasticsearch vs<br>MongoDB <em style="font-style:italic;background:linear-gradient(135deg,var(--ey),var(--ep));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Search</em></h1>
+    <p class="reveal reveal-d3" style="font-size:1.1rem;color:var(--tx2);max-width:600px;margin:0 auto 2.5rem;font-weight:300;">A comprehensive analysis of the Elastic ecosystem, search-specific feature parity, and the conditions where MongoDB has the right to win.</p>
+    <div class="reveal reveal-d4" style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Duration</strong> 15–20 min + Q&A</span>
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Audience</strong> Solutions Architects</span>
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Focus</strong> Competitive Positioning</span>
+    </div>
+    <p class="reveal reveal-d5" style="margin-top:3rem;font-size:0.7rem;color:var(--tx3);animation:pulse 2.5s ease infinite;">Scroll or press ↓ to begin</p>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 2: AGENDA ════════════ -->
+<div class="slide" id="s-agenda" data-title="Agenda">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:2rem;">Agenda</h2>
+    <div class="g4 reveal reveal-d1">
+      <div class="card" style="border-top:2px solid var(--ey);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--ey);margin-bottom:0.5rem;">01</div>
+        <h3 style="font-size:0.95rem;">The Elastic Ecosystem</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Products, stack components, integrations marketplace</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--cy);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--cy);margin-bottom:0.5rem;">02</div>
+        <h3 style="font-size:0.95rem;">Search Deep Dive</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Fields, aggregations, ILM, vectors, advanced features</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--mg);margin-bottom:0.5rem;">03</div>
+        <h3 style="font-size:0.95rem;">Where MongoDB Wins</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Sidecar problem, ACID, consistency, single API</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--pr);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--pr);margin-bottom:0.5rem;">04</div>
+        <h3 style="font-size:0.95rem;">Positioning &amp; Battlecard</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">When to compete, when to concede, key talking points</p>
+      </div>
+    </div>
+    <!-- Visual: Four section flow -->
+    <div class="reveal reveal-d2" style="margin-top:2rem;display:flex;justify-content:center;">
+      <svg width="600" height="56" viewBox="0 0 600 56" fill="none" style="max-width:100%;">
+        <circle cx="75" cy="28" r="18" fill="none" stroke="#FED10A" stroke-width="1.5"/>
+        <text x="75" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#FED10A">01</text>
+        <line x1="93" y1="28" x2="207" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="225" cy="28" r="18" fill="none" stroke="#22D3EE" stroke-width="1.5"/>
+        <text x="225" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#22D3EE">02</text>
+        <line x1="243" y1="28" x2="357" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="375" cy="28" r="18" fill="none" stroke="#00ED64" stroke-width="1.5"/>
+        <text x="375" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00ED64">03</text>
+        <line x1="393" y1="28" x2="507" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="525" cy="28" r="18" fill="none" stroke="#A78BFA" stroke-width="1.5"/>
+        <text x="525" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#A78BFA">04</text>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 3: ELASTIC PRODUCT PORTFOLIO ════════════ -->
+<div class="slide" id="s-eco" data-title="Elastic Portfolio">
+  <div class="slide-inner">
+    <div class="label l-e reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 8h16M4 12h12M4 16h16" stroke="#FED10A" stroke-width="2" stroke-linecap="round"/></svg>
+      Section 01 — Elastic Ecosystem
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Elastic Product Portfolio</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.95rem;margin-bottom:2rem;">Three core solutions, each bundling Elasticsearch with purpose-built tooling.</p>
+
+    <div class="g3 reveal reveal-d2">
+      <!-- Search -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+          <div class="icon-circle" style="background:rgba(254,209,10,0.1);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="#FED10A" stroke-width="2"/><line x1="15.5" y1="15.5" x2="20" y2="20" stroke="#FED10A" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <h3 style="color:var(--ey);">Search</h3>
+        </div>
+        <p style="font-size:0.82rem;color:var(--tx2);line-height:1.5;">Enterprise, site, app, &amp; workplace search. Heavy investment in AI/vector search, RAG workflows, semantic_text, and ELSER (sparse encoder).</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.75rem;">
+          <span class="tag">App Search</span><span class="tag">Workplace</span><span class="tag">Vector/kNN</span><span class="tag">RAG</span><span class="tag">ELSER</span>
+        </div>
+      </div>
+      <!-- Observability -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+          <div class="icon-circle" style="background:rgba(34,211,238,0.1);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><polyline points="3,17 8,11 13,14 21,6" stroke="#22D3EE" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/><polyline points="17,6 21,6 21,10" stroke="#22D3EE" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3 style="color:var(--cy);">Observability</h3>
+        </div>
+        <p style="font-size:0.82rem;color:var(--tx2);line-height:1.5;">Unified logs, metrics, traces, APM. 2025 Gartner MQ Leader. Infrastructure monitoring, SLOs, and OpenTelemetry support (EDOT).</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.75rem;">
+          <span class="tag">Logs</span><span class="tag">Metrics</span><span class="tag">APM</span><span class="tag">Traces</span><span class="tag">SLOs</span><span class="tag">OTel</span>
+        </div>
+      </div>
+      <!-- Security -->
+      <div class="card">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem;">
+          <div class="icon-circle" style="background:rgba(240,78,152,0.1);">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 7v5c0 5.5 3.8 10.7 9 12 5.2-1.3 9-6.5 9-12V7L12 2z" stroke="#F04E98" stroke-width="2" fill="none"/><polyline points="9,12 11,14 15,10" stroke="#F04E98" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <h3 style="color:var(--ep);">Security</h3>
+        </div>
+        <p style="font-size:0.82rem;color:var(--tx2);line-height:1.5;">SIEM with prebuilt detection rules, ML anomaly detection, endpoint protection, attack discovery, threat intelligence. AI-assisted SIEM migration.</p>
+        <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.75rem;">
+          <span class="tag">SIEM</span><span class="tag">Endpoint</span><span class="tag">Threat Intel</span><span class="tag">ML</span><span class="tag">XDR</span>
+        </div>
+      </div>
+    </div>
+    <div class="callout callout-e reveal reveal-d3" style="margin-top:1.25rem;">
+      <strong>Key takeaway:</strong> Establish early if the customer needs <em>search within an OLTP application</em> (our sweet spot) or <em>observability / security / log analytics</em> (Elastic's home turf).
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 4: THE ELASTIC STACK ════════════ -->
+<div class="slide" id="s-stack" data-title="Elastic Stack">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:0.5rem;">The Elastic Stack</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.9rem;margin-bottom:1.5rem;">Five layers powering all Elastic solutions. Each adds operational surface area.</p>
+
+    <!-- Visual Stack Diagram -->
+    <div class="reveal reveal-d1" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="520" height="90" viewBox="0 0 520 90" fill="none" style="max-width:100%;">
+        <!-- Beats -->
+        <rect x="0" y="5" width="90" height="80" rx="10" fill="#111923" stroke="#22D3EE" stroke-width="1.2"/>
+        <text x="45" y="38" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#22D3EE">BEATS</text>
+        <text x="45" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Data Shippers</text>
+        <text x="45" y="64" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">+ Elastic Agent</text>
+        <!-- Arrow -->
+        <path d="M94 45 L118 45" stroke="#243348" stroke-width="1.5" marker-end="url(#arw)"/>
+        <!-- Logstash -->
+        <rect x="122" y="5" width="90" height="80" rx="10" fill="#111923" stroke="#A78BFA" stroke-width="1.2"/>
+        <text x="167" y="38" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#A78BFA">LOGSTASH</text>
+        <text x="167" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">ETL / Transform</text>
+        <text x="167" y="64" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">200+ Plugins</text>
+        <!-- Arrow -->
+        <path d="M216 45 L240 45" stroke="#243348" stroke-width="1.5" marker-end="url(#arw)"/>
+        <!-- Elasticsearch -->
+        <rect x="244" y="0" width="110" height="90" rx="10" fill="#111923" stroke="#FED10A" stroke-width="1.8"/>
+        <text x="299" y="34" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#FED10A">ELASTICSEARCH</text>
+        <text x="299" y="48" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Index &amp; Search</text>
+        <text x="299" y="60" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">Lucene · Shards · kNN</text>
+        <text x="299" y="72" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">Aggregations · ML</text>
+        <!-- Arrow -->
+        <path d="M358 45 L382 45" stroke="#243348" stroke-width="1.5" marker-end="url(#arw)"/>
+        <!-- Kibana -->
+        <rect x="386" y="5" width="90" height="80" rx="10" fill="#111923" stroke="#F04E98" stroke-width="1.2"/>
+        <text x="431" y="38" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#F04E98">KIBANA</text>
+        <text x="431" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">UI / Dashboards</text>
+        <text x="431" y="64" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">Lens · Discover · ML</text>
+        <defs><marker id="arw" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#243348"/></marker></defs>
+      </svg>
+    </div>
+
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="padding:1.25rem;">
+        <div class="stack-row">
+          <div class="icon-circle" style="background:rgba(34,211,238,0.1);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2v4m0 12v4M2 12h4m12 0h4" stroke="#22D3EE" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="#22D3EE" stroke-width="2" fill="none"/></svg>
+          </div>
+          <div>
+            <h4>Beats &amp; Elastic Agent</h4>
+            <p>Filebeat, Metricbeat, Packetbeat, Winlogbeat, Heartbeat, Auditbeat. Elastic Agent unifies all into one binary managed via Fleet. EDOT for OpenTelemetry.</p>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="icon-circle" style="background:rgba(167,139,250,0.1);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 4h16v16H4z" stroke="#A78BFA" stroke-width="2" fill="none" rx="2"/><path d="M4 9h16M9 9v11" stroke="#A78BFA" stroke-width="1.5"/></svg>
+          </div>
+          <div>
+            <h4>Logstash</h4>
+            <p>Heavy ETL pipeline: 200+ input/filter/output plugins. Grok, dissect, mutate, GeoIP. Alternative: lighter ingest pipelines inside Elasticsearch with ML inference.</p>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <div class="stack-row">
+          <div class="icon-circle" style="background:rgba(254,209,10,0.1);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#FED10A" stroke-width="2" fill="none"/><path d="M7 9h10M7 12h8M7 15h10" stroke="#FED10A" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <h4>Elasticsearch Engine</h4>
+            <p>Distributed Lucene-based storage &amp; search. JSON documents, shard management, aggregations, vector DB (dense_vector, HNSW, kNN), ES|QL query language.</p>
+          </div>
+        </div>
+        <div class="stack-row">
+          <div class="icon-circle" style="background:rgba(240,78,152,0.1);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#F04E98" stroke-width="2" fill="none"/><circle cx="8" cy="15" r="2" fill="#F04E98"/><circle cx="12" cy="10" r="2" fill="#F04E98"/><circle cx="16" cy="13" r="2" fill="#F04E98"/></svg>
+          </div>
+          <div>
+            <h4>Kibana</h4>
+            <p>Unified UI: Discover, Lens dashboards, Canvas reports, Maps, ML jobs, Dev Tools console, AI Assistant. Management for Fleet, alerting, index lifecycle.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="reveal reveal-d3" style="font-size:0.82rem;color:var(--tx2);margin-top:1rem;text-align:center;"><strong>Integrations Marketplace:</strong> 300+ pre-built integrations (AWS, GCP, Azure, Kubernetes, Okta, GitHub, Salesforce…) with dashboards, ingest pipelines, and detection rules included.</p>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 5: INDEX ARCHITECTURE ════════════ -->
+<div class="slide" id="s-arch" data-title="Index Architecture">
+  <div class="slide-inner">
+    <div class="label l-e reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="10.5" cy="10.5" r="6.5" stroke="#FED10A" stroke-width="2"/><line x1="15.5" y1="15.5" x2="20" y2="20" stroke="#FED10A" stroke-width="2" stroke-linecap="round"/></svg>
+      Section 02 — Search Deep Dive
+    </div>
+    <h2 class="reveal reveal-d1">Lucene Index Architecture</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.9rem;margin-bottom:1.75rem;">Elasticsearch's power — and limitations — stem from Apache Lucene's immutable segment design.</p>
+
+    <!-- Visual: Inverted Index vs B-Tree -->
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.75rem;">
+      <svg width="700" height="180" viewBox="0 0 700 180" fill="none" style="max-width:100%;">
+        <!-- Inverted Index side -->
+        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#FED10A">Elastic — Inverted Index</text>
+        <rect x="10" y="28" width="80" height="24" rx="4" fill="#1a2538"/><text x="50" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#FED10A">"mongodb"</text>
+        <rect x="10" y="58" width="80" height="24" rx="4" fill="#1a2538"/><text x="50" y="74" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#FED10A">"search"</text>
+        <rect x="10" y="88" width="80" height="24" rx="4" fill="#1a2538"/><text x="50" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#FED10A">"vector"</text>
+        <rect x="10" y="118" width="80" height="24" rx="4" fill="#1a2538"/><text x="50" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#FED10A">"atlas"</text>
+        <!-- Arrows to doc IDs -->
+        <line x1="94" y1="40" x2="120" y2="40" stroke="#FED10A" stroke-width="1" opacity="0.4"/>
+        <line x1="94" y1="70" x2="120" y2="70" stroke="#FED10A" stroke-width="1" opacity="0.4"/>
+        <line x1="94" y1="100" x2="120" y2="100" stroke="#FED10A" stroke-width="1" opacity="0.4"/>
+        <line x1="94" y1="130" x2="120" y2="130" stroke="#FED10A" stroke-width="1" opacity="0.4"/>
+        <!-- Doc IDs -->
+        <rect x="124" y="28" width="160" height="24" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="204" y="44" text-anchor="middle" font-family="JetBrains Mono" font-size="7.5" fill="#8694a8">→ doc1, doc3, doc7, doc12</text>
+        <rect x="124" y="58" width="160" height="24" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="204" y="74" text-anchor="middle" font-family="JetBrains Mono" font-size="7.5" fill="#8694a8">→ doc1, doc2, doc5, doc9</text>
+        <rect x="124" y="88" width="160" height="24" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="204" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="7.5" fill="#8694a8">→ doc2, doc8, doc11</text>
+        <rect x="124" y="118" width="160" height="24" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="204" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="7.5" fill="#8694a8">→ doc1, doc4, doc6</text>
+        <text x="165" y="165" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#4f5e72">Terms → Sorted Doc ID Lists (Immutable Segments)</text>
+
+        <!-- Divider -->
+        <line x1="350" y1="28" x2="350" y2="145" stroke="#1a2538" stroke-width="1" stroke-dasharray="4 3"/>
+
+        <!-- B-Tree side -->
+        <text x="530" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#00ED64">MongoDB — B-Tree Index</text>
+        <!-- Root -->
+        <rect x="495" y="28" width="70" height="22" rx="4" fill="#1a2538"/>
+        <text x="530" y="43" text-anchor="middle" font-family="JetBrains Mono" font-size="7.5" fill="#00ED64">M | S</text>
+        <!-- Branches -->
+        <line x1="510" y1="50" x2="460" y2="68" stroke="#00ED64" stroke-width="0.8" opacity="0.4"/>
+        <line x1="530" y1="50" x2="530" y2="68" stroke="#00ED64" stroke-width="0.8" opacity="0.4"/>
+        <line x1="550" y1="50" x2="600" y2="68" stroke="#00ED64" stroke-width="0.8" opacity="0.4"/>
+        <rect x="425" y="68" width="70" height="22" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="460" y="83" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#8694a8">A | E | L</text>
+        <rect x="495" y="68" width="70" height="22" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="530" y="83" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#8694a8">M | O | R</text>
+        <rect x="565" y="68" width="70" height="22" rx="4" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <text x="600" y="83" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#8694a8">S | T | V</text>
+        <!-- Leaf pointers -->
+        <line x1="445" y1="90" x2="430" y2="108" stroke="#00ED64" stroke-width="0.6" opacity="0.3"/>
+        <line x1="460" y1="90" x2="460" y2="108" stroke="#00ED64" stroke-width="0.6" opacity="0.3"/>
+        <line x1="475" y1="90" x2="490" y2="108" stroke="#00ED64" stroke-width="0.6" opacity="0.3"/>
+        <rect x="415" y="108" width="30" height="18" rx="3" fill="#0d1219" stroke="#00ed64" stroke-width="0.8" opacity="0.5"/><text x="430" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#00ed64" opacity="0.7">→doc</text>
+        <rect x="445" y="108" width="30" height="18" rx="3" fill="#0d1219" stroke="#00ed64" stroke-width="0.8" opacity="0.5"/><text x="460" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#00ed64" opacity="0.7">→doc</text>
+        <rect x="475" y="108" width="30" height="18" rx="3" fill="#0d1219" stroke="#00ed64" stroke-width="0.8" opacity="0.5"/><text x="490" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#00ed64" opacity="0.7">→doc</text>
+        <text x="530" y="165" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#4f5e72">Keys → Balanced Tree → Document Pointers (Mutable)</text>
+      </svg>
+    </div>
+
+    <div class="g2 reveal reveal-d3">
+      <div class="callout callout-e"><strong>Immutable segments:</strong> Lucene never updates in place. Updates = delete + re-insert. Segments merge periodically. Data visible only after async refresh (~1s).</div>
+      <div class="callout callout-e"><strong>Shard model:</strong> Primary shard count fixed at index creation. Changing requires full reindex — expensive, disruptive, and read-only during the process.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 6: FIELD TYPES ════════════ -->
+<div class="slide scrollable" id="s-fields" data-title="Field Types">
+  <div class="slide-inner">
+    <h2 class="reveal">Field Types &amp; Mappings</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.25rem;">Elastic's type system is far more granular than MongoDB BSON. <strong style="color:var(--rd);">Changing a field type requires reindexing the entire index.</strong></p>
+    <div class="tw reveal reveal-d2">
+      <table>
+        <thead><tr><th>Category</th><th>Elastic Type</th><th>Purpose</th><th>MongoDB Analogy</th></tr></thead>
+        <tbody>
+          <tr><td rowspan="3"><strong>Text</strong></td><td><code>text</code></td><td>Full-text search with analysis. Not sortable.</td><td>Atlas Search text field</td></tr>
+          <tr><td><code>keyword</code></td><td>Exact-match, sort, agg. No analysis. Doc values.</td><td>String + index</td></tr>
+          <tr><td><code>match_only_text</code></td><td>Space-optimized text. Omits norms/positions.</td><td>—</td></tr>
+          <tr><td rowspan="3"><strong>Numeric</strong></td><td><code>long</code> / <code>integer</code> / <code>short</code></td><td>Whole numbers at varying precision.</td><td>int32 / int64</td></tr>
+          <tr><td><code>double</code> / <code>float</code> / <code>half_float</code></td><td>Floating-point. half_float = 16-bit.</td><td>BSON double</td></tr>
+          <tr><td><code>scaled_float</code></td><td>Fixed-point stored as long × scale factor.</td><td>Decimal128</td></tr>
+          <tr><td rowspan="3"><strong>Structured</strong></td><td><code>object</code></td><td>Flat JSON. Arrays lose cross-field correlation.</td><td>Embedded doc</td></tr>
+          <tr><td><code>nested</code></td><td>Each element = hidden doc + join. Expensive. Hard limits (50 fields, 10K objects).</td><td><code>$elemMatch</code> (native)</td></tr>
+          <tr><td><code>flattened</code></td><td>Entire object as keywords. Prevents mapping explosion.</td><td>Wildcard index</td></tr>
+          <tr><td rowspan="3"><strong>Vector / AI</strong></td><td><code>dense_vector</code></td><td>Float/byte/bit arrays for kNN. HNSW. Up to 4096 dims.</td><td>Atlas Vector Search</td></tr>
+          <tr><td><code>sparse_vector</code></td><td>Token/weight pairs for ELSER / SPLADE models.</td><td>—</td></tr>
+          <tr><td><code>semantic_text</code></td><td>Auto-embeds at index + query time via inference.</td><td>—</td></tr>
+          <tr><td rowspan="3"><strong>Geo</strong></td><td><code>geo_point</code></td><td>Lat/lon pairs. Distance queries + geo aggs.</td><td>2dsphere</td></tr>
+          <tr><td><code>geo_shape</code></td><td>Polygons, linestrings, envelopes.</td><td>$geoWithin</td></tr>
+          <tr><td><code>point</code> / <code>shape</code></td><td>Cartesian (non-geographic) 2D coordinates.</td><td>—</td></tr>
+          <tr><td rowspan="3"><strong>Specialty</strong></td><td><code>date</code> / <code>date_nanos</code></td><td>Timestamps: ms or ns precision.</td><td>BSON Date</td></tr>
+          <tr><td><code>ip</code></td><td>IPv4/IPv6 with CIDR range queries.</td><td>String</td></tr>
+          <tr><td><code>percolator</code></td><td>"Reverse search" — stores queries, matches incoming docs.</td><td>—</td></tr>
+          <tr><td><strong>Join</strong></td><td><code>join</code></td><td>Parent-child relationships within one index.</td><td>$lookup</td></tr>
+          <tr><td><strong>Ranking</strong></td><td><code>rank_feature</code></td><td>Numeric features to boost relevance at query time.</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 7: AGGREGATIONS ════════════ -->
+<div class="slide" id="s-agg" data-title="Aggregations">
+  <div class="slide-inner">
+    <h2 class="reveal">Aggregation Framework</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Elastic's aggregation system is genuinely broader than MongoDB's for statistical analytics — moving averages, percentiles, t-tests, derivatives are all built-in.</p>
+    <div class="g2 reveal reveal-d2" style="gap:1rem;">
+      <div class="card">
+        <h3 style="font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="3" y="12" width="4" height="9" fill="#FED10A"/><rect x="10" y="6" width="4" height="15" fill="#FED10A"/><rect x="17" y="3" width="4" height="18" fill="#FED10A"/></svg>
+          Bucket Aggregations
+        </h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-bottom:0.5rem;">Group documents into buckets by criteria.</p>
+        <div class="agg-pills">
+          <span class="agg-pill">terms</span><span class="agg-pill">range</span><span class="agg-pill">date_histogram</span><span class="agg-pill">histogram</span><span class="agg-pill">filter</span><span class="agg-pill">filters</span><span class="agg-pill">composite</span><span class="agg-pill">nested</span><span class="agg-pill">significant_terms</span><span class="agg-pill">rare_terms</span><span class="agg-pill">geohash_grid</span><span class="agg-pill">sampler</span><span class="agg-pill">adjacency_matrix</span><span class="agg-pill">multi_terms</span><span class="agg-pill">variable_width_histogram</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#22D3EE" stroke-width="2" fill="none"/><text x="12" y="16" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#22D3EE">Σ</text></svg>
+          Metric Aggregations
+        </h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-bottom:0.5rem;">Compute statistics across document sets.</p>
+        <div class="agg-pills">
+          <span class="agg-pill">avg</span><span class="agg-pill">sum</span><span class="agg-pill">min</span><span class="agg-pill">max</span><span class="agg-pill">cardinality</span><span class="agg-pill">stats</span><span class="agg-pill">extended_stats</span><span class="agg-pill">percentiles</span><span class="agg-pill">percentile_ranks</span><span class="agg-pill">weighted_avg</span><span class="agg-pill">median_abs_deviation</span><span class="agg-pill">geo_centroid</span><span class="agg-pill">top_hits</span><span class="agg-pill">scripted_metric</span><span class="agg-pill">t_test</span><span class="agg-pill">rate</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polyline points="3,17 8,11 13,14 21,6" stroke="#A78BFA" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+          Pipeline Aggregations
+        </h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-bottom:0.5rem;">Calculations on outputs of other aggregations.</p>
+        <div class="agg-pills">
+          <span class="agg-pill">moving_avg</span><span class="agg-pill">moving_fn</span><span class="agg-pill">derivative</span><span class="agg-pill">cumulative_sum</span><span class="agg-pill">cumulative_cardinality</span><span class="agg-pill">serial_diff</span><span class="agg-pill">bucket_script</span><span class="agg-pill">bucket_selector</span><span class="agg-pill">bucket_sort</span><span class="agg-pill">normalize</span><span class="agg-pill">inference</span><span class="agg-pill">avg_bucket</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3 style="font-size:0.9rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="8" r="4" stroke="#F04E98" stroke-width="1.5" fill="none"/><circle cx="16" cy="16" r="4" stroke="#F04E98" stroke-width="1.5" fill="none"/><line x1="11" y1="11" x2="13" y2="13" stroke="#F04E98" stroke-width="1.5"/></svg>
+          Matrix &amp; ML
+        </h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-bottom:0.5rem;">Multi-field statistics and machine learning.</p>
+        <div class="agg-pills">
+          <span class="agg-pill">matrix_stats</span><span class="agg-pill">anomaly detection</span><span class="agg-pill">classification</span><span class="agg-pill">regression</span><span class="agg-pill">outlier detection</span><span class="agg-pill">NLP inference</span><span class="agg-pill">data frame analytics</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 8: ILM + ADVANCED ════════════ -->
+<div class="slide" id="s-ilm" data-title="ILM & Advanced">
+  <div class="slide-inner">
+    <h2 class="reveal">ILM &amp; Advanced Features</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Index Lifecycle Management, doc values, and global ordinals — features that come up in deep technical comparisons.</p>
+
+    <!-- ILM Visual -->
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="640" height="80" viewBox="0 0 640 80" fill="none" style="max-width:100%;">
+        <rect x="0" y="10" width="110" height="60" rx="8" fill="#111923" stroke="#00ED64" stroke-width="1.2"/>
+        <text x="55" y="36" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ED64">HOT</text>
+        <text x="55" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Write + Query</text>
+        <text x="55" y="63" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">Full replicas</text>
+        <path d="M114 40 L132 40" stroke="#243348" stroke-width="1.5" marker-end="url(#arw2)"/>
+        <rect x="136" y="10" width="110" height="60" rx="8" fill="#111923" stroke="#FED10A" stroke-width="1.2"/>
+        <text x="191" y="36" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#FED10A">WARM</text>
+        <text x="191" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Read-only</text>
+        <text x="191" y="63" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">Force-merged</text>
+        <path d="M250 40 L268 40" stroke="#243348" stroke-width="1.5" marker-end="url(#arw2)"/>
+        <rect x="272" y="10" width="110" height="60" rx="8" fill="#111923" stroke="#A78BFA" stroke-width="1.2"/>
+        <text x="327" y="36" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#A78BFA">COLD</text>
+        <text x="327" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Searchable snaps</text>
+        <text x="327" y="63" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">Minimal resources</text>
+        <path d="M386 40 L404 40" stroke="#243348" stroke-width="1.5" marker-end="url(#arw2)"/>
+        <rect x="408" y="10" width="110" height="60" rx="8" fill="#111923" stroke="#4f5e72" stroke-width="1.2"/>
+        <text x="463" y="36" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#5a6578">FROZEN</text>
+        <text x="463" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">S3 / Object store</text>
+        <text x="463" y="63" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#4f5e72">On-demand load</text>
+        <path d="M522 40 L540 40" stroke="#243348" stroke-width="1.5" marker-end="url(#arw2)"/>
+        <rect x="544" y="10" width="90" height="60" rx="8" fill="#111923" stroke="#f87171" stroke-width="1.2"/>
+        <text x="589" y="36" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#f87171">DELETE</text>
+        <text x="589" y="52" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Auto-purge</text>
+        <defs><marker id="arw2" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#243348"/></marker></defs>
+      </svg>
+    </div>
+
+    <div class="g2 reveal reveal-d3">
+      <div class="card" style="padding:1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7" rx="1" fill="#FED10A" opacity="0.7"/><rect x="14" y="3" width="7" height="7" rx="1" fill="#FED10A" opacity="0.5"/><rect x="3" y="14" width="7" height="7" rx="1" fill="#FED10A" opacity="0.3"/><rect x="14" y="14" width="7" height="7" rx="1" fill="#FED10A" opacity="0.15"/></svg>
+          Doc Values &amp; Columnar Storage
+        </h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.5;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Doc Values:</strong> On-disk columnar structure for all non-text fields. Enables fast sort/agg/scripting without the inverted index.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.5;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Fielddata:</strong> In-memory text field structure for sort/agg (disabled by default — extremely expensive).</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.5;"><strong style="color:var(--tx);">_source vs stored fields:</strong> Full JSON in _source by default. Can store individual fields for selective retrieval.</p>
+      </div>
+      <div class="card" style="padding:1.3rem;">
+        <h3 style="font-size:0.9rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#22D3EE" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="5" stroke="#22D3EE" stroke-width="1.5" fill="none"/><circle cx="12" cy="12" r="1.5" fill="#22D3EE"/></svg>
+          Global Ordinals &amp; Norms
+        </h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.5;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Global Ordinals:</strong> Compact integer mapping for keyword values, shared across segments. Speeds up terms aggs on high-cardinality fields.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.5;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Norms:</strong> Per-field normalization factors for relevance scoring. Disable to save disk on filter-only fields.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.5;"><strong style="color:var(--tx);">Similarity:</strong> BM25 (default), DFR, DFI, IB, and scripted similarity. Atlas Search also uses BM25.</p>
+      </div>
+    </div>
+    <p class="reveal reveal-d4" style="font-size:0.8rem;color:var(--tx3);margin-top:1rem;text-align:center;"><strong>Index Templates</strong> auto-apply mappings, settings &amp; ILM policies to new indices matching a pattern. <strong>Component Templates</strong> are reusable building blocks. Purpose-built for time-series data.</p>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 9: VECTOR SEARCH ════════════ -->
+<div class="slide" id="s-vec" data-title="Vector Search">
+  <div class="slide-inner">
+    <h2 class="reveal">Vector Search — Head to Head</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Both platforms use HNSW via Lucene. The difference is operational — not algorithmic.</p>
+
+    <!-- Visual: Vector space -->
+    <div class="reveal reveal-d1" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="500" height="120" viewBox="0 0 500 120" fill="none" style="max-width:100%;">
+        <!-- Elastic side -->
+        <text x="120" y="14" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#FED10A">Elastic kNN</text>
+        <rect x="10" y="22" width="220" height="88" rx="10" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <!-- Dots representing vectors -->
+        <circle cx="45" cy="55" r="3" fill="#FED10A" opacity="0.3"/><circle cx="78" cy="42" r="3" fill="#FED10A" opacity="0.4"/>
+        <circle cx="62" cy="78" r="3" fill="#FED10A" opacity="0.3"/><circle cx="110" cy="60" r="3" fill="#FED10A" opacity="0.5"/>
+        <circle cx="95" cy="85" r="3" fill="#FED10A" opacity="0.3"/><circle cx="140" cy="48" r="3" fill="#FED10A" opacity="0.4"/>
+        <circle cx="155" cy="72" r="3" fill="#FED10A" opacity="0.3"/><circle cx="180" cy="55" r="3" fill="#FED10A" opacity="0.5"/>
+        <circle cx="195" cy="82" r="3" fill="#FED10A" opacity="0.3"/>
+        <!-- Query vector -->
+        <circle cx="120" cy="65" r="5" fill="none" stroke="#FED10A" stroke-width="2"/>
+        <circle cx="120" cy="65" r="12" fill="none" stroke="#FED10A" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.5"/>
+        <!-- HNSW lines -->
+        <line x1="78" y1="42" x2="110" y2="60" stroke="#FED10A" stroke-width="0.5" opacity="0.25"/>
+        <line x1="110" y1="60" x2="140" y2="48" stroke="#FED10A" stroke-width="0.5" opacity="0.25"/>
+        <line x1="110" y1="60" x2="120" y2="65" stroke="#FED10A" stroke-width="0.5" opacity="0.25"/>
+        <text x="120" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">dense_vector + kNN query</text>
+
+        <!-- MongoDB side -->
+        <text x="380" y="14" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#00ED64">MongoDB $vectorSearch</text>
+        <rect x="270" y="22" width="220" height="88" rx="10" fill="#111923" stroke="#1a2538" stroke-width="1"/>
+        <circle cx="305" cy="55" r="3" fill="#00ED64" opacity="0.3"/><circle cx="338" cy="42" r="3" fill="#00ED64" opacity="0.4"/>
+        <circle cx="322" cy="78" r="3" fill="#00ED64" opacity="0.3"/><circle cx="370" cy="60" r="3" fill="#00ED64" opacity="0.5"/>
+        <circle cx="355" cy="85" r="3" fill="#00ED64" opacity="0.3"/><circle cx="400" cy="48" r="3" fill="#00ED64" opacity="0.4"/>
+        <circle cx="415" cy="72" r="3" fill="#00ED64" opacity="0.3"/><circle cx="440" cy="55" r="3" fill="#00ED64" opacity="0.5"/>
+        <circle cx="455" cy="82" r="3" fill="#00ED64" opacity="0.3"/>
+        <circle cx="380" cy="65" r="5" fill="none" stroke="#00ED64" stroke-width="2"/>
+        <circle cx="380" cy="65" r="12" fill="none" stroke="#00ED64" stroke-width="0.5" stroke-dasharray="3 2" opacity="0.5"/>
+        <line x1="338" y1="42" x2="370" y2="60" stroke="#00ED64" stroke-width="0.5" opacity="0.25"/>
+        <line x1="370" y1="60" x2="400" y2="48" stroke="#00ED64" stroke-width="0.5" opacity="0.25"/>
+        <line x1="370" y1="60" x2="380" y2="65" stroke="#00ED64" stroke-width="0.5" opacity="0.25"/>
+        <text x="380" y="104" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">$vectorSearch agg stage</text>
+        <!-- Same algorithm callout -->
+        <text x="250" y="62" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#4f5e72" transform="rotate(-90 250 62)">SAME HNSW</text>
+      </svg>
+    </div>
+
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--ey);padding:1.3rem;">
+        <h3 style="font-size:0.92rem;color:var(--ey);margin-bottom:0.6rem;">Elastic Vector Features</h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;">Float, byte &amp; bit element types. Up to 4096 dims. Quantization: int8, int4, BBQ. GPU-accelerated indexing. Cosine, dot_product, l2_norm, max_inner_product. ELSER sparse encoder. Hybrid via RRF or FORK+FUSE in ES|QL. semantic_text auto-embedding.</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);padding:1.3rem;">
+        <h3 style="font-size:0.92rem;color:var(--mg);margin-bottom:0.6rem;">MongoDB Vector Features</h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;">$vectorSearch as agg stage — chains with $match, $project, $lookup in one query. Pre-filtering via Atlas Search index. Scalar &amp; binary quantization. Cosine, euclidean, dotProduct. <strong style="color:var(--mg);">Vectors stored alongside transactional data. No sync pipeline. No separate cluster.</strong></p>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>The real differentiator isn't the algorithm — it's the architecture.</strong> Elastic requires a separate vector cluster. MongoDB stores vectors alongside your OLTP data. For RAG applications that need to read, write, and search vectors within the same transaction, MongoDB eliminates an entire integration layer.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 10: SIDECAR PROBLEM ════════════ -->
+<div class="slide" id="s-wins" data-title="Sidecar Problem">
+  <div class="slide-inner">
+    <div class="label l-m reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 12.5 7 12.5 9.5C12.5 12 14 13.5 15.3 15C16.6 16.5 17 18 17 19.5C17 23 14.3 26 11.5 27C11.5 27 12 23.5 12 22.5C12 21.5 10.8 19.8 9.5 18.5C8.2 17.2 7 15.5 7 13C7 9 9.5 5.5 12 2Z" fill="#00ED64" transform="scale(0.75) translate(4,2)"/></svg>
+      Section 03 — Where MongoDB Wins
+    </div>
+    <h2 class="reveal reveal-d1">The Sidecar Problem</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.9rem;margin-bottom:1.5rem;">In most deployments, Elasticsearch runs <em>alongside</em> a primary database. This dual-system architecture multiplies every cost.</p>
+
+    <!-- Sidecar Architecture Visual -->
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="680" height="210" viewBox="0 0 680 210" fill="none" style="max-width:100%;">
+        <!-- App layer -->
+        <rect x="230" y="0" width="220" height="40" rx="8" fill="#111923" stroke="#8694a8" stroke-width="1"/>
+        <text x="340" y="24" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="10" fill="#8694a8">Application Layer</text>
+        <!-- Arrows down -->
+        <path d="M280 40 L280 60 L140 60 L140 80" stroke="#22D3EE" stroke-width="1.2" fill="none" marker-end="url(#arw3)"/>
+        <path d="M400 40 L400 60 L540 60 L540 80" stroke="#FED10A" stroke-width="1.2" fill="none" marker-end="url(#arw4)"/>
+        <text x="200" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#22D3EE">MQL / SQL</text>
+        <text x="480" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#FED10A">ES DSL / REST</text>
+        <!-- OLTP DB -->
+        <rect x="40" y="82" width="200" height="70" rx="10" fill="#111923" stroke="#22D3EE" stroke-width="1.5"/>
+        <text x="140" y="110" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#22D3EE">OLTP Database</text>
+        <text x="140" y="126" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Source of truth · ACID · CRUD</text>
+        <text x="140" y="140" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">PostgreSQL / MySQL / MongoDB</text>
+        <!-- Elasticsearch -->
+        <rect x="440" y="82" width="200" height="70" rx="10" fill="#111923" stroke="#FED10A" stroke-width="1.5"/>
+        <text x="540" y="110" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#FED10A">Elasticsearch</text>
+        <text x="540" y="126" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Search sidecar · Eventually consistent</text>
+        <text x="540" y="140" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Separate cluster · Separate API</text>
+        <!-- Sync arrow -->
+        <path d="M244 117 L436 117" stroke="#f87171" stroke-width="1.5" stroke-dasharray="6 3" marker-end="url(#arw5)"/>
+        <text x="340" y="112" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="8" fill="#f87171">CDC / ETL SYNC</text>
+        <!-- Danger callouts -->
+        <rect x="270" y="170" width="140" height="32" rx="6" fill="rgba(248,113,113,0.08)" stroke="#f87171" stroke-width="0.8"/>
+        <text x="340" y="184" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="7.5" fill="#f87171">⚠ Data drift risk</text>
+        <text x="340" y="196" text-anchor="middle" font-family="DM Sans" font-size="6.5" fill="#f87171" opacity="0.7">2 systems · 2 APIs · 2 cost centers</text>
+        <defs>
+          <marker id="arw3" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#22D3EE"/></marker>
+          <marker id="arw4" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#FED10A"/></marker>
+          <marker id="arw5" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#f87171"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="callout callout-r reveal reveal-d3">
+      <strong>The cost:</strong> Two systems to operate, monitor, scale, and secure. A CDC pipeline to build, maintain, and debug when data drifts. Two query languages. Two mental models. Two cost centers. Two failure domains. <strong style="color:var(--mg);">MongoDB with Atlas Search eliminates this entirely.</strong>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 11: MONGODB ADVANTAGES ════════════ -->
+<div class="slide scrollable" id="s-adv" data-title="MongoDB Advantages">
+  <div class="slide-inner">
+    <h2 class="reveal">MongoDB's Right to Win</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">OLTP + Search unified — one platform, one API, one cluster.</p>
+    <div class="g2 reveal reveal-d2" style="gap:0.85rem;">
+      <div class="adv-card"><h4>🔐 ACID Transactions</h4><p>Multi-document ACID across sharded clusters. Elastic has <strong>zero</strong> multi-doc transactions — only single-doc atomicity with eventual consistency.</p></div>
+      <div class="adv-card"><h4>⚡ Consistency by Default</h4><p>Read-your-writes out of the box. Elastic is "near real-time" — writes visible only after ~1s async refresh. Forcing sync severely degrades performance.</p></div>
+      <div class="adv-card"><h4>🔗 Single API (MQL)</h4><p>CRUD, aggregation, $search, $vectorSearch — all in one pipeline. No need for Elasticsearch DSL, ES|QL, or Painless scripting. One SDK, 12+ languages.</p></div>
+      <div class="adv-card"><h4>🛠️ Operational Simplicity</h4><p>One cluster. No shard-count decisions at creation. No reindexing to rescale. No mapping explosion. No segment merge tuning. Atlas automates everything.</p></div>
+      <div class="adv-card"><h4>📄 Flexible Schema</h4><p>Document model + optional validation. Elastic requires strict mappings — changing a type means reindexing the entire index. Dynamic mapping causes silent type errors.</p></div>
+      <div class="adv-card"><h4>🪆 Native Nested Data</h4><p>Arrays &amp; embedded docs work naturally with $elemMatch. Elastic flattens arrays by default. The nested type is expensive with hard limits (50 fields, 10K objects).</p></div>
+      <div class="adv-card"><h4>✍️ Write Performance</h4><p>Sub-ms writes with immediate visibility. Elastic writes go through immutable segment creation, periodic merges, and the 1s refresh gap. Update-heavy = wrong architecture.</p></div>
+      <div class="adv-card"><h4>🔒 Enterprise Security</h4><p>Client-side field-level encryption (data encrypted before leaving app). Built-in encryption at rest. Fine-grained RBAC, LDAP, x.509, Kerberos. PITR. Live resharding.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 12: COMPARISON MATRIX ════════════ -->
+<div class="slide scrollable" id="s-matrix" data-title="Comparison Matrix">
+  <div class="slide-inner">
+    <h2 class="reveal">Feature Comparison Matrix</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.25rem;">Quick reference for solution architects during customer conversations.</p>
+    <div class="tw reveal reveal-d2">
+      <table>
+        <thead><tr><th>Capability</th><th style="color:var(--ey);">Elasticsearch</th><th style="color:var(--mg);">MongoDB</th></tr></thead>
+        <tbody>
+          <tr><td>Multi-document ACID</td><td class="cx">✗ No</td><td class="ck">✓ Full support</td></tr>
+          <tr><td>Strong consistency</td><td class="cx">✗ Eventually consistent</td><td class="ck">✓ Read-your-writes</td></tr>
+          <tr><td>Write latency</td><td class="pt">~1s visible (refresh delay)</td><td class="ck">✓ Sub-ms + immediate</td></tr>
+          <tr><td>Full-text search (Lucene)</td><td class="ck">✓ Native</td><td class="ck">✓ Atlas Search</td></tr>
+          <tr><td>Vector search (kNN / HNSW)</td><td class="ck">✓ dense_vector</td><td class="ck">✓ $vectorSearch</td></tr>
+          <tr><td>Hybrid search (text + vector)</td><td class="ck">✓ RRF</td><td class="ck">✓ RRF via agg</td></tr>
+          <tr><td>Statistical aggs (moving avg, percentiles)</td><td class="ck">✓ Built-in</td><td class="pt">△ $accumulator / Spark</td></tr>
+          <tr><td>Schema flexibility</td><td class="cx">✗ Rigid, reindex to change</td><td class="ck">✓ Flexible + validation</td></tr>
+          <tr><td>Nested arrays / objects</td><td class="pt">△ Expensive nested type</td><td class="ck">✓ Native, no limits</td></tr>
+          <tr><td>Change streams / CDC</td><td class="cx">✗ Watcher (scheduled)</td><td class="ck">✓ Real-time</td></tr>
+          <tr><td>Transparent failover</td><td class="pt">△ 30s / manual multi-DC</td><td class="ck">✓ Auto, cross-region</td></tr>
+          <tr><td>Point-in-time recovery</td><td class="cx">✗ Snapshot only</td><td class="ck">✓ Continuous + PITR</td></tr>
+          <tr><td>Field-level encryption</td><td class="cx">✗ Not available</td><td class="ck">✓ Client-side FLE</td></tr>
+          <tr><td>Live resharding</td><td class="cx">✗ Requires reindex</td><td class="ck">✓ Online</td></tr>
+          <tr><td>Observability / SIEM</td><td class="ck">✓ World-class</td><td class="cx">✗ Not a focus</td></tr>
+          <tr><td>Integrations marketplace (300+)</td><td class="ck">✓ Extensive</td><td class="pt">△ Partner ecosystem</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 13: POSITIONING ════════════ -->
+<div class="slide" id="s-pos" data-title="Positioning">
+  <div class="slide-inner">
+    <div class="label l-v reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 9l10 6 10-6-10-6z" stroke="#22D3EE" stroke-width="2" fill="none"/><path d="M2 15l10 6 10-6" stroke="#22D3EE" stroke-width="2" fill="none"/></svg>
+      Section 04 — Competitive Positioning
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1.5rem;">When to Compete, When to Concede</h2>
+    <div class="g2 reveal reveal-d2">
+      <div class="pos-card pos-e">
+        <h3 style="color:var(--ey);font-size:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#FED10A" stroke-width="2" fill="none"/><path d="M7 9h10M7 12h8M7 15h10" stroke="#FED10A" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Elastic Is the Right Choice When…
+        </h3>
+        <ul>
+          <li>Primary need is <strong>log analytics, metrics, or observability</strong></li>
+          <li>Customer needs a full <strong>SIEM / endpoint security</strong> platform</li>
+          <li>Workload is <strong>write-once, read-many</strong> with no ACID requirement</li>
+          <li>They need <strong>Elastic Agent / Fleet</strong> for infrastructure monitoring</li>
+          <li>Built-in <strong>ML anomaly detection</strong> coupled with log/metric data</li>
+          <li>Advanced <strong>statistical aggregations</strong> are core requirements</li>
+          <li>Customer has an OLTP DB they're happy with and only needs a search sidecar</li>
+        </ul>
+      </div>
+      <div class="pos-card pos-m">
+        <h3 style="color:var(--mg);font-size:1rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 12.5 7 12.5 9.5C12.5 12 14 13.5 15.3 15C16.6 16.5 17 18 17 19.5C17 23 14.3 26 11.5 27" stroke="#00ED64" stroke-width="2" fill="none" transform="scale(0.82) translate(2.5,0)"/></svg>
+          MongoDB Is the Right Choice When…
+        </h3>
+        <ul>
+          <li>App needs <strong>OLTP + search</strong> on the same data</li>
+          <li>Customer wants to <strong>eliminate sidecar architecture</strong></li>
+          <li><strong>ACID transactions</strong> required alongside search</li>
+          <li>Developers want a <strong>single API (MQL)</strong> for everything</li>
+          <li>Data model has <strong>deeply nested documents and arrays</strong></li>
+          <li><strong>Write-heavy</strong> with sub-ms writes and immediate consistency</li>
+          <li><strong>Vector search for RAG/AI</strong> alongside operational data</li>
+          <li>Enterprise: <strong>FLE, PITR, live resharding, x.509</strong></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 14: BATTLECARD ════════════ -->
+<div class="slide scrollable" id="s-battle" data-title="Battlecard">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:1.5rem;">Battlecard — Key Talking Points</h2>
+    <div class="g2 reveal reveal-d1" style="gap:1.5rem;">
+      <div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--rd);margin-bottom:0.75rem;">When Elastic is Used Next to a DB</h3>
+        <div class="battle-item"><strong>"You're maintaining two systems."</strong> Two clusters to scale, two credential sets, two monitoring dashboards, a CDC pipeline to build/maintain, and two invoice line items.</div>
+        <div class="battle-item"><strong>"What happens when data drifts?"</strong> CDC pipelines fail silently. Search results don't match the app's view from the DB. Debugging cross-system inconsistency is a nightmare.</div>
+        <div class="battle-item"><strong>"Your developers need two query languages."</strong> ES DSL is powerful but fundamentally different from SQL or MQL. That's cognitive overhead on every feature sprint.</div>
+      </div>
+      <div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--rd);margin-bottom:0.75rem;">When Elastic is Used As a Database</h3>
+        <div class="battle-item"><strong>"No ACID transactions."</strong> Any multi-document operation can leave data inconsistent. No rollback, no isolation.</div>
+        <div class="battle-item"><strong>"Worse than eventually consistent."</strong> Writes invisible for ~1s. Sync refresh tanks performance. You can't reliably read your own writes.</div>
+        <div class="battle-item"><strong>"Schema changes are destructive."</strong> Changing a field type = new index + full reindex. Expensive, disruptive, read-only during process.</div>
+        <div class="battle-item"><strong>"Nested data is a tax."</strong> Object arrays get flattened. The nested type fixes it but each element = hidden doc with hard limits.</div>
+        <div class="battle-item"><strong>"30-second failover."</strong> MongoDB is automatic and multi-region. Elastic requires manual intervention for cross-DC.</div>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d2" style="margin-top:1.25rem;">
+      <strong>The one-liner:</strong> <em>"If the customer needs an OLTP database with great search and vector search, they should use MongoDB. If they need a log analytics / observability / SIEM platform with search built in, Elastic is strong. We win when search is part of an operational application — not a standalone analytics layer."</em>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE 15: CLOSING ════════════ -->
+<div class="slide" id="s-end" data-title="Q&A">
+  <div class="hero-glow" style="width:50vw;height:50vw;top:10%;left:25%;background:radial-gradient(circle,rgba(0,237,100,0.04),transparent 65%);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal" style="margin-bottom:2rem;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <path d="M32 4C32 4 33.2 14 33.2 19C33.2 24 36.2 27 38.8 30C41.4 33 42.4 36 42.4 39.5C42.4 46 37.4 52 32 54C32 54 33 47 33 44.5C33 42 30.5 39 28.5 37C26.5 35 24 32 24 27.5C24 19 28.5 11 32 4Z" fill="#00ED64" opacity="0.8"/>
+      </svg>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--mg);margin-bottom:1rem;">End of Briefing</p>
+    <h2 class="reveal reveal-d2" style="margin-bottom:1rem;">Questions &amp; Discussion</h2>
+    <p class="reveal reveal-d3" style="color:var(--tx2);font-size:1rem;max-width:420px;margin:0 auto 2.5rem;font-weight:300;">Know the landscape. Compete honestly. Win where we're strongest.</p>
+    <div class="reveal reveal-d4" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.3rem;border-radius:100px;border:1px solid var(--mg);color:var(--mg);font-weight:600;font-size:0.85rem;">
+      MongoDB Solutions Architecture
+    </div>
+  </div>
+</div>
+
+<script>
+// ====== Slide system ======
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+document.getElementById('totalSlides').textContent = totalSlides;
+
+// Build progress dots
+const dotsContainer = document.getElementById('progDots');
+slides.forEach((_, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'dot';
+  dot.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' }));
+  dotsContainer.appendChild(dot);
+});
+const dots = dotsContainer.querySelectorAll('.dot');
+
+// Track current slide via IntersectionObserver
+let currentSlide = 0;
+const slideObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+      const idx = Array.from(slides).indexOf(entry.target);
+      if (idx >= 0) {
+        currentSlide = idx;
+        // Update counter
+        document.querySelector('#slideCounter span:first-child').textContent = idx + 1;
+        // Update dots
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        // Update nav links
+        const id = entry.target.id;
+        document.querySelectorAll('.nav-links a').forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      }
+    }
+  });
+}, { threshold: 0.4 });
+slides.forEach(s => slideObserver.observe(s));
+
+// ====== Reveal animations ======
+const revealEls = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObs.observe(el));
+
+// ====== Keyboard navigation ======
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+    e.preventDefault();
+    const next = Math.min(currentSlide + 1, totalSlides - 1);
+    slides[next].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    const prev = Math.max(currentSlide - 1, 0);
+    slides[prev].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+</script>
+</body>
+</html>
