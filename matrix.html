@@ -1169,14 +1169,14 @@ flowchart TB
     %% SQL-First Path
     AcidCheck -- Yes --> NormalizationCheck{"**Rigid Data Model**<br>is data is 3rd or 4th Normal form?"}
     AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &lt; 1k/sec?"}
-    NormalizationCheck -- No --> RigidSQL{"RigidSQL<br> is business logic embedded in sql and plsql?"}
-    RigidSQL -- No --> RDBMS["**RDBMS**<br>SQL / Oracle"]
-    RigidSQL -- Yes --> Migrator["**Relational Migrator**<br>Schema Transformation"]
+    NormalizationCheck -- No --> RigidSQL{"**Business Logic Check**<br>Is logic embedded in<br>SQL / PL/SQL?"}
+    RigidSQL -- Yes --> RDBMS["**RDBMS**<br>SQL / Oracle"]
+    RigidSQL -- No --> Migrator["**Relational Migrator**<br>Schema Transformation"]
     Migrator -- extension --> AMP["**MongoDB AMP**"]
     NormalizationCheck -- Datamodel Optimization --> Migrator
     Migrator --> MongoCore["**MongoDB Core**<br>Flexible Schema"]
-    VolCheck -- No --> RDBMS
-    VolCheck -- Yes --> MongoCore
+    VolCheck -- Yes --> RDBMS
+    VolCheck -- No --> MongoCore
     
     %% Code-First Path
     ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
@@ -1191,21 +1191,8 @@ flowchart TB
     QueryCheck -- Yes --> MongoCore
     QueryCheck -- No (Basic Queries) --> MongoCore
     
-    %% MongoDB Core → Business Model (Multi-Tenancy Decision)
-    MongoCore --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
-    
-    %% B2B SaaS - Multi-Tenancy Branch
-    BizModel -- B2B SaaS --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
-    Tenancy -- Silo (1 Deployment per Tenant) --> Silo["**Devops Nightmare**<br>Not enforced by MongoDB even for hardware isolation"]
-    Tenancy -- Pool (Shared DB) --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
-    Isolation -- Logical Isolation --> Logical["**Logical Sharding**<br>Standard Collections"]
-    Isolation -- Physical Isolation --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
-    Logical --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
-    TenantShard --> Agility
-    Silo --> Agility
-    
-    %% Internal App - Direct to Agility
-    BizModel -- Internal App --> Agility
+    %% MongoDB Core → Velocity Check (Business Model / Multi-Tenancy removed — cosmetic only)
+    MongoCore --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
     
     %% Velocity & Scaling
     Agility -- Yes --> AgileVal["**Value: High Agility**<br>Faster Time-to-Market"]
@@ -1281,8 +1268,6 @@ flowchart TB
     click ObjMatch showInfo
     click AgileVal showInfo
     click Consolidation showInfo
-    click Logical showInfo
-    click TenantShard showInfo
     click Migrator showInfo
     click MongoCore showInfo
     click HashShard showInfo
@@ -1314,13 +1299,7 @@ flowchart TB
     Secure@{ shape: diamond}
 
      Start:::startNode
-     BizModel:::techZone
      WorkloadCheck:::techZone
-     Tenancy:::techZone
-     Silo:::techZone
-     Isolation:::techZone
-     Logical:::valueNode
-     TenantShard:::valueNode
      AnalyticCheck:::techZone
      DWH:::exitNode
      DevSkill:::techZone
@@ -1530,7 +1509,8 @@ flowchart TB
                                 <strong>Q11 Traffic:</strong> Massive
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                Time Series Engine + MongoDB (Operational)
+                                Time Series Engine + MongoDB (Operational)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">SQL-aware: DB logic → RDBMS + TS Engine; isStrong → both; else → MongoDB</em>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">iot-massive</code>
@@ -1564,7 +1544,8 @@ flowchart TB
                                 <strong>(Default IoT path)</strong>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB Time Series
+                                MongoDB Time Series<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">SQL-aware: significant SQL signals → MongoDB or RDBMS TS Extensions</em>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">timeseries-universal</code>
@@ -1583,8 +1564,8 @@ flowchart TB
                         <tr>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
-                                <strong>Q2 Data Structure:</strong> Graph<br>
-                                <strong>Q3 Graph Depth:</strong> Deep (>5 hops)
+                                <strong>Q14 Data Structure:</strong> Graph<br>
+                                <strong>Q15 Graph Depth:</strong> Deep (>5 hops)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 Graph Database
@@ -1599,23 +1580,24 @@ flowchart TB
                         <tr style="background: rgba(255,255,255,0.03);">
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
-                                <strong>Q2 Data Structure:</strong> Graph<br>
-                                <strong>Q3 Graph Depth:</strong> Shallow (≤5 hops)
+                                <strong>Q14 Data Structure:</strong> Graph<br>
+                                <strong>Q15 Graph Depth:</strong> Shallow (≤5 hops)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB (Aggregation Pipeline)
+                                MongoDB ($graphLookup)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">SQL-aware: isStrong → Hybrid; significant → MongoDB or RDBMS (CTEs)</em>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-shallow-graph</code>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                $graphLookup, Aggregation Pipeline, Hierarchies
+                                $graphLookup, Aggregation Pipeline, Hierarchies, Recursive CTEs (RDBMS)
                             </td>
                         </tr>
                         <tr>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
-                                <strong>Q12 Analytical Nuance:</strong> Warehouse<br>
+                                <strong>Q2 Analytical Nuance:</strong> Warehouse<br>
                                 <strong>OR Q11 Traffic:</strong> Massive
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
@@ -1631,11 +1613,12 @@ flowchart TB
                         <tr style="background: rgba(255,255,255,0.03);">
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
-                                <strong>Q12 Analytical Nuance:</strong> Real-time<br>
-                                <strong>Q4 Deployment:</strong> On-premise
+                                <strong>Q2 Analytical Nuance:</strong> Real-time<br>
+                                <strong>Q21 Deployment:</strong> On-premise
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB (Read-Only Nodes) or Data Warehouse
+                                MongoDB Enterprise (Analytics Nodes) or Data Warehouse<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">SQL-aware: isStrong → Hybrid; significant → MongoDB or RDBMS / DW</em>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-realtime-onprem</code>
@@ -1647,11 +1630,12 @@ flowchart TB
                         <tr>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Analytical<br>
-                                <strong>Q12 Analytical Nuance:</strong> Real-time<br>
-                                <strong>Q4 Deployment:</strong> Cloud
+                                <strong>Q2 Analytical Nuance:</strong> Real-time<br>
+                                <strong>Q21 Deployment:</strong> Cloud
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB Atlas (Analytics Nodes) or Data Warehouse
+                                MongoDB Atlas (Analytics Nodes) or Cloud Data Warehouse<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">SQL-aware: isStrong → Hybrid; significant → MongoDB or RDBMS / DW</em>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">analytical-realtime-cloud</code>
@@ -1670,8 +1654,8 @@ flowchart TB
                         <tr style="background: rgba(255,255,255,0.03);">
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Transactional<br>
-                                <strong>Q2 Data Structure:</strong> Graph<br>
-                                <strong>Q3 Graph Depth:</strong> Deep (>5 hops)
+                                <strong>Q14 Data Structure:</strong> Graph<br>
+                                <strong>Q15 Graph Depth:</strong> Deep (>5 hops)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 MongoDB (Operational) + Graph Database
@@ -1686,17 +1670,18 @@ flowchart TB
                         <tr>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q1 Workload:</strong> Transactional<br>
-                                <strong>Q2 Data Structure:</strong> Graph<br>
-                                <strong>Q3 Graph Depth:</strong> Shallow (≤5 hops)
+                                <strong>Q14 Data Structure:</strong> Graph<br>
+                                <strong>Q15 Graph Depth:</strong> Shallow (≤5 hops)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB
+                                MongoDB ($graphLookup)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">SQL-aware: isStrong → Hybrid; significant → MongoDB or RDBMS (CTEs)</em>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">transactional-shallow-graph</code>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                $graphLookup, Document References, Aggregation Pipeline
+                                $graphLookup, Document References, Aggregation Pipeline, Recursive CTEs (RDBMS)
                             </td>
                         </tr>
 
@@ -1832,13 +1817,110 @@ flowchart TB
                                 <strong>(Moderate requirements - not Heavy ACID + Rigid)</strong>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                MongoDB (with SQL drivers and Relational Migrator)
+                                MongoDB or RDBMS (if heavy ACID or rigid schema signals present, both suggested)
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">sql-moderate</code>
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                                SQL Compatibility Layer, Relational Migrator, Flexible Schema
+                                SQL Compatibility Layer, Relational Migrator, Flexible Schema (or RDBMS equivalents)
+                            </td>
+                        </tr>
+
+                        <!-- CATEGORY: Use Case Specific Paths (6 paths) -->
+                        <tr style="background: rgba(0,237,100,0.05);">
+                            <td colspan="4" style="padding: 12px 16px; font-weight: 600; color: #00ED64; border-bottom: 2px solid rgba(0,237,100,0.2);">
+                                🏪 USE CASE SPECIFIC PATHS (6 paths)
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> SaaS
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (Multi-Tenant)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">isStrong → RDBMS (or Hybrid at large scale)</em>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">saas-multitenant</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Multi-Tenancy, Tenant Isolation, Flexible Schemas
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> E-Commerce
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (Product Catalog + Orders)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">isStrong → RDBMS (or Hybrid at large scale)</em>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">ecommerce</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Product Catalog, Order Management, Session Handling
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> CMS / Content
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (Flexible Content)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">isStrong → Hybrid</em>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">cms-content</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Flexible Schema, Content Management, Document Model
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> Marketplace
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">isStrong → RDBMS (or Hybrid at large scale)</em>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">marketplace</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Multi-Vendor Catalog, Search, Transactions
+                            </td>
+                        </tr>
+                        <tr style="background: rgba(255,255,255,0.03);">
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> Social Network
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB (or + Graph DB for deep graph)<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">isStrong → Hybrid or RDBMS + Graph DB</em>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">social-network</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Social Graph, Activity Feeds, Notifications, Graph Depth Aware
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <strong style="color: #00ED64;">Q0 Use Case:</strong> Custom / Other
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                MongoDB<br>
+                                <em style="color: #ffc107; font-size: 0.85em;">isStrong → RDBMS</em>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">custom-explore</code>
+                            </td>
+                            <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                                Exploratory, SQL Constraint Aware
                             </td>
                         </tr>
 
@@ -1851,7 +1933,7 @@ flowchart TB
                         <tr style="background: rgba(255,255,255,0.03);">
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q5 Team:</strong> Code-first<br>
-                                <strong>Q2 Data Structure:</strong> Document
+                                <strong>Q14 Data Structure:</strong> Document
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 MongoDB
@@ -1866,7 +1948,7 @@ flowchart TB
                         <tr>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 <strong style="color: #00ED64;">Q5 Team:</strong> Code-first<br>
-                                <strong>Q2 Data Structure:</strong> Rigid/Normalized
+                                <strong>Q14 Data Structure:</strong> Rigid/Normalized
                             </td>
                             <td style="padding: 16px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                                 MongoDB (with Schema Validation)
@@ -1888,11 +1970,12 @@ flowchart TB
                         <tr style="background: rgba(255,255,255,0.03);">
                             <td style="padding: 16px;">
                                 <strong style="color: #00ED64;">No specific conditions matched</strong><br>
-                                <strong>Q4 Deployment:</strong> Cloud = MongoDB Atlas<br>
-                                <strong>Q4 Deployment:</strong> On-premise = MongoDB
+                                Three-tier SQL-awareness applies
                             </td>
                             <td style="padding: 16px;">
-                                MongoDB Atlas (Cloud) or MongoDB (On-prem)
+                                isStrong → RDBMS<br>
+                                significant SQL signals → MongoDB or RDBMS<br>
+                                else → MongoDB (Atlas or Enterprise)
                             </td>
                             <td style="padding: 16px;">
                                 <code style="background: rgba(0,237,100,0.1); padding: 4px 8px; border-radius: 4px;">default</code>
@@ -2000,11 +2083,12 @@ flowchart TB
             <div style="background: rgba(255,107,107,0.1); border-left: 4px solid #ff6b6b; padding: 20px; border-radius: 12px; margin-top: 30px;">
                 <h4 style="color: #ff6b6b; margin-bottom: 12px;">📌 Important Notes</h4>
                 <ul style="color: rgba(255,255,255,0.8); line-height: 1.8;">
-                    <li><strong>Complete Coverage:</strong> This table contains all <strong>27 decision paths</strong> from the recommendation engine, organized into <strong>12 categories</strong>.</li>
-                    <li><strong>Question IDs:</strong> Each condition references specific wizard questions (e.g., Q0 = Use Case, Q5 = Team Skillset, Q11 = Traffic Pattern, Q18 = Advanced Features, Q19/Q20 = Scale).</li>
+                    <li><strong>Complete Coverage:</strong> This table contains all <strong>33 decision paths</strong> from the recommendation engine, organized into <strong>13 categories</strong>.</li>
+                    <li><strong>Question IDs:</strong> Each condition references specific wizard questions (e.g., Q0 = Use Case, Q5 = Team Skillset, Q9 = ACID Needs, Q10 = Normalization, Q11 = Traffic Pattern, Q14 = Data Structure, Q18 = Advanced Features, Q21 = Deployment).</li>
                     <li><strong>Evaluation Order:</strong> Conditions are checked in order of specificity - more specific conditions are evaluated first.</li>
+                    <li><strong>Three-Tier SQL Awareness:</strong> Rules use <code>getSQLConstraints()</code> with three tiers: <strong>isStrong</strong> (SQL-first + DB logic or heavy ACID + rigid) → RDBMS primary; <strong>hasSignificantSQLSignals</strong> (SQL-first + heavy ACID or rigid, but not strong) → both suggested; <strong>isModerate</strong> (SQL-first only) → MongoDB primary.</li>
                     <li><strong>Scale Awareness:</strong> All recommendations consider scale. At massive/petabyte scale, tiered architectures (Hot + Cold + Analytics) are recommended.</li>
-                    <li><strong>Unbiased Options:</strong> When valid alternatives exist (e.g., SQL-first team at large scale), the wizard presents "Option 1 / Option 2" comparisons.</li>
+                    <li><strong>Balanced Options:</strong> When both MongoDB and RDBMS are viable (significant SQL signals), both are suggested. When RDBMS is clearly better (isStrong), RDBMS is recommended. MongoDB is primary for right-fit and almost-right-fit use cases.</li>
                     <li><strong>Modernization:</strong> When migration from RDBMS is selected, MongoDB AMP (AI-Driven Modernization) is included as a feature.</li>
                     <li><strong>Reason Codes:</strong> These appear in exported recommendations and analytics tracking for identifying decision paths.</li>
                 </ul>
@@ -2096,6 +2180,40 @@ flowchart TB
                     </span>
                 </div>
 
+                <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">🔑 SQL Constraint System (getSQLConstraints)</h3>
+                <p style="margin-top: 15px;">Many rules use <code>getSQLConstraints(answers)</code> to determine the appropriate recommendation tier. This returns an object with three key tiers:</p>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.9em; background: rgba(0,0,0,0.3);">
+                    <thead style="background: rgba(0,237,100,0.15);">
+                        <tr>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64;">Property</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64;">Condition</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 2px solid #00ED64; color: #00ED64;">Recommendation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px;"><code style="color: #f44336;">isStrong</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">SQL-first AND (DB logic OR (heavy ACID + rigid schema))</td>
+                            <td style="padding: 10px; color: #f44336;">RDBMS primary</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px;"><code style="color: #ffc107;">hasSignificantSQLSignals</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">SQL-first AND (heavy ACID OR rigid) but NOT isStrong</td>
+                            <td style="padding: 10px; color: #ffc107;">Both suggested (MongoDB listed first)</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px;"><code style="color: #00ED64;">isModerate</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">SQL-first only (no strong data-model signals)</td>
+                            <td style="padding: 10px; color: #00ED64;">MongoDB primary</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p style="margin-top: 15px; color: rgba(255,255,255,0.7);">
+                    Rules that use this system: <code>sql-moderate</code>, <code>timeseries-universal</code>, <code>analytical-shallow-graph</code>,
+                    <code>analytical-realtime-*</code>, <code>transactional-shallow-graph</code>, <code>iot-massive</code>, <code>default</code>, 
+                    and the <code>determinePrimaryDB</code> fallbacks.
+                </p>
+
                 <h3 style="color: #00ED64; margin-top: 40px; border-bottom: 1px solid rgba(0,237,100,0.3); padding-bottom: 10px;">➕ How to Add a New Rule</h3>
                 <ol style="color: rgba(255,255,255,0.7); line-height: 1.8;">
                     <li>Open <code>matrix.html</code></li>
@@ -2156,7 +2274,7 @@ flowchart TB
                         <strong style="color: #2196f3; display: block; margin-bottom: 10px;">📈 Analytical Workloads</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
                             <li>analytical-deep-graph (>5 hops → Graph DB)</li>
-                            <li>analytical-shallow-graph (→ MongoDB $graphLookup)</li>
+                            <li>analytical-shallow-graph (→ MongoDB $graphLookup or RDBMS CTEs if significant SQL signals)</li>
                             <li>analytical-warehouse (→ Data Warehouse)</li>
                             <li>analytical-realtime-onprem</li>
                             <li>analytical-realtime-cloud</li>
@@ -2166,7 +2284,7 @@ flowchart TB
                         <strong style="color: #673ab7; display: block; margin-bottom: 10px;">🔗 Transactional Graph</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
                             <li>transactional-deep-graph (→ MongoDB + Graph DB)</li>
-                            <li>transactional-shallow-graph (→ MongoDB)</li>
+                            <li>transactional-shallow-graph (→ MongoDB or RDBMS CTEs if significant SQL signals)</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #ff5722;">
@@ -2178,7 +2296,7 @@ flowchart TB
                             <li><strong>sql-heavy-acid-massive</strong> (→ Tiered: NewSQL OR MongoDB + Data Warehouse)</li>
                             <li><strong>sql-heavy-acid-large</strong> (→ RDBMS with Option 1/2 comparison)</li>
                             <li><strong>sql-heavy-acid</strong> (New app: RDBMS or MongoDB)</li>
-                            <li>sql-moderate (→ MongoDB)</li>
+                            <li>sql-moderate (→ MongoDB or Both, depending on ACID/schema signals)</li>
                         </ul>
                     </div>
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #795548;">
@@ -2202,7 +2320,7 @@ flowchart TB
                     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 8px; border-left: 3px solid #607d8b;">
                         <strong style="color: #607d8b; display: block; margin-bottom: 10px;">⚙️ Default Fallback</strong>
                         <ul style="margin-left: 15px; font-size: 0.9em; color: rgba(255,255,255,0.7);">
-                            <li>default (SQL constraints aware → RDBMS or MongoDB)</li>
+                            <li>default (three-tier: isStrong → RDBMS; significant signals → both; else → MongoDB)</li>
                         </ul>
                     </div>
                 </div>
@@ -2242,7 +2360,7 @@ flowchart TB
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Use Case</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q0</code></td>
                             <td style="padding: 10px; color: rgba(255,255,255,0.8);">Primary use case selection</td>
-                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers IoT, Logs, Mobile rules</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers IoT, Logs, Mobile, SaaS, E-commerce rules</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Workload Type</td>
@@ -2251,16 +2369,16 @@ flowchart TB
                             <td style="padding: 10px; color: #ffc107;">🔴 High - determines workload path</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
-                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Data Structure</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Analytical Nuance</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q2</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Document / Graph / Relational</td>
-                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - triggers graph rules</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Warehouse vs Real-time analytics</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - determines DW vs operational analytics</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Team Skillset</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q5</code></td>
                             <td style="padding: 10px; color: rgba(255,255,255,0.8);">SQL-first vs Code-first</td>
-                            <td style="padding: 10px; color: #ffc107;">🔴 High - determines SQL vs MongoDB path</td>
+                            <td style="padding: 10px; color: #f44336;">🔴🔴 Critical - key input to getSQLConstraints()</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Migration Status</td>
@@ -2269,10 +2387,22 @@ flowchart TB
                             <td style="padding: 10px; color: #ffc107;">🔴 High - triggers AMP features, new app options</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Business Logic</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q8</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">App-tier vs Database (stored procs)</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - input to isStrong; triggers sql-database-logic rules</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">ACID Needs</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q9</code></td>
                             <td style="padding: 10px; color: rgba(255,255,255,0.8);">Transaction requirements</td>
-                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - affects SQL-heavy-acid rules</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - input to isStrong + hasSignificantSQLSignals</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Normalization</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q10</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Rigid / Flexible / Optimizable schema</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - input to isStrong + hasSignificantSQLSignals</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Traffic Pattern</td>
@@ -2287,28 +2417,58 @@ flowchart TB
                             <td style="padding: 10px; color: #4caf50;">🟢 Enhancement - adds sharding guidance</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Data Structure</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q14</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Document / Graph / Rigid</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - triggers graph + codefirst rules</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Graph Depth</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q15</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Shallow (≤5 hops) vs Deep (>5 hops)</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - deep → Graph DB; shallow → $graphLookup</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Access Pattern</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q16</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Query optimization</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Simple lookups vs Complex queries</td>
                             <td style="padding: 10px; color: #4caf50;">🟢 Enhancement - adds caching options</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
-                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Advanced Features</td>
-                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q18</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector, Search, Streams, etc.</td>
-                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers specialized rules</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Latency</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q17</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Sub-millisecond requirement</td>
+                            <td style="padding: 10px; color: #4caf50;">🟢 Enhancement - adds Redis caching layer</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
-                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Search Scale</td>
-                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q19</code></td>
-                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Full-text search workload</td>
-                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - affects search rule selection</td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Advanced Features</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q18</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector, Search, Streams, Time Series</td>
+                            <td style="padding: 10px; color: #ffc107;">🔴 High - triggers specialized rules</td>
                         </tr>
                         <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Search Scale</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q19</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Full-text search workload size</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - petabyte → dedicated search engine</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Vector Scale</td>
                             <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q20</code></td>
                             <td style="padding: 10px; color: rgba(255,255,255,0.8);">Vector embedding count</td>
                             <td style="padding: 10px; color: #ff9800;">🟠 Medium - >100M → dedicated vector DB</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.02);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Deployment</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q21</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Cloud vs On-premise</td>
+                            <td style="padding: 10px; color: #ff9800;">🟠 Medium - affects Atlas vs Enterprise naming</td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);">
+                            <td style="padding: 10px; color: rgba(255,255,255,0.9);">Security</td>
+                            <td style="padding: 10px;"><code style="background: rgba(0,237,100,0.1); color: #00ED64; padding: 2px 6px; border-radius: 3px;">Q22</code></td>
+                            <td style="padding: 10px; color: rgba(255,255,255,0.8);">Standard vs Strict compliance</td>
+                            <td style="padding: 10px; color: #4caf50;">🟢 Enhancement - adds encryption features</td>
                         </tr>
                         <tr>
                             <td style="padding: 10px; color: rgba(255,255,255,0.9);">Mobile Offline</td>
@@ -2672,8 +2832,8 @@ flowchart TB
             USE_CASE: 0,
             WORKLOAD: 1,
             ANALYTICAL_NUANCE: 2,
-            BUSINESS_MODEL: 3,
-            MULTI_TENANCY: 4,
+            // Note: BUSINESS_MODEL (3) removed — cosmetic only, no decision impact
+            // Note: MULTI_TENANCY (4) removed — cosmetic only, no decision impact
             TEAM_SKILL: 5,
             MIGRATION_STATUS: 6,
             // Note: ID 7 (MIGRATION_SOURCE) removed - doesn't affect recommendation
@@ -2851,36 +3011,11 @@ flowchart TB
                         { value: 'realtime', title: 'Lower latency analytics, moderate complexity', desc: 'Lower latency analytics, moderate complexity' }
                     ]
                 },
-                // Business Model (before MongoDB Core decision) - INLINE
-                {
-                    id: 3,
-                    isInline: true,
-                    icon: '🏢',
-                    title: "Business model?",
-                    subtitle: "How do you serve your users?",
-                    condition: {1: 'transactional'},
-                    options: [
-                        { value: 'internal', title: 'Internal Enterprise App', desc: 'Single organization, internal users' },
-                        { value: 'saas', title: 'External Solution/Application', desc: 'External App or Application withMultiple customers (tenants)' }
-                    ]
-                },
-                // Multi-Tenancy Strategy (only if SaaS) - INLINE
-                {
-                    id: 4,
-                    isInline: true,
-                    hasToggle: true,
-                    toggleLabel: "Customize multi-tenancy strategy",
-                    icon: '🔐',
-                    title: "Multi-tenancy isolation?",
-                    subtitle: "Select your isolation strategy",
-                    condition: {3: 'saas'},
-                    options: [
-                        { value: 'logical', title: 'Logical Isolation', desc: 'Shared collections, tenant_id field' },
-                        { value: 'physical', title: 'Physical Isolation', desc: 'Dedicated nodes for VIP tenants' },
-                        { value: 'silo', title: 'Silo (Complete Separation)', desc: 'Separate deployment per tenant (not recommended)' },
-                        { value: 'na', title: 'Not Applicable', desc: 'Not multi tenant as it is not a SAAS' }
-                    ]
-                },
+                // Note: Q3 (Business Model) and Q4 (Multi-Tenancy Strategy) removed —
+                // both were cosmetic only (appended labels to architecture string)
+                // without affecting the recommended DB, features, or deployment.
+                // Multi-tenancy and SaaS guidance are already covered by the
+                // saas-multitenant rule (triggered via Q0 use-case selection).
                 // Team Skillset
                 {
                     id: 5,
@@ -3888,15 +4023,21 @@ flowchart TB
             const acidNeeds = answers[Q.ACID_NEEDS];
             const normalization = answers[Q.NORMALIZATION];
             
+            const isStrong = teamSkill === 'sqlfirst' && 
+                          (businessLogic === 'database' || (acidNeeds === 'heavy' && normalization === 'rigid'));
+
             return {
                 isSQLFirst: teamSkill === 'sqlfirst',
                 hasDBLogic: businessLogic === 'database',
                 hasHeavyACID: acidNeeds === 'heavy',
                 hasRigidSchema: normalization === 'rigid',
-                // Strong constraint = SQL team + (DB logic OR (heavy ACID + rigid schema))
-                isStrong: teamSkill === 'sqlfirst' && 
-                          (businessLogic === 'database' || (acidNeeds === 'heavy' && normalization === 'rigid')),
-                // Moderate constraint = SQL team only
+                // Strong = SQL team + (DB logic OR (heavy ACID + rigid schema)) → RDBMS primary
+                isStrong: isStrong,
+                // Significant = SQL team + (heavy ACID OR rigid schema) but NOT strong
+                // Both RDBMS and MongoDB are legitimate — suggest both
+                hasSignificantSQLSignals: teamSkill === 'sqlfirst' && 
+                    (acidNeeds === 'heavy' || normalization === 'rigid') && !isStrong,
+                // Moderate = SQL team only (no strong data-model signals for RDBMS)
                 isModerate: teamSkill === 'sqlfirst'
             };
         }
@@ -4063,6 +4204,9 @@ flowchart TB
                     if (sqlConstraints.hasDBLogic) {
                         return { db: "Hybrid: RDBMS (Transactional) + Time Series Engine" };
                     }
+                    if (sqlConstraints.isStrong) {
+                        return { db: `Time Series Engine + ${mongoPart} or RDBMS` };
+                    }
                     return { db: `Time Series Engine + ${mongoPart}` };
                 }
             },
@@ -4082,7 +4226,15 @@ flowchart TB
                     const features = answers[Q.ADVANCED_FEATURES] || [];
                     return features.includes('timeseries') || answers[Q.USE_CASE] === 'iot';
                 },
-                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                        const mongoPart = isCloud ? "MongoDB Atlas (Time Series)" : "MongoDB Enterprise (Time Series)";
+                        return { db: `${mongoPart} or RDBMS with Time Series Extensions` };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
             },
 
             // Analytical Workloads
@@ -4109,6 +4261,9 @@ flowchart TB
                     if (sqlConstraints.isStrong) {
                         return { db: resolveComponents(answers, 'hybrid') };
                     }
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        return { db: "MongoDB ($graphLookup) or RDBMS (Recursive CTEs)" };
+                    }
                     return { db: resolveComponents(answers, 'mongodb') };
                 }
             },
@@ -4128,6 +4283,9 @@ flowchart TB
                     if (sqlConstraints.isStrong) {
                         return { db: "Hybrid: RDBMS + MongoDB Enterprise (Analytics Nodes) / Data Warehouse" };
                     }
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        return { db: "MongoDB Enterprise (Analytics Nodes) or RDBMS / Data Warehouse" };
+                    }
                     return { db: "MongoDB Enterprise (Analytics Nodes) or Data Warehouse" };
                 }
             },
@@ -4138,6 +4296,9 @@ flowchart TB
                     const sqlConstraints = getSQLConstraints(answers);
                     if (sqlConstraints.isStrong) {
                         return { db: "Hybrid: RDBMS + MongoDB Atlas (Analytics Nodes) / Cloud Data Warehouse" };
+                    }
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        return { db: "MongoDB Atlas (Analytics Nodes) or RDBMS / Cloud Data Warehouse" };
                     }
                     return { db: "MongoDB Atlas (Analytics Nodes) or Cloud Data Warehouse" };
                 }
@@ -4167,6 +4328,10 @@ flowchart TB
                     
                     if (sqlConstraints.isStrong) {
                         return { db: "Hybrid: RDBMS + MongoDB ($graphLookup)" };
+                    }
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        const mongoDB = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                        return { db: `${mongoDB} ($graphLookup) or RDBMS (Recursive CTEs)` };
                     }
                     const mongoDB = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
                     return { db: `${mongoDB} (with $graphLookup)` };
@@ -4280,7 +4445,15 @@ flowchart TB
             {
                 id: 'sql-moderate',
                 conditions: { [Q.TEAM_SKILL]: 'sqlfirst' },
-                result: (answers) => ({ db: resolveComponents(answers, 'mongodb') })
+                result: (answers) => {
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                        const mongoPart = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                        return { db: `${mongoPart} or RDBMS` };
+                    }
+                    return { db: resolveComponents(answers, 'mongodb') };
+                }
             },
 
             // Use Case Specific Paths
@@ -4405,6 +4578,11 @@ flowchart TB
                     if (sqlConstraints.isStrong) {
                         return { db: resolveComponents(answers, 'rdbms') };
                     }
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                        const mongoPart = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                        return { db: `${mongoPart} or RDBMS` };
+                    }
                     return { db: resolveComponents(answers, 'mongodb') };
                 }
             }
@@ -4421,6 +4599,9 @@ flowchart TB
                 if (sqlConstraints.isStrong) {
                     return { db: "RDBMS or MongoDB (incomplete data)", reason: "incomplete_data" };
                 }
+                if (sqlConstraints.hasSignificantSQLSignals) {
+                    return { db: "MongoDB or RDBMS (incomplete data)", reason: "incomplete_data" };
+                }
                 return { db: resolveComponents(answers, 'mongodb'), reason: "incomplete_data" };
             }
 
@@ -4433,6 +4614,11 @@ flowchart TB
                 const sqlConstraints = getSQLConstraints(answers);
                 if (sqlConstraints.isStrong) {
                     return { db: resolveComponents(answers, 'rdbms'), reason: "fallback" };
+                }
+                if (sqlConstraints.hasSignificantSQLSignals) {
+                    const isCloud = answers[Q.DEPLOYMENT] !== 'onprem';
+                    const mongoPart = isCloud ? "MongoDB Atlas" : "MongoDB Enterprise";
+                    return { db: `${mongoPart} or RDBMS`, reason: "fallback" };
                 }
                 return { db: resolveComponents(answers, 'mongodb'), reason: "fallback" };
             }
@@ -4769,12 +4955,23 @@ flowchart TB
                     reasoningPoints.push("Offline-first mobile apps require local storage with cloud sync. MongoDB partners (Ditto, PowerSync, ObjectBox) provide battle-tested device-to-cloud sync with conflict resolution.");
                     features.push("Offline Sync", "Conflict Resolution", "Local Database", "Cloud Sync");
                 } else if (reason === 'timeseries-universal') {
-                    architecture = "Time Series Optimized Cluster";
-                    reasoningPoints.push("Time series workloads (IoT, metrics, logs) require high write throughput and efficient storage of time-stamped data. MongoDB Time Series Collections use an intelligent **bucket pattern** that groups measurements within time windows, enabling extremely efficient data compression (often 10x+ storage reduction).");
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        architecture = "Time Series Architecture";
+                        reasoningPoints.push("Time series workloads require high write throughput and efficient time-stamped storage. Both MongoDB Time Series Collections (bucket pattern, columnar compression) and RDBMS with time series extensions (e.g., TimescaleDB, pg_partman) handle this well. Choose based on your broader stack, scaling trajectory, and team familiarity.");
+                    } else {
+                        architecture = "Time Series Optimized Cluster";
+                        reasoningPoints.push("Time series workloads (IoT, metrics, logs) require high write throughput and efficient storage of time-stamped data. MongoDB Time Series Collections use an intelligent **bucket pattern** that groups measurements within time windows, enabling extremely efficient data compression (often 10x+ storage reduction).");
+                    }
                     features.push("Time Series Collections", "Data Tiering (Hot/Cold)", "Columnar Compression");
                 } else if (reason === 'iot-massive') {
             architecture = "Hybrid: Time Series Warehouse + Operational Layer";
-            reasoningPoints.push("Petabyte-scale IoT requires specialized time-series databases or Data Warehouses optimized for time-series analytics, combined with MongoDB for operational queries, device management, and real-time processing.");
+            const sqlConstraints = getSQLConstraints(answers);
+            if (sqlConstraints.isStrong && !sqlConstraints.hasDBLogic) {
+                reasoningPoints.push("Petabyte-scale IoT requires a specialized time-series engine for ingestion and analytics. For the operational layer (device management, real-time queries), both MongoDB and RDBMS are viable given your strong SQL signals. MongoDB excels at flexible IoT device schemas; RDBMS offers familiar relational patterns.");
+            } else {
+                reasoningPoints.push("Petabyte-scale IoT requires specialized time-series databases or Data Warehouses optimized for time-series analytics, combined with MongoDB for operational queries, device management, and real-time processing.");
+            }
             features.push("Time Series Warehouse", "Time Series Engine", "MongoDB Operational Layer", "Data Federation");
         } else if (reason === 'iot-small-sql') {
             architecture = "RDBMS + Time Series Extensions";
@@ -4785,23 +4982,44 @@ flowchart TB
             reasoningPoints.push("Deep graph analytics (centrality, community detection, pathfinding >5 hops) require specialized graph algorithms and engines.");
             features.push("Graph Algorithms", "Network Analysis");
                 } else if (reason === 'analytical-shallow-graph') {
-                    architecture = "Operational Analytics with $graphLookup";
-                    reasoningPoints.push("For shallower graph analytics (hierarchies, simple connections), MongoDB's aggregation framework and $graphLookup provide efficient analysis without a separate graph engine.");
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        architecture = "Graph Analytics";
+                        reasoningPoints.push("Shallow graph analytics (hierarchies, ≤5-hop traversals) can be handled by MongoDB's $graphLookup operator or RDBMS recursive CTEs (WITH RECURSIVE). Both approaches are production-proven — choose based on your broader stack and team familiarity.");
+                    } else {
+                        architecture = "Operational Analytics with $graphLookup";
+                        reasoningPoints.push("For shallower graph analytics (hierarchies, simple connections), MongoDB's aggregation framework and $graphLookup provide efficient analysis without a separate graph engine.");
+                    }
                     features.push("$graphLookup", "Recursive Search");
                 } else if (reason === 'analytical-warehouse') {
                     architecture = "Columnar Storage MPP";
                     reasoningPoints.push("Massive joins, full table scans, >500TB working datasets, or petabyte-scale analytics require a dedicated Data Warehouse.");
                 } else if (reason === 'analytical-realtime-cloud') {
                     architecture = "Operational Analytics";
-                    reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Atlas Analytics Nodes or purpose built datawarehouses work well as performance requirements mount.");
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        reasoningPoints.push("For real-time analytics, both MongoDB Atlas Analytics Nodes and RDBMS with read replicas / materialized views are viable. MongoDB excels with flexible schema analytics and horizontal scaling; RDBMS offers mature SQL tooling for structured analytical queries.");
+                    } else {
+                        reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Atlas Analytics Nodes or purpose built datawarehouses work well as performance requirements mount.");
+                    }
                 } else if (reason === 'analytical-realtime-onprem') {
                     architecture = "Operational Analytics";
-                    reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Read-Only Nodes (self-managed) or on-premise data warehouses work well as performance requirements mount.");
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        reasoningPoints.push("For on-premise real-time analytics, both MongoDB Enterprise Read-Only Nodes and RDBMS with read replicas / materialized views are viable. Choose based on your existing infrastructure, team familiarity, and data model flexibility needs.");
+                    } else {
+                        reasoningPoints.push("For real-time analytics with moderate complexity and scale, MongoDB Read-Only Nodes (self-managed) or on-premise data warehouses work well as performance requirements mount.");
+                    }
                 } else if (reason === 'transactional-deep-graph') {
                     architecture = "Hybrid: Document + Graph Model";
                     reasoningPoints.push("Deep relationship traversals (>5 hops) require a dedicated graph database. MongoDB handles operational data while specialized Graph DBs excel at complex graph queries.");
                 } else if (reason === 'transactional-shallow-graph') {
-                    reasoningPoints.push("Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.");
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        reasoningPoints.push("Shallow graph relationships (≤3-5 hops) can be efficiently handled by both MongoDB's $graphLookup and RDBMS recursive CTEs. Both are production-proven for hierarchies, org charts, and category trees.");
+                    } else {
+                        reasoningPoints.push("Shallow graph relationships (≤3-5 hops) are efficiently handled by MongoDB's document model.");
+                    }
                 } else if (reason === 'sql-modernization') {
                     architecture = "Replica Set (3-Node)";
                     reasoningPoints.push(`Modernization Path: While your workload has heavy ACID requirements and rigid schemas, you've indicated a desire to modernize from your existing RDBMS. MongoDB with Document ACID transactions, Schema Validation, and tools like Relational Migrator can help transition away from traditional RDBMS (Oracle, SQL Server, PostgreSQL, MySQL, etc.).`);
@@ -4838,12 +5056,17 @@ flowchart TB
                     }
                 } else if (reason === 'sql-database-logic') {
                     architecture = "Traditional RDBMS with Stored Procedures";
-                    reasoningPoints.push("For workloads requiring business logic in the database (stored procedures, triggers, functions),RDBMS do provide mature, battle-tested procedural languages (PL/pgSQL, T-SQL) with rich ecosystems. MongoDB supports server-side JavaScript but is application-logic-first by desig which is more extensible.");
+                    reasoningPoints.push("For workloads requiring business logic in the database (stored procedures, triggers, functions), RDBMS do provide mature, battle-tested procedural languages (PL/pgSQL, T-SQL) with rich ecosystems. MongoDB supports server-side JavaScript but is application-logic-first by design, which is more extensible.");
                 } else if (reason === 'sql-database-logic-large-scale') {
-                    architecture = "RDBMS(with scaling caveats) or Distributed SQL or MongoDB (with Rearchitecturing)";
+                    architecture = "RDBMS (with scaling caveats) or Distributed SQL or MongoDB (with Re-architecting)";
                     reasoningPoints.push("⚠️ CHALLENGING COMBINATION: You need stored procedures at large scale. Traditional RDBMS struggle with horizontal scaling beyond sharding limits. Consider: (1) Re-architecting to move business logic to application tier with MongoDB.  (2) Distributed SQL databases for handling scale (limited stored procedure support), or (3) Shard traditional RDBMS (ex : RDBMS with sharding extensions - Note: 3rd party extensions are often not maintained by core DB team)");
                 } else if (reason === 'sql-moderate') {
-                    reasoningPoints.push("Even with SQL skills, if the data model can be optimized or scale is high, MongoDB is a strong candidate using tools like SQL drivers and Relational Migrator.");
+                    const sqlConstraints = getSQLConstraints(answers);
+                    if (sqlConstraints.hasSignificantSQLSignals) {
+                        reasoningPoints.push("Your SQL team has meaningful relational signals (heavy ACID or rigid schema preference) but not all indicators point to RDBMS exclusively. Both MongoDB and RDBMS are strong fits here — MongoDB offers flexible scaling, a modern developer experience, and SQL-compatible drivers; RDBMS offers mature transaction support and familiarity. Evaluate based on growth trajectory, operational preferences, and team velocity.");
+                    } else {
+                        reasoningPoints.push("Your SQL team's data model is flexible and ACID requirements are moderate — MongoDB is a strong fit. SQL-compatible drivers, Relational Migrator, and familiar query patterns make the transition smooth while unlocking flexible schemas and horizontal scaling.");
+                    }
                 } else if (reason === 'codefirst-document') {
                     reasoningPoints.push("Flexible JSON schema with Code-First teams works well with MongoDB's document model and native language drivers.");
                 } else if (reason === 'codefirst-rigid') {
@@ -4897,6 +5120,17 @@ flowchart TB
                     reasoningPoints.push("Based on your specific requirements, the recommendation considers your team's skills, scale needs, and feature requirements.");
                 }
 
+            // --- DATA MODEL REFINEMENTS ---
+
+            // When user has heavy ACID needs but schema is open to denormalization,
+            // acknowledge the answer and explain why it favors MongoDB.
+            if (answers[Q.ACID_NEEDS] === 'heavy' && answers[Q.NORMALIZATION] === 'optimizable') {
+                reasoningPoints.push("Your data model is open to denormalization — this is a strong signal for MongoDB. By embedding related data into single documents (e.g., order with line items), most transactions become single-document writes that are atomic by default, reducing the need for multi-document transactions and improving both performance and simplicity.");
+                if (dbChoice.includes("MongoDB")) {
+                    features.push("Schema Design Patterns", "Document-Level Atomicity");
+                }
+            }
+
             // --- ARCHITECTURE REFINEMENTS ---
             
             const trafficValue = answers[Q.TRAFFIC_PATTERN];
@@ -4940,37 +5174,8 @@ flowchart TB
                     architecture = "Replica Set (3-Node)";
                 }
 
-                // Multi-Tenancy
-                if (answers[Q.BUSINESS_MODEL] === 'saas') {
-                    let suffix = "";
-                    if (dbChoice.includes("Graph Database")) {
-                         suffix = " (applied to MongoDB operational layer)";
-                         reasoningPoints.push("Multi-tenancy isolation strategies (Logical/Physical) are applied to the MongoDB operational layer. The Graph Database can be deployed as a shared service or per-tenant instances depending on strictness.");
-                    }
-
-                    // Default to logical if not specified (toggle off)
-                    const isolation = answers[Q.MULTI_TENANCY] || 'logical';
-
-                    // WAREHOUSE MULTI-TENANCY
-                    if (dbChoice.includes("Data Warehouse")) {
-                        if (isolation === 'physical') {
-                            architecture += " with Dedicated Compute/Accounts (High Cost)";
-                            reasoningPoints.push("Physical isolation in Data Warehouses typically requires dedicated compute clusters or separate accounts, which significantly increases cost.");
-                        } else if (isolation === 'logical') {
-                            architecture += " (Multi-Tenant / Logical Isolation)";
-                        }
-                    } 
-                    // MONGODB MULTI-TENANCY
-                    else {
-                        if (isolation === 'logical') {
-                            architecture += " (Multi-Tenant / Logical Isolation)" + suffix;
-                        } else if (isolation === 'physical') {
-                            architecture += " (Multi-Tenant / Dedicated Nodes)" + suffix;
-                        } else if (isolation === 'silo') {
-                            architecture += " with Silo Isolation" + suffix;
-                        }
-                    }
-                }
+                // Note: Multi-tenancy label block removed with Q3/Q4.
+                // SaaS multi-tenancy guidance is provided by the saas-multitenant rule.
 
                 // Latency + Access Pattern
                 const accessPattern = answers[Q.ACCESS_PATTERN];
@@ -5440,18 +5645,6 @@ flowchart TB
                 value: "Lower TCO & Complexity",
                 detail: "By combining Transactional, Search, AI, and Time Series workloads into one API, you remove the cost and maintenance burden of syncing 3-4 separate niche databases.",
                 link: "https://www.mongodb.com/products/platform"
-            },
-            "Logical": {
-                title: "Logical Sharding",
-                value: "Simple Multi-Tenancy",
-                detail: "Isolates tenants using a 'tenant_id' field within standard collections. Ideal for high-volume SaaS where tenants share resources but need logical separation.",
-                link: "https://www.mongodb.com/docs/manual/core/moveable-collections/multi-tenant/"
-            },
-            "TenantShard": {
-                title: "Tenant-Aware Sharding",
-                value: "Physical Isolation",
-                detail: "Pin specific tenants to specific hardware. Allows you to offer 'Premium Tier' performance on dedicated NVMe nodes while keeping 'Free Tier' users on shared hardware—all in one cluster.",
-                link: "https://www.mongodb.com/docs/manual/sharding//"
             },
             "MongoCore": {
                 title: "MongoDB Core",
