@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
     <head>
+        <!-- Security Headers -->
+        <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+        <meta name="referrer" content="strict-origin-when-cross-origin">
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>MongoDB CRUD Operations - Comprehensive Guide</title>
@@ -10,9 +13,11 @@
         <link
             rel="stylesheet"
             href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css"
+            integrity="sha384-oaMLBGEzBOJx3UHwac0cVndtX5fxGQIfnAeFZ35RTgqPcYlbprH9o9PUV/F8Le07"
+            crossorigin="anonymous"
         />
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha384-F/bZzf7p3Joyp5psL90p/p89AZJsndkSoGwRpXcZhleCWhd8SnRuoYo4d0yirjJp" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/javascript.min.js" integrity="sha384-44q2s9jxk8W5N9gAB0yn7UYLi9E2oVw8eHyaTZLkDS3WuZM/AttkAiVj6JoZuGS4" crossorigin="anonymous"></script>
         <style>
             body {
                 font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
@@ -358,12 +363,12 @@ db.createCollection("users", {
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/core/schema-validation/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Schema Validation - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/operator/query/jsonSchema/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >$jsonSchema Operator Reference</a
                 >
             </div>
@@ -650,12 +655,12 @@ db.products.insertMany([
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/write-concern/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Write Concern - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/method/db.collection.insertMany/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >insertMany() Method Reference</a
                 >
             </div>
@@ -873,12 +878,12 @@ try {
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/core/bulk-write-operations/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Bulk Write Operations - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/method/db.collection.insertMany/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >insertMany() Method Reference</a
                 >
             </div>
@@ -1247,12 +1252,12 @@ db.orders.aggregate([
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/aggregation/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Aggregation Pipeline - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Aggregation Pipeline Operators</a
                 >
             </div>
@@ -1505,12 +1510,12 @@ db.users.updateMany(
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/method/db.collection.updateOne/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >updateOne() - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/method/db.collection.updateMany/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >updateMany() - MongoDB Manual</a
                 >
             </div>
@@ -1692,12 +1697,12 @@ db.orderItems.deleteMany({
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/method/db.collection.deleteOne/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >deleteOne() - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/reference/method/db.collection.deleteMany/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >deleteMany() - MongoDB Manual</a
                 >
             </div>
@@ -2039,12 +2044,12 @@ const orderResult = processOrderWithInventory("USR000001", orderItems)</code></p
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/core/transactions/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Transactions - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/core/transactions-production-consideration/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Production Considerations for Transactions</a
                 >
             </div>
@@ -2391,12 +2396,12 @@ db.runCommand({ planCacheClear: "orders" })</code></pre>
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/indexes/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Indexes - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/tutorial/analyze-query-plan/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Analyze Query Performance</a
                 >
             </div>
@@ -2792,12 +2797,12 @@ db.products.aggregate([
                 <strong>📚 Official Documentation:</strong>
                 <a
                     href="https://www.mongodb.com/docs/manual/data-modeling/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Data Modeling - MongoDB Manual</a
                 ><br />
                 <a
                     href="https://www.mongodb.com/docs/manual/aggregation/"
-                    target="_blank"
+                    target="_blank" rel="noopener noreferrer"
                     >Aggregation Framework</a
                 >
             </div>
@@ -3041,49 +3046,49 @@ db.createCollection("sensitiveData", {
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >MongoDB Manual - Official Documentation</a
                         >
                     </li>
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/tutorial/getting-started/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >Getting Started with MongoDB</a
                         >
                     </li>
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/core/data-model-design/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >Data Model Design Guide</a
                         >
                     </li>
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/administration/production-notes/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >Production Deployment Guide</a
                         >
                     </li>
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/reference/operator/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >Query and Projection Operators</a
                         >
                     </li>
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/tutorial/optimize-query-performance-with-indexes-and-projections/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >Query Performance Optimization</a
                         >
                     </li>
                     <li>
                         <a
                             href="https://www.mongodb.com/docs/manual/core/security/"
-                            target="_blank"
+                            target="_blank" rel="noopener noreferrer"
                             >Security in MongoDB</a
                         >
                     </li>
@@ -3199,5 +3204,6 @@ db.createCollection("sensitiveData", {
                 }
             });
         </script>
+        <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
     </body>
 </html>

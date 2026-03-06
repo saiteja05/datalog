@@ -1,11 +1,14 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MongoDB Atlas vs Cosmos DB vs DocumentDB</title>
     <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
     
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -1334,7 +1337,7 @@
                     <td>All official MongoDB drivers fully supported and tested. Community drivers work</td>
                     <td>Official drivers work with caveats. Some features (like CSFLE, sessions) may not work</td>
                     <td>Official drivers work. Many advanced features return errors or behave differently</td>
-                    <td>Official drivers work for basic operations. <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" style="color:var(--accent)">See MongoDB's DocumentDB compat matrix</a></td>
+                    <td>Official drivers work for basic operations. <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">See MongoDB's DocumentDB compat matrix</a></td>
                 </tr>
                 <tr>
                     <td>mongosh / Compass</td>
@@ -1687,7 +1690,7 @@ session.startTransaction();
             </div>
             <div class="limit-card info">
                 <h4>"8.0 Compatible" ≠ MongoDB 8.0</h4>
-                <p>DocumentDB version numbers refer to its own releases, not MongoDB releases. "8.0 compatible" means it supports some MongoDB 8.0 driver features, but many 8.0 features (compound wildcard indexes, encrypted range queries, cluster-to-cluster sync) are absent. Always test against the <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" style="color:var(--accent)">compatibility matrix</a>.</p>
+                <p>DocumentDB version numbers refer to its own releases, not MongoDB releases. "8.0 compatible" means it supports some MongoDB 8.0 driver features, but many 8.0 features (compound wildcard indexes, encrypted range queries, cluster-to-cluster sync) are absent. Always test against the <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" rel="noopener noreferrer" style="color:var(--accent)">compatibility matrix</a>.</p>
                 <span class="tag tag-docdb">DocumentDB</span>
             </div>
         </div>
@@ -2011,39 +2014,39 @@ session.startTransaction();
         <div class="ref-grid">
             <div class="ref-card">
                 <h4 style="color: var(--atlas-color);">MongoDB Atlas</h4>
-                <a href="https://www.mongodb.com/docs/atlas/" target="_blank">Atlas Documentation</a>
-                <a href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/" target="_blank">Aggregation Pipeline Reference</a>
-                <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank">Atlas Search Overview</a>
-                <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank">Atlas Vector Search</a>
-                <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank">Queryable Encryption</a>
-                <a href="https://www.mongodb.com/docs/atlas/stream-processing/overview/" target="_blank">Atlas Stream Processing</a>
+                <a href="https://www.mongodb.com/docs/atlas/" target="_blank" rel="noopener noreferrer">Atlas Documentation</a>
+                <a href="https://www.mongodb.com/docs/manual/reference/operator/aggregation/" target="_blank" rel="noopener noreferrer">Aggregation Pipeline Reference</a>
+                <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank" rel="noopener noreferrer">Atlas Search Overview</a>
+                <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank" rel="noopener noreferrer">Atlas Vector Search</a>
+                <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank" rel="noopener noreferrer">Queryable Encryption</a>
+                <a href="https://www.mongodb.com/docs/atlas/stream-processing/overview/" target="_blank" rel="noopener noreferrer">Atlas Stream Processing</a>
             </div>
             <div class="ref-card">
                 <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore</h4>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/introduction" target="_blank">vCore Introduction</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/compatibility" target="_blank">Compatibility &amp; Feature Support</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/limits" target="_blank">Service Limits &amp; Quotas</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search" target="_blank">Vector Search (vCore)</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/introduction" target="_blank" rel="noopener noreferrer">vCore Introduction</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/compatibility" target="_blank" rel="noopener noreferrer">Compatibility &amp; Feature Support</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/limits" target="_blank" rel="noopener noreferrer">Service Limits &amp; Quotas</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/vcore/vector-search" target="_blank" rel="noopener noreferrer">Vector Search (vCore)</a>
             </div>
             <div class="ref-card">
                 <h4 style="color: var(--cosmos-color);">Cosmos DB RU</h4>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/feature-support-60" target="_blank">6.0 Feature Support</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview" target="_blank">Partitioning &amp; Horizontal Scaling</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels" target="_blank">Consistency Levels</a>
-                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/concepts-limits" target="_blank">Service Quotas &amp; Limits</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/mongodb/feature-support-60" target="_blank" rel="noopener noreferrer">6.0 Feature Support</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/partitioning-overview" target="_blank" rel="noopener noreferrer">Partitioning &amp; Horizontal Scaling</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/consistency-levels" target="_blank" rel="noopener noreferrer">Consistency Levels</a>
+                <a href="https://learn.microsoft.com/en-us/azure/cosmos-db/concepts-limits" target="_blank" rel="noopener noreferrer">Service Quotas &amp; Limits</a>
             </div>
             <div class="ref-card">
                 <h4 style="color: var(--docdb-color);">Amazon DocumentDB</h4>
-                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html" target="_blank">DocumentDB Developer Guide</a>
-                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html" target="_blank">Functional Differences vs MongoDB</a>
-                <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank">MongoDB Driver Compatibility Matrix</a>
-                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/limits.html" target="_blank">Quotas &amp; Limits</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/what-is.html" target="_blank" rel="noopener noreferrer">DocumentDB Developer Guide</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/functional-differences.html" target="_blank" rel="noopener noreferrer">Functional Differences vs MongoDB</a>
+                <a href="https://www.mongodb.com/docs/drivers/documentdb-support/" target="_blank" rel="noopener noreferrer">MongoDB Driver Compatibility Matrix</a>
+                <a href="https://docs.aws.amazon.com/documentdb/latest/developerguide/limits.html" target="_blank" rel="noopener noreferrer">Quotas &amp; Limits</a>
             </div>
             <div class="ref-card">
                 <h4>Competitive Analysis</h4>
-                <a href="https://www.mongodb.com/resources/compare/mongodb-vs-cosmos-db" target="_blank">MongoDB vs Cosmos DB (MongoDB.com)</a>
-                <a href="https://www.mongodb.com/resources/compare/compare-documentdb-cosmosdb" target="_blank">Atlas vs DocumentDB vs Cosmos DB</a>
-                <a href="https://www.mongodb.com/resources/compare/documentdb-vs-mongodb" target="_blank">DocumentDB vs MongoDB</a>
+                <a href="https://www.mongodb.com/resources/compare/mongodb-vs-cosmos-db" target="_blank" rel="noopener noreferrer">MongoDB vs Cosmos DB (MongoDB.com)</a>
+                <a href="https://www.mongodb.com/resources/compare/compare-documentdb-cosmosdb" target="_blank" rel="noopener noreferrer">Atlas vs DocumentDB vs Cosmos DB</a>
+                <a href="https://www.mongodb.com/resources/compare/documentdb-vs-mongodb" target="_blank" rel="noopener noreferrer">DocumentDB vs MongoDB</a>
             </div>
         </div>
     </div>
@@ -2466,6 +2469,7 @@ updateChartsVisibility = function() {
 };
 
 </script>
+    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 
 </body>
 </html>

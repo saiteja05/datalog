@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MongoDB Atlas At Scale: Comprehensive Runbook</title>
@@ -424,7 +427,7 @@
                     </div>
 
                     <h4 class="text-xl font-semibold text-white mt-4">Managing 20TB+ Growth</h4>
-                    <p class="text-[--mongo-text] mb-4">Avoid performance degradation during massive data loads without live rebalancing.<a href="https://www.tencentcloud.com/techpedia/114181" target="_blank" rel="noopener noreferrer" class="ref-link">[1]</a><a href="http://learnmongodbthehardway.com/schema/sharding/" target="_blank" rel="noopener noreferrer" class="ref-link">[2]</a><a href="https://stackoverflow.com/questions/31751008/is-mongodb-always-write-to-primary-shard-and-then-rebalance" target="_blank" rel="noopener noreferrer" class="ref-link">[3]</a></p>
+                    <p class="text-[--mongo-text] mb-4">Avoid performance degradation during massive data loads without live rebalancing.<a href="https://www.tencentcloud.com/techpedia/114181" target="_blank" rel="noopener noreferrer" class="ref-link">[1]</a><a href="https://learnmongodbthehardway.com/schema/sharding/" target="_blank" rel="noopener noreferrer" class="ref-link">[2]</a><a href="https://stackoverflow.com/questions/31751008/is-mongodb-always-write-to-primary-shard-and-then-rebalance" target="_blank" rel="noopener noreferrer" class="ref-link">[3]</a></p>
                     <ul class="list-disc list-outside space-y-2 pl-5 text-[--mongo-text-muted] mb-4">
                         <li><strong class="text-[--mongo-text]">Pre-sharding is essential:</strong> Manually split chunks *before* bulk loads.</li>
                         <li>Disable the balancer during initial data load to prevent contention.</li>
@@ -3589,7 +3592,7 @@ process_batch()</div>
             }
         });
     </script>
-
+    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 </body>
 </html>
 

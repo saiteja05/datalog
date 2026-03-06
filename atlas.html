@@ -2,6 +2,9 @@
 <html lang="en" class="scroll-smooth">
 
 <head>
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Interactive Guide: MongoDB Atlas Advanced Deployments</title>
@@ -611,7 +614,7 @@
                                 <div id="ov-card-tip" class="ov-card-tooltip">
                                     <div class="ov-card-tooltip-title"></div>
                                     <div class="ov-card-tooltip-desc"></div>
-                                    <a class="ov-card-tooltip-link" href="#" target="_blank">
+                                    <a class="ov-card-tooltip-link" href="#" target="_blank" rel="noopener noreferrer">
                                         <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                         View Documentation
                                     </a>
@@ -812,7 +815,7 @@
                                     placing a secondary node in a separate geographic region (like Node 2 and 3) ensures
                                     data durability and availability for reads and writes even in the event of a full
                                     regional outage. <a href="https://www.mongodb.com/docs/manual/replication/"
-                                        target="_blank" class="text-indigo-400 hover:underline">[Ref: Replication
+                                        target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Replication
                                         Docs]</a></p>
                             </div>
                         </section>
@@ -908,7 +911,7 @@
                                         cluster. It determines how data is distributed. A poor key can lead to "hot
                                         shards" that become bottlenecks, while a good key ensures an even spread of data
                                         and workload. <a href="https://www.mongodb.com/docs/manual/sharding/"
-                                            target="_blank" class="text-indigo-400 hover:underline">[Ref: Sharding
+                                            target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Sharding
                                             Docs]</a></p>
                                 </div>
                             </div>
@@ -1001,7 +1004,7 @@
                                     each document to the correct zone's shard. A user in the EU writes to Shard 2 locally
                                     (~2ms); that data never leaves Europe. Each shard is a 3-member replica set for HA
                                     within the zone.
-                                    <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank"
+                                    <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank" rel="noopener noreferrer"
                                         class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a>
                                 </p>
                             </div>
@@ -1047,7 +1050,7 @@
                                             connection between your application's VPC/VNet and the Atlas VPC. Traffic does
                                             not traverse the public internet. Supported on <strong>AWS, Azure, and GCP</strong>.</p>
                                         <a href="https://www.mongodb.com/docs/atlas/security-vpc-peering/"
-                                            target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
+                                            target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
                                             Peering Docs]</a>
                                     </div>
                                 </div>
@@ -1071,7 +1074,7 @@
                                             your network to the Atlas cluster. No CIDR management or firewall rules needed.
                                             Each cloud provider offers its native private endpoint service.</p>
                                         <a href="https://www.mongodb.com/docs/atlas/security-private-endpoint/"
-                                            target="_blank" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
+                                            target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
                                             Private Endpoint Docs]</a>
                                     </div>
                                 </div>
@@ -1089,7 +1092,7 @@
                                     <li>Basic monitoring and security features</li>
                                     <li>Available on AWS, GCP, and Azure</li>
                                 </ul>
-                                <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank"
+                                <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank" rel="noopener noreferrer"
                                     class="mt-6 inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Start
                                     Free</a>
                             </div>
@@ -1562,6 +1565,7 @@
         }
         window.simulateGlobalWrite = simulateGlobalWrite;
     </script>
+    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 </body>
 
 </html>
