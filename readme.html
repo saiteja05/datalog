@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>README — MongoDB Unpacked</title>
+    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-primary: #001E2B;
+            --bg-secondary: #002838;
+            --bg-card: #003345;
+            --text-primary: #fafafa;
+            --text-secondary: #b8d8e8;
+            --text-muted: #7fa8bc;
+            --accent: #00ED64;
+            --accent-dim: #00c853;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Top Bar ── */
+        .top-bar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: rgba(0, 30, 43, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .top-bar a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .top-bar a:hover { color: var(--accent); }
+        .top-bar .separator { color: var(--text-muted); opacity: 0.3; }
+        .top-bar .filename {
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* ── Content Container ── */
+        .content {
+            max-width: 52rem;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+        }
+
+        /* ── Loading / Error ── */
+        .loading {
+            text-align: center;
+            padding: 4rem 0;
+            color: var(--text-muted);
+        }
+        .loading .spinner {
+            display: inline-block;
+            width: 2rem;
+            height: 2rem;
+            border: 3px solid var(--border-subtle);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 1rem;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-box {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+        .error-box h2 {
+            color: var(--text-primary);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .error-box code {
+            display: inline-block;
+            margin-top: 1rem;
+            background: var(--bg-card);
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: var(--accent);
+        }
+
+        /* ── Markdown Styles ── */
+        .markdown-body h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--accent);
+        }
+        .markdown-body h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 2.5rem;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        .markdown-body h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-top: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-body p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.75;
+        }
+        .markdown-body a {
+            color: var(--accent);
+            text-decoration: none;
+            border-bottom: 1px solid transparent;
+            transition: border-color 0.2s;
+        }
+        .markdown-body a:hover {
+            border-bottom-color: var(--accent);
+        }
+        .markdown-body strong {
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        .markdown-body em {
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Lists */
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 1rem;
+            padding-left: 1.5rem;
+        }
+        .markdown-body li {
+            margin-bottom: 0.35rem;
+            color: var(--text-secondary);
+        }
+        .markdown-body li::marker {
+            color: var(--accent);
+        }
+
+        /* Inline code */
+        .markdown-body code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85em;
+            background: rgba(0, 237, 100, 0.08);
+            color: var(--accent);
+            padding: 0.15em 0.4em;
+            border-radius: 0.3rem;
+            border: 1px solid rgba(0, 237, 100, 0.15);
+        }
+
+        /* Code blocks */
+        .markdown-body pre {
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 0.75rem;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+        }
+        .markdown-body pre code {
+            background: none;
+            border: none;
+            padding: 0;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        /* Tables */
+        .markdown-body table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+        .markdown-body thead th {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid rgba(0, 237, 100, 0.2);
+            white-space: nowrap;
+        }
+        .markdown-body tbody td {
+            padding: 0.65rem 1rem;
+            border-bottom: 1px solid var(--border-subtle);
+            color: var(--text-secondary);
+            vertical-align: top;
+        }
+        .markdown-body tbody tr:hover {
+            background: rgba(0, 237, 100, 0.03);
+        }
+
+        /* Blockquotes */
+        .markdown-body blockquote {
+            border-left: 3px solid var(--accent);
+            padding: 0.75rem 1rem;
+            margin-bottom: 1rem;
+            background: rgba(0, 237, 100, 0.04);
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+        .markdown-body blockquote p {
+            margin-bottom: 0;
+            color: var(--text-muted);
+        }
+
+        /* Horizontal rules */
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid var(--border-subtle);
+            margin: 2.5rem 0;
+        }
+
+        /* Images */
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border-subtle);
+        }
+
+        /* Q&A styling (lines starting with Q: / A:) */
+        .markdown-body p:has(+ p) {
+            margin-bottom: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="home.html">MongoDB Unpacked</a>
+        <span class="separator">/</span>
+        <span class="filename" id="bar-filename">README.md</span>
+    </div>
+
+    <div class="content">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading README&hellip;</p>
+        </div>
+        <div id="error" class="error-box" style="display: none;">
+            <h2>File not found</h2>
+            <p>The requested README could not be loaded.</p>
+            <code id="error-file"></code>
+        </div>
+        <article id="markdown-content" class="markdown-body" style="display: none;"></article>
+    </div>
+
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const file = params.get('file');
+
+            if (!file || !/^README[-\w]*\.md$/i.test(file)) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').style.display = 'block';
+                document.getElementById('error-file').textContent = file || '(no file specified)';
+                return;
+            }
+
+            document.getElementById('bar-filename').textContent = file;
+            document.title = file.replace('.md', '') + ' — MongoDB Unpacked';
+
+            fetch(file)
+                .then(function(res) {
+                    if (!res.ok) throw new Error(res.status);
+                    return res.text();
+                })
+                .then(function(md) {
+                    document.getElementById('loading').style.display = 'none';
+                    var el = document.getElementById('markdown-content');
+                    el.style.display = 'block';
+                    el.innerHTML = marked.parse(md);
+                })
+                .catch(function() {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error').style.display = 'block';
+                    document.getElementById('error-file').textContent = file;
+                });
+        })();
+    </script>
+</body>
+</html>
