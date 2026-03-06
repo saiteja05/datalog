@@ -700,7 +700,7 @@
                     <p class="text-xs text-mongo-textMuted mb-3">Knowledge and facts — the agent's world understanding.</p>
                     <div class="flex flex-wrap gap-1.5">
                         <span class="memory-tag">Vector Search</span>
-                        <span class="memory-tag">Embeddings</span>
+                        <span class="memory-tag">Voyage AI</span>
                     </div>
                 </a>
                 <a href="#dd-procedural" class="memory-card fade-in fade-in-delay-4 block no-underline">
@@ -906,6 +906,14 @@ db.<span class="fn">episodes</span>.<span class="fn">insertOne</span>({
                         <div class="space-y-3">
                             <div class="flex items-start gap-3">
                                 <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Voyage AI Embeddings</strong> — Atlas-native embedding models from Voyage AI generate high-quality vectors directly inside the platform. No external embedding API calls needed.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Voyage AI Reranking</strong> — after initial vector retrieval, Atlas reranks results using Voyage AI's cross-encoder models for significantly higher recall and precision.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
                                 <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Atlas Vector Search</strong> finds semantically similar documents using ANN (Approximate Nearest Neighbor).</p>
                             </div>
                             <div class="flex items-start gap-3">
@@ -922,7 +930,7 @@ db.<span class="fn">episodes</span>.<span class="fn">insertOne</span>({
                             <div class="dd-particle" style="top: 45%; animation-duration: 4.5s; animation-delay: 0.7s;"></div>
                             <div class="dd-particle" style="top: 70%; animation-duration: 3s; animation-delay: 1.2s;"></div>
                             <div class="absolute inset-0 flex items-center justify-center">
-                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">EMBED → INDEX → $vectorSearch</span>
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">Voyage AI EMBED → INDEX → $vectorSearch → RERANK</span>
                             </div>
                         </div>
                     </div>
@@ -1934,8 +1942,8 @@ db.<span class="fn">shared_knowledge</span>.<span class="fn">find</span>({
                     <div class="value-icon">🔍</div>
                     <h3 class="text-xl font-bold text-mongo-textPri mb-3">Vector + Document</h3>
                     <p class="text-sm text-mongo-textMuted leading-relaxed">
-                        Atlas Vector Search runs natively on your operational data. Combine semantic search with
-                        structured filters, full-text search, and geospatial queries in a single aggregation pipeline.
+                        Atlas Vector Search with built-in Voyage AI embedding and reranking models. Combine semantic search with
+                        structured filters, full-text search, and geospatial queries — all in a single aggregation pipeline, no external APIs.
                     </p>
                 </div>
 
@@ -2061,16 +2069,17 @@ db.<span class="fn">shared_knowledge</span>.<span class="fn">find</span>({
                 op: '<span class="cm">// Recall similar resolved episodes</span>\ndb.episodes.<span class="fn">find</span>({\n  <span class="prop">user_id</span>: <span class="str">"user_123"</span>,\n  <span class="prop">outcome</span>: <span class="str">"resolved"</span>,\n  <span class="prop">tags</span>: { <span class="op">$in</span>: [<span class="str">"billing"</span>] }\n}).<span class="fn">sort</span>({ <span class="prop">timestamp</span>: <span class="num">-1</span> }).<span class="fn">limit</span>(<span class="num">5</span>)'
             },
             semantic: {
-                icon: '🌐', title: 'Semantic Memory', subtitle: 'Knowledge base with vector embeddings',
+                icon: '🌐', title: 'Semantic Memory', subtitle: 'Knowledge base with Voyage AI embeddings & reranking',
                 collection: 'db.knowledge',
                 features: [
+                    { label: 'Voyage AI Embeddings', desc: 'Atlas-native embedding models' },
+                    { label: 'Voyage AI Reranking', desc: 'Cross-encoder reranking for precision' },
                     { label: '$vectorSearch', desc: 'ANN similarity on embeddings' },
                     { label: 'Atlas Vector Search', desc: 'Native vector index' },
                     { label: 'Hybrid Search', desc: 'Vector + keyword + metadata' },
-                    { label: '$meta: "vectorSearchScore"', desc: 'Relevance scoring' },
-                    { label: 'filter (pre-filter)', desc: 'Scoped search by domain' }
+                    { label: '$meta: "vectorSearchScore"', desc: 'Relevance scoring' }
                 ],
-                desc: 'Domain knowledge is stored as documents with co-located vector embeddings. Atlas Vector Search runs ANN queries natively — no separate vector database required. Pre-filters on metadata (domain, active status) narrow the search space before vector scoring.',
+                desc: 'Domain knowledge is stored as documents with co-located vector embeddings generated by Voyage AI models built into Atlas. After retrieval, Voyage AI reranking refines results with cross-encoder scoring — no external embedding or reranking APIs needed.',
                 op: '<span class="cm">// Semantic retrieval with pre-filter</span>\ndb.knowledge.<span class="fn">aggregate</span>([\n  { <span class="op">$vectorSearch</span>: {\n    <span class="prop">index</span>: <span class="str">"vector_index"</span>,\n    <span class="prop">path</span>: <span class="str">"embedding"</span>,\n    <span class="prop">queryVector</span>: embedding,\n    <span class="prop">filter</span>: { <span class="prop">domain</span>: <span class="str">"billing"</span> },\n    <span class="prop">limit</span>: <span class="num">5</span>\n  }}\n])'
             },
             procedural: {
