@@ -1,0 +1,2411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agentic Memory on MongoDB</title>
+    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        mongo: { bg: '#001E2B', bg2: '#002838', card: '#003345', cardHover: '#004058', accent: '#00ED64', accentDim: '#00c853', textPri: '#fafafa', textSec: '#b8d8e8', textMuted: '#7fa8bc' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            --bg-primary: #001E2B;
+            --bg-secondary: #002838;
+            --bg-card: #003345;
+            --bg-card-hover: #004058;
+            --text-primary: #fafafa;
+            --text-secondary: #b8d8e8;
+            --text-muted: #7fa8bc;
+            --accent: #00ED64;
+            --accent-dim: #00c853;
+            --accent-glow: rgba(0, 237, 100, 0.15);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 237, 100, 0.25);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── Neural Network Background ── */
+        .hero-bg {
+            position: absolute; inset: 0; overflow: hidden; pointer-events: none;
+        }
+        .hero-bg canvas { width: 100%; height: 100%; opacity: 0.35; }
+
+        /* ── Sticky Nav ── */
+        .sticky-nav {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background: rgba(0, 30, 43, 0.8);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: all 0.3s ease;
+        }
+        .sticky-nav a {
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        .sticky-nav a:hover, .sticky-nav a.active { color: var(--accent); }
+
+        /* ── Fade In ── */
+        .fade-in {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
+        }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        .fade-in-delay-1 { transition-delay: 0.1s; }
+        .fade-in-delay-2 { transition-delay: 0.2s; }
+        .fade-in-delay-3 { transition-delay: 0.3s; }
+        .fade-in-delay-4 { transition-delay: 0.4s; }
+
+        /* ── Lifecycle Diagram ── */
+        .lifecycle-ring {
+            position: relative;
+            width: 520px; height: 520px;
+            margin: 0 auto;
+        }
+        @media (max-width: 640px) {
+            .lifecycle-ring { width: 320px; height: 320px; }
+            .lifecycle-node { width: 80px !important; height: 80px !important; }
+            .lifecycle-node .node-icon { font-size: 1.5rem !important; }
+            .lifecycle-node .node-label { font-size: 0.55rem !important; }
+        }
+
+        .lifecycle-svg {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+        }
+        .lifecycle-path {
+            fill: none;
+            stroke: var(--border-accent);
+            stroke-width: 2;
+            stroke-dasharray: 8 6;
+            animation: dashFlow 20s linear infinite;
+        }
+        .lifecycle-path-glow {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+            stroke-dasharray: 30 200;
+            stroke-linecap: round;
+            opacity: 0;
+            animation: dashFlow 4s linear infinite;
+            filter: drop-shadow(0 0 6px var(--accent));
+        }
+        .lifecycle-path-glow.active { opacity: 1; }
+
+        @keyframes dashFlow {
+            to { stroke-dashoffset: -230; }
+        }
+
+        .lifecycle-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--border-accent);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            box-shadow: 0 0 40px rgba(0, 237, 100, 0.1);
+            animation: centerPulse 3s ease-in-out infinite;
+        }
+        @keyframes centerPulse {
+            0%, 100% { box-shadow: 0 0 40px rgba(0, 237, 100, 0.1); }
+            50% { box-shadow: 0 0 60px rgba(0, 237, 100, 0.2); }
+        }
+        .lifecycle-center img { width: 40px; height: 40px; margin-bottom: 4px; }
+        .lifecycle-center span { font-size: 0.6rem; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+
+        .lifecycle-node {
+            position: absolute;
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+        }
+        .lifecycle-node:hover, .lifecycle-node.active {
+            border-color: var(--accent);
+            transform: scale(1.12);
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.25);
+        }
+        .lifecycle-node.active { background: linear-gradient(135deg, rgba(0, 237, 100, 0.1), var(--bg-card)); }
+        .lifecycle-node .node-icon { font-size: 1.75rem; margin-bottom: 4px; }
+        .lifecycle-node .node-label { font-size: 0.65rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.08em; }
+
+        /* Node positions (pentagon layout) */
+        .lifecycle-node:nth-child(1) { top: 2%;  left: 50%; transform: translateX(-50%); }
+        .lifecycle-node:nth-child(2) { top: 28%; right: 2%; }
+        .lifecycle-node:nth-child(3) { bottom: 8%; right: 12%; }
+        .lifecycle-node:nth-child(4) { bottom: 8%; left: 12%; }
+        .lifecycle-node:nth-child(5) { top: 28%; left: 2%; }
+        .lifecycle-node:nth-child(1):hover, .lifecycle-node:nth-child(1).active { transform: translateX(-50%) scale(1.12); }
+
+        /* ── Memory Cards ── */
+        .memory-card {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .memory-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.35s ease;
+        }
+        .memory-card:hover, .memory-card.active {
+            border-color: var(--border-accent);
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 237, 100, 0.08);
+        }
+        .memory-card:hover::before, .memory-card.active::before { opacity: 1; }
+
+        .memory-tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 237, 100, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+        }
+
+        /* ── Deep Dive Code Blocks ── */
+        .code-block {
+            background: #0a1628;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .code-header span { color: var(--text-muted); font-size: 0.75rem; }
+        .code-copy {
+            background: transparent; border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 6px;
+            font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .code-copy:hover { border-color: var(--accent); color: var(--accent); }
+        .code-body { padding: 1.25rem; overflow-x: auto; }
+        .code-body code { color: #e2e8f0; }
+        .code-body .kw { color: #c792ea; }
+        .code-body .str { color: #c3e88d; }
+        .code-body .num { color: #f78c6c; }
+        .code-body .fn { color: #82aaff; }
+        .code-body .op { color: #89ddff; }
+        .code-body .cm { color: #546e7a; }
+        .code-body .prop { color: #ffcb6b; }
+
+        /* ── Architecture Diagram ── */
+        .arch-box {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .arch-box:hover {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 25px rgba(0, 237, 100, 0.1);
+        }
+        .arch-connector {
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-size: 1.5rem;
+            position: relative;
+        }
+        .arch-connector .flow-dot {
+            width: 8px; height: 8px; background: var(--accent); border-radius: 50%;
+            animation: flowPulse 1.5s ease-in-out infinite;
+        }
+        @keyframes flowPulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.3); }
+        }
+
+        .memory-layer {
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(0, 30, 43, 0.6);
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+        }
+        .memory-layer:hover {
+            border-color: var(--border-accent);
+            background: rgba(0, 237, 100, 0.05);
+        }
+        .memory-layer.ml-active {
+            border-color: var(--accent);
+            background: rgba(0, 237, 100, 0.08);
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.1);
+        }
+
+        /* ── Architecture Detail Panel ── */
+        .arch-detail-panel {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, margin 0.4s ease;
+            opacity: 0;
+            margin-top: 0;
+        }
+        .arch-detail-panel.open {
+            max-height: 600px;
+            opacity: 1;
+            margin-top: 1.5rem;
+        }
+        .arch-detail-inner {
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-accent);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+        }
+        .arch-detail-inner::before {
+            content: '';
+            position: absolute; top: -8px; right: 60px;
+            width: 14px; height: 14px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border-accent);
+            border-left: 1px solid var(--border-accent);
+            transform: rotate(45deg);
+        }
+        .mongo-feature-chip {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.35rem 0.75rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 237, 100, 0.08);
+            color: var(--accent);
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            transition: all 0.2s ease;
+        }
+        .mongo-feature-chip:hover {
+            background: rgba(0, 237, 100, 0.15);
+            border-color: rgba(0, 237, 100, 0.3);
+        }
+        .arch-flow-active .flow-dot {
+            animation: flowPulseActive 0.8s ease-in-out infinite !important;
+        }
+        @keyframes flowPulseActive {
+            0%, 100% { opacity: 0.5; transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 237, 100, 0); }
+            50% { opacity: 1; transform: scale(1.6); box-shadow: 0 0 12px 4px rgba(0, 237, 100, 0.3); }
+        }
+
+        /* ── Value Cards ── */
+        .value-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            transition: all 0.35s ease;
+            text-align: center;
+        }
+        .value-card:hover {
+            border-color: var(--border-accent);
+            transform: translateY(-4px);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 237, 100, 0.08);
+        }
+        .value-icon {
+            width: 64px; height: 64px;
+            border-radius: 16px;
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            display: flex; align-items: center; justify-content: center;
+            margin: 0 auto 1.5rem;
+            font-size: 1.75rem;
+        }
+
+        /* ── Deep Dive Visual ── */
+        .dd-visual {
+            width: 100%; height: 120px;
+            position: relative;
+            margin-top: 1.5rem;
+            border-radius: 12px;
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid var(--border-subtle);
+            overflow: hidden;
+        }
+        .dd-particle {
+            position: absolute;
+            width: 6px; height: 6px;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: particleFloat linear infinite;
+        }
+        @keyframes particleFloat {
+            0% { transform: translateX(-20px); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateX(calc(100vw)); opacity: 0; }
+        }
+
+        /* ── Scenario Walkthrough ── */
+        .scenario-step {
+            display: flex; gap: 1.5rem; align-items: flex-start;
+            padding: 1.5rem;
+            border-radius: 14px;
+            border: 1px solid var(--border-subtle);
+            background: rgba(0, 30, 43, 0.4);
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.5;
+        }
+        .scenario-step.step-active {
+            opacity: 1;
+            border-color: var(--border-accent);
+            background: rgba(0, 237, 100, 0.04);
+            box-shadow: 0 0 25px rgba(0, 237, 100, 0.06);
+        }
+        .scenario-step:hover { opacity: 0.85; }
+        .scenario-step.step-active:hover { opacity: 1; }
+        .step-num {
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 700; flex-shrink: 0;
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            color: var(--accent);
+            transition: all 0.3s ease;
+        }
+        .step-active .step-num {
+            background: var(--accent);
+            color: var(--bg-primary);
+        }
+        .scenario-viz {
+            min-height: 320px;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+        .mem-pill {
+            display: inline-flex; align-items: center; gap: 0.4rem;
+            padding: 0.5rem 0.9rem; border-radius: 10px;
+            font-size: 0.75rem; font-weight: 600;
+            border: 1px solid var(--border-subtle);
+            background: rgba(0, 30, 43, 0.8);
+            color: var(--text-muted);
+            transition: all 0.4s ease;
+        }
+        .mem-pill.pill-read {
+            border-color: rgba(56, 189, 248, 0.5);
+            color: #38bdf8;
+            background: rgba(56, 189, 248, 0.08);
+            box-shadow: 0 0 15px rgba(56, 189, 248, 0.1);
+        }
+        .mem-pill.pill-write {
+            border-color: rgba(0, 237, 100, 0.5);
+            color: var(--accent);
+            background: rgba(0, 237, 100, 0.08);
+            box-shadow: 0 0 15px rgba(0, 237, 100, 0.1);
+        }
+        .pill-badge {
+            font-size: 0.55rem; font-weight: 700;
+            padding: 0.1rem 0.4rem; border-radius: 4px;
+            text-transform: uppercase; letter-spacing: 0.05em;
+        }
+        .pill-badge-read { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+        .pill-badge-write { background: rgba(0, 237, 100, 0.2); color: var(--accent); }
+
+        /* ── Before/After Comparison ── */
+        .compare-col {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        .compare-col:hover { border-color: var(--border-accent); }
+        .compare-item {
+            display: flex; align-items: center; gap: 0.75rem;
+            padding: 0.6rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-subtle);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        .compare-item:hover { border-color: rgba(255,255,255,0.1); }
+        .sync-line {
+            height: 2px;
+            background: repeating-linear-gradient(90deg, #ff6b6b 0 6px, transparent 6px 12px);
+            animation: syncDash 1s linear infinite;
+        }
+        @keyframes syncDash { to { background-position: 12px 0; } }
+
+        /* ── Timeline ── */
+        .tl-track {
+            position: relative;
+            padding-left: 40px;
+        }
+        .tl-track::before {
+            content: '';
+            position: absolute; left: 15px; top: 0; bottom: 0;
+            width: 2px;
+            background: linear-gradient(to bottom, var(--accent), var(--border-accent), transparent);
+        }
+        .tl-node {
+            position: relative;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            transition: all 0.3s ease;
+        }
+        .tl-node:hover {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.08);
+        }
+        .tl-node::before {
+            content: '';
+            position: absolute; left: -33px; top: 1.5rem;
+            width: 12px; height: 12px;
+            border-radius: 50%;
+            background: var(--accent);
+            border: 2px solid var(--bg-primary);
+            box-shadow: 0 0 10px rgba(0, 237, 100, 0.3);
+        }
+        .tl-time {
+            font-size: 0.65rem; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--accent);
+        }
+
+        /* ── Section Gradient Dividers ── */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+        }
+
+        /* ── Scroll indicator ── */
+        .scroll-indicator {
+            animation: bounceDown 2s ease-in-out infinite;
+        }
+        @keyframes bounceDown {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(8px); }
+        }
+    </style>
+</head>
+<body class="bg-mongo-bg text-mongo-textSec">
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- STICKY NAV                                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <nav class="sticky-nav fixed top-0 left-0 right-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 flex items-center justify-between h-14">
+            <a href="home.html" class="flex items-center gap-2 text-mongo-textPri font-bold text-sm tracking-wide">
+                <img src="assets/mongodb-leaf.png" alt="" class="w-5 h-5"> Agentic Memory
+            </a>
+            <div class="hidden md:flex items-center gap-6">
+                <a href="#lifecycle">Lifecycle</a>
+                <a href="#memory-types">Memory Types</a>
+                <a href="#deep-dive">Deep Dive</a>
+                <a href="#architecture">Architecture</a>
+                <a href="#scenario">Scenario</a>
+                <a href="#timeline">Timeline</a>
+                <a href="#why-atlas">Why Atlas</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 1 : HERO                                            -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
+        <div class="hero-bg"><canvas id="neuralCanvas"></canvas></div>
+        <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-mongo-accent/20 bg-mongo-accent/5 text-mongo-accent text-xs font-semibold tracking-widest uppercase mb-8">
+                <span class="w-2 h-2 bg-mongo-accent rounded-full animate-pulse"></span>
+                MongoDB Atlas
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold leading-tight">
+                <span class="bg-gradient-to-r from-white via-white to-mongo-accent bg-clip-text text-transparent">Agentic Memory</span>
+                <br>
+                <span class="text-mongo-textSec text-3xl md:text-4xl font-light">on MongoDB</span>
+            </h1>
+            <p class="mt-6 text-lg md:text-xl text-mongo-textMuted max-w-2xl mx-auto leading-relaxed">
+                AI agents need more than intelligence — they need <strong class="text-mongo-textSec">memory</strong>.
+                Explore how MongoDB Atlas powers every layer of agentic memory: from fleeting context
+                to permanent knowledge, all in a single unified platform.
+            </p>
+            <div class="mt-10 scroll-indicator">
+                <a href="#lifecycle" class="text-mongo-textMuted hover:text-mongo-accent transition-colors">
+                    <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 2 : AGENT LIFECYCLE                                 -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="lifecycle" class="py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">The Agent Lifecycle</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Every intelligent agent operates in a continuous loop. MongoDB sits at the center —
+                    the persistent memory that makes each cycle smarter than the last.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <!-- Interactive Ring -->
+                <div class="flex-shrink-0 fade-in">
+                    <div class="lifecycle-ring">
+                        <svg class="lifecycle-svg" viewBox="0 0 520 520">
+                            <path class="lifecycle-path" d="M260,50 L460,190 L400,430 L120,430 L60,190 Z" />
+                            <path class="lifecycle-path-glow active" d="M260,50 L460,190 L400,430 L120,430 L60,190 Z" />
+                        </svg>
+                        <div class="lifecycle-node" data-phase="perceive" onclick="selectPhase(0)">
+                            <span class="node-icon">👁️</span>
+                            <span class="node-label">Perceive</span>
+                        </div>
+                        <div class="lifecycle-node" data-phase="retrieve" onclick="selectPhase(1)">
+                            <span class="node-icon">🔍</span>
+                            <span class="node-label">Retrieve</span>
+                        </div>
+                        <div class="lifecycle-node" data-phase="reason" onclick="selectPhase(2)">
+                            <span class="node-icon">🧠</span>
+                            <span class="node-label">Reason</span>
+                        </div>
+                        <div class="lifecycle-node" data-phase="act" onclick="selectPhase(3)">
+                            <span class="node-icon">⚡</span>
+                            <span class="node-label">Act</span>
+                        </div>
+                        <div class="lifecycle-node" data-phase="store" onclick="selectPhase(4)">
+                            <span class="node-icon">💾</span>
+                            <span class="node-label">Store</span>
+                        </div>
+                        <div class="lifecycle-center">
+                            <img src="assets/mongodb-leaf.png" alt="MongoDB">
+                            <span>Memory</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Phase Detail Panel -->
+                <div class="flex-1 fade-in fade-in-delay-2">
+                    <div id="phase-detail" class="bg-mongo-card/60 border border-white/5 rounded-2xl p-8 min-h-[280px] transition-all duration-500">
+                        <div id="phase-badge" class="inline-block text-xs font-bold uppercase tracking-widest text-mongo-accent mb-3">Phase 1 of 5</div>
+                        <h3 id="phase-title" class="text-2xl font-bold text-mongo-textPri mb-3">Perceive</h3>
+                        <p id="phase-desc" class="text-mongo-textSec leading-relaxed mb-4">
+                            The agent receives input — a user message, an API event, a sensor reading, or a scheduled trigger.
+                            This raw input is the catalyst for the entire cognitive cycle.
+                        </p>
+                        <div id="phase-mongo" class="border-t border-white/5 pt-4">
+                            <span class="text-xs font-semibold text-mongo-accent uppercase tracking-wider">MongoDB Role</span>
+                            <p id="phase-mongo-text" class="mt-1 text-sm text-mongo-textMuted">
+                                Change Streams capture real-time events. Incoming messages are immediately persisted to the
+                                <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs">working_memory</code> collection.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 3 : MEMORY TYPES GRID                               -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="memory-types" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Eight Layers of Memory</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Just like the human mind, an intelligent agent needs multiple types of memory
+                    working in concert. MongoDB Atlas unifies them all in a single cluster.
+                </p>
+            </div>
+
+            <!-- Core Types — pill row (matching ExoMemory branding) -->
+            <div class="flex flex-wrap justify-center gap-6 mb-16 fade-in">
+                <a href="#dd-working" class="text-center group block no-underline">
+                    <div class="px-6 py-2.5 rounded-full bg-mongo-accent text-mongo-bg font-bold text-sm tracking-wide group-hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all duration-300">Short Term</div>
+                    <p class="mt-2 text-xs text-mongo-textMuted max-w-[140px] mx-auto leading-snug">Recent dialogs or task context</p>
+                </a>
+                <a href="#dd-longterm" class="text-center group block no-underline">
+                    <div class="px-6 py-2.5 rounded-full bg-mongo-accent text-mongo-bg font-bold text-sm tracking-wide group-hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all duration-300">Long Term</div>
+                    <p class="mt-2 text-xs text-mongo-textMuted max-w-[140px] mx-auto leading-snug">Facts, knowledge &amp; world understanding</p>
+                </a>
+                <a href="#dd-procedural" class="text-center group block no-underline">
+                    <div class="px-6 py-2.5 rounded-full bg-mongo-accent text-mongo-bg font-bold text-sm tracking-wide group-hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all duration-300">Procedural</div>
+                    <p class="mt-2 text-xs text-mongo-textMuted max-w-[140px] mx-auto leading-snug">How-to knowledge &amp; step-by-step instructions</p>
+                </a>
+                <a href="#dd-taxonomic" class="text-center group block no-underline">
+                    <div class="px-6 py-2.5 rounded-full bg-mongo-accent text-mongo-bg font-bold text-sm tracking-wide group-hover:shadow-[0_0_20px_rgba(0,237,100,0.3)] transition-all duration-300">Taxonomic</div>
+                    <p class="mt-2 text-xs text-mongo-textMuted max-w-[140px] mx-auto leading-snug">Organizes terminology into structured categories</p>
+                </a>
+            </div>
+
+            <!-- Detailed cards grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                <a href="#dd-working" class="memory-card fade-in fade-in-delay-1 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">⚡ Working Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Short-term conversation context — the agent's scratchpad.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">TTL Index</span>
+                        <span class="memory-tag">Change Streams</span>
+                    </div>
+                </a>
+                <a href="#dd-episodic" class="memory-card fade-in fade-in-delay-2 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">📖 Episodic Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Past interactions and experiences — the agent's autobiography.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">Timestamped Docs</span>
+                        <span class="memory-tag">Atlas Search</span>
+                    </div>
+                </a>
+                <a href="#dd-semantic" class="memory-card fade-in fade-in-delay-3 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">🌐 Semantic Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Knowledge and facts — the agent's world understanding.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">Vector Search</span>
+                        <span class="memory-tag">Embeddings</span>
+                    </div>
+                </a>
+                <a href="#dd-procedural" class="memory-card fade-in fade-in-delay-4 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">🔧 Procedural Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Learned skills and workflows — the agent knows <em>how</em>.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">Document Model</span>
+                        <span class="memory-tag">Aggregation</span>
+                    </div>
+                </a>
+                <a href="#dd-longterm" class="memory-card fade-in fade-in-delay-1 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">🏛️ Long-term Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Persistent preferences and profiles that grow over time.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">Flexible Schema</span>
+                        <span class="memory-tag">Upserts</span>
+                    </div>
+                </a>
+                <a href="#dd-taxonomic" class="memory-card fade-in fade-in-delay-2 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">🏷️ Taxonomic Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Structured categories and domain terminology.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">$graphLookup</span>
+                        <span class="memory-tag">Hierarchical Docs</span>
+                    </div>
+                </a>
+                <a href="#dd-entity" class="memory-card fade-in fade-in-delay-3 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">🪪 Entity Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">People, products, and organizations the agent knows.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">Document Model</span>
+                        <span class="memory-tag">Rich Queries</span>
+                    </div>
+                </a>
+                <a href="#dd-shared" class="memory-card fade-in fade-in-delay-4 block no-underline">
+                    <h3 class="text-base font-bold text-mongo-textPri mb-1.5">🤝 Shared Memory</h3>
+                    <p class="text-xs text-mongo-textMuted mb-3">Cross-agent sharing — one learns, the team benefits.</p>
+                    <div class="flex flex-wrap gap-1.5">
+                        <span class="memory-tag">RBAC</span>
+                        <span class="memory-tag">Multi-tenant</span>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 4 : DEEP DIVES                                      -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="deep-dive" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-20 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Deep Dive</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Each memory type maps to specific MongoDB features. Here's exactly how.
+                </p>
+            </div>
+
+            <!-- ── Working Memory ── -->
+            <div id="dd-working" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">⚡</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Working Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Working memory is the agent's scratchpad — it holds the current conversation context,
+                            intermediate reasoning steps, and any temporary data needed for the task at hand.
+                            Like human short-term memory, it's fast, focused, and ephemeral.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">TTL Indexes</strong> automatically expire sessions after inactivity, preventing unbounded growth.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Change Streams</strong> let the agent react to new messages in real-time without polling.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">LangGraph Checkpointer</strong> uses MongoDB to persist graph state for multi-step agent workflows.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 30%; animation-duration: 3s; animation-delay: 0s;"></div>
+                            <div class="dd-particle" style="top: 50%; animation-duration: 4s; animation-delay: 0.5s;"></div>
+                            <div class="dd-particle" style="top: 70%; animation-duration: 3.5s; animation-delay: 1s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">SESSION → BUFFER → TTL EXPIRE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>working_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Auto-expire sessions after 1 hour of inactivity</span>
+db.<span class="fn">working_memory</span>.<span class="fn">createIndex</span>(
+  { <span class="str">"created_at"</span>: <span class="num">1</span> },
+  { <span class="prop">expireAfterSeconds</span>: <span class="num">3600</span> }
+)
+
+<span class="cm">// Store current conversation context</span>
+db.<span class="fn">working_memory</span>.<span class="fn">insertOne</span>({
+  <span class="prop">session_id</span>: <span class="str">"sess_abc"</span>,
+  <span class="prop">agent_id</span>:  <span class="str">"support-v2"</span>,
+  <span class="prop">messages</span>: [
+    { <span class="prop">role</span>: <span class="str">"user"</span>,  <span class="prop">content</span>: <span class="str">"My order hasn't arrived"</span> },
+    { <span class="prop">role</span>: <span class="str">"agent"</span>, <span class="prop">content</span>: <span class="str">"Let me check that..."</span> }
+  ],
+  <span class="prop">tool_state</span>: { <span class="prop">pending</span>: <span class="str">"order_lookup"</span> },
+  <span class="prop">created_at</span>: <span class="kw">new</span> <span class="fn">Date</span>()
+})</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Episodic Memory ── -->
+            <div id="dd-episodic" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in order-1 lg:order-2">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">📖</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Episodic Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Episodic memory records <em>what happened</em> — past conversations, resolved tickets,
+                            successful outcomes, and failures. It lets the agent learn from experience:
+                            "Last time this user asked about billing, here's what worked."
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Rich Documents</strong> capture full interaction context: messages, decisions, outcomes, and metadata.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Atlas Search</strong> enables fuzzy, full-text search across past episodes by content, tags, or outcome.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Compound Indexes</strong> on user + timestamp enable instant lookups for recent history.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 25%; animation-duration: 5s; animation-delay: 0s;"></div>
+                            <div class="dd-particle" style="top: 55%; animation-duration: 4s; animation-delay: 0.8s;"></div>
+                            <div class="dd-particle" style="top: 75%; animation-duration: 6s; animation-delay: 1.5s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">INTERACTION → LOG → RECALL</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2 order-2 lg:order-1">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>episodic_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Recall similar past episodes for context</span>
+db.<span class="fn">episodes</span>.<span class="fn">find</span>({
+  <span class="prop">user_id</span>: <span class="str">"user_123"</span>,
+  <span class="prop">outcome</span>: <span class="str">"resolved"</span>,
+  <span class="prop">tags</span>: { <span class="op">$in</span>: [<span class="str">"billing"</span>, <span class="str">"refund"</span>] }
+}).<span class="fn">sort</span>({ <span class="prop">timestamp</span>: <span class="num">-1</span> }).<span class="fn">limit</span>(<span class="num">5</span>)
+
+<span class="cm">// Store a completed episode</span>
+db.<span class="fn">episodes</span>.<span class="fn">insertOne</span>({
+  <span class="prop">user_id</span>:   <span class="str">"user_123"</span>,
+  <span class="prop">agent_id</span>:  <span class="str">"support-v2"</span>,
+  <span class="prop">summary</span>:   <span class="str">"Resolved billing dispute for $49.99"</span>,
+  <span class="prop">outcome</span>:   <span class="str">"resolved"</span>,
+  <span class="prop">tags</span>:      [<span class="str">"billing"</span>, <span class="str">"refund"</span>, <span class="str">"positive"</span>],
+  <span class="prop">messages</span>:  [...],
+  <span class="prop">decisions</span>: [<span class="str">"escalated_to_supervisor"</span>],
+  <span class="prop">timestamp</span>: <span class="kw">new</span> <span class="fn">Date</span>()
+})</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Semantic Memory ── -->
+            <div id="dd-semantic" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🌐</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Semantic Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Semantic memory is the agent's knowledge base — facts, concepts, and domain expertise
+                            stored as vector embeddings alongside structured metadata. This is the backbone of
+                            RAG (Retrieval-Augmented Generation).
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Atlas Vector Search</strong> finds semantically similar documents using ANN (Approximate Nearest Neighbor).</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Hybrid Search</strong> combines vector similarity with keyword and metadata filters in one query.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Co-located Data</strong> — embeddings live alongside the source documents. No sync pipeline needed.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 20%; animation-duration: 3.5s; animation-delay: 0.2s;"></div>
+                            <div class="dd-particle" style="top: 45%; animation-duration: 4.5s; animation-delay: 0.7s;"></div>
+                            <div class="dd-particle" style="top: 70%; animation-duration: 3s; animation-delay: 1.2s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">EMBED → INDEX → $vectorSearch</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>semantic_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Retrieve knowledge via vector similarity</span>
+db.<span class="fn">knowledge</span>.<span class="fn">aggregate</span>([
+  { <span class="op">$vectorSearch</span>: {
+      <span class="prop">index</span>:         <span class="str">"vector_index"</span>,
+      <span class="prop">path</span>:          <span class="str">"embedding"</span>,
+      <span class="prop">queryVector</span>:   queryEmbedding,
+      <span class="prop">numCandidates</span>: <span class="num">100</span>,
+      <span class="prop">limit</span>:         <span class="num">5</span>,
+      <span class="prop">filter</span>: {
+        <span class="prop">domain</span>: <span class="str">"billing"</span>,
+        <span class="prop">active</span>: <span class="kw">true</span>
+      }
+  }},
+  { <span class="op">$project</span>: {
+      <span class="prop">content</span>: <span class="num">1</span>,
+      <span class="prop">source</span>:  <span class="num">1</span>,
+      <span class="prop">score</span>:   { <span class="op">$meta</span>: <span class="str">"vectorSearchScore"</span> }
+  }}
+])</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Procedural Memory ── -->
+            <div id="dd-procedural" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in order-1 lg:order-2">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🔧</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Procedural Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Procedural memory stores <em>how</em> the agent does things — tool definitions, learned workflows,
+                            successful action sequences, and decision templates. It's the difference between
+                            knowing facts and knowing skills.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Flexible Documents</strong> store complex tool schemas, multi-step workflows, and versioned procedures.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Versioning</strong> allows agents to evolve their skills — keeping proven procedures while testing new ones.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Success Tracking</strong> — each procedure tracks its success rate so the agent picks the best approach.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 30%; animation-duration: 4s; animation-delay: 0s;"></div>
+                            <div class="dd-particle" style="top: 55%; animation-duration: 5s; animation-delay: 0.6s;"></div>
+                            <div class="dd-particle" style="top: 80%; animation-duration: 3.5s; animation-delay: 1.1s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">SKILL → VERSION → EXECUTE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2 order-2 lg:order-1">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>procedural_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Retrieve the best-performing refund procedure</span>
+db.<span class="fn">procedures</span>.<span class="fn">findOne</span>({
+  <span class="prop">skill</span>:        <span class="str">"order_refund"</span>,
+  <span class="prop">version</span>:      { <span class="op">$gte</span>: <span class="num">2</span> },
+  <span class="prop">success_rate</span>: { <span class="op">$gte</span>: <span class="num">0.95</span> }
+})
+
+<span class="cm">// A procedure document — the agent's playbook</span>
+{
+  <span class="prop">skill</span>:    <span class="str">"order_refund"</span>,
+  <span class="prop">version</span>:  <span class="num">3</span>,
+  <span class="prop">steps</span>: [
+    { <span class="prop">action</span>: <span class="str">"lookup_order"</span>,   <span class="prop">tool</span>: <span class="str">"orders_api"</span> },
+    { <span class="prop">action</span>: <span class="str">"check_policy"</span>,   <span class="prop">tool</span>: <span class="str">"policy_engine"</span> },
+    { <span class="prop">action</span>: <span class="str">"process_refund"</span>, <span class="prop">tool</span>: <span class="str">"payments_api"</span> },
+    { <span class="prop">action</span>: <span class="str">"send_confirm"</span>,   <span class="prop">tool</span>: <span class="str">"email_service"</span> }
+  ],
+  <span class="prop">success_rate</span>: <span class="num">0.97</span>,
+  <span class="prop">avg_duration_ms</span>: <span class="num">4200</span>
+}</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Long-term Memory ── -->
+            <div id="dd-longterm" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🏛️</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Long-term Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Long-term memory persists user preferences, behavioral patterns, and accumulated insights
+                            across sessions. It enables true personalization — the agent remembers that you prefer
+                            concise answers, always want tracking links, and tend to ask about billing on Mondays.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Flexible Schema</strong> lets profiles evolve organically — new preferences are added without migrations.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Atomic Updates</strong> with <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$set</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$push</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$inc</code> modify specific fields without overwriting the full document.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Capped Arrays</strong> via <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$slice</code> keep history bounded while retaining the most recent entries.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 25%; animation-duration: 6s; animation-delay: 0s;"></div>
+                            <div class="dd-particle" style="top: 50%; animation-duration: 5s; animation-delay: 0.9s;"></div>
+                            <div class="dd-particle" style="top: 75%; animation-duration: 7s; animation-delay: 1.6s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">LEARN → STORE → PERSONALIZE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>longterm_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Evolve user profile with every interaction</span>
+db.<span class="fn">user_profiles</span>.<span class="fn">updateOne</span>(
+  { <span class="prop">user_id</span>: <span class="str">"user_123"</span> },
+  {
+    <span class="op">$set</span>: {
+      <span class="str">"preferences.tone"</span>: <span class="str">"concise"</span>,
+      <span class="str">"preferences.include_links"</span>: <span class="kw">true</span>,
+      <span class="str">"last_active"</span>: <span class="kw">new</span> <span class="fn">Date</span>()
+    },
+    <span class="op">$push</span>: {
+      <span class="str">"interaction_history"</span>: {
+        <span class="op">$each</span>:  [{ <span class="prop">topic</span>: <span class="str">"billing"</span>, <span class="prop">ts</span>: <span class="kw">new</span> <span class="fn">Date</span>() }],
+        <span class="op">$slice</span>: <span class="num">-100</span>
+      }
+    },
+    <span class="op">$inc</span>: { <span class="str">"metrics.total_interactions"</span>: <span class="num">1</span> }
+  },
+  { <span class="prop">upsert</span>: <span class="kw">true</span> }
+)
+
+<span class="cm">// Read personalization at session start</span>
+<span class="kw">const</span> profile = db.<span class="fn">user_profiles</span>.<span class="fn">findOne</span>(
+  { <span class="prop">user_id</span>: <span class="str">"user_123"</span> },
+  { <span class="prop">preferences</span>: <span class="num">1</span>, <span class="prop">interaction_history</span>: { <span class="op">$slice</span>: <span class="num">-5</span> } }
+)</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ── Taxonomic Memory ── -->
+            <div id="dd-taxonomic" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🏷️</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Taxonomic Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Taxonomic memory organizes domain terminology into structured hierarchies and categories.
+                            When the agent encounters "WAN issue," it knows this belongs under Networking → Wide Area Network → Troubleshooting.
+                            It's the difference between understanding words and understanding how concepts relate.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">$graphLookup</strong> traverses hierarchical category trees in a single query — no recursive application code needed.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Self-referencing Documents</strong> store parent-child relationships natively with a <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">parent_id</code> field.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Post-session Consolidation</strong> — back-end processing analyzes working memory and automatically discovers new terms to categorize.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 25%; animation-duration: 4s; animation-delay: 0s;"></div>
+                            <div class="dd-particle" style="top: 55%; animation-duration: 5s; animation-delay: 0.7s;"></div>
+                            <div class="dd-particle" style="top: 80%; animation-duration: 3.5s; animation-delay: 1.3s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">TERM → CLASSIFY → HIERARCHY</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>taxonomic_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Taxonomy as self-referencing documents</span>
+db.<span class="fn">taxonomy</span>.<span class="fn">insertMany</span>([
+  { <span class="prop">_id</span>: <span class="str">"networking"</span>, <span class="prop">label</span>: <span class="str">"Networking"</span>, <span class="prop">parent</span>: <span class="kw">null</span> },
+  { <span class="prop">_id</span>: <span class="str">"wan"</span>, <span class="prop">label</span>: <span class="str">"Wide Area Network"</span>, <span class="prop">parent</span>: <span class="str">"networking"</span> },
+  { <span class="prop">_id</span>: <span class="str">"wan_troubleshoot"</span>, <span class="prop">label</span>: <span class="str">"WAN Troubleshooting"</span>,
+    <span class="prop">parent</span>: <span class="str">"wan"</span>,
+    <span class="prop">terms</span>: [<span class="str">"latency"</span>, <span class="str">"packet loss"</span>, <span class="str">"jitter"</span>] }
+])
+
+<span class="cm">// Traverse the full hierarchy with $graphLookup</span>
+db.<span class="fn">taxonomy</span>.<span class="fn">aggregate</span>([
+  { <span class="op">$match</span>: { <span class="prop">_id</span>: <span class="str">"wan_troubleshoot"</span> } },
+  { <span class="op">$graphLookup</span>: {
+      <span class="prop">from</span>: <span class="str">"taxonomy"</span>,
+      <span class="prop">startWith</span>: <span class="str">"$parent"</span>,
+      <span class="prop">connectFromField</span>: <span class="str">"parent"</span>,
+      <span class="prop">connectToField</span>: <span class="str">"_id"</span>,
+      <span class="prop">as</span>: <span class="str">"ancestors"</span>
+  }}
+])</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Entity Memory ── -->
+            <div id="dd-entity" class="mb-24 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in order-1 lg:order-2">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🪪</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Entity Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            Entity memory stores structured knowledge about the specific people, products, organizations,
+                            and concepts the agent interacts with. Unlike semantic memory (embeddings), entity memory is
+                            richly structured — enabling precise attribute lookups and relationship traversal.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Document Model</strong> naturally represents entities with nested attributes, arrays of relationships, and arbitrary metadata.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Rich Queries</strong> on structured fields — filter entities by type, relationship, attribute, or any combination.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">CrewAI Compatible</strong> — maps directly to CrewAI's EntityMemory interface for multi-agent entity tracking.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 30%; animation-duration: 4.5s; animation-delay: 0.2s;"></div>
+                            <div class="dd-particle" style="top: 55%; animation-duration: 3.5s; animation-delay: 0.8s;"></div>
+                            <div class="dd-particle" style="top: 75%; animation-duration: 5s; animation-delay: 1.4s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">EXTRACT → STORE → RELATE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2 order-2 lg:order-1">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>entity_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Store structured entity knowledge</span>
+db.<span class="fn">entities</span>.<span class="fn">updateOne</span>(
+  { <span class="prop">entity_id</span>: <span class="str">"acme_corp"</span> },
+  { <span class="op">$set</span>: {
+      <span class="prop">type</span>: <span class="str">"organization"</span>,
+      <span class="prop">name</span>: <span class="str">"Acme Corporation"</span>,
+      <span class="prop">attributes</span>: {
+        <span class="prop">tier</span>: <span class="str">"enterprise"</span>,
+        <span class="prop">industry</span>: <span class="str">"manufacturing"</span>,
+        <span class="prop">since</span>: <span class="num">2019</span>
+      },
+      <span class="prop">relationships</span>: [
+        { <span class="prop">type</span>: <span class="str">"contact"</span>, <span class="prop">ref</span>: <span class="str">"jane_doe"</span> },
+        { <span class="prop">type</span>: <span class="str">"product"</span>, <span class="prop">ref</span>: <span class="str">"widget_pro"</span> }
+      ]
+  }},
+  { <span class="prop">upsert</span>: <span class="kw">true</span> }
+)
+
+<span class="cm">// Query entities by relationship</span>
+db.<span class="fn">entities</span>.<span class="fn">find</span>({
+  <span class="str">"relationships.ref"</span>: <span class="str">"jane_doe"</span>,
+  <span class="prop">type</span>: <span class="str">"organization"</span>
+})</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Shared Memory ── -->
+            <div id="dd-shared" class="mb-8 scroll-mt-20">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                    <div class="fade-in">
+                        <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🤝</div>
+                            <h3 class="text-2xl font-bold text-mongo-textPri">Shared Memory</h3>
+                        </div>
+                        <p class="text-mongo-textSec leading-relaxed mb-4">
+                            In multi-agent systems, what one agent learns should benefit the whole team.
+                            Shared memory enables cross-agent knowledge sharing — when Engineer A's agent
+                            solves a WAN issue, Engineer B's agent can leverage that knowledge a week later.
+                            MongoDB's RBAC controls exactly who reads and writes what.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">RBAC</strong> — Role-Based Access Control governs which agents or teams can read/write to shared collections.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Multi-tenant Design</strong> — a <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">team_id</code> field scopes shared memory to teams, departments, or organizations.</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-1">▸</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Change Streams</strong> notify peer agents when shared knowledge is updated — enabling real-time collaboration.</p>
+                            </div>
+                        </div>
+                        <div class="dd-visual mt-6">
+                            <div class="dd-particle" style="top: 20%; animation-duration: 4s; animation-delay: 0s;"></div>
+                            <div class="dd-particle" style="top: 50%; animation-duration: 5.5s; animation-delay: 0.5s;"></div>
+                            <div class="dd-particle" style="top: 80%; animation-duration: 3.5s; animation-delay: 1s;"></div>
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">LEARN → SHARE → COLLABORATE</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span>shared_memory.js</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><code><span class="cm">// Agent A learns and shares with the team</span>
+db.<span class="fn">shared_knowledge</span>.<span class="fn">insertOne</span>({
+  <span class="prop">team_id</span>:     <span class="str">"noc_team"</span>,
+  <span class="prop">contributed_by</span>: <span class="str">"agent_A"</span>,
+  <span class="prop">topic</span>:       <span class="str">"WAN troubleshooting"</span>,
+  <span class="prop">insight</span>:     <span class="str">"Rebooting the edge router resolves 80% of WAN latency spikes"</span>,
+  <span class="prop">confidence</span>:  <span class="num">0.92</span>,
+  <span class="prop">source_episode</span>: ObjectId(<span class="str">"..."</span>),
+  <span class="prop">created_at</span>:  <span class="kw">new</span> <span class="fn">Date</span>()
+})
+
+<span class="cm">// Agent B queries shared team knowledge</span>
+db.<span class="fn">shared_knowledge</span>.<span class="fn">find</span>({
+  <span class="prop">team_id</span>:    <span class="str">"noc_team"</span>,
+  <span class="prop">topic</span>:      { <span class="op">$regex</span>: <span class="str">/wan/i</span> },
+  <span class="prop">confidence</span>: { <span class="op">$gte</span>: <span class="num">0.8</span> }
+}).<span class="fn">sort</span>({ <span class="prop">created_at</span>: <span class="num">-1</span> })</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 5 : ARCHITECTURE DIAGRAM                            -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="architecture" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">How It All Connects</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    A single MongoDB Atlas cluster serves as the unified memory backbone.
+                    One connection, one API, every type of memory.
+                </p>
+            </div>
+
+            <!-- Architecture Flow -->
+            <div class="fade-in" id="arch-diagram">
+                <div class="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] gap-4 items-start">
+
+                    <!-- User / Input -->
+                    <div class="arch-box self-center">
+                        <div class="text-3xl mb-3">👤</div>
+                        <h4 class="text-mongo-textPri font-bold text-sm mb-1">User / Event</h4>
+                        <p class="text-xs text-mongo-textMuted">Messages, API calls, triggers, sensor data</p>
+                    </div>
+
+                    <!-- Connector -->
+                    <div id="arch-conn-1" class="arch-connector hidden md:flex flex-col items-center gap-1 self-center">
+                        <span class="text-xs text-mongo-textMuted font-mono">input</span>
+                        <div class="flex items-center gap-1">
+                            <div class="w-8 h-px bg-gradient-to-r from-transparent to-mongo-accent/50"></div>
+                            <div class="flow-dot"></div>
+                            <div class="w-8 h-px bg-gradient-to-r from-mongo-accent/50 to-transparent"></div>
+                        </div>
+                    </div>
+
+                    <!-- Agent Framework -->
+                    <div class="arch-box border-mongo-accent/30 self-center">
+                        <div class="text-3xl mb-3">🤖</div>
+                        <h4 class="text-mongo-accent font-bold text-sm mb-1">Agent Framework</h4>
+                        <p class="text-xs text-mongo-textMuted">LangChain / LangGraph / CrewAI / Custom</p>
+                        <div class="mt-3 grid grid-cols-2 gap-2 text-[0.65rem]">
+                            <div class="bg-mongo-bg/50 rounded px-2 py-1 text-mongo-textMuted">Perceive</div>
+                            <div class="bg-mongo-bg/50 rounded px-2 py-1 text-mongo-textMuted">Retrieve</div>
+                            <div class="bg-mongo-bg/50 rounded px-2 py-1 text-mongo-textMuted">Reason</div>
+                            <div class="bg-mongo-bg/50 rounded px-2 py-1 text-mongo-textMuted">Act</div>
+                        </div>
+                    </div>
+
+                    <!-- Connector -->
+                    <div id="arch-conn-2" class="arch-connector hidden md:flex flex-col items-center gap-1 self-center">
+                        <span class="text-xs text-mongo-textMuted font-mono">read/write</span>
+                        <div class="flex items-center gap-1">
+                            <div class="w-8 h-px bg-gradient-to-r from-transparent to-mongo-accent/50"></div>
+                            <div class="flow-dot" style="animation-delay: 0.5s;"></div>
+                            <div class="w-8 h-px bg-gradient-to-r from-mongo-accent/50 to-transparent"></div>
+                        </div>
+                    </div>
+
+                    <!-- MongoDB Atlas -->
+                    <div class="arch-box !border-mongo-accent/40 bg-gradient-to-b from-mongo-card to-mongo-bg">
+                        <div class="flex items-center justify-center gap-2 mb-3">
+                            <img src="assets/mongodb-leaf.png" alt="" class="w-6 h-6">
+                            <h4 class="text-mongo-accent font-bold text-sm">MongoDB Atlas</h4>
+                        </div>
+                        <p class="text-[0.65rem] text-mongo-textMuted text-center mb-3 italic">Click a layer to explore</p>
+                        <div class="space-y-2">
+                            <div class="memory-layer flex items-center gap-2" data-mem="working" onclick="toggleArchLayer('working')">
+                                <span class="text-sm">⚡</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Working Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-working" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="episodic" onclick="toggleArchLayer('episodic')">
+                                <span class="text-sm">📖</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Episodic Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-episodic" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="semantic" onclick="toggleArchLayer('semantic')">
+                                <span class="text-sm">🌐</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Semantic Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-semantic" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="procedural" onclick="toggleArchLayer('procedural')">
+                                <span class="text-sm">🔧</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Procedural Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-procedural" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="longterm" onclick="toggleArchLayer('longterm')">
+                                <span class="text-sm">🏛️</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Long-term Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-longterm" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="taxonomic" onclick="toggleArchLayer('taxonomic')">
+                                <span class="text-sm">🏷️</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Taxonomic Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-taxonomic" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="entity" onclick="toggleArchLayer('entity')">
+                                <span class="text-sm">🪪</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Entity Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-entity" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                            <div class="memory-layer flex items-center gap-2" data-mem="shared" onclick="toggleArchLayer('shared')">
+                                <span class="text-sm">🤝</span>
+                                <span class="text-xs text-mongo-textSec font-medium flex-1">Shared Memory</span>
+                                <svg class="w-3.5 h-3.5 text-mongo-textMuted transition-transform duration-300" id="ml-chevron-shared" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interactive Detail Panel (appears below the diagram) -->
+                <div class="arch-detail-panel" id="arch-detail-panel">
+                    <div class="arch-detail-inner">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <span id="arch-detail-icon" class="text-2xl">⚡</span>
+                                <div>
+                                    <h4 id="arch-detail-title" class="text-lg font-bold text-mongo-textPri">Working Memory</h4>
+                                    <p id="arch-detail-subtitle" class="text-xs text-mongo-textMuted">Short-term conversation context</p>
+                                </div>
+                            </div>
+                            <button onclick="toggleArchLayer(null)" class="text-mongo-textMuted hover:text-mongo-accent transition-colors p-1">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- MongoDB Features Used -->
+                            <div>
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-mongo-accent mb-3">MongoDB Features Used</h5>
+                                <div id="arch-detail-features" class="flex flex-wrap gap-2">
+                                </div>
+                            </div>
+                            <!-- How It Works -->
+                            <div>
+                                <h5 class="text-xs font-bold uppercase tracking-wider text-mongo-accent mb-3">How It Works</h5>
+                                <p id="arch-detail-desc" class="text-sm text-mongo-textSec leading-relaxed"></p>
+                            </div>
+                        </div>
+
+                        <!-- Collection & Sample Operation -->
+                        <div class="mt-5 pt-4 border-t border-white/5">
+                            <div class="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-4 items-start">
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-mongo-textMuted">Collection</span>
+                                    <div id="arch-detail-collection" class="mt-1 font-mono text-sm text-mongo-accent bg-mongo-accent/10 px-3 py-1.5 rounded-lg border border-mongo-accent/20">
+                                        db.working_memory
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold uppercase tracking-wider text-mongo-textMuted">Key Operation</span>
+                                    <div id="arch-detail-op" class="mt-1 code-block">
+                                        <div class="code-body !py-2 !px-3"><code class="text-xs"></code></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mobile connectors -->
+                <div class="flex md:hidden justify-center my-4">
+                    <div class="flex flex-col items-center gap-1">
+                        <div class="flow-dot"></div>
+                        <div class="w-px h-6 bg-gradient-to-b from-mongo-accent/50 to-transparent"></div>
+                    </div>
+                </div>
+
+                <!-- Bottom callout -->
+                <div class="mt-12 text-center fade-in">
+                    <div class="inline-flex items-center gap-3 px-6 py-3 bg-mongo-accent/5 border border-mongo-accent/20 rounded-full">
+                        <span class="text-mongo-accent text-lg">🍃</span>
+                        <span class="text-sm text-mongo-textSec font-medium">
+                            One cluster &middot; One connection string &middot; Eight memory types &middot; Zero sync overhead
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 6 : SCENARIO WALKTHROUGH                            -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="scenario" class="py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Memory in Action</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Watch a support agent handle a real conversation. Click each step to see
+                    which memory layers are read and written — and the exact MongoDB operations behind each one.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.4fr] gap-8 items-start">
+                <!-- Steps List -->
+                <div class="space-y-3 fade-in" id="scenario-steps">
+                    <div class="scenario-step step-active" data-step="0" onclick="setScenarioStep(0)">
+                        <div class="step-num">1</div>
+                        <div>
+                            <p class="text-sm font-semibold text-mongo-textPri">User sends message</p>
+                            <p class="text-xs text-mongo-textMuted mt-0.5">"My last order was damaged, can you help?"</p>
+                        </div>
+                    </div>
+                    <div class="scenario-step" data-step="1" onclick="setScenarioStep(1)">
+                        <div class="step-num">2</div>
+                        <div>
+                            <p class="text-sm font-semibold text-mongo-textPri">Agent recalls history</p>
+                            <p class="text-xs text-mongo-textMuted mt-0.5">Pulls past conversations & similar resolved cases</p>
+                        </div>
+                    </div>
+                    <div class="scenario-step" data-step="2" onclick="setScenarioStep(2)">
+                        <div class="step-num">3</div>
+                        <div>
+                            <p class="text-sm font-semibold text-mongo-textPri">Agent retrieves knowledge</p>
+                            <p class="text-xs text-mongo-textMuted mt-0.5">Searches refund policy docs via vector similarity</p>
+                        </div>
+                    </div>
+                    <div class="scenario-step" data-step="3" onclick="setScenarioStep(3)">
+                        <div class="step-num">4</div>
+                        <div>
+                            <p class="text-sm font-semibold text-mongo-textPri">Agent selects best procedure</p>
+                            <p class="text-xs text-mongo-textMuted mt-0.5">Loads the highest-performing "damaged_item" workflow</p>
+                        </div>
+                    </div>
+                    <div class="scenario-step" data-step="4" onclick="setScenarioStep(4)">
+                        <div class="step-num">5</div>
+                        <div>
+                            <p class="text-sm font-semibold text-mongo-textPri">Agent reads preferences</p>
+                            <p class="text-xs text-mongo-textMuted mt-0.5">Checks user prefers concise responses with links</p>
+                        </div>
+                    </div>
+                    <div class="scenario-step" data-step="5" onclick="setScenarioStep(5)">
+                        <div class="step-num">6</div>
+                        <div>
+                            <p class="text-sm font-semibold text-mongo-textPri">Agent responds & stores</p>
+                            <p class="text-xs text-mongo-textMuted mt-0.5">Sends reply, logs episode, updates profile</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization Panel -->
+                <div class="scenario-viz fade-in fade-in-delay-2">
+                    <!-- Memory pills at top -->
+                    <div class="flex flex-wrap gap-2 mb-6" id="scenario-pills">
+                        <div class="mem-pill" id="sp-working" data-mem="working">⚡ Working</div>
+                        <div class="mem-pill" id="sp-episodic" data-mem="episodic">📖 Episodic</div>
+                        <div class="mem-pill" id="sp-semantic" data-mem="semantic">🌐 Semantic</div>
+                        <div class="mem-pill" id="sp-procedural" data-mem="procedural">🔧 Procedural</div>
+                        <div class="mem-pill" id="sp-longterm" data-mem="longterm">🏛️ Long-term</div>
+                        <div class="mem-pill" id="sp-taxonomic" data-mem="taxonomic">🏷️ Taxonomic</div>
+                        <div class="mem-pill" id="sp-entity" data-mem="entity">🪪 Entity</div>
+                        <div class="mem-pill" id="sp-shared" data-mem="shared">🤝 Shared</div>
+                    </div>
+
+                    <!-- Thought bubble -->
+                    <div class="mb-5 p-4 rounded-xl bg-mongo-bg/60 border border-white/5">
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-sm">🤖</span>
+                            <span class="text-xs font-bold uppercase tracking-wider text-mongo-accent">Agent Thought</span>
+                        </div>
+                        <p id="scenario-thought" class="text-sm text-mongo-textSec leading-relaxed italic">
+                            "New message received. Storing to working memory and beginning the cognitive cycle."
+                        </p>
+                    </div>
+
+                    <!-- MongoDB Operation -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <img src="assets/mongodb-leaf.png" alt="" class="w-4 h-4 opacity-70">
+                            <span class="text-xs font-bold uppercase tracking-wider text-mongo-accent">MongoDB Operation</span>
+                            <div class="flex gap-1.5 ml-auto" id="scenario-badges"></div>
+                        </div>
+                        <div class="code-block">
+                            <div class="code-body !py-3"><code id="scenario-code" class="text-xs leading-relaxed"></code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 7 : BEFORE / AFTER COMPARISON                       -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="compare" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">The Sync Tax</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Most teams bolt together separate databases for each memory type. The result?
+                    Sync pipelines, consistency bugs, and compounding operational cost.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Bolted-On -->
+                <div class="compare-col fade-in" style="border-color: rgba(255, 107, 107, 0.2);">
+                    <div class="flex items-center gap-2 mb-5">
+                        <span class="text-xl">🔩</span>
+                        <h3 class="text-lg font-bold text-red-400">Bolted-On Architecture</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="compare-item">
+                            <span class="text-sm">💬</span>
+                            <span class="flex-1">Redis / Memcached</span>
+                            <span class="text-[0.65rem] text-mongo-textMuted">session cache</span>
+                        </div>
+                        <div class="flex justify-center py-1">
+                            <div class="sync-line w-24"></div>
+                        </div>
+                        <div class="compare-item">
+                            <span class="text-sm">🔍</span>
+                            <span class="flex-1">Pinecone / Weaviate</span>
+                            <span class="text-[0.65rem] text-mongo-textMuted">vector store</span>
+                        </div>
+                        <div class="flex justify-center py-1">
+                            <div class="sync-line w-24"></div>
+                        </div>
+                        <div class="compare-item">
+                            <span class="text-sm">🗄️</span>
+                            <span class="flex-1">PostgreSQL</span>
+                            <span class="text-[0.65rem] text-mongo-textMuted">user profiles</span>
+                        </div>
+                        <div class="flex justify-center py-1">
+                            <div class="sync-line w-24"></div>
+                        </div>
+                        <div class="compare-item">
+                            <span class="text-sm">📊</span>
+                            <span class="flex-1">Elasticsearch</span>
+                            <span class="text-[0.65rem] text-mongo-textMuted">episode search</span>
+                        </div>
+                        <div class="flex justify-center py-1">
+                            <div class="sync-line w-24"></div>
+                        </div>
+                        <div class="compare-item">
+                            <span class="text-sm">🏷️</span>
+                            <span class="flex-1">Neo4j</span>
+                            <span class="text-[0.65rem] text-mongo-textMuted">taxonomy graph</span>
+                        </div>
+                        <div class="flex justify-center py-1">
+                            <div class="sync-line w-24"></div>
+                        </div>
+                        <div class="compare-item">
+                            <span class="text-sm">🔐</span>
+                            <span class="flex-1">Custom ACL layer</span>
+                            <span class="text-[0.65rem] text-mongo-textMuted">shared access</span>
+                        </div>
+                    </div>
+                    <div class="mt-5 p-3 rounded-lg bg-red-500/5 border border-red-500/15 text-center">
+                        <p class="text-xs text-red-400 font-medium">6 databases &middot; 5+ sync pipelines &middot; N consistency bugs</p>
+                    </div>
+                </div>
+
+                <!-- Unified MongoDB -->
+                <div class="compare-col fade-in fade-in-delay-2" style="border-color: rgba(0, 237, 100, 0.3);">
+                    <div class="flex items-center gap-2 mb-5">
+                        <span class="text-xl">🍃</span>
+                        <h3 class="text-lg font-bold text-mongo-accent">Unified on MongoDB Atlas</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">⚡</span>
+                            <span class="flex-1 text-mongo-textPri">working_memory</span>
+                            <span class="text-[0.65rem] text-mongo-accent">TTL + Change Streams</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">📖</span>
+                            <span class="flex-1 text-mongo-textPri">episodes</span>
+                            <span class="text-[0.65rem] text-mongo-accent">Atlas Search</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">🌐</span>
+                            <span class="flex-1 text-mongo-textPri">knowledge</span>
+                            <span class="text-[0.65rem] text-mongo-accent">$vectorSearch</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">🔧</span>
+                            <span class="flex-1 text-mongo-textPri">procedures</span>
+                            <span class="text-[0.65rem] text-mongo-accent">Document Model</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">🏛️</span>
+                            <span class="flex-1 text-mongo-textPri">user_profiles</span>
+                            <span class="text-[0.65rem] text-mongo-accent">Flexible Schema</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">🏷️</span>
+                            <span class="flex-1 text-mongo-textPri">taxonomy</span>
+                            <span class="text-[0.65rem] text-mongo-accent">$graphLookup</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">🪪</span>
+                            <span class="flex-1 text-mongo-textPri">entities</span>
+                            <span class="text-[0.65rem] text-mongo-accent">Document Model</span>
+                        </div>
+                        <div class="compare-item" style="border-color: rgba(0, 237, 100, 0.15);">
+                            <span class="text-sm">🤝</span>
+                            <span class="flex-1 text-mongo-textPri">shared_knowledge</span>
+                            <span class="text-[0.65rem] text-mongo-accent">RBAC + Change Streams</span>
+                        </div>
+                    </div>
+                    <div class="mt-5 p-3 rounded-lg bg-mongo-accent/5 border border-mongo-accent/15 text-center">
+                        <p class="text-xs text-mongo-accent font-medium">1 cluster &middot; 0 sync pipelines &middot; Atomic consistency</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 8 : MEMORY LIFECYCLE TIMELINE                       -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="timeline" class="py-24 px-6">
+        <div class="max-w-4xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Memory Lifecycle</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Data doesn't stay in one layer forever. It flows, consolidates, and transforms
+                    as the agent learns — all within a single MongoDB cluster.
+                </p>
+            </div>
+
+            <div class="tl-track fade-in">
+                <!-- T+0s -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 0s &mdash; Message Arrives</div>
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">⚡ Working</span>
+                        <span class="pill-badge pill-badge-write">Write</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">User message is persisted to <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">working_memory</code> with a TTL. The agent's scratchpad is initialized.</p>
+                </div>
+
+                <!-- T+50ms -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 50ms &mdash; Memory Retrieval</div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">📖 Episodic</span>
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">🌐 Semantic</span>
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">🔧 Procedural</span>
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">🏛️ Long-term</span>
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">🏷️ Taxonomic</span>
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">🪪 Entity</span>
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">🤝 Shared</span>
+                        <span class="pill-badge pill-badge-read">Read</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">Queries fan out across all memory layers: past episodes, knowledge embeddings, skill definitions, user preferences, domain taxonomy, entity records, and shared team knowledge.</p>
+                </div>
+
+                <!-- T+200ms -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 200ms &mdash; LLM Reasoning</div>
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-read" style="padding:0.3rem 0.6rem;">⚡ Working</span>
+                        <span class="pill-badge pill-badge-read">Read</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">The LLM receives the enriched context from working memory — current conversation plus all retrieved memories — and begins generating a response.</p>
+                </div>
+
+                <!-- T+2s -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 2s &mdash; Response & Action</div>
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">⚡ Working</span>
+                        <span class="pill-badge pill-badge-write">Write</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">Agent response is appended to the working memory conversation buffer. Tool calls and their results are logged to <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">agent_traces</code>.</p>
+                </div>
+
+                <!-- T+2.1s -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 2.1s &mdash; Episode Capture</div>
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">📖 Episodic</span>
+                        <span class="pill-badge pill-badge-write">Write</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">The completed interaction is summarized and stored as an episode document — including outcome, tags, and decisions taken — for future recall.</p>
+                </div>
+
+                <!-- T+2.2s -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 2.2s &mdash; Profile Update</div>
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">🏛️ Long-term</span>
+                        <span class="pill-badge pill-badge-write">Write</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">User preferences are atomically updated via <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$set</code> / <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$inc</code>. Interaction history is appended with <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$push + $slice</code>.</p>
+                </div>
+
+                <!-- T+2.3s -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 2.3s &mdash; Entity Extraction</div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">🪪 Entity</span>
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">🤝 Shared</span>
+                        <span class="pill-badge pill-badge-write">Write</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">Entities mentioned in the conversation (people, products, order IDs) are extracted and upserted. If the agent is part of a team, insights are written to <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">shared_knowledge</code> via RBAC.</p>
+                </div>
+
+                <!-- T+5s (async) -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 5s &mdash; Post-Session Consolidation (async)</div>
+                    <div class="flex flex-wrap items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">🔧 Procedural</span>
+                        <span class="mem-pill pill-write" style="padding:0.3rem 0.6rem;">🏷️ Taxonomic</span>
+                        <span class="pill-badge pill-badge-write">Write</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">Back-end processing analyzes the completed session: discovers new step sequences and writes them to procedural memory, identifies new domain terms and categorizes them in the taxonomy. This is how the agent <em>learns</em>.</p>
+                </div>
+
+                <!-- T+1h -->
+                <div class="tl-node">
+                    <div class="tl-time">T + 1 hour &mdash; Automatic Cleanup</div>
+                    <div class="flex items-center gap-2 mt-2 mb-2">
+                        <span class="mem-pill" style="padding:0.3rem 0.6rem; border-color: rgba(251,191,36,0.4); color: #fbbf24; background: rgba(251,191,36,0.08);">⚡ Working</span>
+                        <span class="pill-badge" style="background: rgba(251,191,36,0.2); color: #fbbf24;">TTL Expire</span>
+                    </div>
+                    <p class="text-sm text-mongo-textSec">The TTL index on <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">working_memory</code> expires the session document. The scratchpad is cleared — but the episode, knowledge updates, and profile persist forever.</p>
+                </div>
+            </div>
+
+            <!-- Summary callout -->
+            <div class="mt-12 text-center fade-in">
+                <div class="inline-block p-6 bg-mongo-card/60 border border-white/5 rounded-2xl max-w-xl">
+                    <p class="text-sm text-mongo-textSec leading-relaxed">
+                        <strong class="text-mongo-textPri">The key insight:</strong> Working memory is ephemeral (TTL).
+                        But every interaction enriches the episodic, procedural, taxonomic, entity, shared, and long-term layers — making
+                        the agent permanently smarter with each conversation. Post-session consolidation closes the learning loop.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 9 : FRAMEWORK INTEGRATION                           -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="frameworks" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Plug Into Any Framework</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    MongoDB integrates natively with the leading agent frameworks.
+                    Here's how to wire up memory in just a few lines.
+                </p>
+            </div>
+
+            <!-- Framework Tabs -->
+            <div class="flex flex-wrap justify-center gap-2 mb-8 fade-in" id="fw-tabs">
+                <button class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-mongo-accent/10 text-mongo-accent border border-mongo-accent/30" data-fw="langchain" onclick="setFramework('langchain')">LangChain</button>
+                <button class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-mongo-bg/50 text-mongo-textMuted border border-white/5 hover:border-white/15" data-fw="langgraph" onclick="setFramework('langgraph')">LangGraph</button>
+                <button class="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 bg-mongo-bg/50 text-mongo-textMuted border border-white/5 hover:border-white/15" data-fw="llamaindex" onclick="setFramework('llamaindex')">LlamaIndex</button>
+            </div>
+
+            <!-- Code Panel -->
+            <div class="fade-in fade-in-delay-1">
+                <div class="code-block max-w-3xl mx-auto">
+                    <div class="code-header">
+                        <span id="fw-filename">langchain_memory.py</span>
+                        <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                    </div>
+                    <div class="code-body"><code id="fw-code" class="text-sm leading-relaxed"></code></div>
+                </div>
+            </div>
+
+            <!-- Integration highlights -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 fade-in fade-in-delay-2">
+                <div class="text-center p-6 rounded-xl border border-white/5 bg-mongo-card/30">
+                    <div class="text-2xl mb-2">📦</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">Official Packages</h4>
+                    <p class="text-xs text-mongo-textMuted">First-party <code class="text-mongo-accent text-xs">langchain-mongodb</code>, <code class="text-mongo-accent text-xs">llama-index-vector-stores-mongodb</code> packages</p>
+                </div>
+                <div class="text-center p-6 rounded-xl border border-white/5 bg-mongo-card/30">
+                    <div class="text-2xl mb-2">🔄</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">Checkpointing</h4>
+                    <p class="text-xs text-mongo-textMuted">LangGraph's <code class="text-mongo-accent text-xs">MongoDBSaver</code> persists graph state for multi-step agent workflows</p>
+                </div>
+                <div class="text-center p-6 rounded-xl border border-white/5 bg-mongo-card/30">
+                    <div class="text-2xl mb-2">🧠</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">Chat History</h4>
+                    <p class="text-xs text-mongo-textMuted"><code class="text-mongo-accent text-xs">MongoDBChatMessageHistory</code> provides drop-in conversational memory</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 10 : WHY MONGODB ATLAS                              -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="why-atlas" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Why MongoDB Atlas</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    The alternative is bolting together separate databases for vectors, sessions, profiles,
+                    and knowledge. Here's why a unified platform wins.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Unified Platform -->
+                <div class="value-card fade-in fade-in-delay-1">
+                    <div class="value-icon">🔗</div>
+                    <h3 class="text-xl font-bold text-mongo-textPri mb-3">Unified Platform</h3>
+                    <p class="text-sm text-mongo-textMuted leading-relaxed">
+                        All eight memory types in a single cluster. No sync pipelines between a vector DB, a cache, a graph DB,
+                        and a document store. Fewer moving parts, lower TCO, faster time-to-production.
+                    </p>
+                </div>
+
+                <!-- Vector + Document -->
+                <div class="value-card fade-in fade-in-delay-2">
+                    <div class="value-icon">🔍</div>
+                    <h3 class="text-xl font-bold text-mongo-textPri mb-3">Vector + Document</h3>
+                    <p class="text-sm text-mongo-textMuted leading-relaxed">
+                        Atlas Vector Search runs natively on your operational data. Combine semantic search with
+                        structured filters, full-text search, and geospatial queries in a single aggregation pipeline.
+                    </p>
+                </div>
+
+                <!-- Production Ready -->
+                <div class="value-card fade-in fade-in-delay-3">
+                    <div class="value-icon">🛡️</div>
+                    <h3 class="text-xl font-bold text-mongo-textPri mb-3">Production Ready</h3>
+                    <p class="text-sm text-mongo-textMuted leading-relaxed">
+                        TTL indexes, Change Streams, RBAC, CSFLE, horizontal scaling, multi-region replication.
+                        Enterprise-grade infrastructure that AI startups and Fortune 500s already trust.
+                    </p>
+                </div>
+            </div>
+
+            <!-- See Frameworks link -->
+            <div class="mt-12 text-center fade-in">
+                <a href="#frameworks" class="inline-flex items-center gap-2 text-sm text-mongo-accent hover:underline font-medium">
+                    See framework integration code
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION 7 : FOOTER                                          -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <footer class="py-8 px-6 border-t border-white/5">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-mongo-textMuted">
+            <div class="flex items-center gap-2">
+                <img src="assets/mongodb-leaf.png" alt="" class="w-4 h-4 opacity-60">
+                <span>&copy; 2025 MongoDB, Inc. — Internal Use Only</span>
+            </div>
+            <a href="home.html" class="text-mongo-accent hover:underline">← Back to Home</a>
+        </div>
+    </footer>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- JAVASCRIPT                                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        // ── Phase Data ──
+        const phases = [
+            {
+                title: 'Perceive',
+                desc: 'The agent receives input — a user message, an API event, a sensor reading, or a scheduled trigger. This raw input is the catalyst for the entire cognitive cycle.',
+                mongo: 'Change Streams capture real-time events. Incoming messages are immediately persisted to the <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">working_memory</code> collection, creating an immutable audit trail.'
+            },
+            {
+                title: 'Retrieve',
+                desc: 'Before responding, the agent queries all eight memory layers — conversation context, past episodes, knowledge embeddings, procedures, user preferences, domain taxonomy, entity records, and shared team knowledge.',
+                mongo: 'A single <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">aggregate()</code> pipeline can combine <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$vectorSearch</code> with <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$graphLookup</code>, structured filters, and full-text search — one database, all memory types.'
+            },
+            {
+                title: 'Reason',
+                desc: 'Armed with retrieved context, the LLM reasons over the enriched prompt. Working memory provides the current thread; episodic memory offers precedent; semantic memory fills knowledge gaps.',
+                mongo: 'MongoDB\'s document model naturally maps to the LLM context window. Retrieved documents are already structured JSON — no ORM translation needed. The agent sees a single, coherent view of its knowledge.'
+            },
+            {
+                title: 'Act',
+                desc: 'The agent executes its decision — calling tools, invoking APIs, generating responses, or delegating to sub-agents. Procedural memory guides which actions to take and in what order.',
+                mongo: 'Action traces are written to an <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">agent_traces</code> collection for observability. Tool schemas and workflows are read from procedural memory in real-time.'
+            },
+            {
+                title: 'Store',
+                desc: 'After acting, the agent writes back to memory — logging the episode, updating preferences, enriching entity records, sharing insights with the team, and triggering async consolidation for taxonomy and procedures.',
+                mongo: 'Atomic operators (<code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$set</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$push</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1.5 py-0.5 rounded text-xs font-mono">$inc</code>) update multiple memory layers in a single round-trip. Post-session consolidation enriches taxonomic and procedural memory asynchronously.'
+            }
+        ];
+
+        let currentPhase = 0;
+
+        window.selectPhase = function(idx) {
+            currentPhase = idx;
+            const p = phases[idx];
+            document.getElementById('phase-badge').textContent = `Phase ${idx + 1} of 5`;
+            document.getElementById('phase-title').textContent = p.title;
+            document.getElementById('phase-desc').textContent = p.desc;
+            document.getElementById('phase-mongo-text').innerHTML = p.mongo;
+
+            document.querySelectorAll('.lifecycle-node').forEach((n, i) => {
+                n.classList.toggle('active', i === idx);
+            });
+        };
+
+        // Auto-cycle phases
+        let autoCycle = setInterval(() => {
+            currentPhase = (currentPhase + 1) % 5;
+            selectPhase(currentPhase);
+        }, 5000);
+
+        document.querySelectorAll('.lifecycle-node').forEach(n => {
+            n.addEventListener('click', () => clearInterval(autoCycle));
+        });
+
+        // ── Architecture Layer Interactivity ──
+        const archLayers = {
+            working: {
+                icon: '⚡', title: 'Working Memory', subtitle: 'Short-term conversation context & scratchpad',
+                collection: 'db.working_memory',
+                features: [
+                    { label: 'TTL Index', desc: 'Auto-expire stale sessions' },
+                    { label: 'Change Streams', desc: 'React to new messages in real-time' },
+                    { label: 'insertOne()', desc: 'Persist each conversation turn' },
+                    { label: 'expireAfterSeconds', desc: 'Automatic cleanup' },
+                    { label: 'LangGraph Checkpointer', desc: 'Graph state persistence' }
+                ],
+                desc: 'The agent stores its current conversation buffer and intermediate tool state as documents with a TTL index. Sessions expire automatically after inactivity. Change Streams allow reactive architectures — the agent is notified the instant a new message arrives.',
+                op: '<span class="cm">// TTL auto-cleanup + real-time insert</span>\ndb.working_memory.<span class="fn">createIndex</span>(\n  { <span class="str">"created_at"</span>: <span class="num">1</span> },\n  { <span class="prop">expireAfterSeconds</span>: <span class="num">3600</span> }\n)'
+            },
+            episodic: {
+                icon: '📖', title: 'Episodic Memory', subtitle: 'Past interactions, outcomes & experiences',
+                collection: 'db.episodes',
+                features: [
+                    { label: 'Compound Index', desc: 'user_id + timestamp for fast recall' },
+                    { label: 'Atlas Search', desc: 'Full-text search across past episodes' },
+                    { label: 'find().sort().limit()', desc: 'Retrieve recent history' },
+                    { label: '$in / $elemMatch', desc: 'Filter by tags or outcomes' },
+                    { label: 'Rich Documents', desc: 'Store full interaction context' }
+                ],
+                desc: 'Each completed interaction is logged as a structured episode document containing messages, decisions, outcomes, and tags. Compound indexes on user + timestamp enable instant lookups. Atlas Search allows fuzzy querying across past experiences.',
+                op: '<span class="cm">// Recall similar resolved episodes</span>\ndb.episodes.<span class="fn">find</span>({\n  <span class="prop">user_id</span>: <span class="str">"user_123"</span>,\n  <span class="prop">outcome</span>: <span class="str">"resolved"</span>,\n  <span class="prop">tags</span>: { <span class="op">$in</span>: [<span class="str">"billing"</span>] }\n}).<span class="fn">sort</span>({ <span class="prop">timestamp</span>: <span class="num">-1</span> }).<span class="fn">limit</span>(<span class="num">5</span>)'
+            },
+            semantic: {
+                icon: '🌐', title: 'Semantic Memory', subtitle: 'Knowledge base with vector embeddings',
+                collection: 'db.knowledge',
+                features: [
+                    { label: '$vectorSearch', desc: 'ANN similarity on embeddings' },
+                    { label: 'Atlas Vector Search', desc: 'Native vector index' },
+                    { label: 'Hybrid Search', desc: 'Vector + keyword + metadata' },
+                    { label: '$meta: "vectorSearchScore"', desc: 'Relevance scoring' },
+                    { label: 'filter (pre-filter)', desc: 'Scoped search by domain' }
+                ],
+                desc: 'Domain knowledge is stored as documents with co-located vector embeddings. Atlas Vector Search runs ANN queries natively — no separate vector database required. Pre-filters on metadata (domain, active status) narrow the search space before vector scoring.',
+                op: '<span class="cm">// Semantic retrieval with pre-filter</span>\ndb.knowledge.<span class="fn">aggregate</span>([\n  { <span class="op">$vectorSearch</span>: {\n    <span class="prop">index</span>: <span class="str">"vector_index"</span>,\n    <span class="prop">path</span>: <span class="str">"embedding"</span>,\n    <span class="prop">queryVector</span>: embedding,\n    <span class="prop">filter</span>: { <span class="prop">domain</span>: <span class="str">"billing"</span> },\n    <span class="prop">limit</span>: <span class="num">5</span>\n  }}\n])'
+            },
+            procedural: {
+                icon: '🔧', title: 'Procedural Memory', subtitle: 'Skills, tools & learned workflows',
+                collection: 'db.procedures',
+                features: [
+                    { label: 'Flexible Document Model', desc: 'Complex tool schemas' },
+                    { label: 'Versioned Documents', desc: 'Evolve skills over time' },
+                    { label: 'success_rate Field', desc: 'Track procedure effectiveness' },
+                    { label: 'Aggregation Pipeline', desc: 'Chain multi-step workflows' },
+                    { label: 'findOne() with Filters', desc: 'Pick the best procedure' }
+                ],
+                desc: 'Tool definitions, multi-step workflows, and decision templates are stored as versioned documents. Each procedure tracks its success rate, so the agent dynamically picks the most effective approach. New versions are added without deleting old ones.',
+                op: '<span class="cm">// Get the best-performing refund skill</span>\ndb.procedures.<span class="fn">findOne</span>({\n  <span class="prop">skill</span>: <span class="str">"order_refund"</span>,\n  <span class="prop">version</span>: { <span class="op">$gte</span>: <span class="num">2</span> },\n  <span class="prop">success_rate</span>: { <span class="op">$gte</span>: <span class="num">0.95</span> }\n})'
+            },
+            longterm: {
+                icon: '🏛️', title: 'Long-term Memory', subtitle: 'Persistent user preferences & profiles',
+                collection: 'db.user_profiles',
+                features: [
+                    { label: '$set', desc: 'Update specific preferences' },
+                    { label: '$push + $slice', desc: 'Bounded history arrays' },
+                    { label: '$inc', desc: 'Increment interaction counters' },
+                    { label: 'upsert: true', desc: 'Create-or-update in one call' },
+                    { label: 'Flexible Schema', desc: 'Profiles grow without migrations' }
+                ],
+                desc: 'User preferences, behavioral patterns, and accumulated insights persist across all sessions. Atomic update operators modify individual fields without overwriting the full document. Capped arrays via $slice keep history bounded while retaining recent entries.',
+                op: '<span class="cm">// Evolve profile atomically</span>\ndb.user_profiles.<span class="fn">updateOne</span>(\n  { <span class="prop">user_id</span>: <span class="str">"user_123"</span> },\n  { <span class="op">$set</span>: { <span class="str">"preferences.tone"</span>: <span class="str">"concise"</span> },\n    <span class="op">$inc</span>: { <span class="str">"metrics.total"</span>: <span class="num">1</span> } },\n  { <span class="prop">upsert</span>: <span class="kw">true</span> }\n)'
+            },
+            taxonomic: {
+                icon: '🏷️', title: 'Taxonomic Memory', subtitle: 'Domain terminology organized into structured hierarchies',
+                collection: 'db.taxonomy',
+                features: [
+                    { label: '$graphLookup', desc: 'Traverse category hierarchies' },
+                    { label: 'Self-referencing Docs', desc: 'Parent-child relationships' },
+                    { label: 'terms Array', desc: 'Domain-specific vocabulary' },
+                    { label: 'Consolidation', desc: 'Auto-categorize from sessions' },
+                    { label: 'Compound Indexes', desc: 'Fast category lookups' }
+                ],
+                desc: 'Domain terminology is organized as self-referencing documents with parent-child relationships. $graphLookup traverses the full hierarchy in one query. Post-session consolidation automatically discovers and categorizes new terms from working memory.',
+                op: '<span class="cm">// Traverse taxonomy hierarchy</span>\ndb.taxonomy.<span class="fn">aggregate</span>([\n  { <span class="op">$match</span>: { <span class="prop">_id</span>: <span class="str">"wan_troubleshoot"</span> } },\n  { <span class="op">$graphLookup</span>: {\n    <span class="prop">from</span>: <span class="str">"taxonomy"</span>,\n    <span class="prop">startWith</span>: <span class="str">"$parent"</span>,\n    <span class="prop">connectFromField</span>: <span class="str">"parent"</span>,\n    <span class="prop">connectToField</span>: <span class="str">"_id"</span>,\n    <span class="prop">as</span>: <span class="str">"ancestors"</span>\n  }}\n])'
+            },
+            entity: {
+                icon: '🪪', title: 'Entity Memory', subtitle: 'Structured knowledge about people, products & organizations',
+                collection: 'db.entities',
+                features: [
+                    { label: 'Document Model', desc: 'Rich nested entity attributes' },
+                    { label: 'relationships Array', desc: 'Entity-to-entity links' },
+                    { label: 'Upsert', desc: 'Create-or-update entities' },
+                    { label: 'Rich Queries', desc: 'Filter by type, attribute, relationship' },
+                    { label: 'Partial Indexes', desc: 'Index only active entities' }
+                ],
+                desc: 'Each entity (person, product, org) is a structured document with typed attributes and relationships. Unlike embeddings, entity memory supports precise attribute lookups. Upserts ensure entities are enriched over time without duplicates.',
+                op: '<span class="cm">// Upsert an entity</span>\ndb.entities.<span class="fn">updateOne</span>(\n  { <span class="prop">entity_id</span>: <span class="str">"acme_corp"</span> },\n  { <span class="op">$set</span>: {\n    <span class="prop">type</span>: <span class="str">"organization"</span>,\n    <span class="str">"attributes.tier"</span>: <span class="str">"enterprise"</span>\n  }},\n  { <span class="prop">upsert</span>: <span class="kw">true</span> }\n)'
+            },
+            shared: {
+                icon: '🤝', title: 'Shared Memory', subtitle: 'Cross-agent knowledge shared via RBAC',
+                collection: 'db.shared_knowledge',
+                features: [
+                    { label: 'RBAC', desc: 'Role-based read/write access' },
+                    { label: 'team_id Scoping', desc: 'Multi-tenant isolation' },
+                    { label: 'Change Streams', desc: 'Notify peers of new knowledge' },
+                    { label: 'confidence Field', desc: 'Trust scoring for shared insights' },
+                    { label: 'Provenance Tracking', desc: 'Link back to source episode' }
+                ],
+                desc: 'When one agent learns something, it writes to shared_knowledge scoped by team_id. RBAC controls which agents can read or contribute. Change Streams notify peer agents in real-time. Each insight tracks confidence and provenance back to its source episode.',
+                op: '<span class="cm">// Share team knowledge</span>\ndb.shared_knowledge.<span class="fn">insertOne</span>({\n  <span class="prop">team_id</span>: <span class="str">"noc_team"</span>,\n  <span class="prop">contributed_by</span>: <span class="str">"agent_A"</span>,\n  <span class="prop">insight</span>: <span class="str">"Reboot edge router for WAN latency"</span>,\n  <span class="prop">confidence</span>: <span class="num">0.92</span>\n})'
+            }
+        };
+
+        let activeLayer = null;
+
+        window.toggleArchLayer = function(key) {
+            const panel = document.getElementById('arch-detail-panel');
+            const conn2 = document.getElementById('arch-conn-2');
+
+            // Close if clicking the same layer or null
+            if (key === activeLayer || key === null) {
+                panel.classList.remove('open');
+                if (conn2) conn2.classList.remove('arch-flow-active');
+                document.querySelectorAll('.memory-layer.ml-active').forEach(el => el.classList.remove('ml-active'));
+                document.querySelectorAll('[id^="ml-chevron-"]').forEach(el => el.style.transform = '');
+                activeLayer = null;
+                return;
+            }
+
+            activeLayer = key;
+            const data = archLayers[key];
+
+            // Update UI
+            document.getElementById('arch-detail-icon').textContent = data.icon;
+            document.getElementById('arch-detail-title').textContent = data.title;
+            document.getElementById('arch-detail-subtitle').textContent = data.subtitle;
+            document.getElementById('arch-detail-desc').textContent = data.desc;
+            document.getElementById('arch-detail-collection').textContent = data.collection;
+            document.getElementById('arch-detail-op').querySelector('code').innerHTML = data.op;
+
+            const featContainer = document.getElementById('arch-detail-features');
+            featContainer.innerHTML = data.features.map(f =>
+                `<span class="mongo-feature-chip" title="${f.desc}">` +
+                `<span class="opacity-60">&#9679;</span> ${f.label}</span>`
+            ).join('');
+
+            // Highlight active layer
+            document.querySelectorAll('.memory-layer').forEach(el => {
+                el.classList.toggle('ml-active', el.dataset.mem === key);
+            });
+            document.querySelectorAll('[id^="ml-chevron-"]').forEach(el => {
+                const isActive = el.id === `ml-chevron-${key}`;
+                el.style.transform = isActive ? 'rotate(180deg)' : '';
+                el.style.color = isActive ? 'var(--accent)' : '';
+            });
+
+            // Animate connectors
+            if (conn2) conn2.classList.add('arch-flow-active');
+
+            // Open panel
+            panel.classList.add('open');
+        };
+
+        // ── Scenario Walkthrough ──
+        const scenarioSteps = [
+            {
+                thought: '"New message received. Let me store it in working memory and begin the cognitive cycle."',
+                memories: { working: 'write' },
+                badges: ['Write'],
+                code: '<span class="cm"># Store incoming message to working memory</span>\ndb.<span class="fn">working_memory</span>.<span class="fn">updateOne</span>(\n  { <span class="prop">session_id</span>: <span class="str">"sess_7f2a"</span> },\n  { <span class="op">$push</span>: { <span class="prop">messages</span>: {\n      <span class="prop">role</span>: <span class="str">"user"</span>,\n      <span class="prop">content</span>: <span class="str">"My last order was damaged, can you help?"</span>,\n      <span class="prop">ts</span>: <span class="fn">ISODate</span>()\n  }}},\n  { <span class="prop">upsert</span>: <span class="kw">true</span> }\n)'
+            },
+            {
+                thought: '"Let me check past interactions with this user. I see 3 prior episodes — one about a billing refund that was resolved successfully. I also know this user is tied to Acme Corp (enterprise tier)."',
+                memories: { episodic: 'read', longterm: 'read', entity: 'read' },
+                badges: ['Read'],
+                code: '<span class="cm"># Recall episodes + profile + entity info</span>\ndb.<span class="fn">episodes</span>.<span class="fn">find</span>({\n  <span class="prop">user_id</span>: <span class="str">"user_8k3x"</span>,\n  <span class="prop">tags</span>: { <span class="op">$in</span>: [<span class="str">"order"</span>, <span class="str">"damage"</span>, <span class="str">"refund"</span>] }\n}).<span class="fn">sort</span>({ <span class="prop">timestamp</span>: <span class="num">-1</span> }).<span class="fn">limit</span>(<span class="num">5</span>)\n\ndb.<span class="fn">entities</span>.<span class="fn">findOne</span>(\n  { <span class="prop">entity_id</span>: <span class="str">"user_8k3x"</span> },\n  { <span class="prop">attributes</span>: <span class="num">1</span>, <span class="prop">relationships</span>: <span class="num">1</span> }\n)'
+            },
+            {
+                thought: '"Searching the knowledge base for damaged-item refund policies. Also checking taxonomy — \'damaged order\' falls under Returns → Physical Damage → Replacement Eligible."',
+                memories: { semantic: 'read', taxonomic: 'read' },
+                badges: ['Read'],
+                code: '<span class="cm"># Vector search for relevant policy documents</span>\ndb.<span class="fn">knowledge</span>.<span class="fn">aggregate</span>([\n  { <span class="op">$vectorSearch</span>: {\n      <span class="prop">index</span>: <span class="str">"vector_index"</span>,\n      <span class="prop">path</span>: <span class="str">"embedding"</span>,\n      <span class="prop">queryVector</span>: embed(<span class="str">"damaged order refund policy"</span>),\n      <span class="prop">filter</span>: { <span class="prop">domain</span>: <span class="str">"returns"</span> },\n      <span class="prop">numCandidates</span>: <span class="num">100</span>,\n      <span class="prop">limit</span>: <span class="num">5</span>\n  }}\n])'
+            },
+            {
+                thought: '"Loading the \'damaged_item\' procedure v3 — it has a 97% success rate. Steps: verify order → check policy → process replacement → confirm."',
+                memories: { procedural: 'read' },
+                badges: ['Read'],
+                code: '<span class="cm"># Load best-performing procedure for this scenario</span>\ndb.<span class="fn">procedures</span>.<span class="fn">findOne</span>({\n  <span class="prop">skill</span>: <span class="str">"damaged_item"</span>,\n  <span class="prop">version</span>: { <span class="op">$gte</span>: <span class="num">2</span> },\n  <span class="prop">success_rate</span>: { <span class="op">$gte</span>: <span class="num">0.90</span> }\n})\n\n<span class="cm">// Returns: { steps: ["verify_order", "check_policy",</span>\n<span class="cm">//   "process_replacement", "send_confirmation"],</span>\n<span class="cm">//   success_rate: 0.97, avg_duration_ms: 3800 }</span>'
+            },
+            {
+                thought: '"User prefers concise responses with tracking links. I\'ll keep it brief and include the replacement tracking URL."',
+                memories: { longterm: 'read' },
+                badges: ['Read'],
+                code: '<span class="cm"># Read personalization preferences</span>\n<span class="kw">const</span> profile = db.<span class="fn">user_profiles</span>.<span class="fn">findOne</span>(\n  { <span class="prop">user_id</span>: <span class="str">"user_8k3x"</span> },\n  { <span class="prop">preferences</span>: <span class="num">1</span> }\n)\n\n<span class="cm">// Returns: {</span>\n<span class="cm">//   preferences: {</span>\n<span class="cm">//     tone: "concise",</span>\n<span class="cm">//     include_links: true,</span>\n<span class="cm">//     preferred_channel: "chat"</span>\n<span class="cm">//   }</span>\n<span class="cm">// }</span>'
+            },
+            {
+                thought: '"Response sent! Storing the episode, updating profile, enriching entity data, and sharing the resolution pattern with my team."',
+                memories: { working: 'write', episodic: 'write', longterm: 'write', entity: 'write', shared: 'write' },
+                badges: ['Write'],
+                code: '<span class="cm"># Multi-write: episode + profile + entity + shared</span>\ndb.<span class="fn">episodes</span>.<span class="fn">insertOne</span>({\n  <span class="prop">user_id</span>: <span class="str">"user_8k3x"</span>,\n  <span class="prop">summary</span>: <span class="str">"Processed replacement for damaged order #4521"</span>,\n  <span class="prop">outcome</span>: <span class="str">"resolved"</span>,\n  <span class="prop">procedure_used</span>: <span class="str">"damaged_item_v3"</span>\n})\n\ndb.<span class="fn">shared_knowledge</span>.<span class="fn">insertOne</span>({\n  <span class="prop">team_id</span>: <span class="str">"support_team"</span>,\n  <span class="prop">insight</span>: <span class="str">"damaged_item_v3 resolved in 3.8s"</span>,\n  <span class="prop">confidence</span>: <span class="num">0.95</span>\n})'
+            }
+        ];
+
+        window.setScenarioStep = function(idx) {
+            const step = scenarioSteps[idx];
+            document.querySelectorAll('.scenario-step').forEach((el, i) => {
+                el.classList.toggle('step-active', i === idx);
+            });
+
+            document.getElementById('scenario-thought').textContent = step.thought;
+            document.getElementById('scenario-code').innerHTML = step.code;
+
+            // Highlight memory pills
+            const memTypes = ['working', 'episodic', 'semantic', 'procedural', 'longterm', 'taxonomic', 'entity', 'shared'];
+            memTypes.forEach(m => {
+                const pill = document.getElementById('sp-' + m);
+                pill.classList.remove('pill-read', 'pill-write');
+                if (step.memories[m] === 'read') pill.classList.add('pill-read');
+                if (step.memories[m] === 'write') pill.classList.add('pill-write');
+            });
+
+            // Badges
+            const badgeContainer = document.getElementById('scenario-badges');
+            badgeContainer.innerHTML = step.badges.map(b => {
+                const isWrite = b === 'Write';
+                return `<span class="pill-badge ${isWrite ? 'pill-badge-write' : 'pill-badge-read'}">${b}</span>`;
+            }).join('');
+        };
+
+        // Initialize scenario
+        setScenarioStep(0);
+
+        // ── Framework Integration Tabs ──
+        const frameworks = {
+            langchain: {
+                filename: 'langchain_memory.py',
+                code: '<span class="kw">from</span> langchain_mongodb <span class="kw">import</span> MongoDBAtlasVectorSearch\n<span class="kw">from</span> langchain_mongodb.chat_message_histories <span class="kw">import</span> MongoDBChatMessageHistory\n<span class="kw">from</span> pymongo <span class="kw">import</span> MongoClient\n\nclient = MongoClient(<span class="str">"mongodb+srv://..."</span>)\ndb = client[<span class="str">"agent_memory"</span>]\n\n<span class="cm"># Semantic Memory — Vector Search</span>\nvector_store = MongoDBAtlasVectorSearch(\n    collection=db[<span class="str">"knowledge"</span>],\n    embedding=OpenAIEmbeddings(),\n    index_name=<span class="str">"vector_index"</span>\n)\nretriever = vector_store.as_retriever(search_kwargs={<span class="str">"k"</span>: <span class="num">5</span>})\n\n<span class="cm"># Working Memory — Chat History</span>\nchat_history = MongoDBChatMessageHistory(\n    connection_string=<span class="str">"mongodb+srv://..."</span>,\n    database_name=<span class="str">"agent_memory"</span>,\n    collection_name=<span class="str">"working_memory"</span>,\n    session_id=<span class="str">"sess_7f2a"</span>\n)\n\n<span class="cm"># Long-term Memory — Direct Collection Access</span>\nuser_profiles = db[<span class="str">"user_profiles"</span>]'
+            },
+            langgraph: {
+                filename: 'langgraph_checkpoint.py',
+                code: '<span class="kw">from</span> langgraph.checkpoint.mongodb <span class="kw">import</span> MongoDBSaver\n<span class="kw">from</span> langgraph.graph <span class="kw">import</span> StateGraph\n<span class="kw">from</span> pymongo <span class="kw">import</span> MongoClient\n\nclient = MongoClient(<span class="str">"mongodb+srv://..."</span>)\n\n<span class="cm"># Checkpointer — persists graph state to MongoDB</span>\ncheckpointer = MongoDBSaver(client)\n\n<span class="cm"># Define your agent graph</span>\ngraph = StateGraph(AgentState)\ngraph.add_node(<span class="str">"perceive"</span>, perceive_fn)\ngraph.add_node(<span class="str">"retrieve"</span>, retrieve_fn)  <span class="cm"># queries all memory layers</span>\ngraph.add_node(<span class="str">"reason"</span>, reason_fn)\ngraph.add_node(<span class="str">"act"</span>, act_fn)\ngraph.add_node(<span class="str">"store"</span>, store_fn)      <span class="cm"># writes back to memory</span>\n\n<span class="cm"># Compile with MongoDB checkpointing</span>\nagent = graph.compile(checkpointer=checkpointer)\n\n<span class="cm"># Every state transition is persisted — resumable,</span>\n<span class="cm"># debuggable, and observable via MongoDB queries</span>\nresult = agent.invoke(\n    {<span class="str">"input"</span>: <span class="str">"My order was damaged"</span>},\n    config={<span class="str">"configurable"</span>: {<span class="str">"thread_id"</span>: <span class="str">"sess_7f2a"</span>}}\n)'
+            },
+            llamaindex: {
+                filename: 'llamaindex_memory.py',
+                code: '<span class="kw">from</span> llama_index.vector_stores.mongodb <span class="kw">import</span> MongoDBAtlasVectorSearch\n<span class="kw">from</span> llama_index.storage.chat_store <span class="kw">import</span> MongoDBChatStore\n<span class="kw">from</span> llama_index.core.memory <span class="kw">import</span> ChatMemoryBuffer\n<span class="kw">from</span> pymongo <span class="kw">import</span> MongoClient\n\nclient = MongoClient(<span class="str">"mongodb+srv://..."</span>)\n\n<span class="cm"># Semantic Memory — Vector Store</span>\nvector_store = MongoDBAtlasVectorSearch(\n    mongodb_client=client,\n    db_name=<span class="str">"agent_memory"</span>,\n    collection_name=<span class="str">"knowledge"</span>,\n    index_name=<span class="str">"vector_index"</span>\n)\nindex = VectorStoreIndex.from_vector_store(vector_store)\n\n<span class="cm"># Working Memory — Chat Store</span>\nchat_store = MongoDBChatStore(\n    mongodb_client=client,\n    db_name=<span class="str">"agent_memory"</span>,\n    collection_name=<span class="str">"working_memory"</span>\n)\nmemory = ChatMemoryBuffer.from_defaults(\n    chat_store=chat_store,\n    chat_store_key=<span class="str">"sess_7f2a"</span>,\n    token_limit=<span class="num">4096</span>\n)'
+            }
+        };
+
+        window.setFramework = function(key) {
+            const fw = frameworks[key];
+            document.getElementById('fw-filename').textContent = fw.filename;
+            document.getElementById('fw-code').innerHTML = fw.code;
+
+            document.querySelectorAll('#fw-tabs button').forEach(btn => {
+                const isActive = btn.dataset.fw === key;
+                btn.className = `px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${
+                    isActive
+                        ? 'bg-mongo-accent/10 text-mongo-accent border border-mongo-accent/30'
+                        : 'bg-mongo-bg/50 text-mongo-textMuted border border-white/5 hover:border-white/15'
+                }`;
+            });
+        };
+
+        // Initialize framework tabs
+        setFramework('langchain');
+
+        // ── Copy Code ──
+        window.copyCode = function(btn) {
+            const code = btn.closest('.code-block').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        };
+
+        // ── Fade In Observer ──
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // ── Active Nav Highlighting ──
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.sticky-nav a[href^="#"]');
+
+        const navObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+
+        sections.forEach(s => navObserver.observe(s));
+
+        // ── Neural Network Canvas ──
+        const canvas = document.getElementById('neuralCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let w, h, nodes = [];
+
+            function resize() {
+                w = canvas.width = canvas.parentElement.offsetWidth;
+                h = canvas.height = canvas.parentElement.offsetHeight;
+            }
+
+            function initNodes() {
+                nodes = [];
+                const count = Math.floor((w * h) / 18000);
+                for (let i = 0; i < count; i++) {
+                    nodes.push({
+                        x: Math.random() * w,
+                        y: Math.random() * h,
+                        vx: (Math.random() - 0.5) * 0.4,
+                        vy: (Math.random() - 0.5) * 0.4,
+                        r: Math.random() * 2 + 1
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                const maxDist = 140;
+
+                for (let i = 0; i < nodes.length; i++) {
+                    const a = nodes[i];
+                    a.x += a.vx; a.y += a.vy;
+                    if (a.x < 0 || a.x > w) a.vx *= -1;
+                    if (a.y < 0 || a.y > h) a.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(0, 237, 100, 0.4)';
+                    ctx.fill();
+
+                    for (let j = i + 1; j < nodes.length; j++) {
+                        const b = nodes[j];
+                        const dx = a.x - b.x, dy = a.y - b.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < maxDist) {
+                            ctx.beginPath();
+                            ctx.moveTo(a.x, a.y);
+                            ctx.lineTo(b.x, b.y);
+                            ctx.strokeStyle = `rgba(0, 237, 100, ${0.12 * (1 - dist / maxDist)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+
+            resize();
+            initNodes();
+            draw();
+            window.addEventListener('resize', () => { resize(); initNodes(); });
+        }
+    })();
+    </script>
+</body>
+</html>
