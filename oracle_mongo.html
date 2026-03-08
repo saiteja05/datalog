@@ -1,971 +1,619 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oracle to MongoDB Developer Deep Dive</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
-    
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configure Tailwind to use the Inter font -->
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif'],
-                    },
-                    colors: {
-                        'mongo-dark': '#001E2B', // MongoDB forest
-                        'mongo-blue': '#1a3a4a', // forest mid
-                        'mongo-accent': '#00ED64', // emerald-500
-                        'mongo-light': '#f1f5f9', // slate-100
-                        'mongo-strategy': '#fcd34d', // amber-300
-                        'mongo-dev': '#38bdf8', // sky-400
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        .bg-slate-900 { background-color: #001a24 !important; }
-        .bg-slate-800 { background-color: #002838 !important; }
-        .bg-slate-700 { background-color: #003345 !important; }
-        .border-slate-700 { border-color: #1a3a4a !important; }
-        .border-slate-600 { border-color: #1a3a4a !important; }
-        .text-slate-400 { color: #b8d8e8 !important; }
-        .text-slate-300 { color: #b8d8e8 !important; }
-        /* Custom scrollbar for better visual integration in dark mode */
-        body::-webkit-scrollbar {
-            width: 8px;
-        }
-        body::-webkit-scrollbar-track {
-            background: #001E2B; /* dark background */
-        }
-        body::-webkit-scrollbar-thumb {
-            background-color: #475569; /* slate-600 */
-            border-radius: 20px;
-            border: 2px solid #001a24;
-        }
-        .code-container {
-            max-height: 400px;
-            overflow-y: auto;
-            border-radius: 0.5rem;
-        }
-        .code-tab.active {
-            border-bottom: 2px solid #00ED64;
-            color: #00ED64;
-            font-weight: 600;
-        }
-    </style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Oracle → MongoDB — Developer Deep Dive</title>
+<link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #080c14; --bg2: #0d1219; --bg-card: #111923; --bg-card-h: #16202e;
+  --border: #1a2538; --border2: #243348;
+  --tx: #e4e9f2; --tx2: #8694a8; --tx3: #4f5e72;
+  --mg: #00ed64; --mg-d: #00a847; --mg-g: rgba(0,237,100,0.10);
+  --cy: #22d3ee; --rd: #f87171; --pr: #a78bfa; --or: #fb923c;
+  --oc: #f04e30;
+}
+html { scroll-snap-type: y mandatory; overflow-y: scroll; scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--tx); font-family: 'DM Sans', sans-serif; line-height: 1.65; overflow-x: hidden; }
+.slide { min-height: 100vh; height: 100vh; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; padding: 3.5rem 2.5rem 2.5rem; position: relative; overflow: hidden; }
+.slide-inner { max-width: 1100px; width: 100%; margin: 0 auto; }
+.slide.scrollable { align-items: flex-start; overflow-y: auto; scroll-snap-align: start; -ms-overflow-style: none; scrollbar-width: none; }
+.slide.scrollable::-webkit-scrollbar { display: none; }
+.slide.scrollable .slide-inner { padding: 2rem 0 3rem; }
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(8,12,20,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+.nav-in { max-width: 1100px; margin: 0 auto; padding: 0 2.5rem; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+.nav-brand { font-weight: 700; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tx3); display: flex; align-items: center; gap: 0.6rem; }
+.nav-brand svg { flex-shrink: 0; }
+.nav-links { display: flex; gap: 0.15rem; }
+.nav-links a { color: var(--tx2); text-decoration: none; font-size: 0.72rem; font-weight: 500; padding: 0.35rem 0.65rem; border-radius: 6px; transition: all 0.2s; }
+.nav-links a:hover, .nav-links a.active { color: var(--tx); background: var(--bg-card); }
+.slide-counter { position: fixed; bottom: 1.5rem; right: 2rem; z-index: 1000; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--tx3); background: rgba(8,12,20,0.8); backdrop-filter: blur(12px); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border); }
+.slide-counter span { color: var(--mg); }
+.progress-dots { position: fixed; right: 1rem; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 6px; }
+.progress-dots .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tx3); transition: all 0.3s; cursor: pointer; opacity: 0.4; }
+.progress-dots .dot.active { background: var(--mg); opacity: 1; transform: scale(1.4); }
+h1 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(2.6rem, 5.5vw, 4.5rem); line-height: 1.08; }
+h2 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: clamp(1.8rem, 3.5vw, 2.6rem); line-height: 1.12; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+.label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.75rem; border-radius: 100px; border: 1px solid; margin-bottom: 0.75rem; }
+.l-o { color: var(--oc); border-color: rgba(240,78,48,0.2); background: rgba(240,78,48,0.05); }
+.l-m { color: var(--mg); border-color: rgba(0,237,100,0.2); background: rgba(0,237,100,0.05); }
+.l-v { color: var(--cy); border-color: rgba(34,211,238,0.2); background: rgba(34,211,238,0.05); }
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s; }
+.card:hover { border-color: var(--border2); }
+.tag { font-size: 0.65rem; padding: 0.18rem 0.5rem; border-radius: 100px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--tx3); font-weight: 500; display: inline-block; }
+.callout { background: var(--bg-card); border-radius: 0 10px 10px 0; padding: 1.1rem 1.3rem; font-size: 0.85rem; color: var(--tx2); line-height: 1.55; }
+.callout strong { color: var(--tx); }
+.callout-o { border-left: 3px solid var(--oc); }
+.callout-m { border-left: 3px solid var(--mg); }
+.callout-r { border-left: 3px solid var(--rd); }
+@keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+@keyframes pulse { 0%,100%{ opacity:0.4; } 50%{ opacity:1; } }
+.reveal { opacity: 0; transform: translateY(28px); transition: all 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal.vis { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; } .reveal-d2 { transition-delay: 0.2s; } .reveal-d3 { transition-delay: 0.3s; } .reveal-d4 { transition-delay: 0.4s; } .reveal-d5 { transition-delay: 0.5s; }
+.tw { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { text-align:left; padding:0.75rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--tx3); background:var(--bg-card); border-bottom:1px solid var(--border); }
+td { padding:0.65rem 1rem; border-bottom:1px solid var(--border); color:var(--tx2); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+td:first-child { color:var(--tx); font-weight:500; }
+td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:rgba(255,255,255,0.06); padding:0.12rem 0.35rem; border-radius:4px; color:var(--cy); }
+.ck { color:var(--mg); font-weight:700; } .cx { color:var(--rd); font-weight:700; opacity:0.7; } .pt { color:#fed10a; font-weight:500; }
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+@media (max-width: 900px) { .g2, .g3, .g4 { grid-template-columns: 1fr; } .nav-links { display: none; } .progress-dots { display: none; } .slide { padding: 3.5rem 1.25rem 2rem; } }
+.hero-glow { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px); }
+.adv-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; border-left: 3px solid var(--mg); }
+.adv-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+.adv-card p { font-size: 0.8rem; color: var(--tx2); line-height: 1.5; }
+.battle-item { font-size: 0.82rem; color: var(--tx2); line-height: 1.5; padding: 0.55rem 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); margin-bottom: 0.4rem; }
+.battle-item strong { color: var(--tx); }
+.pos-card { border-radius: 12px; padding: 1.75rem; }
+.pos-card ul { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+.pos-card li { font-size:0.82rem; color:var(--tx2); line-height:1.5; padding-left:1.2rem; position:relative; }
+.pos-card li::before { content:'→'; position:absolute; left:0; font-weight:600; }
+.pos-o { background:linear-gradient(135deg,rgba(240,78,48,0.05),rgba(251,146,60,0.03)); border:1px solid rgba(240,78,48,0.12); }
+.pos-o li::before { color:var(--oc); }
+.pos-m { background:linear-gradient(135deg,rgba(0,237,100,0.05),rgba(34,211,238,0.03)); border:1px solid rgba(0,237,100,0.12); }
+.pos-m li::before { color:var(--mg); }
+pre.code-block { font-family:'JetBrains Mono',monospace; font-size:0.7rem; background:var(--bg2); padding:0.85rem 1rem; border-radius:8px; color:var(--tx2); line-height:1.6; border:1px solid var(--border); overflow-x:auto; white-space:pre; }
+pre.code-block .kw { color:var(--pr); } pre.code-block .fn { color:var(--cy); } pre.code-block .st { color:var(--or); } pre.code-block .cm { color:var(--tx3); }
+</style>
 </head>
+<body>
 
-<body class="bg-mongo-dark text-mongo-light font-sans min-h-screen">
-
-    <!-- Fixed Header -->
-    <header class="sticky top-0 z-50 bg-mongo-dark/95 backdrop-blur-sm shadow-xl p-4 md:p-6 border-b border-mongo-blue">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <h1 class="text-2xl md:text-3xl font-extrabold text-mongo-light tracking-tight">
-                Oracle <span class="text-mongo-accent">→</span> MongoDB
-            </h1>
-            <span class="hidden sm:block text-sm md:text-base text-mongo-blue font-medium">Developer Deep Dive Guide</span>
-        </div>
-    </header>
-
-    <div id="content" class="max-w-7xl mx-auto p-4 md:p-8">
-
-        <!-- Introduction Section -->
-        <section class="mb-12 p-6 bg-slate-800 rounded-xl shadow-2xl border-l-4 border-mongo-accent">
-            <h2 class="text-3xl font-bold mb-4 text-mongo-accent">The Developer Experience Shift</h2>
-            <p class="text-lg text-slate-300">
-                Migrating from Oracle's strict relational model to MongoDB's flexible document model fundamentally changes how developers approach data. This guide provides a detailed breakdown of how traditional Oracle features are implemented, replaced, or modernized in the MongoDB ecosystem, focusing on the architectural and code-level details.
-            </p>
-            <p class="mt-4 text-sm text-slate-400">
-                **Core Benefit:** Moving towards flexible schemas and rich documents often allows for **atomic, single-document operations**, reducing the need for complex, explicit multi-statement transactions prevalent in Oracle PL/SQL.
-            </p>
-        </section>
-
-        <!-- Architectural & Strategic Shift Section (Added for Architect's Perspective) -->
-       <section class="mb-12">
-            <h2 class="text-3xl font-bold mb-6 text-mongo-light">Architectural & Strategic Rationale</h2>
-            <!-- Adjusted grid to allow 5 cards to wrap gracefully, showing 3 on large screens -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-                <!-- Card 1: Data Model Shift (Expanded) -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Data Model & Performance</h3>
-                    <p class="text-slate-400 text-sm">
-                        Shift from normalizing data (Oracle) to designing **rich documents** around application access patterns. This strategy enables **atomic operations** and **faster, single-query reads** by co-locating related data, drastically reducing costly join operations.
-                    </p>
-                </div>
-                <!-- Card 2: Agile Development (New) -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Agility & Iteration Speed</h3>
-                    <p class="text-slate-400 text-sm">
-                        Oracle's fixed schema requires strict DDL before every application change. MongoDB's **flexible schema** allows developers to iterate on features, deploy schema updates immediately, and modify data structures in parallel, dramatically improving **time-to-market**.
-                    </p>
-                </div>
-                <!-- Card 3: Licensing & TCO (Original) -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Operational Simplicity</h3>
-                    <p class="text-slate-400 text-sm">
-                        Oracle requires dedicated DBA teams for patching, tuning, and complex capacity-based management (EULA & PULA). MongoDB Atlas provides a **fully managed platform** with automated scaling, backups, and upgrades — reducing operational burden and letting teams focus on building features.
-                    </p>
-                </div>
-                <!-- Card 4: Cloud & Vendor Flexibility (New) -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">Cloud & Vendor Flexibility</h3>
-                    <p class="text-slate-400 text-sm">
-                        Oracle often leads to vendor lock-in and complex migration paths to cloud. MongoDB Atlas provides a fully managed service that is **multi-cloud by design** (AWS, Azure, GCP), ensuring portability, avoiding vendor lock-in, and leveraging best-of-breed cloud features.
-                    </p>
-                </div>
-                <!-- Card 5: AI Readiness & Vector Search (NEW) -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg border-l-4 border-mongo-strategy">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-strategy">AI Readiness & Vector Search</h3>
-                    <p class="text-slate-400 text-sm">
-                        MongoDB Atlas is a unified platform for AI/ML workflows, allowing storage of transactional data, metadata, and **vector embeddings** in one place. **Atlas Vector Search** enables high-dimensional similarity queries required for Retrieval-Augmented Generation (RAG) and semantic search, making the application inherently **AI-Ready**.
-                    </p>
-                </div>
-            </div>
-        </section>
-        
-        <!-- Main Interactive Content (Accordion) -->
-        <section id="features-mapping">
-            <h2 class="text-3xl font-bold mb-6 text-mongo-light">Developer Experience</h2>
-            
-            <div id="accordion-container" class="space-y-4">
-                <!-- Data will be dynamically populated here -->
-            </div>
-        </section>
-        
-        <!-- Migration Deep Dive Section -->
-        <section class="mt-12 pt-8 border-t border-mongo-blue">
-            <h2 class="text-3xl font-bold mb-6 text-mongo-light">Migration & Automation Deep Dive</h2>
-            
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Card 1: JSON Schema Validation & Data Types -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg hover:shadow-mongo-accent/30 transition duration-300">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-accent">Schema Validation & Data Quality</h3>
-                    <p class="text-slate-400 text-sm">
-                        While Relational Migrator (RM) doesn't enforce destination data types, **JSON Schema Validation** must be used post-design to enforce structure and data types before migration. RM ensures row counts match, but a custom tool is needed to calculate and compare data hashes (correctness/precision) between source and target for true data quality assurance.
-                    </p>
-                </div>
-                <!-- Card 2: Access Pattern Analysis -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg hover:shadow-mongo-accent/30 transition duration-300">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-accent">Designing for Access Patterns</h3>
-                    <p class="text-slate-400 text-sm">
-                        Schema design relies heavily on application access patterns. Oracle tools can extract query frequency and plans pre-migration. Post-migration, **repurposing End-to-End tests for performance testing** is the key strategy to validate the efficiency of the new document model design.
-                    </p>
-                </div>
-                <!-- Card 3: Modernization Automation -->
-                <div class="p-6 bg-slate-800 rounded-xl shadow-lg hover:shadow-mongo-accent/30 transition duration-300">
-                    <h3 class="text-xl font-semibold mb-3 text-mongo-accent">LLM-Powered Automation</h3>
-                    <p class="text-slate-400 text-sm">
-                        MongoDB offers several tools: **Relational Migrator** (for schema and stored procedure rewrite), **Code Analyzer** (for documentation), and **Code Modernizing Tool** (converts legacy code, often requiring breaking down large blocks for LLM context windows).
-                    </p>
-                </div>
-            </div>
-        </section>
-
-        <!-- References & Further Reading -->
-        <section class="mt-12 pt-8 border-t border-mongo-blue">
-            <h2 class="text-3xl font-bold mb-6 text-mongo-light">References & Further Reading</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="p-5 bg-slate-800 rounded-xl border border-slate-700">
-                    <h4 class="font-bold text-lg mb-3 text-mongo-accent">Migration Tools</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="https://www.mongodb.com/docs/relational-migrator/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Relational Migrator Documentation</a></li>
-                        <li><a href="https://www.mongodb.com/docs/relational-migrator/getting-started/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Getting Started with Relational Migrator</a></li>
-                        <li><a href="https://www.mongodb.com/resources/products/capabilities/rdbms-migration" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">RDBMS to MongoDB Migration Guide</a></li>
-                    </ul>
-                </div>
-                <div class="p-5 bg-slate-800 rounded-xl border border-slate-700">
-                    <h4 class="font-bold text-lg mb-3 text-mongo-accent">Schema & Data Modeling</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="https://www.mongodb.com/docs/manual/core/data-modeling-introduction/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Data Modeling Introduction</a></li>
-                        <li><a href="https://www.mongodb.com/docs/manual/core/schema-validation/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Schema Validation (JSON Schema)</a></li>
-                        <li><a href="https://www.mongodb.com/docs/manual/applications/data-models-relationships/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Model Relationships Between Documents</a></li>
-                        <li><a href="https://www.mongodb.com/docs/manual/indexes/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Indexes — Strategy & Best Practices</a></li>
-                    </ul>
-                </div>
-                <div class="p-5 bg-slate-800 rounded-xl border border-slate-700">
-                    <h4 class="font-bold text-lg mb-3 text-mongo-accent">Transactions & Operations</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="https://www.mongodb.com/docs/manual/core/transactions/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Transactions Documentation</a></li>
-                        <li><a href="https://www.mongodb.com/docs/manual/changeStreams/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Change Streams</a></li>
-                        <li><a href="https://www.mongodb.com/docs/manual/core/aggregation-pipeline/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Aggregation Pipeline</a></li>
-                        <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Atlas Vector Search Overview</a></li>
-                        <li><a href="https://www.mongodb.com/docs/atlas/backup/cloud-backup/overview/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Atlas Cloud Backup & PITR</a></li>
-                    </ul>
-                </div>
-            </div>
-        </section>
+<nav>
+  <div class="nav-in">
+    <div class="nav-brand">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg>
+      <span>MongoDB</span> — Migration Intel
     </div>
+    <div class="nav-links">
+      <a href="#s-rationale">Rationale</a>
+      <a href="#s-arch">Architecture</a>
+      <a href="#s-query">Query</a>
+      <a href="#s-txn">Transactions</a>
+      <a href="#s-migrate">Migration</a>
+      <a href="#s-matrix">Matrix</a>
+      <a href="#s-pos">Positioning</a>
+    </div>
+  </div>
+</nav>
 
-    <footer class="mt-12 p-4 text-center text-sm text-mongo-blue border-t border-mongo-blue">
-        &copy; 2025 MongoDB Migration Deep Dive. Content based on Architects FAQS.
-    </footer>
+<div class="progress-dots" id="progDots"></div>
+<div class="slide-counter" id="slideCounter"><span>1</span> / <span id="totalSlides">—</span></div>
 
-    <script>
-        // Data structure containing the deep dive content
-        const deepDiveData = [
-            // --- NEW DBA CONTENT: OPERATIONAL BACKBONE ---
-            {
-                id: 'operational_backbone',
-                title: 'Operational Backbone: Backup, Recovery, & Storage (RMAN/Tablespaces)',
-                behaviour: 'Oracle DBAs rely on RMAN for consistent backups, easy Point-in-Time Recovery (PITR), and manage physical storage via Tablespaces and Partitions.',
-                solution: 'The **oplog** (operation log) is central to recovery, enabling PITR. **MongoDB Atlas** provides managed backups, and **Sharding** replaces Oracle partitioning for horizontal scaling and storage distribution.',
-                details: [
-                    {
-                        type: 'Backup, PITR, and the Oplog',
-                        code: `// The oplog is an unbounded, idempotent log of all write operations.
-// RMAN replacement: Atlas Managed Backups or custom tools leveraging the oplog.
+<!-- ════════════ SLIDE 1: TITLE ════════════ -->
+<div class="slide" id="s-title" data-title="Title">
+  <div class="hero-glow" style="width:60vw;height:60vw;top:-25%;left:-15%;background:radial-gradient(circle,rgba(0,237,100,0.05),transparent 65%);"></div>
+  <div class="hero-glow" style="width:50vw;height:50vw;bottom:-20%;right:-10%;background:radial-gradient(circle,rgba(240,78,48,0.04),transparent 65%);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal" style="margin-bottom:2rem;">
+      <svg width="140" height="48" viewBox="0 0 140 48" fill="none" style="opacity:0.6;">
+        <rect x="0" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#f04e30" stroke-width="1.5"/>
+        <text x="16" y="28" text-anchor="middle" font-family="DM Sans" font-weight="800" font-size="12" fill="#f04e30">O</text>
+        <text x="50" y="30" font-family="DM Sans" font-weight="600" font-size="14" fill="#5a6578">→</text>
+        <rect x="68" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#00ED64" stroke-width="1.5"/>
+        <path d="M84 14c0 0-0.3 4-0.3 5.5c0 1.5 0.8 2.8 1.7 3.8c0.9 1 1.3 2 1.3 3.2c0 2.5-1.6 4.8-3.4 5.5c0 0 0.3-2.5 0.3-3.5c0-0.8-0.7-1.8-1.5-2.8c-0.8-1-1.5-2.2-1.5-4c0-2.8 1.5-5.3 3.4-7.7z" fill="#00ED64"/>
+      </svg>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--mg);margin-bottom:1.5rem;">Developer Deep Dive &amp; Migration Guide</p>
+    <h1 class="reveal reveal-d2" style="margin-bottom:1.25rem;">Oracle <span style="color:var(--oc);">→</span> MongoDB</h1>
+    <p class="reveal reveal-d3" style="font-size:1.1rem;color:var(--tx2);max-width:600px;margin:0 auto 2.5rem;font-weight:300;">Architecture, data model, query language, transactions, HA/DR, migration tooling — the complete modernization playbook.</p>
+    <div class="reveal reveal-d4" style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Duration</strong> 20–25 min</span>
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Audience</strong> Architects &amp; Developers</span>
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Focus</strong> Migration &amp; Modernization</span>
+    </div>
+    <p class="reveal reveal-d5" style="margin-top:3rem;font-size:0.7rem;color:var(--tx3);animation:pulse 2.5s ease infinite;">Scroll or press ↓ to begin</p>
+  </div>
+</div>
 
-// Point-in-Time Recovery (PITR):
-// To achieve PITR, an initial snapshot is taken, and then all subsequent oplog entries 
-// are replayed up to the desired timestamp. This guarantees a consistent state 
-// across the entire cluster, replacing RMAN-based recovery procedures.`,
-                        language: 'text'
-                    },
-                    {
-                        type: 'Storage Management (Sharding vs. Partitioning)',
-                        code: `// Oracle Partitioning: Logical division of a single table, improving query efficiency.
-// MongoDB Sharding: Horizontal scaling across multiple servers (shards), dividing the entire dataset.
+<!-- ════════════ SLIDE 2: AGENDA ════════════ -->
+<div class="slide" id="s-agenda" data-title="Agenda">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:2rem;">Agenda</h2>
+    <div class="g4 reveal reveal-d1">
+      <div class="card" style="border-top:2px solid var(--oc);"><div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--oc);margin-bottom:0.5rem;">01</div><h3 style="font-size:0.95rem;">Why Migrate?</h3><p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Strategic rationale, architecture shift</p></div>
+      <div class="card" style="border-top:2px solid var(--cy);"><div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--cy);margin-bottom:0.5rem;">02</div><h3 style="font-size:0.95rem;">Developer Deep Dive</h3><p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Data model, queries, transactions, HA</p></div>
+      <div class="card" style="border-top:2px solid var(--mg);"><div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--mg);margin-bottom:0.5rem;">03</div><h3 style="font-size:0.95rem;">Migration Tooling</h3><p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Relational Migrator, schema analysis, code gen</p></div>
+      <div class="card" style="border-top:2px solid var(--pr);"><div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--pr);margin-bottom:0.5rem;">04</div><h3 style="font-size:0.95rem;">Feature Matrix &amp; Battlecard</h3><p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Oracle → MongoDB mapping, positioning</p></div>
+    </div>
+    <div class="reveal reveal-d2" style="margin-top:2rem;display:flex;justify-content:center;">
+      <svg width="600" height="56" viewBox="0 0 600 56" fill="none" style="max-width:100%;"><circle cx="75" cy="28" r="18" fill="none" stroke="#f04e30" stroke-width="1.5"/><text x="75" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#f04e30">01</text><line x1="93" y1="28" x2="207" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="225" cy="28" r="18" fill="none" stroke="#22D3EE" stroke-width="1.5"/><text x="225" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#22D3EE">02</text><line x1="243" y1="28" x2="357" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="375" cy="28" r="18" fill="none" stroke="#00ED64" stroke-width="1.5"/><text x="375" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00ED64">03</text><line x1="393" y1="28" x2="507" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/><circle cx="525" cy="28" r="18" fill="none" stroke="#A78BFA" stroke-width="1.5"/><text x="525" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#A78BFA">04</text></svg>
+    </div>
+  </div>
+</div>
 
-// DBA Concern: Data growth and I/O capacity.
-// Solution: Sharding automates data distribution, ensuring that disk and I/O load 
-// are spread across the shard cluster. The DBA focuses on selecting the correct 
-// 'shard key' (the equivalent of a partition key).`,
-                        language: 'text'
-                    }
-                ],
-                note: 'In Atlas, these functions are automated, reducing the daily manual RMAN/storage management tasks common to Oracle DBAs.'
-            },
-            // --- NEW DBA CONTENT: SECURITY & DATATYPES ---
-            {
-                id: 'dba_security_datatypes',
-                title: 'Advanced Security & Data Integrity (VPD/RLS & Strict Data Types)',
-                behaviour: 'DBAs need fine-grained control over who sees which rows/columns (VPD/RLS) and must strictly enforce data types to maintain application stability.',
-                solution: 'The **JSON Schema Validation** feature allows DBAs to define mandatory fields and specific data types (`bsonType`) to enforce strictness. **Dynamic Views** with the `$cond` operator effectively replace Oracle\'s VPD (Virtual Private Database) or Row-Level Security (RLS) policies.',
-                details: [
-                    {
-                        type: 'Enforcing Strict Data Types',
-                        code: `// JSON Schema enforces strict data types for Oracle NUMBER/DATE equivalents:
-db.createCollection("policies", {
-    validator: {
-        $jsonSchema: {
-            properties: {
-                "issue_date": { "bsonType": "date", "description": "Strictly a BSON date type" },
-                "premium_amount": { 
-                    "bsonType": "double", 
-                    "description": "Used for decimal precision, replacing NUMBER(10,2)" 
-                }
-            },
-            required: ["issue_date", "premium_amount"]
-        }
-    }
-})`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Row-Level Security (RLS) via Views',
-                        code: `// This view filters documents based on the current user's department, mimicking RLS:
-db.createView(
-    "department_data_view", 
-    "sensitive_data_collection",
-    [{
-        $match: {
-            // $$USER is the authenticated user principal in MongoDB
-            "department": "$$USER.department_id" 
-        }
-    }]
-)`,
-                        language: 'javascript'
-                    }
-                ],
-                note: 'The combination of Roles-Based Access Control (RBAC) and Dynamic Views provides a modern, flexible, and powerful replacement for traditional Oracle security policies.'
-            },
-            // --- EXISTING DEVELOPER CONTENT ---
-            {
-                id: 'querylanguage',
-                title: 'Query Language Shift (SQL to Query API/Aggregation)',
-                behaviour: 'Developers rely on declarative SQL (SELECT, WHERE, GROUP BY) and complex DML, which are fundamentally text-based and relational.',
-                solution: 'The **MongoDB Query API** uses a JSON-like syntax for basic CRUD operations. Complex data manipulation (joins, grouping, transformations) is handled by the multi-stage **Aggregation Pipeline**, which acts as a powerful, server-side data processor.',
-                details: [
-                    {
-                        type: 'SQL vs. Query API (Basic)',
-                        code: `// SQL: Select * from users where status = 'active' AND age > 30;
+<!-- ════════════ SLIDE 3: STRATEGIC RATIONALE ════════════ -->
+<div class="slide" id="s-rationale" data-title="Strategic Rationale">
+  <div class="slide-inner">
+    <div class="label l-o reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2L2 22h20L12 2z" stroke="#f04e30" stroke-width="2" fill="none"/></svg> Section 01 — Why Migrate?</div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1.5rem;">Five Reasons to Leave Oracle</h2>
+    <div class="g3 reveal reveal-d2" style="gap:0.85rem;">
+      <div class="card" style="border-top:2px solid var(--or);"><h3 style="font-size:0.88rem;color:var(--or);margin-bottom:0.4rem;">Data Model &amp; Performance</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Shift from normalization to <strong style="color:var(--tx);">rich documents</strong> designed around access patterns. Atomic single-document operations replace expensive multi-table JOINs.</p></div>
+      <div class="card" style="border-top:2px solid var(--cy);"><h3 style="font-size:0.88rem;color:var(--cy);margin-bottom:0.4rem;">Agility &amp; Iteration Speed</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Oracle's fixed DDL requires schema approval for every change. MongoDB's <strong style="color:var(--tx);">flexible schema</strong> lets developers iterate and deploy immediately.</p></div>
+      <div class="card" style="border-top:2px solid var(--mg);"><h3 style="font-size:0.88rem;color:var(--mg);margin-bottom:0.4rem;">Operational Simplicity</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">No DBA teams for patching, RMAN, capacity-based licensing. <strong style="color:var(--tx);">MongoDB Atlas</strong> automates scaling, backups, and upgrades.</p></div>
+      <div class="card" style="border-top:2px solid var(--pr);"><h3 style="font-size:0.88rem;color:var(--pr);margin-bottom:0.4rem;">Cloud &amp; Vendor Flexibility</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Oracle locks you to Exadata/OCI. Atlas runs on <strong style="color:var(--tx);">AWS, Azure, and GCP</strong> — multi-cloud by design, zero vendor lock-in.</p></div>
+      <div class="card" style="border-top:2px solid var(--rd);"><h3 style="font-size:0.88rem;color:var(--rd);margin-bottom:0.4rem;">AI Readiness</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Store transactional data and <strong style="color:var(--tx);">vector embeddings</strong> in one platform. Atlas Vector Search enables RAG and semantic search — Oracle requires bolt-on AI infrastructure.</p></div>
+      <div class="card" style="border-top:2px solid var(--oc);"><h3 style="font-size:0.88rem;color:var(--oc);margin-bottom:0.4rem;">Licensing Cost</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Oracle per-core licensing + mandatory support contracts + extra-cost options (RAC, partitioning, GoldenGate). MongoDB: <strong style="color:var(--tx);">pay-as-you-go consumption</strong>.</p></div>
+    </div>
+  </div>
+</div>
 
-// MongoDB Query API (JavaScript Shell):
-db.users.find({
-    "status": "active",
-    "age": { "$gt": 30 }
-})`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'SQL Group By vs. Aggregation Pipeline',
-                        code: `// SQL: SELECT dept, COUNT(*) FROM employees GROUP BY dept;
+<!-- ════════════ SLIDE 4: ARCHITECTURE ════════════ -->
+<div class="slide" id="s-arch" data-title="Architecture">
+  <div class="slide-inner">
+    <div class="label l-v reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#22D3EE" stroke-width="2" fill="none"/></svg> Section 02 — Architecture Comparison</div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1.5rem;">Oracle RAC vs. MongoDB Replica Sets</h2>
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="680" height="170" viewBox="0 0 680 170" fill="none" style="max-width:100%;">
+        <text x="160" y="14" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#f04e30">Oracle RAC</text>
+        <rect x="40" y="22" width="240" height="60" rx="8" fill="#111923" stroke="#f04e30" stroke-width="1.2"/>
+        <text x="160" y="48" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#e4e9f2">Shared Storage (SAN/ASM)</text>
+        <text x="160" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">All nodes read/write same disk</text>
+        <rect x="50" y="90" width="70" height="36" rx="6" fill="#111923" stroke="#f04e30" stroke-width="0.8"/><text x="85" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f04e30">Node 1</text>
+        <rect x="130" y="90" width="70" height="36" rx="6" fill="#111923" stroke="#f04e30" stroke-width="0.8"/><text x="165" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f04e30">Node 2</text>
+        <rect x="210" y="90" width="70" height="36" rx="6" fill="#111923" stroke="#f04e30" stroke-width="0.8"/><text x="245" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f04e30">Node N</text>
+        <line x1="85" y1="82" x2="85" y2="90" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
+        <line x1="165" y1="82" x2="165" y2="90" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
+        <line x1="245" y1="82" x2="245" y2="90" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
+        <text x="160" y="145" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Shared-disk · Cache fusion · Global locks</text>
+        <text x="160" y="160" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#4f5e72">Scale-up · Exadata lock-in · High cost</text>
+        <line x1="340" y1="22" x2="340" y2="145" stroke="#1a2538" stroke-width="1" stroke-dasharray="4 3"/>
+        <text x="520" y="14" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ED64">MongoDB Replica Set</text>
+        <rect x="440" y="22" width="80" height="50" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
+        <text x="480" y="44" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8.5" fill="#00ed64">Primary</text>
+        <text x="480" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Reads + Writes</text>
+        <rect x="540" y="38" width="80" height="40" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/><text x="580" y="56" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#8694a8">Secondary</text><text x="580" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Replication</text>
+        <rect x="540" y="88" width="80" height="40" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/><text x="580" y="106" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#8694a8">Secondary</text><text x="580" y="118" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Replication</text>
+        <path d="M520 47 L540 53" stroke="#00ed64" stroke-width="0.8" opacity="0.5" stroke-dasharray="3 2"/>
+        <path d="M520 55 L540 103" stroke="#00ed64" stroke-width="0.8" opacity="0.5" stroke-dasharray="3 2"/>
+        <text x="520" y="145" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Shared-nothing · Local storage · Auto failover</text>
+        <text x="520" y="160" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#4f5e72">Scale-out via sharding · Multi-cloud · Pay-as-you-go</text>
+      </svg>
+    </div>
+    <div class="g2 reveal reveal-d3">
+      <div class="callout callout-o"><strong>Oracle:</strong> Shared-disk architecture. All nodes compete for the same storage via cache fusion. Scaling means bigger hardware (Exadata). GoldenGate for DR adds cost and complexity.</div>
+      <div class="callout callout-m"><strong>MongoDB:</strong> Shared-nothing architecture. Each node owns its data. Auto-failover in seconds. Horizontal scaling via <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" style="color:var(--cy);text-decoration:none;">sharding</a>. Cross-region replication built-in.</div>
+    </div>
+  </div>
+</div>
 
-// MongoDB Aggregation Pipeline:
-db.employees.aggregate([
-    {
-        "$group": {
-            "_id": "$dept", 
-            "employeeCount": { "$sum": 1 }
-        }
-    }
-])`,
-                        language: 'javascript'
-                    }
-                ],
-                note: 'Mastering the Aggregation Pipeline is the single largest developer shift, replacing most complex Oracle views and report-generating stored procedures.'
-            },
-            {
-                id: 'joins',
-                title: 'Handling Relational Joins (JOINs)',
-                behaviour: 'Oracle enforces relationships via foreign keys and uses JOINs for nearly all multi-table data reads.',
-                solution: 'The primary technique is **Schema Denormalization (Embedding)**, co-locating related data to eliminate joins for *most* reads. Where decoupling is necessary (e.g., large arrays, high-cardinality), use **Manual References**. The **$lookup** aggregation stage acts as a performant left outer join when relationships are needed.',
-                details: [
-                    {
-                        type: 'Embedding vs. Referencing',
-                        code: `// EMBEDDING: Policy and all its Riders in one document (eliminates join)
-{
-    "policyId": 12345,
-    "customer": { "name": "Jane Doe", "id": "C1" },
-    "riders": [
-                        { "name": "Accident", "premium": 50 },
-                        { "name": "Disability", "premium": 100 }
-                    ]
-                }
+<!-- ════════════ SLIDE 5: DATA MODEL ════════════ -->
+<div class="slide" id="s-model" data-title="Data Model">
+  <div class="slide-inner">
+    <h2 class="reveal">Tables &amp; JOINs → Rich Documents</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">The single largest paradigm shift. Co-locate related data in one document — eliminating JOINs for most reads.</p>
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--oc);">
+        <h3 style="font-size:0.88rem;color:var(--oc);margin-bottom:0.5rem;">Oracle — Normalized Tables</h3>
+        <pre class="code-block"><span class="cm">-- 3 tables, 2 JOINs to fetch one order</span>
+<span class="kw">SELECT</span> o.order_id, c.name, p.product_name
+<span class="kw">FROM</span> orders o
+<span class="kw">JOIN</span> customers c <span class="kw">ON</span> o.customer_id = c.id
+<span class="kw">JOIN</span> order_items oi <span class="kw">ON</span> o.id = oi.order_id
+<span class="kw">JOIN</span> products p <span class="kw">ON</span> oi.product_id = p.id
+<span class="kw">WHERE</span> o.order_id = <span class="st">12345</span>;</pre>
+        <p style="font-size:0.75rem;color:var(--tx3);margin-top:0.5rem;">Separate tables for every entity. Foreign keys enforce relationships. Every read = multi-table JOIN.</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.88rem;color:var(--mg);margin-bottom:0.5rem;">MongoDB — Embedded Document</h3>
+        <pre class="code-block">{
+  <span class="st">"_id"</span>: <span class="st">"order_12345"</span>,
+  <span class="st">"customer"</span>: { <span class="st">"name"</span>: <span class="st">"Jane Doe"</span>, <span class="st">"id"</span>: <span class="st">"C1"</span> },
+  <span class="st">"items"</span>: [
+    { <span class="st">"product"</span>: <span class="st">"Hiking Boots"</span>, <span class="st">"qty"</span>: <span class="fn">1</span>, <span class="st">"price"</span>: <span class="fn">129.99</span> },
+    { <span class="st">"product"</span>: <span class="st">"Wool Socks"</span>, <span class="st">"qty"</span>: <span class="fn">2</span>, <span class="st">"price"</span>: <span class="fn">14.99</span> }
+  ],
+  <span class="st">"total"</span>: <span class="fn">159.97</span>
+}</pre>
+        <p style="font-size:0.75rem;color:var(--tx3);margin-top:0.5rem;">One document = one read. Atomic. No JOINs. Arrays and nested objects are first-class citizens.</p>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>When to reference instead of embed:</strong> Large arrays (>1000 elements), high-cardinality relationships (many-to-many), or data that changes independently. Use <code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$lookup</code> for server-side JOINs when needed. <a href="https://www.mongodb.com/docs/manual/core/data-modeling-introduction/" target="_blank" style="color:var(--cy);text-decoration:none;">Data Modeling Docs →</a>
+    </div>
+  </div>
+</div>
 
-// MANUAL REFERENCE (For very large/rarely accessed data):
-// Policy document stores the ID of the customer document.
-{
-    "policyId": 12345,
-    "customerId": "C1" // Reference
-}`,
-                        language: 'json'
-                    }
-                ],
-                app_layer: 'Embedding dramatically increases read performance and ensures atomicity, but requires application logic for cascading updates if non-embedded fields change.'
-            },
-            {
-                id: 'indexing',
-                title: 'Indexing Strategy & Performance Tuning',
-                behaviour: 'Oracle indexing relies on primary keys, individual column indexes, and composite indexes to tune relational queries.',
-                solution: 'MongoDB uses **Compound Indexes** (similar to composite indexes) which must adhere to the **ESR Rule (Equality, Sort, Range)** for optimal performance. Developers must learn to use the **`explain()`** method (like Oracle\'s explain plan) to validate if an index is being used effectively, especially on embedded fields.',
-                details: [
-                    {
-                        type: 'Compound Index Creation',
-                        code: `// Goal: Efficiently find policies by customer and sort by issue date.
+<!-- ════════════ SLIDE 6: QUERY LANGUAGE ════════════ -->
+<div class="slide" id="s-query" data-title="Query Language">
+  <div class="slide-inner">
+    <h2 class="reveal">SQL → MongoDB Query API</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Declarative SQL becomes JSON-based queries and the powerful Aggregation Pipeline.</p>
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--oc);">
+        <h3 style="font-size:0.85rem;color:var(--oc);margin-bottom:0.5rem;">Oracle SQL</h3>
+        <pre class="code-block"><span class="cm">-- Filter + Sort</span>
+<span class="kw">SELECT</span> * <span class="kw">FROM</span> users
+<span class="kw">WHERE</span> status = <span class="st">'active'</span> <span class="kw">AND</span> age > <span class="fn">30</span>
+<span class="kw">ORDER BY</span> created_at <span class="kw">DESC</span>;
 
-// SQL: CREATE INDEX policy_cust_date ON policy (customer_id, issue_date DESC);
+<span class="cm">-- GROUP BY</span>
+<span class="kw">SELECT</span> dept, <span class="fn">COUNT</span>(*) <span class="kw">FROM</span> employees
+<span class="kw">GROUP BY</span> dept;</pre>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.5rem;">MongoDB MQL</h3>
+        <pre class="code-block"><span class="cm">// Filter + Sort</span>
+db.users.<span class="fn">find</span>({
+  <span class="st">"status"</span>: <span class="st">"active"</span>,
+  <span class="st">"age"</span>: { <span class="kw">$gt</span>: <span class="fn">30</span> }
+}).<span class="fn">sort</span>({ <span class="st">"created_at"</span>: -<span class="fn">1</span> });
 
-// MongoDB Shell:
-db.policies.createIndex(
-    { "customerId": 1, "issueDate": -1 }, 
-    { name: "idx_cust_date" }
-)`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Index Validation (Explain)',
-                        code: `// Always validate index usage:
-db.policies.find({ 
-    "customerId": "C100" 
-}).sort({ 
-    "issueDate": -1 
-}).explain("executionStats") 
+<span class="cm">// Aggregation Pipeline (GROUP BY)</span>
+db.employees.<span class="fn">aggregate</span>([
+  { <span class="kw">$group</span>: { _id: <span class="st">"$dept"</span>, count: { <span class="kw">$sum</span>: <span class="fn">1</span> } } }
+]);</pre>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>The Aggregation Pipeline</strong> is the single most important concept for Oracle developers to master. It replaces complex Oracle views, stored procedures, and report-generating SQL. Stages chain together: <code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$match → $group → $sort → $lookup → $project</code>. <a href="https://www.mongodb.com/docs/manual/core/aggregation-pipeline/" target="_blank" style="color:var(--cy);text-decoration:none;">Pipeline Docs →</a>
+    </div>
+  </div>
+</div>
 
-// The 'winningPlan' and 'totalDocsExamined' fields must be scrutinized.`,
-                        language: 'javascript'
-                    }
-                ],
-                optimization: 'Indexes on embedded fields (e.g., `riders.premium`) are also crucial for performance, a concept not directly mirrored in the relational world.'
-            },
-            // --- EXISTING ARCHITECT & FEATURE MAPPING CONTENT ---
-            {
-                id: 'storedprocedures',
-                title: 'Stored Procedures (PL/SQL Rewrites)',
-                behaviour: 'Oracle PL/SQL Stored Procedures tightly couple complex business logic and data manipulation to the database layer, creating significant migration complexity.',
-                solution: 'The logic is "lifted" from the database and shifted to the **application layer** (e.g., microservices). **Relational Migrator (RM)** automates the rewriting of this logic into application-compatible code or complex **MongoDB Aggregation Pipelines** for data-intensive transformations.',
-                details: [
-                    {
-                        type: 'Application Logic Shift',
-                        code: `// PL/SQL logic is refactored into a service layer function (e.g., Java, Node.js, Python)
-// Benefits: Easier unit testing, better scalability, decoupled from the database engine.
-
-public void processPolicyRenewal(String policyId) {
-    // 1. Fetch data (was SELECT in Oracle)
-    Policy p = policyRepository.findById(policyId); 
-    // 2. Perform business logic (was PL/SQL procedural code)
-    if (p.isEligibleForRenewal()) {
-        p.setRenewalDate(LocalDate.now().plusYears(1));
-    }
-    // 3. Save data (was UPDATE/INSERT)
-    policyRepository.save(p);
-}`,
-                        language: 'java'
-                    }
-                ],
-                note: 'For highly complex, set-based logic, the Aggregation Pipeline in MongoDB often serves as a powerful replacement for complex stored procedures, executing logic efficiently on the server.'
-            },
-            {
-                id: 'availability_dr',
-                title: 'Availability & DR (Replication/GoldenGate)',
-                behaviour: 'Oracle relies on solutions like GoldenGate for robust replication, high availability, and disaster recovery (DR).',
-                solution: 'MongoDB natively handles HA/DR through **Replica Sets** (3+ members for automatic failover) and **Sharding** (for horizontal scalability). **MongoDB Atlas** provides managed, zone-aware deployment for seamless global distribution and DR.',
-                details: [
-                    {
-                        type: 'Replica Set HA Concept',
-                        code: `// A replica set ensures high availability:
-// Primary: Accepts all writes.
-// Secondaries: Replicate data and support read operations.
-// Arbiters (Optional): Participate in elections, but do not store data.
-
-// Automatic Failover: If the primary fails, the remaining members automatically elect a new primary, 
-// ensuring rapid recovery without manual intervention (a core feature of MongoDB).`,
-                        language: 'text'
-                    }
-                ],
-                atlas: 'For multi-region DR, Atlas can deploy a **Global Cluster** with nodes spread across different continents, providing low-latency access and maximum fault tolerance.'
-            },
-            {
-                id: 'transactions',
-                title: 'Transactional Guarantees (PL/SQL COMMIT/ROLLBACK)',
-                behaviour: 'Oracle operations are implicitly transactional. How does MongoDB ensure atomicity and manage multi-statement changes?',
-                solution: 'MongoDB guarantees **ACID compliance** for changes to a **single document** atomically by design, making explicit transactions unnecessary for most operations. For scenarios requiring updates across multiple documents/collections, MongoDB supports **Multi-Document Transactional APIs** with Snapshot Read Concern.',
-                details: [
-                    {
-                        type: 'Java/Spring Boot',
-                        code: `// 1. Explicit Session-based Transaction (Java)
-try (ClientSession session = client.startSession()) {
-    session.startTransaction(TransactionOptions.builder()
-        .readConcern(ReadConcern.SNAPSHOT).build());
-    
-    // Soft delete all children
-    action.update(Child.class).matching(query_ext).apply(update).all();
-    // Soft delete the parent
-    action.update(Parent.class).matching(query_ext).apply(update).all();
-    
-    session.commitTransaction();
-} catch (RuntimeException e) {
-    session.abortTransaction();
-}`,
-                        language: 'java'
-                    },
-                    {
-                        type: 'Spring Boot @Transactional',
-                        code: `@Transactional(label = { "mongo: readConcern=snapshot" })
-void deletePolicy(int policyNumber) {
-    // Both updates occur within a single transaction
-    template.update(Parent.class).matching(query_ext).apply(update).all();
-    template.update(Child.class).matching(query).apply(update).all();
-};`,
-                        language: 'java'
-                    }
-                ],
-                security: 'To prevent support staff from bypassing transactions via Compass, disable database writes for their users and mandate that all changes go through a dedicated API that enforces Snapshot-level transactional guarantees.'
-            },
-            {
-                id: 'commitbehavior',
-                title: 'Default Commit Behavior & Production Support Safety',
-                behaviour: 'In Oracle, changes occur within a transaction by default, providing a safety net for "trial" changes (commit/rollback). MongoDB writes outside a transaction are immediately persistent.',
-                solution: 'Production support staff must be trained to **explicitly execute all modifications within a transactional session**. This replicates the try-out-and-commit/rollback capability essential for safety during manual changes.',
-                details: [
-                    {
-                        type: 'Mandatory Transactional Session (JavaScript Shell)',
-                        code: `var session = db.getMongo().startSession();
-var policyCollection = session.getDatabase("quotes").policies;
-
-session.startTransaction( { 
-    readConcern: { level: "snapshot" }, 
-    writeConcern: { w: "majority" } 
+<!-- ════════════ SLIDE 7: TRANSACTIONS ════════════ -->
+<div class="slide" id="s-txn" data-title="Transactions">
+  <div class="slide-inner">
+    <h2 class="reveal">Transactions &amp; Consistency</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Oracle is implicitly transactional. MongoDB provides ACID at the single-document level by default — and multi-document transactions when you need them.</p>
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--oc);">
+        <h3 style="font-size:0.85rem;color:var(--oc);margin-bottom:0.5rem;">Oracle Transaction</h3>
+        <pre class="code-block"><span class="cm">-- Implicit transaction (auto-begin)</span>
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance - <span class="fn">100</span>
+  <span class="kw">WHERE</span> id = <span class="st">'A'</span>;
+<span class="kw">UPDATE</span> accounts <span class="kw">SET</span> balance = balance + <span class="fn">100</span>
+  <span class="kw">WHERE</span> id = <span class="st">'B'</span>;
+<span class="kw">COMMIT</span>; <span class="cm">-- or ROLLBACK</span></pre>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.5rem;">MongoDB Multi-Document Transaction</h3>
+        <pre class="code-block"><span class="kw">const</span> session = client.<span class="fn">startSession</span>();
+session.<span class="fn">startTransaction</span>({
+  readConcern: { level: <span class="st">"snapshot"</span> },
+  writeConcern: { w: <span class="st">"majority"</span> }
 });
+<span class="kw">try</span> {
+  accounts.<span class="fn">updateOne</span>(
+    { _id: <span class="st">"A"</span> }, { <span class="kw">$inc</span>: { balance: -<span class="fn">100</span> } }, { session });
+  accounts.<span class="fn">updateOne</span>(
+    { _id: <span class="st">"B"</span> }, { <span class="kw">$inc</span>: { balance: <span class="fn">100</span> } }, { session });
+  session.<span class="fn">commitTransaction</span>();
+} <span class="kw">catch</span>(e) { session.<span class="fn">abortTransaction</span>(); }</pre>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Key insight:</strong> Because MongoDB documents can contain arrays and nested objects, <em>most</em> operations that require multi-statement transactions in Oracle are single-document atomic operations in MongoDB. Multi-document transactions exist for the remaining cases. <a href="https://www.mongodb.com/docs/manual/core/transactions/" target="_blank" style="color:var(--cy);text-decoration:none;">Transactions Docs →</a>
+    </div>
+  </div>
+</div>
 
-// Perform data modifications here (test changes)
-policyCollection.insert(something);
-policyCollection.update(something_else);
+<!-- ════════════ SLIDE 8: HA & DR ════════════ -->
+<div class="slide" id="s-ha" data-title="HA & DR">
+  <div class="slide-inner">
+    <h2 class="reveal">HA &amp; Disaster Recovery</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Oracle Data Guard + GoldenGate vs. MongoDB's built-in replica sets and change streams.</p>
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--oc);">
+        <h3 style="font-size:0.88rem;color:var(--oc);margin-bottom:0.5rem;">Oracle HA/DR</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;margin-bottom:0.3rem;"><strong style="color:var(--tx);">Data Guard:</strong> Standby databases (physical/logical). Manual or scripted failover. RPO depends on redo log shipping frequency.</p>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;margin-bottom:0.3rem;"><strong style="color:var(--tx);">GoldenGate:</strong> Real-time replication across heterogeneous systems. Complex setup, extra-cost license, dedicated infrastructure.</p>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;"><strong style="color:var(--tx);">RAC:</strong> Multi-instance on shared storage. HA within one data center only. Does not protect against site failure.</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.88rem;color:var(--mg);margin-bottom:0.5rem;">MongoDB HA/DR</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;margin-bottom:0.3rem;"><strong style="color:var(--tx);">Replica Sets:</strong> 3+ nodes with automatic failover in seconds. No manual intervention. Built into every deployment.</p>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;margin-bottom:0.3rem;"><strong style="color:var(--tx);">Change Streams:</strong> Real-time event-driven architecture. Subscribe to the oplog — triggers, CDC, audit trail — no GoldenGate needed.</p>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;"><strong style="color:var(--tx);">Global Clusters:</strong> Atlas deploys across continents with zone-aware sharding. Low-latency reads from the nearest node. RPO ≈ 0 with majority write concern.</p>
+      </div>
+    </div>
+    <div class="callout callout-r reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Cost comparison:</strong> Oracle Data Guard + GoldenGate + RAC requires three separate licenses plus specialized hardware (Exadata). MongoDB replica sets and change streams are <strong style="color:var(--mg);">included in every deployment at no extra cost</strong>. <a href="https://www.mongodb.com/docs/manual/replication/" target="_blank" style="color:var(--cy);text-decoration:none;">Replication Docs →</a>
+    </div>
+  </div>
+</div>
 
-// If changes are correct:
-session.commitTransaction();
+<!-- ════════════ SLIDE 9: INDEXING ════════════ -->
+<div class="slide" id="s-index" data-title="Indexing">
+  <div class="slide-inner">
+    <h2 class="reveal">Indexing &amp; Performance Tuning</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Oracle and MongoDB both use B-tree indexes. MongoDB adds compound indexes (ESR rule), text, vector, wildcard, and geospatial.</p>
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--oc);">
+        <h3 style="font-size:0.85rem;color:var(--oc);margin-bottom:0.5rem;">Oracle Index Types</h3>
+        <pre class="code-block"><span class="cm">-- Composite index</span>
+<span class="kw">CREATE INDEX</span> idx_cust_date
+  <span class="kw">ON</span> policies(customer_id, issue_date <span class="kw">DESC</span>);
 
-// If changes are incorrect or risky:
-session.rollbackTransaction();`,
-                        language: 'javascript'
-                    }
-                ],
-                note: 'This explicit session use is mandatory for any non-trivial manual data modification to maintain the same safety guarantees that Oracle\'s default behavior provided.'
-            },
-            {
-                id: 'sequences',
-                title: 'Sequence Generation (Oracle SEQUENCE)',
-                behaviour: 'Oracle provides built-in sequences for generating unique, auto-incrementing primary keys. How is this replicated in a document database?',
-                solution: 'MongoDB does not have native sequences. This functionality is implemented at the **application layer** using a dedicated `sequence` collection and the atomic `findAndModify` command to ensure serialization of the increment operation.',
-                details: [
-                    {
-                        type: 'Sequence Collection Structure (JavaScript)',
-                        code: `{
-    "name": "policy_id_seq",
-    "sequence": 1000
-}`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Atomic Increment and Retrieve (Java)',
-                        code: `Query query = new Query(Criteria.where("name").is("policy_id_seq"));
-Update update = new Update().inc("sequence", 1);
+<span class="cm">-- Bitmap (low-cardinality columns)</span>
+<span class="kw">CREATE BITMAP INDEX</span> idx_status
+  <span class="kw">ON</span> policies(status);
 
-// findAndModify ensures atomic increment and returns the new value
-Sequence newestValue = template.update(Sequence.class)
-    .matching(query)
-    .apply(update)
-    .withOptions(FindAndModifyOptions.options().returnNew(true))
-    .findAndModifyValue();
+<span class="cm">-- Function-based</span>
+<span class="kw">CREATE INDEX</span> idx_upper_name
+  <span class="kw">ON</span> customers(<span class="fn">UPPER</span>(name));</pre>
+      </div>
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.5rem;">MongoDB Index Types</h3>
+        <pre class="code-block"><span class="cm">// Compound (ESR: Equality, Sort, Range)</span>
+db.policies.<span class="fn">createIndex</span>(
+  { customerId: <span class="fn">1</span>, issueDate: -<span class="fn">1</span> }
+);
 
-policy_to_insert.setSequenceId(newestValue.getSequence());
-template.insert(policy_to_insert);`,
-                        language: 'java'
-                    }
-                ],
-                optimization: 'To optimize, increment the sequence by a larger block (e.g., 1000) and cache the range in the application memory, reducing database calls.'
-            },
-            {
-                id: 'triggers',
-                title: 'Triggers (Oracle BEFORE/AFTER INSERT/UPDATE)',
-                behaviour: 'Oracle PL/SQL uses data triggers to execute server-side logic in response to DML operations.',
-                solution: 'MongoDB uses the **Change Streams API** or managed **Atlas Database Triggers**. Change Streams allow applications to subscribe to the oplog for real-time change events. Atlas Triggers run serverless business logic (JavaScript) in response to these events.',
-                details: [
-                    {
-                        type: 'Change Stream Implementation (Java)',
-                        code: `Flux changeStream = reactiveTemplate
-    .changeStream(newAggregation(match(
-        // Filter for specific events, e.g., 'update' where status is 'deleted'
-        Criteria.where("operationType").is("update")
-        .andOperator(Criteria.where("body.status").is("deleted"))
-    ), Parent.class, ChangeStreamOptions.empty(), "parent");
+<span class="cm">// Text index (full-text search)</span>
+db.products.<span class="fn">createIndex</span>({ description: <span class="st">"text"</span> });
 
-changeStream.doOnNext(event -> {
-    Document document = event.getBody();
-    // 1. Invoke audit method (Equivalent to BEFORE/AFTER)
-    Policies.auditSoftDeleteEvent(document); 
-    // 2. Make downstream changes
-    Extension.removeAssociatedDocumentsByParentEvent(document);
-}).subscribe();`,
-                        language: 'java'
-                    }
-                ],
-                atlas: 'Atlas Database Triggers are a fully managed, serverless implementation that scales independently of the database. Logic is written in JavaScript.'
-            },
-            {
-                id: 'schedulers',
-                title: 'Job Schedulers (Oracle DBMS_JOB / Scheduler)',
-                behaviour: 'Oracle uses dedicated database features (like DBMS_JOB) for time-based, recurring tasks, tightly coupling scheduling with the database.',
-                solution: 'Job scheduling should be decoupled and handled by the **application layer**. MongoDB Atlas provides **Scheduled Triggers** based on CRON schedules. For broader enterprise use, **Kubernetes CronJobs** offer a unified, platform-level solution, requiring no new hardware.',
-                details: [
-                    {
-                        type: 'Atlas Scheduled Trigger (Concept)',
-                        code: `// The logic for a scheduled task (e.g., 'generateDailyReport') is written in a 
-// serverless JavaScript function. 
-// The trigger is configured in the Atlas UI with a CRON expression (e.g., '0 7 * * *' for 7:00 AM daily).
-// This runs outside the database in a scalable serverless environment.`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'External Scheduler (Kubernetes CronJob)',
-                        code: `// For applications modernized onto Kubernetes, a CronJob provides a unified solution:
-apiVersion: batch/v1
-kind: CronJob
-metadata:
-  name: daily-report-job
-spec:
-  schedule: "0 7 * * *" # Daily at 7:00 AM
-  jobTemplate:
-    spec:
-      template:
-        spec:
-          containers:
-          - name: report-container
-            image: my-app/report-processor:latest
-            command: ["python", "/app/generate_report.py"]
-          restartPolicy: OnFailure`,
-                        language: 'yaml'
-                    }
-                ],
-                note: 'This decoupling removes dependency on database-specific scheduling features and leverages modern infrastructure orchestration.'
-            },
-            {
-                id: 'integrity',
-                title: 'Referential Integrity (Oracle Foreign Keys)',
-                behaviour: 'Relational databases enforce parent-child relationships using foreign key constraints, including cascade delete functionality.',
-                solution: 'The recommended solution is **Data Embedding**, where child documents are physically stored inside the parent document. This provides referential integrity out-of-the-box. If embedding is not feasible, integrity checks (find parent before insert/update child) and cascading deletes must be implemented explicitly at the **application layer** (e.g., in Spring Boot repository).',
-                details: [
-                    {
-                        type: 'Embedded Document Example (JavaScript)',
-                        code: `// Referential Integrity is inherent in this structure
-{
-    "parent_field1": "value",
-    "children":[
-        {
-            "child_field1": "value",
-            "child_field2": "value"
-        },
-        // ... more children
-    ]
-}`,
-                        language: 'javascript'
-                    }
-                ],
-                app_layer: 'Application-level checks executed within a **multi-document transaction** are required when embedding is not used.'
-            },
-            {
-                id: 'constraints',
-                title: 'Table/Field Constraints (NOT NULL, CHECK, UNIQUE)',
-                behaviour: 'Oracle imposes structure (data type, uniqueness, non-null) at the table level.',
-                solution: 'MongoDB uses **JSON Schema Validation** to define required fields, data types, and value ranges at the collection level. **Unique Indexes** can enforce uniqueness constraints, often combined with `partialFilterExpression` for conditional uniqueness.',
-                details: [
-                    {
-                        type: 'Enforcing Strict Data Types',
-                        code: `// JSON Schema enforces strict data types for Oracle NUMBER/DATE equivalents:
-db.createCollection("students", {
-    validator: {
-        $jsonSchema: {
-            properties: {
-                "issue_date": { "bsonType": "date", "description": "Strictly a BSON date type" },
-                "premium_amount": { 
-                    "bsonType": "double", 
-                    "description": "Used for decimal precision, replacing NUMBER(10,2)" 
-                }
-            },
-            required: ["issue_date", "premium_amount"]
-        }
-    }
-})`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Conditional Unique Index (JavaScript Shell)',
-                        code: `// Ensures uniqueness only for 'active' policies
-db.users.createIndex(
-    { policyholderName: 1, policyType: 1},
-    { unique: true, partialFilterExpression: { status: { $ne: "closed"} } }
-)`,
-                        language: 'javascript'
-                    }
-                ]
-            },
-            {
-                id: 'locking',
-                title: 'Application-Level Locking (SELECT FOR UPDATE)',
-                behaviour: 'Legacy Oracle apps use `SELECT FOR UPDATE` or flag fields to implement a lock mechanism so only one user can modify a business entity.',
-                solution: 'MongoDB uses the **atomic `findAndModify()`** command to check the lock status and update the lock fields (`locked: true`, `lockedBy: userId`) in a single, atomic operation, preventing race conditions.',
-                details: [
-                    {
-                        type: 'Locking Logic (Java)',
-                        code: `boolean checkAndLockPolicy(int policyId, ObjectId userId) {
-    Criteria criteria = new Criteria().and("policyId").is(policyId)
-        .andOperator(new Criteria().orOperator(
-            // Policy must be unlocked OR locked by the current user
-            Criteria.and("locked").is(false),
-            Criteria.and("locked").is(true).and("lockedBy").is(userId)
-        ));
+<span class="cm">// Wildcard (dynamic schemas)</span>
+db.events.<span class="fn">createIndex</span>({ <span class="st">"metadata.$**"</span>: <span class="fn">1</span> });
 
-    Query query = new Query(criteria);
-    Update update = new Update().set("locked", true).set("lockedBy", userId);
-    
-    // Atomically find and modify the document based on the criteria
-    Policy updatedPolicy = mongoTemplate.findAndModify(query, update, options, Policy.class);
+<span class="cm">// Vector (Atlas Vector Search)</span>
+<span class="cm">// Defined in Atlas Search index definition</span></pre>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Key difference:</strong> Oracle has bitmap indexes for OLAP workloads. MongoDB doesn't — it's not designed for data warehousing. For performance tuning, replace Oracle's <code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">EXPLAIN PLAN</code> with MongoDB's <code style="font-family:'JetBrains Mono',monospace;font-size:0.78rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">explain("executionStats")</code>. <a href="https://www.mongodb.com/docs/manual/indexes/" target="_blank" style="color:var(--cy);text-decoration:none;">Indexes Docs →</a>
+    </div>
+  </div>
+</div>
 
-    if (updatedPolicy != null) {
-        return updatedPolicy.getLockedBy().equals(userId);
-    }
-    return false;
-}`,
-                        language: 'java'
-                    }
-                ],
-                note: 'The `findAndModify` command guarantees that no other session can update or modify the record during this critical check-and-set operation.'
-            },
-            {
-                id: 'oracledblinks',
-                title: 'Database Links (Oracle DB Links)',
-                behaviour: 'Oracle Database Links allow one database instance to access data and code in a separate, remote database instance directly via the database layer.',
-                solution: 'This feature is replaced by modern, application-centric communication. Use **REST APIs or gRPC** for inter-service communication. For read-only/reporting needs across multiple MongoDB instances, use the **MongoDB Atlas Data Federation Service**.',
-                details: [
-                    {
-                        type: 'Modern Application Layer (REST/gRPC)',
-                        code: `// Instead of a database link, Microservice A uses an HTTP client 
-// to call a dedicated API (Microservice B) that owns the remote data.
+<!-- ════════════ SLIDE 10: PL/SQL MAPPING ════════════ -->
+<div class="slide scrollable" id="s-plsql" data-title="PL/SQL Mapping">
+  <div class="slide-inner">
+    <h2 class="reveal">PL/SQL → Application Layer</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.25rem;">Oracle couples business logic to the database. MongoDB shifts it to the application layer — testable, scalable, and decoupled.</p>
+    <div class="g2 reveal reveal-d2" style="gap:0.85rem;">
+      <div class="adv-card"><h4>Stored Procedures → Microservices</h4><p>PL/SQL logic moves to application code (Java, Node.js, Python). <strong>Relational Migrator</strong> automates rewriting stored procedures into application-compatible code or aggregation pipelines.</p></div>
+      <div class="adv-card"><h4>Triggers → Change Streams</h4><p>Oracle BEFORE/AFTER triggers become <strong>Change Streams</strong> — subscribe to the oplog for real-time events. Atlas Database Triggers run serverless JavaScript. <a href="https://www.mongodb.com/docs/manual/changeStreams/" target="_blank" style="color:var(--cy);text-decoration:none;">Docs →</a></p></div>
+      <div class="adv-card"><h4>Sequences → findAndModify</h4><p>No native sequences. Use a dedicated collection + atomic <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">findAndModify</code> with <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$inc</code> for gap-free auto-increment. Cache blocks of IDs in the app for throughput.</p></div>
+      <div class="adv-card"><h4>DBMS_JOB → Scheduled Triggers / K8s</h4><p>Oracle job schedulers decouple to <strong>Atlas Scheduled Triggers</strong> (CRON-based serverless) or <strong>Kubernetes CronJobs</strong>. No database dependency for scheduling.</p></div>
+      <div class="adv-card"><h4>Foreign Keys → Embedding + Validation</h4><p>Referential integrity via <strong>embedded documents</strong> (inherent). When references are used, enforce integrity at the app layer within multi-document transactions. <a href="https://www.mongodb.com/docs/manual/core/schema-validation/" target="_blank" style="color:var(--cy);text-decoration:none;">Schema Validation →</a></p></div>
+      <div class="adv-card"><h4>VPD/RLS → Views + $cond</h4><p>Row-level security via <strong>dynamic views</strong> using <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$cond</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$$USER_ROLES</code>. Data masking with field-level conditional logic inside view pipelines.</p></div>
+    </div>
+  </div>
+</div>
 
-// Service A (Conceptual Java Call)
-// private RestTemplate restTemplate;
-// public RemoteData fetchRemoteResource(String id) {
-//     return restTemplate.getForObject("http://microservice-b/api/resource/" + id, RemoteData.class);
-// }`,
-                        language: 'java'
-                    },
-                    {
-                        type: 'Atlas Data Federation (Reporting)',
-                        code: `// Use a single query endpoint to federate data from:
-// 1. Cluster A (MongoDB Atlas)
-// 2. Cluster B (MongoDB Atlas)
-// 3. External sources like S3/Azure Blob Storage
+<!-- ════════════ SLIDE 11: MIGRATION TOOLING ════════════ -->
+<div class="slide" id="s-migrate" data-title="Migration Tooling">
+  <div class="slide-inner">
+    <div class="label l-m reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 12.5 7 12.5 9.5C12.5 12 14 13.5 15.3 15" stroke="#00ED64" stroke-width="2" fill="none" transform="scale(0.75) translate(4,2)"/></svg> Section 03 — Migration Tooling</div>
+    <h2 class="reveal reveal-d1">Relational Migrator</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Purpose-built for Oracle → MongoDB migration. Schema analysis, data migration, stored procedure conversion — in one tool.</p>
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="600" height="100" viewBox="0 0 600 100" fill="none" style="max-width:100%;">
+        <rect x="0" y="20" width="120" height="60" rx="8" fill="#111923" stroke="#f04e30" stroke-width="1.2"/><text x="60" y="46" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#f04e30">Oracle Schema</text><text x="60" y="60" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Tables · Views · PL/SQL</text>
+        <path d="M124 50 L178 50" stroke="#243348" stroke-width="1.5" marker-end="url(#arw)"/>
+        <rect x="182" y="10" width="140" height="80" rx="10" fill="#111923" stroke="#00ed64" stroke-width="1.8"/><text x="252" y="38" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">Relational Migrator</text><text x="252" y="54" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Schema Analysis</text><text x="252" y="66" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Data Migration</text><text x="252" y="78" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Code Generation</text>
+        <path d="M326 50 L378 50" stroke="#243348" stroke-width="1.5" marker-end="url(#arw)"/>
+        <rect x="382" y="20" width="120" height="60" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.2"/><text x="442" y="46" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#00ed64">MongoDB</text><text x="442" y="60" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Collections · Indexes · Code</text>
+        <defs><marker id="arw" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#243348"/></marker></defs>
+      </svg>
+    </div>
+    <div class="g3 reveal reveal-d3">
+      <div class="card"><h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.4rem;">Schema Analysis</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Reads Oracle data dictionary, foreign keys, and constraints. Recommends embedding vs. referencing based on relationship cardinality and access patterns.</p></div>
+      <div class="card"><h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.4rem;">Data Migration</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Snapshot + CDC modes. Validates row counts between source and target. Handles type mapping (NUMBER → Double, DATE → ISODate). <a href="https://www.mongodb.com/docs/relational-migrator/" target="_blank" style="color:var(--cy);text-decoration:none;">RM Docs →</a></p></div>
+      <div class="card"><h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.4rem;">Code Generation</h3><p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Rewrites PL/SQL stored procedures to Java/Node.js/Python + Aggregation Pipelines. LLM-assisted for complex procedures. Breaks large blocks for context windows.</p></div>
+    </div>
+  </div>
+</div>
 
-// This centralizes reporting without database-to-database connections.`,
-                        language: 'text'
-                    }
-                ],
-                app_layer: 'This shift enforces service ownership, better security, and clearer separation of concerns, which is a key principle of application modernization.'
-            },
-            {
-                id: 'messaging',
-                title: 'Messaging & Queuing (DBMS_PIPE / Advanced Queuing)',
-                behaviour: 'Oracle PL/SQL uses packages like `DBMS_PIPE` and `Advanced Queuing` for inter-session communication and asynchronous processing.',
-                solution: 'In a modernized application, synchronous and asynchronous communication is moved entirely to the **application layer**. This is handled by **REST APIs, gRPC, Apache Kafka, or RabbitMQ**. Database-level piping becomes obsolete.',
-                details: [
-                    {
-                        type: 'Core Technology Replacement',
-                        code: 'Asynchronous communication uses modern queuing and streaming technologies like Apache Kafka or RabbitMQ. Synchronous communication uses REST APIs or gRPC.',
-                        language: 'text'
-                    }
-                ]
-            },
-            {
-                id: 'masking',
-                title: 'Data Obfuscation and Masking',
-                behaviour: 'Need to hide sensitive data (e.g., PII) based on user roles or permissions.',
-                solution: 'Use **Views** that dynamically obfuscate data via the Aggregation Framework’s `$set` and `$cond` operators. The view logic checks the current user\'s roles (`$$USER_ROLES.role`) to determine whether to display the full field or a masked version.',
-                details: [
-                    {
-                        type: 'View Creation Logic (JavaScript Shell)',
-                        code: `db.createView(
-    "userView", "users",
-    [{
-        $set: {
-            "phone": {
-                $cond: {
-                    // Check if the current user has the 'FullViewUser' role
-                    if: { $in: ["FullViewUser", "$$USER_ROLES.role"] },
-                    then: "$phone", // Show unmasked
-                    else: {
-                        // Mask first 6 digits
-                        $concat: ["XXXXXX", { $substrCP: ["$phone", 6, { $strLenCP: "$phone" }] }]
-                    }
-                }
-            }
-        }
-    }]
-)`,
-                        language: 'javascript'
-                    }
-                ],
-                restriction: 'Read permissions must be restricted on the original collection to enforce all access through the new view.'
-            },
-            {
-                id: 'reporting',
-                title: 'Reporting & Analytics (Materialized Views / BI Tools)',
-                behaviour: 'Oracle provides Materialized Views for pre-computed aggregations, Oracle BI tools, and direct SQL access for reporting teams. Many organizations have dedicated reporting databases.',
-                solution: 'MongoDB offers multiple approaches: the **Aggregation Pipeline** for real-time analytics, **Atlas Charts** for built-in visualization, and **Atlas Data Federation** for querying across Atlas clusters, S3, and HTTP endpoints. For warehouse-style reporting, use **Atlas connectors** for BI tools (Tableau, Power BI) via the MongoDB BI Connector or Atlas SQL Interface.',
-                details: [
-                    {
-                        type: 'Aggregation Pipeline (Real-Time Report)',
-                        code: `// Monthly revenue report
-db.orders.aggregate([
-    { $match: { status: "completed", orderDate: { $gte: ISODate("2025-01-01") } } },
-    { $group: {
-        _id: { month: { $month: "$orderDate" }, year: { $year: "$orderDate" } },
-        totalRevenue: { $sum: "$amount" },
-        orderCount: { $sum: 1 },
-        avgOrderValue: { $avg: "$amount" }
-    }},
-    { $sort: { "_id.year": 1, "_id.month": 1 } }
-])`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Atlas Data Federation (Cross-Source Query)',
-                        code: `// Query across Atlas cluster and S3 archive
-db.aggregate([
-    { $unionWith: { coll: "archived_orders", pipeline: [] } },
-    { $group: { _id: "$customerId", lifetimeValue: { $sum: "$amount" } } },
-    { $sort: { lifetimeValue: -1 } },
-    { $limit: 100 }
-])`,
-                        language: 'javascript'
-                    }
-                ],
-                restriction: 'For heavy reporting workloads, consider using **Analytics Nodes** (read-only secondaries) to isolate reporting queries from the operational workload.'
-            },
-            {
-                id: 'connectionpooling',
-                title: 'Connection Pooling & Resource Limits',
-                behaviour: 'Oracle manages connections through Oracle Net (TNS), Universal Connection Pool (UCP), and connection limits configured at the database and listener level. Connection storms and pool exhaustion are common issues.',
-                solution: 'MongoDB drivers include **built-in connection pooling** with configurable pool sizes, timeouts, and retry logic. Atlas enforces connection limits per tier (e.g., M30 supports 1,500 connections). For serverless or Lambda workloads, the driver\'s connection pool is often sufficient without a separate pooler.',
-                details: [
-                    {
-                        type: 'Node.js Driver (Connection Pool Config)',
-                        code: `const { MongoClient } = require('mongodb');
-const client = new MongoClient(uri, {
-    maxPoolSize: 50,
-    minPoolSize: 5,
-    maxIdleTimeMS: 30000,
-    waitQueueTimeoutMS: 5000,
-    retryWrites: true,
-    retryReads: true
-});
-await client.connect();`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Java Driver (Connection Pool Config)',
-                        code: `MongoClientSettings settings = MongoClientSettings.builder()
-    .applyConnectionString(new ConnectionString(uri))
-    .applyToConnectionPoolSettings(builder ->
-        builder.maxSize(50)
-               .minSize(5)
-               .maxWaitTime(5, TimeUnit.SECONDS)
-               .maxConnectionIdleTime(30, TimeUnit.SECONDS))
-    .retryWrites(true)
-    .retryReads(true)
-    .build();
-MongoClient client = MongoClients.create(settings);`,
-                        language: 'java'
-                    }
-                ],
-                restriction: 'Monitor connection usage via Atlas Metrics. If connections are a bottleneck, consider upgrading the cluster tier or optimizing connection reuse in your application.'
-            },
-            {
-                id: 'monitoring',
-                title: 'Monitoring & Performance Diagnosis (Oracle EM / AWR)',
-                behaviour: 'Oracle provides Enterprise Manager (EM), Automatic Workload Repository (AWR), Statspack, and ADDM for comprehensive database monitoring, wait-event analysis, and performance tuning.',
-                solution: 'MongoDB Atlas provides **Atlas Metrics** (real-time dashboards), **Performance Advisor** (index recommendations), **Real-Time Performance Panel**, and **Query Profiler** (slow query analysis). For self-managed deployments, use `mongostat`, `mongotop`, and the `db.currentOp()` command. The `explain()` method provides detailed query execution plans.',
-                details: [
-                    {
-                        type: 'Query Profiling (Shell)',
-                        code: `// Enable profiling for slow queries (>100ms)
-db.setProfilingLevel(1, { slowms: 100 })
+<!-- ════════════ SLIDE 12: FEATURE MATRIX ════════════ -->
+<div class="slide scrollable" id="s-matrix" data-title="Feature Matrix">
+  <div class="slide-inner">
+    <div class="label l-v reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#22D3EE" stroke-width="2" fill="none"/></svg> Section 04 — Feature Mapping</div>
+    <h2 class="reveal reveal-d1">Oracle → MongoDB Feature Matrix</h2>
+    <div class="tw reveal reveal-d2" style="margin-top:1rem;">
+      <table>
+        <thead><tr><th>Oracle Feature</th><th>MongoDB Equivalent</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td>Tables + Rows</td><td>Collections + Documents</td><td>Documents can contain nested objects and arrays</td></tr>
+          <tr><td>SQL</td><td>MQL + Aggregation Pipeline</td><td>Also: Atlas SQL Interface for BI tools</td></tr>
+          <tr><td>JOINs</td><td>Embedding / <code>$lookup</code></td><td>Embed for 1:few; <code>$lookup</code> for 1:many</td></tr>
+          <tr><td>Foreign Keys</td><td>Embedding / App-layer validation</td><td><code>JSON Schema Validation</code> for constraints</td></tr>
+          <tr><td>PL/SQL Procedures</td><td>App layer + Aggregation Pipeline</td><td>Relational Migrator auto-converts</td></tr>
+          <tr><td>Triggers</td><td>Change Streams / Atlas Triggers</td><td>Real-time, event-driven, serverless</td></tr>
+          <tr><td>Sequences</td><td><code>findAndModify</code> + counter collection</td><td>Atomic increment; cache for throughput</td></tr>
+          <tr><td>Data Guard / RAC</td><td>Replica Sets (auto-failover)</td><td>Built-in, no extra license</td></tr>
+          <tr><td>GoldenGate</td><td>Change Streams</td><td>Real-time CDC included free</td></tr>
+          <tr><td>RMAN (Backup)</td><td>Atlas Cloud Backup + PITR</td><td>Continuous backup with point-in-time restore</td></tr>
+          <tr><td>Tablespace Partitioning</td><td>Sharding</td><td>Horizontal scaling across servers</td></tr>
+          <tr><td>VPD / RLS</td><td>Views + <code>$cond</code> + <code>$$USER_ROLES</code></td><td>Dynamic row/field filtering</td></tr>
+          <tr><td>Materialized Views</td><td><code>$merge</code> / Atlas Charts</td><td>Aggregation output to collection + visualization</td></tr>
+          <tr><td>DBMS_JOB</td><td>Atlas Scheduled Triggers / K8s CronJobs</td><td>Decoupled from database</td></tr>
+          <tr><td>SELECT FOR UPDATE</td><td>Atomic <code>findAndModify</code></td><td>Check-and-set in one operation</td></tr>
+          <tr><td>DB Links</td><td>REST/gRPC / Atlas Data Federation</td><td>Application-layer integration</td></tr>
+          <tr><td>Advanced Queuing</td><td>Kafka / RabbitMQ / Change Streams</td><td>Modern messaging infrastructure</td></tr>
+          <tr><td>Oracle Analytics</td><td>Atlas Charts / BI Connector</td><td>Embedded dashboards or Tableau/PowerBI</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
 
-// Review slow queries
-db.system.profile.find().sort({ ts: -1 }).limit(5).pretty()
+<!-- ════════════ SLIDE 13: ENTERPRISE ════════════ -->
+<div class="slide" id="s-enterprise" data-title="Enterprise">
+  <div class="slide-inner">
+    <h2 class="reveal">Enterprise Readiness</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.25rem;">MongoDB Atlas matches or exceeds Oracle on enterprise requirements — with dramatically simpler operations.</p>
+    <div class="tw reveal reveal-d2">
+      <table>
+        <thead><tr><th>Capability</th><th style="color:var(--oc);">Oracle</th><th style="color:var(--mg);">MongoDB Atlas</th></tr></thead>
+        <tbody>
+          <tr><td>SLA</td><td>99.995% (Exadata Cloud)</td><td class="ck">99.995%</td></tr>
+          <tr><td>Multi-Cloud</td><td class="cx">OCI primary, limited multi-cloud</td><td class="ck">AWS, Azure, GCP — 100+ regions</td></tr>
+          <tr><td>Encryption</td><td>TDE, Network Encryption</td><td class="ck">TLS, at-rest, Client-Side FLE, Queryable Encryption</td></tr>
+          <tr><td>Auth &amp; AuthZ</td><td>LDAP, Kerberos, Oracle DB Vault</td><td class="ck">LDAP, x.509, OIDC, SCRAM, fine-grained RBAC</td></tr>
+          <tr><td>Compliance</td><td>SOC 2, HIPAA, PCI DSS, FedRAMP</td><td class="ck">SOC 2, HIPAA, PCI DSS, ISO 27001, FedRAMP, GDPR</td></tr>
+          <tr><td>Backup</td><td>RMAN + scripts</td><td class="ck">Continuous cloud backup + PITR (managed)</td></tr>
+          <tr><td>Licensing</td><td class="cx">Per-core + options (RAC, partitioning, GoldenGate)</td><td class="ck">Pay-as-you-go consumption</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal reveal-d3" style="font-size:0.78rem;color:var(--tx3);margin-top:1rem;text-align:center;">Sources: <a href="https://docs.oracle.com/en/database/oracle/oracle-database/" target="_blank" style="color:var(--cy);text-decoration:none;">Oracle Database Docs</a> · <a href="https://www.mongodb.com/docs/atlas/" target="_blank" style="color:var(--cy);text-decoration:none;">MongoDB Atlas Docs</a></p>
+  </div>
+</div>
 
-// Analyze a specific query's execution plan
-db.orders.find({ customerId: "C123", status: "pending" })
-    .explain("executionStats")`,
-                        language: 'javascript'
-                    },
-                    {
-                        type: 'Atlas CLI (Check Metrics)',
-                        code: `# List available metrics for a cluster
-atlas metrics processes list --projectId <projectId>
+<!-- ════════════ SLIDE 14: POSITIONING ════════════ -->
+<div class="slide" id="s-pos" data-title="Positioning">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:1.5rem;">When to Migrate, When Oracle Stays</h2>
+    <div class="g2 reveal reveal-d1">
+      <div class="pos-card pos-m">
+        <h3 style="color:var(--mg);font-size:0.95rem;margin-bottom:0.6rem;">MongoDB Wins When…</h3>
+        <ul>
+          <li><strong>Greenfield</strong> applications or complete modernization</li>
+          <li>Data model is <strong>document-oriented</strong> (nested, polymorphic)</li>
+          <li>Team wants <strong>developer velocity</strong> over DBA control</li>
+          <li>Workload needs <strong>horizontal scaling</strong> beyond single-node capacity</li>
+          <li><strong>Multi-cloud</strong> or cloud-native is a requirement</li>
+          <li>Need <strong>real-time search + vector search</strong> alongside OLTP</li>
+          <li>Oracle <strong>licensing cost</strong> is unsustainable</li>
+        </ul>
+      </div>
+      <div class="pos-card pos-o">
+        <h3 style="color:var(--oc);font-size:0.95rem;margin-bottom:0.6rem;">Oracle Stays When…</h3>
+        <ul>
+          <li>Application is deeply coupled to <strong>PL/SQL</strong> with 100K+ LOC and migration cost exceeds benefit</li>
+          <li>Workload requires <strong>complex analytical queries</strong> (data warehousing, OLAP cubes)</li>
+          <li>Organization mandates <strong>Oracle-specific</strong> compliance or tooling</li>
+          <li>Existing <strong>ERP/CRM</strong> system (SAP, Siebel) requires Oracle backend</li>
+          <li>Team has deep <strong>Oracle DBA expertise</strong> but no app development capacity</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
 
-# Get specific metric data
-atlas metrics processes describe <hostname:port> \\
-    --granularity PT1H --period P1D \\
-    --type OPCOUNTER_CMD`,
-                        language: 'text'
-                    }
-                ],
-                restriction: 'Atlas Performance Advisor requires M10+ tiers. For production workloads, always use Atlas Alerts to proactively monitor connections, replication lag, and disk I/O.'
-            }
-        ];
+<!-- ════════════ SLIDE 15: BATTLECARD ════════════ -->
+<div class="slide scrollable" id="s-battle" data-title="Battlecard">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:1.5rem;">Battlecard — Key Talking Points</h2>
+    <div class="g2 reveal reveal-d1" style="gap:1.5rem;">
+      <div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--mg);margin-bottom:0.75rem;">MongoDB Advantages</h3>
+        <div class="battle-item"><strong>"One document replaces five tables."</strong> Rich documents eliminate JOINs for most reads. Faster, simpler, atomic by default.</div>
+        <div class="battle-item"><strong>"No Oracle tax."</strong> Per-core licensing, mandatory support, extra-cost options (RAC, partitioning, GoldenGate). Atlas is consumption-based.</div>
+        <div class="battle-item"><strong>"Multi-cloud freedom."</strong> Oracle pushes OCI. MongoDB runs on AWS, Azure, and GCP — switch with zero code changes.</div>
+        <div class="battle-item"><strong>"AI-ready by default."</strong> Vector search, full-text search, and ACID transactions in one platform. Oracle requires separate AI infrastructure.</div>
+        <div class="battle-item"><strong>"Relational Migrator does the heavy lifting."</strong> Schema analysis, data migration, PL/SQL rewriting — purpose-built automation.</div>
+      </div>
+      <div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--oc);margin-bottom:0.75rem;">Common Objections</h3>
+        <div class="battle-item"><strong>"Oracle has stronger transactions."</strong> MongoDB has full multi-document ACID with snapshot isolation. Most operations are single-document atomic — no transaction needed.</div>
+        <div class="battle-item"><strong>"We need JOINs."</strong> Most JOINs disappear with proper document modeling. <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$lookup</code> handles the rest.</div>
+        <div class="battle-item"><strong>"What about our PL/SQL?"</strong> Relational Migrator converts stored procedures to application code. It's an investment in modern, testable architecture.</div>
+        <div class="battle-item"><strong>"Can MongoDB handle our scale?"</strong> MongoDB shards horizontally. The world's largest deployments run on Atlas (trillions of docs, petabyte-scale).</div>
+      </div>
+    </div>
+  </div>
+</div>
 
-        // JavaScript to manage the accordion and code tabs
-        function initializeAccordion() {
-            const container = document.getElementById('accordion-container');
-            
-            deepDiveData.forEach(item => {
-                // Dynamically create the full item HTML structure
-                const accordionItem = document.createElement('div');
-                accordionItem.className = 'bg-slate-700 rounded-xl shadow-lg';
-                
-                // Use a temporary container to parse the HTML string and find the header
-                // NOTE: We MUST ensure item.id is used to create unique IDs for elements
-                const itemHtml = `
-                    <div class="p-5 cursor-pointer flex justify-between items-center" id="header-${item.id}" data-target="#body-${item.id}">
-                        <h3 class="text-xl font-semibold text-mongo-light">${item.title}</h3>
-                        <svg class="w-6 h-6 transform transition duration-300" data-arrow="#body-${item.id}" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
-                    <div id="body-${item.id}" class="hidden p-5 pt-0">
-                        <!-- behaviour & Solution -->
-                        <div class="mb-4 text-slate-300">
-                            <p class="mb-2"><span class="font-bold text-red-300">Oracle behaviour:</span> ${item.behaviour}</p>
-                            <p class="mb-4"><span class="font-bold text-mongo-accent">MongoDB Solution:</span> ${item.solution}</p>
-                            ${item.optimization ? `<p class="text-sm italic text-yellow-300">Optimization Note: ${item.optimization}</p>` : ''}
-                            ${item.security ? `<p class="text-sm italic text-yellow-300">Security Note: ${item.security}</p>` : ''}
-                            ${item.app_layer ? `<p class="text-sm italic text-yellow-300">Integration Note: ${item.app_layer}</p>` : ''}
-                            ${item.note ? `<p class="text-sm italic text-yellow-300">Note: ${item.note}</p>` : ''}
-                            ${item.restriction ? `<p class="text-sm italic text-yellow-300">Restriction Note: ${item.restriction}</p>` : ''}
-                            ${item.atlas ? `<p class="text-sm italic text-yellow-300">Atlas Note: ${item.atlas}</p>` : ''}
-                        </div>
+<!-- ════════════ SLIDE 16: REFERENCES ════════════ -->
+<div class="slide scrollable" id="s-refs" data-title="References">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:1.5rem;">References &amp; Further Reading</h2>
+    <div class="g3 reveal reveal-d1" style="gap:1.25rem;">
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.6rem;">Migration Tools</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://www.mongodb.com/docs/relational-migrator/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Relational Migrator Documentation</a>
+          <a href="https://www.mongodb.com/docs/relational-migrator/getting-started/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Getting Started with RM</a>
+          <a href="https://www.mongodb.com/resources/products/capabilities/rdbms-migration" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">RDBMS Migration Guide</a>
+        </div>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.6rem;">Schema &amp; Data Modeling</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://www.mongodb.com/docs/manual/core/data-modeling-introduction/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Data Modeling Introduction</a>
+          <a href="https://www.mongodb.com/docs/manual/core/schema-validation/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Schema Validation (JSON Schema)</a>
+          <a href="https://www.mongodb.com/docs/manual/applications/data-models-relationships/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Model Relationships</a>
+          <a href="https://www.mongodb.com/docs/manual/indexes/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Index Strategy &amp; Best Practices</a>
+        </div>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.6rem;">Core Features</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://www.mongodb.com/docs/manual/core/transactions/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Transactions Documentation</a>
+          <a href="https://www.mongodb.com/docs/manual/changeStreams/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Change Streams</a>
+          <a href="https://www.mongodb.com/docs/manual/core/aggregation-pipeline/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Aggregation Pipeline</a>
+          <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Atlas Vector Search</a>
+          <a href="https://www.mongodb.com/docs/atlas/backup/cloud-backup/overview/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Atlas Cloud Backup &amp; PITR</a>
+        </div>
+      </div>
+    </div>
+    <div class="g3 reveal reveal-d2" style="gap:1.25rem;margin-top:1rem;">
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--oc);margin-bottom:0.6rem;">Oracle Documentation</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://docs.oracle.com/en/database/oracle/oracle-database/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Oracle Database Documentation</a>
+          <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sqlrf/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">SQL Language Reference</a>
+          <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/sbydb/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Data Guard Documentation</a>
+          <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/racad/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Real Application Clusters</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
-                        <!-- Code Tabs -->
-                        <div class="mt-4">
-                            <div class="flex border-b border-mongo-blue mb-4" id="tabs-${item.id}">
-                                ${item.details.map((detail, index) => `
-                                    <button class="code-tab px-4 py-2 text-sm text-slate-400 transition duration-150 ${index === 0 ? 'active' : ''}" 
-                                            data-tab-for="#code-content-${item.id}-${index}">${detail.type}</button>
-                                `).join('')}
-                            </div>
-                            <div id="code-contents-${item.id}">
-                                ${item.details.map((detail, index) => `
-                                    <div id="code-content-${item.id}-${index}" class="code-container bg-slate-900 p-4 ${index !== 0 ? 'hidden' : ''}">
-                                        <pre class="whitespace-pre-wrap text-sm text-mongo-light"><code class="language-${detail.language}">${detail.code.trim().replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code></pre>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    </div>
-                `;
+<!-- ════════════ SLIDE 17: Q&A ════════════ -->
+<div class="slide" id="s-end" data-title="Q&A">
+  <div class="hero-glow" style="width:50vw;height:50vw;top:10%;left:25%;background:radial-gradient(circle,rgba(0,237,100,0.04),transparent 65%);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal" style="margin-bottom:2rem;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><path d="M32 4C32 4 33.2 14 33.2 19C33.2 24 36.2 27 38.8 30C41.4 33 42.4 36 42.4 39.5C42.4 46 37.4 52 32 54C32 54 33 47 33 44.5C33 42 30.5 39 28.5 37C26.5 35 24 32 24 27.5C24 19 28.5 11 32 4Z" fill="#00ED64" opacity="0.8"/></svg>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--mg);margin-bottom:1rem;">End of Briefing</p>
+    <h2 class="reveal reveal-d2" style="margin-bottom:1rem;">Questions &amp; Discussion</h2>
+    <p class="reveal reveal-d3" style="color:var(--tx2);font-size:1rem;max-width:460px;margin:0 auto 2.5rem;font-weight:300;">Modernize the data layer. Free the developers. Win on velocity, cost, and cloud readiness.</p>
+    <div class="reveal reveal-d4" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.3rem;border-radius:100px;border:1px solid var(--mg);color:var(--mg);font-weight:600;font-size:0.85rem;">MongoDB Solutions Architecture</div>
+  </div>
+</div>
 
-                accordionItem.innerHTML = itemHtml;
-                container.appendChild(accordionItem);
-
-                // Attach event listener directly to the dynamically created header element
-                const headerElement = accordionItem.querySelector(`#header-${item.id}`);
-
-                headerElement.addEventListener('click', function() {
-                    const targetId = this.getAttribute('data-target');
-                    const targetBody = document.querySelector(targetId);
-                    const arrow = this.querySelector('[data-arrow]'); // Query relative to 'this' (the header)
-                    
-                    // Toggle visibility of the content body
-                    targetBody.classList.toggle('hidden');
-                    // Rotate arrow
-                    arrow.classList.toggle('rotate-180');
-                });
-
-
-                // Add event listeners for code tabs
-                const tabsContainer = accordionItem.querySelector(`#tabs-${item.id}`);
-                const codeContentsContainer = accordionItem.querySelector(`#code-contents-${item.id}`);
-                
-                if (tabsContainer && codeContentsContainer) {
-                    tabsContainer.querySelectorAll('.code-tab').forEach(tab => {
-                        tab.addEventListener('click', function() {
-                            const targetContentId = this.getAttribute('data-tab-for');
-                            
-                            // Deactivate all tabs and hide all content
-                            tabsContainer.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
-                            codeContentsContainer.querySelectorAll('.code-container').forEach(c => c.classList.add('hidden'));
-
-                            // Activate the clicked tab
-                            this.classList.add('active');
-                            // Show the corresponding content
-                            document.querySelector(targetContentId).classList.remove('hidden');
-                        });
-                    });
-                }
-            });
-        }
-
-        // Initialize the website functionality on load
-        window.onload = initializeAccordion;
-    </script>
-    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+<script>
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+document.getElementById('totalSlides').textContent = totalSlides;
+const dotsContainer = document.getElementById('progDots');
+slides.forEach((_, i) => { const dot = document.createElement('div'); dot.className = 'dot'; dot.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' })); dotsContainer.appendChild(dot); });
+const dots = dotsContainer.querySelectorAll('.dot');
+let currentSlide = 0;
+const slideObserver = new IntersectionObserver((entries) => { entries.forEach(entry => { if (entry.isIntersecting && entry.intersectionRatio > 0.4) { const idx = Array.from(slides).indexOf(entry.target); if (idx >= 0) { currentSlide = idx; document.querySelector('#slideCounter span:first-child').textContent = idx + 1; dots.forEach((d, i) => d.classList.toggle('active', i === idx)); const id = entry.target.id; document.querySelectorAll('.nav-links a').forEach(a => { a.classList.toggle('active', a.getAttribute('href') === '#' + id); }); } } }); }, { threshold: 0.4 });
+slides.forEach(s => slideObserver.observe(s));
+const revealEls = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }); }, { threshold: 0.1 });
+revealEls.forEach(el => revealObs.observe(el));
+document.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); const next = Math.min(currentSlide + 1, totalSlides - 1); slides[next].scrollIntoView({ behavior: 'smooth' }); } else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); const prev = Math.max(currentSlide - 1, 0); slides[prev].scrollIntoView({ behavior: 'smooth' }); } });
+</script>
+<script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 </body>
 </html>
