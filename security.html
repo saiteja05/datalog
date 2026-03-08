@@ -1,348 +1,1260 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Security Headers -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MongoDB Atlas Security Overview</title>
-    <!-- Favicon -->
+    <title>MongoDB Atlas Security — Defense in Depth</title>
     <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+                    colors: {
+                        mongo: { bg: '#001E2B', bg2: '#002838', card: '#003345', cardHover: '#004058', accent: '#00ED64', accentDim: '#00c853', textPri: '#fafafa', textSec: '#b8d8e8', textMuted: '#7fa8bc' }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        .bg-gray-900 { background-color: #001E2B !important; }
-        .bg-gray-800 { background-color: #002838 !important; }
-        .bg-gray-700 { background-color: #003345 !important; }
-        .border-gray-700 { border-color: #1a3a4a !important; }
+        :root {
+            --bg-primary: #001E2B;
+            --bg-secondary: #002838;
+            --bg-card: #003345;
+            --bg-card-hover: #004058;
+            --text-primary: #fafafa;
+            --text-secondary: #b8d8e8;
+            --text-muted: #7fa8bc;
+            --accent: #00ED64;
+            --accent-dim: #00c853;
+            --accent-glow: rgba(0, 237, 100, 0.15);
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 237, 100, 0.25);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #001E2B;
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
-        .tab-content {
-            display: none;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .tab-button {
+
+        /* ── Shield Canvas ── */
+        .hero-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
+        .hero-bg canvas { width: 100%; height: 100%; opacity: 0.3; }
+
+        /* ── Sticky Nav ── */
+        .sticky-nav {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background: rgba(0, 30, 43, 0.8);
+            border-bottom: 1px solid var(--border-subtle);
             transition: all 0.3s ease;
-            color: #9CA3AF; /* gray-400 */
-            border-color: transparent;
         }
-        .tab-button:hover {
-            color: #00ED64; /* emerald-400 */
-            border-color: #00ED64; /* emerald-300 */
+        .sticky-nav a {
+            color: var(--text-muted);
+            transition: color 0.2s ease;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
         }
-        .tab-button.active {
-            border-color: #00ED64; /* emerald-400 */
-            color: #00ED64;
+        .sticky-nav a:hover, .sticky-nav a.active { color: var(--accent); }
+
+        /* ── Fade In ── */
+        .fade-in {
+            opacity: 0; transform: translateY(24px);
+            transition: opacity 0.7s ease, transform 0.7s ease;
         }
+        .fade-in.visible { opacity: 1; transform: translateY(0); }
+        .fade-in-delay-1 { transition-delay: 0.1s; }
+        .fade-in-delay-2 { transition-delay: 0.2s; }
+        .fade-in-delay-3 { transition-delay: 0.3s; }
+        .fade-in-delay-4 { transition-delay: 0.4s; }
+        .fade-in-delay-5 { transition-delay: 0.5s; }
+
+        /* ── Section Divider ── */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+            max-width: 64rem;
+            margin: 0 auto;
+        }
+
+        /* ── Security Layer Ring ── */
+        .layer-ring {
+            position: relative;
+            width: 480px; height: 480px;
+            margin: 0 auto;
+        }
+        @media (max-width: 640px) {
+            .layer-ring { width: 300px; height: 300px; }
+            .layer-node { width: 72px !important; height: 72px !important; }
+            .layer-node .node-icon { font-size: 1.3rem !important; }
+            .layer-node .node-label { font-size: 0.5rem !important; }
+        }
+
+        .layer-svg {
+            position: absolute; inset: 0; width: 100%; height: 100%;
+        }
+        .layer-path {
+            fill: none;
+            stroke: var(--border-accent);
+            stroke-width: 2;
+            stroke-dasharray: 8 6;
+            animation: dashFlow 20s linear infinite;
+        }
+        .layer-path-glow {
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 2;
+            stroke-dasharray: 30 200;
+            stroke-linecap: round;
+            opacity: 1;
+            animation: dashFlow 4s linear infinite;
+            filter: drop-shadow(0 0 6px var(--accent));
+        }
+        @keyframes dashFlow { to { stroke-dashoffset: -230; } }
+
+        .layer-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 110px; height: 110px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--border-accent);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            box-shadow: 0 0 40px rgba(0, 237, 100, 0.1);
+            animation: centerPulse 3s ease-in-out infinite;
+        }
+        @keyframes centerPulse {
+            0%, 100% { box-shadow: 0 0 40px rgba(0, 237, 100, 0.1); }
+            50% { box-shadow: 0 0 60px rgba(0, 237, 100, 0.2); }
+        }
+        .layer-center img { width: 40px; height: 40px; margin-bottom: 4px; }
+        .layer-center span { font-size: 0.6rem; font-weight: 700; color: var(--accent); letter-spacing: 0.1em; text-transform: uppercase; }
+
+        .layer-node {
+            position: absolute;
+            width: 96px; height: 96px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 2px solid var(--border-subtle);
+            display: flex; align-items: center; justify-content: center; flex-direction: column;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 2;
+            text-decoration: none;
+        }
+        .layer-node:hover, .layer-node.active {
+            border-color: var(--accent);
+            transform: scale(1.12);
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.25);
+        }
+        .layer-node.active { background: linear-gradient(135deg, rgba(0, 237, 100, 0.1), var(--bg-card)); }
+        .layer-node .node-icon { font-size: 1.6rem; margin-bottom: 4px; }
+        .layer-node .node-label { font-size: 0.6rem; font-weight: 600; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.08em; }
+
+        .layer-node:nth-child(1) { top: 2%;  left: 50%; transform: translateX(-50%); }
+        .layer-node:nth-child(2) { top: 28%; right: 2%; }
+        .layer-node:nth-child(3) { bottom: 8%; right: 12%; }
+        .layer-node:nth-child(4) { bottom: 8%; left: 12%; }
+        .layer-node:nth-child(5) { top: 28%; left: 2%; }
+        .layer-node:nth-child(1):hover, .layer-node:nth-child(1).active { transform: translateX(-50%) scale(1.12); }
+
+        /* ── Feature Cards ── */
         .feature-card {
-            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            display: flex;
-            flex-direction: column;
+            background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.75rem;
+            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .feature-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.35s ease;
         }
         .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            border-color: var(--border-accent);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 30px rgba(0, 237, 100, 0.06);
         }
-        .feature-card-content {
-            flex-grow: 1;
+        .feature-card:hover::before { opacity: 1; }
+
+        .feat-tag {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 237, 100, 0.1);
+            color: var(--accent);
+            border: 1px solid rgba(0, 237, 100, 0.2);
         }
+
+        /* ── Code Blocks ── */
+        .code-block {
+            background: #0a1628;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            overflow: hidden;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.7;
+        }
+        .code-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0.75rem 1rem;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .code-header span { color: var(--text-muted); font-size: 0.75rem; }
+        .code-copy {
+            background: transparent; border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-muted); padding: 0.25rem 0.5rem; border-radius: 6px;
+            font-size: 0.7rem; cursor: pointer; transition: all 0.2s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .code-copy:hover { border-color: var(--accent); color: var(--accent); }
+        .code-body { padding: 1.25rem; overflow-x: auto; }
+        .code-body code { color: #e2e8f0; }
+        .code-body .kw { color: #c792ea; }
+        .code-body .str { color: #c3e88d; }
+        .code-body .num { color: #f78c6c; }
+        .code-body .fn { color: #82aaff; }
+        .code-body .op { color: #89ddff; }
+        .code-body .cm { color: #546e7a; }
+        .code-body .prop { color: #ffcb6b; }
+
+        /* ── Deep-Dive Visuals ── */
+        .dd-visual {
+            position: relative;
+            height: 100px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0, 237, 100, 0.03), rgba(0, 40, 56, 0.5));
+            border: 1px dashed rgba(0, 237, 100, 0.15);
+            overflow: hidden;
+        }
+        .dd-particle {
+            position: absolute;
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: rgba(0, 237, 100, 0.4);
+            animation: floatParticle 4s ease-in-out infinite alternate;
+        }
+        @keyframes floatParticle {
+            from { transform: translateX(0) translateY(0); opacity: 0.3; }
+            to { transform: translateX(80px) translateY(-20px); opacity: 0.8; }
+        }
+
+        /* ── Compliance Badges ── */
+        .cert-badge {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 1.5rem 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .cert-badge:hover {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.08);
+            transform: translateY(-3px);
+        }
+
+        /* ── Responsibility Cards ── */
+        .resp-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+        }
+
+        /* ── Value Cards ── */
+        .value-card {
+            background: linear-gradient(135deg, var(--bg-card), var(--bg-secondary));
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+        .value-card:hover {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 30px rgba(0, 237, 100, 0.06);
+        }
+
+        /* ── Learn More Links ── */
+        .learn-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            text-decoration: none;
+            transition: gap 0.2s ease;
+            margin-top: 1rem;
+        }
+        .learn-link:hover { gap: 0.7rem; }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200">
+<body class="bg-mongo-bg text-mongo-textSec">
 
-    <!-- Header -->
-    <header class="bg-gray-800 shadow-md sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
-            <div class="flex items-center space-x-3">
-                <svg class="w-10 h-10 text-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path fill-rule="evenodd" d="M12.5 4.5a8.5 8.5 0 100 17 8.5 8.5 0 000-17zM3.161 12.2a9.5 9.5 0 015.33-7.973.75.75 0 011.018.962A4.5 4.5 0 0012.5 14a4.5 4.5 0 002.99-1.81.75.75 0 011.017-.963A9.5 9.5 0 0121.84 12.2a.75.75 0 01-.75.75h-18a.75.75 0 01-.75-.75z" clip-rule="evenodd" />
-                </svg>
-                <h1 class="text-2xl font-bold text-white">MongoDB Atlas Security</h1>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- STICKY NAV                                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <nav class="sticky-nav sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-6 py-3 flex items-center gap-6 overflow-x-auto">
+            <a href="home.html" class="font-bold text-mongo-textPri whitespace-nowrap flex items-center gap-2">
+                <img src="assets/mongodb-leaf.png" alt="" class="w-5 h-5"> Security
+            </a>
+            <div class="flex items-center gap-5 ml-auto">
+                <a href="#posture">Posture</a>
+                <a href="#network">Network</a>
+                <a href="#encryption">Encryption</a>
+                <a href="#authentication">Auth</a>
+                <a href="#authorization">Authz</a>
+                <a href="#auditing">Audit</a>
+                <a href="#compliance">Compliance</a>
             </div>
         </div>
-    </header>
+    </nav>
 
-    <!-- Main Content -->
-    <main class="container mx-auto px-6 py-12">
-
-        <!-- Introduction -->
-        <section class="text-center mb-16">
-            <h2 class="text-4xl font-bold mb-4 text-white">A Fortress for Your Data</h2>
-            <p class="text-lg text-gray-400 max-w-3xl mx-auto">
-                MongoDB Atlas provides a fully managed, secure database service on AWS, Azure, and Google Cloud. Explore the comprehensive security features that protect your data at every layer, enabling you to develop rapidly while maintaining the highest standards of security.
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 1 : HERO                                        -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section class="relative min-h-screen flex items-center justify-center overflow-hidden pt-14">
+        <div class="hero-bg"><canvas id="shieldCanvas"></canvas></div>
+        <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-mongo-accent/20 bg-mongo-accent/5 text-mongo-accent text-xs font-semibold tracking-widest uppercase mb-8">
+                <span class="w-2 h-2 bg-mongo-accent rounded-full animate-pulse"></span>
+                MongoDB Atlas
+            </div>
+            <h1 class="text-5xl md:text-7xl font-extrabold leading-tight">
+                <span class="bg-gradient-to-r from-white via-white to-mongo-accent bg-clip-text text-transparent">Defense in Depth</span>
+                <br>
+                <span class="text-mongo-textSec text-3xl md:text-4xl font-light">Security on MongoDB Atlas</span>
+            </h1>
+            <p class="mt-6 text-lg md:text-xl text-mongo-textMuted max-w-2xl mx-auto leading-relaxed">
+                Five layers of security — network isolation, encryption, authentication, authorization,
+                and auditing — protecting your data from the perimeter to the field level.
             </p>
-        </section>
+            <div class="mt-10">
+                <a href="#posture" class="text-mongo-textMuted hover:text-mongo-accent transition-colors">
+                    <svg class="w-6 h-6 mx-auto" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/></svg>
+                </a>
+            </div>
+        </div>
+    </section>
 
-        <!-- Interactive Tabs -->
-        <div class="w-full">
-            <div class="border-b border-gray-700 mb-8">
-                <nav class="-mb-px flex flex-wrap space-x-6" aria-label="Tabs">
-                    <button class="tab-button active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="defend">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                        Defend
-                    </button>
-                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="auth">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
-                        Authenticate & Authorize
-                    </button>
-                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="detect">
-                       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                        Detect & Monitor
-                    </button>
-                    <button class="tab-button whitespace-nowrap py-4 px-1 border-b-2 font-medium text-lg" data-tab="compliance">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 inline-block mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                        Governance & Compliance
-                    </button>
-                </nav>
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 2 : SECURITY POSTURE                            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="posture" class="py-24 px-6">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Five Layers of Protection</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Atlas implements a defense-in-depth model. Each layer operates independently —
+                    compromising one never exposes the others.
+                </p>
             </div>
 
-            <!-- Defend Tab Content -->
-            <div id="defend" class="tab-content active">
-                <h3 class="text-3xl font-bold mb-6 text-white">Defend: Infrastructure & Data Protection</h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Network Security -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Network Isolation & Connectivity</h4>
-                            <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">VPC Isolation:</strong> Dedicated clusters are deployed in a fully isolated VPC/VNet.</li>
-                                <li><strong class="text-gray-100">IP Access List:</strong> Restrict cluster access to trusted IP addresses.</li>
-                                <li><strong class="text-gray-100">VPC Peering:</strong> Connect your application's virtual network directly to Atlas.</li>
-                                <li><strong class="text-gray-100">Private Endpoints:</strong> Ensure traffic never traverses the public internet using AWS PrivateLink, Azure Private Link, or Google Private Service Connect.</li>
-                            </ul>
+            <div class="flex flex-col lg:flex-row items-center gap-12">
+                <div class="flex-shrink-0 fade-in">
+                    <div class="layer-ring">
+                        <svg class="layer-svg" viewBox="0 0 480 480">
+                            <path class="layer-path" d="M240,40 L430,175 L370,400 L110,400 L50,175 Z" />
+                            <path class="layer-path-glow" d="M240,40 L430,175 L370,400 L110,400 L50,175 Z" />
+                        </svg>
+                        <a href="#network" class="layer-node">
+                            <span class="node-icon">🌐</span>
+                            <span class="node-label">Network</span>
+                        </a>
+                        <a href="#encryption" class="layer-node">
+                            <span class="node-icon">🔒</span>
+                            <span class="node-label">Encrypt</span>
+                        </a>
+                        <a href="#authentication" class="layer-node">
+                            <span class="node-icon">🪪</span>
+                            <span class="node-label">AuthN</span>
+                        </a>
+                        <a href="#authorization" class="layer-node">
+                            <span class="node-icon">🛡️</span>
+                            <span class="node-label">AuthZ</span>
+                        </a>
+                        <a href="#auditing" class="layer-node">
+                            <span class="node-icon">📋</span>
+                            <span class="node-label">Audit</span>
+                        </a>
+                        <div class="layer-center">
+                            <img src="assets/mongodb-leaf.png" alt="MongoDB">
+                            <span>Your Data</span>
                         </div>
-                        <a href="https://www.mongodb.com/docs/atlas/security/network-access/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                    <!-- Encryption at Rest -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Encryption at Rest</h4>
-                             <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Always-On Disk Encryption:</strong> Transparently encrypts all data on disk using AES-256.</li>
-                                <li><strong class="text-gray-100">Bring Your Own Key (BYOK):</strong> Encrypt data using your own keys from AWS KMS, Azure Key Vault, or GCP KMS for enhanced control.</li>
-                            </ul>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/security/encryption-at-rest/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                    <!-- Encryption in Transit -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Encryption in Transit</h4>
-                            <p class="text-gray-300">
-                                TLS 1.2+ is required for all connections to your Atlas cluster, protecting your data as it moves. Uses OpenSSL FIPS module for strong cryptographic standards.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/security-tls-ssl/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                    <!-- Field-Level Encryption -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Client-Side Field-Level Encryption</h4>
-                            <p class="text-gray-300">
-                                Encrypt specific fields on the client side before they are sent to the database, ensuring data is unreadable to anyone without the client keys.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/drivers/security/client-side-field-level-encryption-csfle/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                    <!-- Queryable Encryption -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Queryable Encryption</h4>
-                            <p class="text-gray-300">
-                                Perform queries on fully encrypted data while it remains unreadable to the server, allowing rich application functionality on your most sensitive data.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                    <!-- Secure Configuration -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Secure by Default Configuration</h4>
-                            <p class="text-gray-300">
-                                Atlas is designed with strong security defaults, including always-on authentication, authorization, and encryption. Bastion hosts with MFA and strict approvals are required for any potential backend access by MongoDB personnel.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/cloud/trust/security" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
                     </div>
                 </div>
-            </div>
 
-            <!-- Authenticate & Authorize Tab Content -->
-            <div id="auth" class="tab-content">
-                <h3 class="text-3xl font-bold mb-6 text-white">Authenticate & Authorize: Controlling Access</h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Atlas Control Plane Auth -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Atlas Control Plane Authentication</h4>
-                            <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Multi-Factor Authentication (MFA):</strong> Require a second factor (app, device, SMS) for all users to log in to the Atlas UI.</li>
-                                <li><strong class="text-gray-100">Identity Federation (SSO):</strong> Integrate with your IdP (e.g., Okta, Azure AD) via SAML or OpenID Connect.</li>
-                            </ul>
+                <div class="flex-1 fade-in fade-in-delay-2">
+                    <div class="bg-mongo-card/60 border border-white/5 rounded-2xl p-8">
+                        <h3 class="text-2xl font-bold text-mongo-textPri mb-4">Secure by Default</h3>
+                        <p class="text-mongo-textSec leading-relaxed mb-6">
+                            Unlike self-managed deployments where security is opt-in, Atlas ships with strong defaults
+                            from the moment you create a cluster. No open ports, no anonymous access, no unencrypted connections.
+                        </p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-0.5">✓</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Authentication required</strong> — no anonymous access</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-0.5">✓</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">TLS 1.2+ enforced</strong> — all connections encrypted in transit</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-0.5">✓</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Encryption at rest</strong> — AES-256 on all data</p>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <span class="text-mongo-accent mt-0.5">✓</span>
+                                <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">IP allowlist empty</strong> — zero access until you explicitly grant it</p>
+                            </div>
                         </div>
-                         <a href="https://www.mongodb.com/docs/atlas/security/manage-atlas-access/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
                     </div>
-                    <!-- Database Auth -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Database Authentication</h4>
-                            <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">SCRAM:</strong> Default username/password authentication (NIST 800-63 compliant).</li>
-                                <li><strong class="text-gray-100">X.509 Certificates:</strong> Authenticate using client certificates from your own PKI.</li>
-                                <li><strong class="text-gray-100">LDAP:</strong> Integrate with your corporate LDAP or Active Directory.</li>
-                                <li><strong class="text-gray-100">AWS IAM:</strong> Use AWS IAM roles for passwordless authentication.</li>
-                            </ul>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/security/database-access-control/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                     <!-- Authorization -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Authorization (RBAC)</h4>
-                            <p class="text-gray-300">
-                                Implement the principle of least privilege with Role-Based Access Control. Use built-in or custom roles to grant specific permissions to users at the Organization and Project levels.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/security/database-access-control/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                     <!-- Secrets Management -->
-                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Secrets Management</h4>
-                            <p class="text-gray-300">
-                                Integrate with HashiCorp Vault to dynamically manage database credentials and reduce the risk of credential leakage.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/reference/atlas-hashicorp-vault/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                     <!-- Privileged Access -->
-                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Privileged User Access</h4>
-                            <p class="text-gray-300">
-                                MongoDB personnel do not have default access to customer clusters. Access by a small group of Privileged Users is gated, requires MFA, management approval, and is limited to the minimum time necessary to resolve critical issues. All access is logged and reviewed.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/cloud/trust/security" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Detect Tab Content -->
-            <div id="detect" class="tab-content">
-                <h3 class="text-3xl font-bold mb-6 text-white">Detect & Monitor: Accountability and Logging</h3>
-                <div class="grid md:grid-cols-1 lg:grid-cols-2 gap-8">
-                     <!-- Auditing -->
-                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Database Auditing</h4>
-                            <p class="text-gray-300">
-                                Capture all administrative and DML/DDL activities with granular filters. Track actions by users, roles, and LDAP groups. Audit logs can be downloaded via UI/API for analysis and integration with SIEM tools like Splunk, Imperva, and Guardium.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/database-auditing/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                     <!-- Activity Feed -->
-                     <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Organization & Project Activity Feeds</h4>
-                            <p class="text-gray-300">
-                                Track all administrative actions taken within your Atlas Organization and Projects through the UI or API. The activity feed provides a chronological, filterable log of events like user access changes, cluster modifications, and network configuration updates.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/docs/atlas/reference/activity-feed/" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Security & Compliance Tab Content -->
-            <div id="compliance" class="tab-content">
-                <h3 class="text-3xl font-bold mb-6 text-white">Governance & Compliance Impact with Atlas</h3>
-                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    <!-- Security Governance -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Security Governance & Risk Management</h4>
-                            <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Regular Audits:</strong> Cloud provider audits are conducted regularly to validate compliance.</li>
-                                <li><strong class="text-gray-100">Vulnerability Management:</strong> Structured program using CVSS for risk-based remediation.</li>
-                                <li><strong class="text-gray-100">Threat Identification:</strong> As a Mitre CVE Numbering Authority, MongoDB helps identify and report threats.</li>
-                                <li><strong class="text-gray-100">Penetration Testing:</strong> Annual tests validate platform defenses.</li>
-                            </ul>
-                        </div>
-                         <a href="https://www.mongodb.com/licensing/master-agreement" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                    <!-- Shared Responsibility -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Shared Responsibility Model</h4>
-                            <p class="text-gray-300">
-                                Atlas minimizes the customer's security burden with strong defaults like always-on authentication and encryption. The customer remains responsible for securely configuring their side, including network access rules, user permissions, and application-level security.
-                            </p>
-                        </div>
-                        <a href="https://www.mongodb.com/cloud/trust/security" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                     <!-- Resilience -->
-                    <div class="feature-card bg-gray-800 p-6 rounded-lg shadow-lg">
-                        <div class="feature-card-content">
-                            <h4 class="text-xl font-semibold mb-3 text-green-400">Resilience & Business Continuity</h4>
-                            <ul class="space-y-2 text-gray-300 list-disc list-inside">
-                                <li><strong class="text-gray-100">Self-Healing Replica Sets:</strong> Ensure high availability and automatic failover.</li>
-                                <li><strong class="text-gray-100">Backup & Restore:</strong> Easily distribute backup snapshots across multiple geographic regions.</li>
-                                <li><strong class="text-gray-100">BCDR Plan:</strong> A comprehensive plan aligned with ISO 22301 ensures tested RPOs and RTOs for service continuity.</li>
-                            </ul>
-                        </div>
-                        <a href="https://www.mongodb.com/cloud/trust/compliance" target="_blank" rel="noopener noreferrer" class="text-green-400 hover:underline mt-4 inline-block">Learn More &rarr;</a>
-                    </div>
-                </div>
-                <div class="mt-12 bg-gray-800 p-6 rounded-lg shadow-lg border border-green-500/30">
-                     <h4 class="text-lg font-semibold text-green-400">Impact of Security & Compliance Add-ons</h4>
-                     <p class="text-gray-300 mt-2">Total Cost of Ownership (TCO) is calculated factoring in advanced monitoring, security, and compliance capabilities that support key frameworks such as ISO, SOC 2, and PCI DSS. The estimate incorporates an industry-standard benchmark of 5% of total infrastructure cost to account for these add-on services.</p>
                 </div>
             </div>
         </div>
+    </section>
 
-    </main>
+    <div class="section-divider"></div>
 
-    <!-- Footer -->
-    <footer class="bg-gray-800 mt-16 border-t border-gray-700">
-        <div class="container mx-auto px-6 py-8 text-center text-gray-400">
-            <p>&copy; 2024 MongoDB Atlas Security Overview. This is a conceptual site based on provided materials.</p>
-            <p class="mt-2">For official information, please visit the <a href="https://www.mongodb.com/products/platform/trust" class="text-green-400 hover:underline">MongoDB Trust Center</a>.</p>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 3 : NETWORK SECURITY                            -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="network" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Network Security</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    The outermost layer. Control exactly who and what can reach your cluster —
+                    from IP allowlists to fully private connectivity that never touches the internet.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <div class="fade-in">
+                    <div class="space-y-6">
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold text-mongo-textPri mb-2">VPC Isolation</h4>
+                            <p class="text-sm text-mongo-textMuted mb-3">Dedicated clusters run in a fully isolated VPC/VNet within the Atlas infrastructure. Your data plane is logically separated from all other customers.</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="feat-tag">AWS VPC</span>
+                                <span class="feat-tag">Azure VNet</span>
+                                <span class="feat-tag">GCP VPC</span>
+                            </div>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold text-mongo-textPri mb-2">Private Endpoints</h4>
+                            <p class="text-sm text-mongo-textMuted mb-3">Traffic between your application and Atlas stays on the cloud provider's backbone — never traversing the public internet.</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="feat-tag">AWS PrivateLink</span>
+                                <span class="feat-tag">Azure Private Link</span>
+                                <span class="feat-tag">GCP PSC</span>
+                            </div>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold text-mongo-textPri mb-2">IP Access List & VPC Peering</h4>
+                            <p class="text-sm text-mongo-textMuted mb-3">Restrict access to trusted IP addresses or CIDR blocks. Alternatively, peer your VPC directly with Atlas for private routing without endpoint services.</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="feat-tag">CIDR Rules</span>
+                                <span class="feat-tag">VPC Peering</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="https://www.mongodb.com/docs/atlas/security-whitelist/" target="_blank" rel="noopener noreferrer" class="learn-link">
+                        Atlas Network Access Docs
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                    </a>
+                </div>
+                <div class="fade-in fade-in-delay-2">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>network_config.tf</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <div class="code-body"><code><span class="cm"># Private Endpoint — AWS PrivateLink</span>
+<span class="kw">resource</span> <span class="str">"mongodbatlas_privatelink_endpoint"</span> <span class="str">"pe"</span> {
+  <span class="prop">project_id</span>    = var.atlas_project_id
+  <span class="prop">provider_name</span> = <span class="str">"AWS"</span>
+  <span class="prop">region</span>        = <span class="str">"US_EAST_1"</span>
+}
+
+<span class="cm"># IP Access List</span>
+<span class="kw">resource</span> <span class="str">"mongodbatlas_project_ip_access_list"</span> <span class="str">"office"</span> {
+  <span class="prop">project_id</span> = var.atlas_project_id
+  <span class="prop">cidr_block</span> = <span class="str">"203.0.113.0/24"</span>
+  <span class="prop">comment</span>    = <span class="str">"Office network"</span>
+}
+
+<span class="cm"># VPC Peering</span>
+<span class="kw">resource</span> <span class="str">"mongodbatlas_network_peering"</span> <span class="str">"peer"</span> {
+  <span class="prop">project_id</span>             = var.atlas_project_id
+  <span class="prop">container_id</span>           = mongodbatlas_cluster.main.container_id
+  <span class="prop">provider_name</span>          = <span class="str">"AWS"</span>
+  <span class="prop">accepter_region_name</span>   = <span class="str">"us-east-1"</span>
+  <span class="prop">aws_account_id</span>         = var.aws_account_id
+  <span class="prop">vpc_id</span>                 = var.vpc_id
+  <span class="prop">route_table_cidr_block</span> = <span class="str">"10.0.0.0/16"</span>
+}</code></div>
+                    </div>
+                    <div class="dd-visual mt-6">
+                        <div class="dd-particle" style="top: 20%; left: 10%; animation-duration: 3.5s;"></div>
+                        <div class="dd-particle" style="top: 50%; left: 30%; animation-duration: 4s; animation-delay: 0.5s;"></div>
+                        <div class="dd-particle" style="top: 30%; left: 60%; animation-duration: 3s; animation-delay: 1s;"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">App VPC ⟶ PrivateLink ⟶ Atlas VPC ⟶ Cluster</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 4 : ENCRYPTION                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="encryption" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Encryption at Every Layer</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Data is encrypted in transit, at rest, and optionally at the field level — so sensitive fields
+                    remain unreadable even to database administrators and MongoDB personnel.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-12 fade-in">
+                <div class="feature-card">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🔐</div>
+                    <h4 class="text-base font-bold text-mongo-textPri mb-1.5">In Transit</h4>
+                    <p class="text-xs text-mongo-textMuted mb-3">TLS 1.2+ required for all client-to-cluster and intra-cluster communication. Uses OpenSSL FIPS module.</p>
+                    <span class="feat-tag">TLS 1.2+</span>
+                </div>
+                <div class="feature-card">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">💾</div>
+                    <h4 class="text-base font-bold text-mongo-textPri mb-1.5">At Rest</h4>
+                    <p class="text-xs text-mongo-textMuted mb-3">AES-256 encrypts all data on disk transparently. Bring your own key (BYOK) via AWS KMS, Azure Key Vault, or GCP KMS.</p>
+                    <span class="feat-tag">AES-256</span> <span class="feat-tag">BYOK</span>
+                </div>
+                <div class="feature-card">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🔑</div>
+                    <h4 class="text-base font-bold text-mongo-textPri mb-1.5">CSFLE</h4>
+                    <p class="text-xs text-mongo-textMuted mb-3">Client-Side Field-Level Encryption encrypts specific fields before they leave the application — server never sees plaintext.</p>
+                    <span class="feat-tag">Client-Side</span>
+                </div>
+                <div class="feature-card">
+                    <div class="w-10 h-10 rounded-lg flex items-center justify-center text-xl mb-3" style="background: rgba(0, 237, 100, 0.08); border: 1px solid rgba(0, 237, 100, 0.18);">🔍</div>
+                    <h4 class="text-base font-bold text-mongo-textPri mb-1.5">Queryable Encryption</h4>
+                    <p class="text-xs text-mongo-textMuted mb-3">Run equality and range queries on fully encrypted data. The server processes encrypted queries without ever decrypting.</p>
+                    <span class="feat-tag">Query on Encrypted</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <div class="fade-in">
+                    <h3 class="text-2xl font-bold text-mongo-textPri mb-4">Queryable Encryption in Action</h3>
+                    <p class="text-mongo-textSec leading-relaxed mb-4">
+                        Queryable Encryption lets you query encrypted fields using equality and range operators.
+                        The database processes encrypted values and returns encrypted results — decryption happens
+                        only on the client. This protects data from compromised servers, snapshots, and backups.
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">No server-side exposure</strong> — data remains encrypted in memory, logs, and backups.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Automatic encryption</strong> — configure once, the driver handles all encryption/decryption transparently.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Range queries</strong> — run <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$gt</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$lt</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$gte</code> on encrypted numeric and date fields.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <a href="https://www.mongodb.com/docs/manual/core/queryable-encryption/" target="_blank" rel="noopener noreferrer" class="learn-link">
+                            Queryable Encryption Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                        <a href="https://www.mongodb.com/docs/current/core/csfle/" target="_blank" rel="noopener noreferrer" class="learn-link" style="color: var(--text-muted);">
+                            CSFLE Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="fade-in fade-in-delay-2">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>queryable_encryption.py</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <div class="code-body"><code><span class="kw">from</span> pymongo <span class="kw">import</span> MongoClient
+<span class="kw">from</span> pymongo.encryption <span class="kw">import</span> AutoEncryptionOpts
+
+<span class="cm"># KMS provider config (AWS KMS example)</span>
+kms = { <span class="str">"aws"</span>: {
+    <span class="str">"accessKeyId"</span>: os.environ[<span class="str">"AWS_KEY"</span>],
+    <span class="str">"secretAccessKey"</span>: os.environ[<span class="str">"AWS_SECRET"</span>]
+}}
+
+<span class="cm"># Encrypted fields configuration</span>
+encrypted_fields = {
+    <span class="str">"fields"</span>: [
+        { <span class="str">"path"</span>: <span class="str">"ssn"</span>,
+          <span class="str">"bsonType"</span>: <span class="str">"string"</span>,
+          <span class="str">"queries"</span>: [{ <span class="str">"queryType"</span>: <span class="str">"equality"</span> }] },
+        { <span class="str">"path"</span>: <span class="str">"billing.amount"</span>,
+          <span class="str">"bsonType"</span>: <span class="str">"double"</span>,
+          <span class="str">"queries"</span>: [{ <span class="str">"queryType"</span>: <span class="str">"range"</span> }] }
+    ]
+}
+
+<span class="cm"># The driver handles all encryption transparently</span>
+client = MongoClient(
+    <span class="str">"mongodb+srv://cluster.mongodb.net"</span>,
+    auto_encryption_opts=AutoEncryptionOpts(
+        kms_providers=kms,
+        encrypted_fields_map={
+            <span class="str">"mydb.patients"</span>: encrypted_fields
+        }
+    )
+)
+
+<span class="cm"># Query on encrypted field — server never sees plaintext</span>
+result = client.mydb.patients.<span class="fn">find_one</span>(
+    { <span class="str">"ssn"</span>: <span class="str">"123-45-6789"</span> }
+)</code></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 5 : AUTHENTICATION                              -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="authentication" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Authentication</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Verify who is connecting. Atlas supports multiple authentication mechanisms —
+                    from username/password to certificate-based to federated identity.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <div class="fade-in">
+                    <div class="space-y-4">
+                        <div class="feature-card">
+                            <h4 class="text-base font-bold text-mongo-textPri mb-2">SCRAM (Default)</h4>
+                            <p class="text-xs text-mongo-textMuted">Salted Challenge-Response Authentication Mechanism. NIST 800-63B compliant, default for all Atlas clusters.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-base font-bold text-mongo-textPri mb-2">X.509 Certificates</h4>
+                            <p class="text-xs text-mongo-textMuted">Authenticate using client certificates from your own PKI. Eliminates passwords entirely for service-to-service communication.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-base font-bold text-mongo-textPri mb-2">LDAP / Active Directory</h4>
+                            <p class="text-xs text-mongo-textMuted">Integrate with your corporate directory. Centralize user management and map LDAP groups to MongoDB roles.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-base font-bold text-mongo-textPri mb-2">AWS IAM Authentication</h4>
+                            <p class="text-xs text-mongo-textMuted">Use AWS IAM roles for passwordless authentication. Ideal for applications running on EC2, ECS, Lambda.</p>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-base font-bold text-mongo-textPri mb-2">OIDC / Workforce Identity Federation</h4>
+                            <p class="text-xs text-mongo-textMuted">Authenticate via Okta, Azure AD, or any OIDC provider. Supports both workforce (human) and workload (service) identity.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <a href="https://www.mongodb.com/docs/atlas/security-add-mongodb-users/" target="_blank" rel="noopener noreferrer" class="learn-link">
+                            Database Auth Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                        <a href="https://www.mongodb.com/docs/atlas/access/manage-project-access/" target="_blank" rel="noopener noreferrer" class="learn-link" style="color: var(--text-muted);">
+                            Atlas Access Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="fade-in fade-in-delay-2">
+                    <h3 class="text-xl font-bold text-mongo-textPri mb-4">Connection Examples</h3>
+                    <div class="code-block mb-4">
+                        <div class="code-header">
+                            <span>connection_strings.sh</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <div class="code-body"><code><span class="cm"># SCRAM (username/password)</span>
+mongosh <span class="str">"mongodb+srv://cluster.mongodb.net/mydb"</span> \
+  --username admin --authenticationDatabase admin
+
+<span class="cm"># X.509 Certificate</span>
+mongosh <span class="str">"mongodb+srv://cluster.mongodb.net/mydb"</span> \
+  --tls --tlsCertificateKeyFile <span class="str">client.pem</span> \
+  --authenticationMechanism MONGODB-X509
+
+<span class="cm"># AWS IAM (passwordless)</span>
+mongosh <span class="str">"mongodb+srv://cluster.mongodb.net/mydb"</span> \
+  --authenticationMechanism MONGODB-AWS
+
+<span class="cm"># OIDC (Workforce Identity)</span>
+mongosh <span class="str">"mongodb+srv://cluster.mongodb.net/mydb"</span> \
+  --authenticationMechanism MONGODB-OIDC</code></div>
+                    </div>
+                    <div class="bg-mongo-card/60 border border-white/5 rounded-xl p-5 mt-4">
+                        <h4 class="text-sm font-bold text-mongo-accent mb-2">Atlas Control Plane</h4>
+                        <p class="text-xs text-mongo-textMuted leading-relaxed">
+                            Access to the Atlas UI and API is separately protected by <strong class="text-mongo-textSec">Multi-Factor Authentication (MFA)</strong>
+                            and <strong class="text-mongo-textSec">Identity Federation (SSO)</strong> via SAML or OpenID Connect with providers like Okta and Azure AD.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 6 : AUTHORIZATION                               -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="authorization" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Authorization & RBAC</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Control what each identity can do. Built-in and custom roles implement the principle of
+                    least privilege — from organization-wide to field-level granularity.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <div class="fade-in">
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Built-in Roles</strong> — <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">readOnly</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">readWrite</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">dbAdmin</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">clusterMonitor</code>, and more — covering common access patterns.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Custom Roles</strong> — define fine-grained privileges per collection or even per field. Combine actions like <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">find</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">insert</code>, <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">update</code> on specific namespaces.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Field-Level Redaction</strong> — use <code class="text-mongo-accent bg-mongo-accent/10 px-1 py-0.5 rounded text-xs">$redact</code> in aggregation pipelines to strip sensitive fields based on the caller's role or clearance level.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Atlas Organization & Project Roles</strong> — separate administrative roles for billing, project management, and cluster operations. No single user needs full access.</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-1">▸</span>
+                            <p class="text-sm text-mongo-textMuted"><strong class="text-mongo-textSec">Secrets Management</strong> — integrate with HashiCorp Vault to dynamically issue short-lived database credentials, eliminating long-lived secrets.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <a href="https://www.mongodb.com/docs/atlas/security-add-mongodb-users/" target="_blank" rel="noopener noreferrer" class="learn-link">
+                            RBAC Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                        <a href="https://www.mongodb.com/products/integrations/hashicorp-vault" target="_blank" rel="noopener noreferrer" class="learn-link" style="color: var(--text-muted);">
+                            Vault Integration
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="fade-in fade-in-delay-2">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>custom_role.js</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <div class="code-body"><code><span class="cm">// Custom role: read orders, write only to reviews</span>
+db.<span class="fn">adminCommand</span>({
+  <span class="prop">createRole</span>: <span class="str">"appServiceRole"</span>,
+  <span class="prop">privileges</span>: [
+    {
+      <span class="prop">resource</span>: { <span class="prop">db</span>: <span class="str">"store"</span>, <span class="prop">collection</span>: <span class="str">"orders"</span> },
+      <span class="prop">actions</span>: [<span class="str">"find"</span>]
+    },
+    {
+      <span class="prop">resource</span>: { <span class="prop">db</span>: <span class="str">"store"</span>, <span class="prop">collection</span>: <span class="str">"reviews"</span> },
+      <span class="prop">actions</span>: [<span class="str">"find"</span>, <span class="str">"insert"</span>, <span class="str">"update"</span>]
+    }
+  ],
+  <span class="prop">roles</span>: []
+})
+
+<span class="cm">// Field-level redaction in aggregation</span>
+db.patients.<span class="fn">aggregate</span>([
+  { <span class="op">$redact</span>: {
+    <span class="op">$cond</span>: {
+      <span class="prop">if</span>: { <span class="op">$in</span>: [<span class="str">"MEDICAL"</span>, <span class="str">"$tags"</span>] },
+      <span class="prop">then</span>: <span class="str">"$$PRUNE"</span>,
+      <span class="prop">else</span>: <span class="str">"$$DESCEND"</span>
+    }
+  }}
+])</code></div>
+                    </div>
+                    <div class="bg-mongo-card/60 border border-white/5 rounded-xl p-5 mt-4">
+                        <h4 class="text-sm font-bold text-mongo-accent mb-2">Privileged User Access</h4>
+                        <p class="text-xs text-mongo-textMuted leading-relaxed">
+                            MongoDB personnel do not have default access to customer clusters. The rare exception
+                            requires MFA, management approval, is time-limited, and every action is logged and reviewed.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 7 : AUDITING & MONITORING                       -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="auditing" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Auditing & Monitoring</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    The innermost layer: accountability. Every administrative and database action can be captured,
+                    filtered, and forwarded to your SIEM for forensic analysis and compliance evidence.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
+                <div class="fade-in">
+                    <div class="space-y-6">
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold text-mongo-textPri mb-2">Database Auditing</h4>
+                            <p class="text-sm text-mongo-textMuted mb-3">
+                                Capture all DML/DDL and administrative actions with granular filters. Track actions by
+                                user, role, LDAP group, IP address, or operation type. Available on M10+ dedicated clusters.
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="feat-tag">authCheck</span>
+                                <span class="feat-tag">CRUD Events</span>
+                                <span class="feat-tag">DDL Events</span>
+                            </div>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold text-mongo-textPri mb-2">Organization & Project Activity Feed</h4>
+                            <p class="text-sm text-mongo-textMuted mb-3">
+                                Chronological, filterable log of all administrative actions — user access changes,
+                                cluster modifications, network configuration updates, billing events.
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="feat-tag">UI + API</span>
+                                <span class="feat-tag">Filterable</span>
+                            </div>
+                        </div>
+                        <div class="feature-card">
+                            <h4 class="text-lg font-bold text-mongo-textPri mb-2">SIEM Integration</h4>
+                            <p class="text-sm text-mongo-textMuted mb-3">
+                                Export audit logs via the Atlas API for integration with Splunk, Imperva, IBM Guardium,
+                                or any SIEM platform. Build alerts, dashboards, and compliance reports.
+                            </p>
+                            <div class="flex flex-wrap gap-1.5">
+                                <span class="feat-tag">Splunk</span>
+                                <span class="feat-tag">Guardium</span>
+                                <span class="feat-tag">Custom SIEM</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex gap-4 mt-6">
+                        <a href="https://www.mongodb.com/docs/atlas/database-auditing/" target="_blank" rel="noopener noreferrer" class="learn-link">
+                            Auditing Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                        <a href="https://www.mongodb.com/docs/atlas/tutorial/activity-feed/" target="_blank" rel="noopener noreferrer" class="learn-link" style="color: var(--text-muted);">
+                            Activity Feed Docs
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="fade-in fade-in-delay-2">
+                    <div class="code-block">
+                        <div class="code-header">
+                            <span>audit_filter.json</span>
+                            <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                        </div>
+                        <div class="code-body"><code><span class="cm">// Audit filter: capture auth failures + sensitive ops</span>
+{
+  <span class="prop">"$or"</span>: [
+    <span class="cm">// All authentication failures</span>
+    {
+      <span class="prop">"atype"</span>: <span class="str">"authenticate"</span>,
+      <span class="prop">"param.mechanism"</span>: { <span class="op">"$exists"</span>: <span class="kw">true</span> },
+      <span class="prop">"result"</span>: { <span class="op">"$ne"</span>: <span class="num">0</span> }
+    },
+    <span class="cm">// DDL operations (create, drop, rename)</span>
+    {
+      <span class="prop">"atype"</span>: {
+        <span class="op">"$in"</span>: [
+          <span class="str">"createCollection"</span>,
+          <span class="str">"dropCollection"</span>,
+          <span class="str">"dropDatabase"</span>,
+          <span class="str">"renameCollection"</span>,
+          <span class="str">"createIndex"</span>,
+          <span class="str">"dropIndex"</span>
+        ]
+      }
+    },
+    <span class="cm">// Writes to sensitive collections</span>
+    {
+      <span class="prop">"atype"</span>: <span class="str">"authCheck"</span>,
+      <span class="prop">"param.ns"</span>: {
+        <span class="op">"$regex"</span>: <span class="str">"^mydb\\.patients"</span>
+      },
+      <span class="prop">"param.command"</span>: {
+        <span class="op">"$in"</span>: [<span class="str">"update"</span>, <span class="str">"delete"</span>, <span class="str">"insert"</span>]
+      }
+    }
+  ]
+}</code></div>
+                    </div>
+                    <div class="dd-visual mt-6">
+                        <div class="dd-particle" style="top: 15%; left: 5%; animation-duration: 3.5s;"></div>
+                        <div class="dd-particle" style="top: 50%; left: 40%; animation-duration: 4.2s; animation-delay: 0.3s;"></div>
+                        <div class="dd-particle" style="top: 70%; left: 75%; animation-duration: 3s; animation-delay: 0.8s;"></div>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <span class="text-xs text-mongo-textMuted font-mono tracking-wider opacity-60">ACTION → AUDIT LOG → SIEM → ALERT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 8 : COMPLIANCE CERTIFICATIONS                   -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="compliance" class="py-24 px-6">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Compliance & Certifications</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Atlas is audited and certified against the industry's most demanding security and privacy frameworks.
+                    These certifications mean fewer controls your team has to build and validate.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 fade-in">
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">🛡️</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">SOC 2 Type II</h4>
+                    <p class="text-xs text-mongo-textMuted">Security, availability, and confidentiality controls independently audited annually.</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">📋</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">ISO 27001</h4>
+                    <p class="text-xs text-mongo-textMuted">Information security management system certified by accredited third party.</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">🏥</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">HIPAA</h4>
+                    <p class="text-xs text-mongo-textMuted">BAA available. Atlas supports HIPAA-compliant architectures for healthcare data.</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">💳</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">PCI DSS</h4>
+                    <p class="text-xs text-mongo-textMuted">Level 1 Service Provider compliant for payment card data workloads.</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">🇪🇺</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">GDPR</h4>
+                    <p class="text-xs text-mongo-textMuted">Data processing agreements, EU data residency, and right-to-erasure support.</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">☁️</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">CSA STAR</h4>
+                    <p class="text-xs text-mongo-textMuted">Cloud Security Alliance STAR registry listing with detailed security posture.</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">🏛️</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">FedRAMP</h4>
+                    <p class="text-xs text-mongo-textMuted">Available through MongoDB Atlas for Government (via authorized partners).</p>
+                </div>
+                <div class="cert-badge">
+                    <div class="text-3xl mb-3">🇦🇺</div>
+                    <h4 class="text-sm font-bold text-mongo-textPri mb-1">IRAP</h4>
+                    <p class="text-xs text-mongo-textMuted">Assessed for Australian government workloads under the IRAP framework.</p>
+                </div>
+            </div>
+
+            <div class="mt-12 bg-mongo-card/60 border border-mongo-accent/15 rounded-2xl p-6 fade-in fade-in-delay-1">
+                <div class="flex items-start gap-4">
+                    <div class="text-2xl mt-1">📄</div>
+                    <div>
+                        <h4 class="text-base font-bold text-mongo-textPri mb-1">Governance & Risk Management</h4>
+                        <p class="text-sm text-mongo-textMuted leading-relaxed">
+                            MongoDB conducts regular cloud provider audits, maintains a structured vulnerability management
+                            program using CVSS risk scoring, performs annual penetration tests, and is a
+                            <strong class="text-mongo-textSec">MITRE CVE Numbering Authority</strong> for identifying and reporting threats.
+                        </p>
+                        <a href="https://www.mongodb.com/products/platform/trust" target="_blank" rel="noopener noreferrer" class="learn-link">
+                            MongoDB Trust Center
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SECTION 9 : SHARED RESPONSIBILITY MODEL                 -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <section id="shared-resp" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri">Shared Responsibility Model</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-2xl mx-auto">
+                    Atlas handles infrastructure security so you can focus on application-level controls.
+                    Here's where the line is drawn.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 fade-in">
+                <!-- Atlas Manages -->
+                <div class="resp-card border-mongo-accent/20">
+                    <div class="flex items-center gap-3 mb-6">
+                        <img src="assets/mongodb-leaf.png" alt="" class="w-7 h-7">
+                        <h3 class="text-xl font-bold text-mongo-accent">Atlas Manages</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">Physical infrastructure and data center security</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">OS patching, MongoDB version upgrades, and hotfixes</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">Always-on encryption at rest (AES-256) and in transit (TLS 1.2+)</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">Automated backups, snapshots, and point-in-time recovery</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">Replica set failover and self-healing for high availability</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">Compliance certifications (SOC 2, ISO 27001, HIPAA, PCI DSS)</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">VPC/VNet isolation of cluster infrastructure</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-accent mt-0.5 text-sm">✓</span>
+                            <p class="text-sm text-mongo-textMuted">Vulnerability management, pen testing, and BCDR planning (ISO 22301)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- You Manage -->
+                <div class="resp-card">
+                    <div class="flex items-center gap-3 mb-6">
+                        <div class="text-2xl">👤</div>
+                        <h3 class="text-xl font-bold text-mongo-textPri">You Manage</h3>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Configure IP Access List and network peering / private endpoints</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Create database users with appropriate roles (least privilege)</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Enable and configure database auditing filters</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Set up CSFLE / Queryable Encryption for sensitive fields</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Manage BYOK encryption keys in your KMS</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Enforce MFA and identity federation for Atlas UI/API access</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Application-level input validation and security</p>
+                        </div>
+                        <div class="flex items-start gap-3">
+                            <span class="text-mongo-textMuted mt-0.5 text-sm">→</span>
+                            <p class="text-sm text-mongo-textMuted">Regular review of access permissions and audit logs</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- FOOTER                                                  -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <footer class="py-12 px-6 text-center">
+        <p class="text-sm text-mongo-textMuted">
+            MongoDB Atlas Security Overview &middot; For official information, visit the
+            <a href="https://www.mongodb.com/products/platform/trust" target="_blank" rel="noopener noreferrer" class="text-mongo-accent hover:underline">MongoDB Trust Center</a>.
+        </p>
+        <p class="mt-2 text-xs text-mongo-textMuted opacity-60">Built for MongoDB Solutions Architecture team</p>
     </footer>
 
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- SCRIPTS                                                 -->
+    <!-- ═══════════════════════════════════════════════════════ -->
     <script>
-        const tabs = document.querySelectorAll('.tab-button');
-        const tabContents = document.querySelectorAll('.tab-content');
+        // ── Copy Code ──
+        window.copyCode = function(btn) {
+            const code = btn.closest('.code-block').querySelector('code').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 2000);
+            });
+        };
 
-        tabs.forEach(tab => {
-            tab.addEventListener('click', (event) => {
-                event.preventDefault();
+        // ── Fade In Observer ──
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) entry.target.classList.add('visible');
+            });
+        }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
-                // Deactivate all tabs and content
-                tabs.forEach(item => {
-                    item.classList.remove('active');
-                });
-                tabContents.forEach(content => {
-                    content.classList.remove('active');
-                });
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 
-                // Activate the clicked tab and its content
-                tab.classList.add('active');
-                const targetContent = document.getElementById(tab.dataset.tab);
-                if (targetContent) {
-                    targetContent.classList.add('active');
+        // ── Active Nav Highlighting ──
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.sticky-nav a[href^="#"]');
+
+        const navObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    navLinks.forEach(link => {
+                        link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id);
+                    });
                 }
             });
-        });
+        }, { threshold: 0.3 });
+
+        sections.forEach(s => navObserver.observe(s));
+
+        // ── Shield Canvas Animation ──
+        const canvas = document.getElementById('shieldCanvas');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            let w, h, particles = [];
+
+            function resize() {
+                w = canvas.width = canvas.parentElement.offsetWidth;
+                h = canvas.height = canvas.parentElement.offsetHeight;
+            }
+
+            function initParticles() {
+                particles = [];
+                const count = Math.floor((w * h) / 12000);
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * w,
+                        y: Math.random() * h,
+                        vx: (Math.random() - 0.5) * 0.4,
+                        vy: (Math.random() - 0.5) * 0.4,
+                        r: Math.random() * 1.5 + 0.5
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, w, h);
+                const accent = [0, 237, 100];
+
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx; p.y += p.vy;
+                    if (p.x < 0 || p.x > w) p.vx *= -1;
+                    if (p.y < 0 || p.y > h) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${accent[0]}, ${accent[1]}, ${accent[2]}, 0.5)`;
+                    ctx.fill();
+
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const q = particles[j];
+                        const dx = p.x - q.x, dy = p.y - q.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(q.x, q.y);
+                            ctx.strokeStyle = `rgba(${accent[0]}, ${accent[1]}, ${accent[2]}, ${0.15 * (1 - dist / 120)})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+
+            resize();
+            initParticles();
+            draw();
+            window.addEventListener('resize', () => { resize(); initParticles(); });
+        }
     </script>
-    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 </body>
 </html>

@@ -1,228 +1,150 @@
-# MongoDB Atlas Security Overview
+# MongoDB Atlas Security — Defense in Depth
 
-A comprehensive guide to MongoDB Atlas enterprise-grade security features.
+An interactive guide to MongoDB Atlas's five-layer security model — network isolation, encryption, authentication, authorization, and auditing — with code examples and compliance details.
 
-## 🎯 Purpose
+## Purpose
 
-This overview helps explain:
-- MongoDB Atlas multi-layered security architecture
-- Authentication and authorization options
-- Encryption at rest and in transit
-- Network isolation and access controls
-- Compliance certifications and audit capabilities
+This page helps explain:
+- The defense-in-depth security posture of MongoDB Atlas
+- Five security layers and how they operate independently
+- Encryption options from TLS to CSFLE to Queryable Encryption
+- Authentication mechanisms (SCRAM, X.509, LDAP, AWS IAM, OIDC)
+- Role-based access control with custom roles and field-level redaction
+- Database auditing, SIEM integration, and activity feeds
+- Compliance certifications (SOC 2, ISO 27001, HIPAA, PCI DSS, GDPR, FedRAMP)
+- The shared responsibility model between Atlas and the customer
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 1. Open `security.html` in a web browser
-2. Use the tabbed interface to explore security pillars
-3. Click on feature cards for detailed information
-4. Review implementation recommendations
+2. Use the sticky navigation bar to jump between sections
+3. Click security layers in the interactive pentagon to navigate to deep dives
+4. Review code examples for Terraform, Queryable Encryption, custom roles, and audit filters
+5. Scroll to the compliance grid for certification details
 
 ---
 
-## 🛡️ Security Pillars
+## Page Sections
 
-### Defend - Prevent Unauthorized Access
-| Feature | Description |
-|---------|-------------|
-| **Network Isolation** | VPC peering, private endpoints |
-| **IP Access Lists** | Allowlist specific IPs |
-| **Database Users** | Role-based access control |
-| **LDAP/OIDC** | Enterprise identity integration |
-
-### Protect - Encrypt Everything
-| Feature | Description |
-|---------|-------------|
-| **Encryption at Rest** | AES-256, customer-managed keys |
-| **Encryption in Transit** | TLS 1.2+ required |
-| **Client-Side FLE** | Encrypt before it leaves app |
-| **Queryable Encryption** | Query encrypted data |
-
-### Detect - Monitor Activity
-| Feature | Description |
-|---------|-------------|
-| **Database Auditing** | Log all operations |
-| **Real-time Alerts** | Anomaly detection |
-| **Access Logs** | Who accessed what, when |
-| **Atlas Search Audit** | Search query logging |
-
-### Comply - Meet Requirements
-| Certification | Description |
-|--------------|-------------|
-| **SOC 2 Type II** | Security controls audit |
-| **HIPAA** | Healthcare data protection |
-| **PCI DSS** | Payment card data |
-| **GDPR** | EU data protection |
-| **ISO 27001** | Information security |
+| # | Section | Description |
+|---|---------|-------------|
+| 1 | **Hero** | Animated particle canvas, defense-in-depth tagline |
+| 2 | **Security Posture** | Interactive pentagon diagram linking to 5 security layers, secure-by-default defaults |
+| 3 | **Network Security** | VPC isolation, private endpoints, IP access list, VPC peering — with Terraform code |
+| 4 | **Encryption** | In transit, at rest, CSFLE, Queryable Encryption — with Python driver example |
+| 5 | **Authentication** | SCRAM, X.509, LDAP, AWS IAM, OIDC — with connection string examples |
+| 6 | **Authorization** | RBAC, custom roles, field-level redaction, secrets management — with JS code |
+| 7 | **Auditing & Monitoring** | Database auditing, activity feed, SIEM integration — with audit filter JSON |
+| 8 | **Compliance** | Certification badges: SOC 2, ISO 27001, HIPAA, PCI DSS, GDPR, CSA STAR, FedRAMP, IRAP |
+| 9 | **Shared Responsibility** | Two-column "Atlas Manages" vs "You Manage" comparison |
 
 ---
 
-## 🎬 Demo Scenarios
+## Five Security Layers
 
-### Scenario 1: Security Overview (15 mins)
-**Goal:** High-level security architecture tour
-
-1. **Start with defense in depth**
-   - "Multiple layers of protection"
-   - "Not relying on any single control"
-
-2. **Walk through each pillar**
-   - Defend: Network, authentication
-   - Protect: Encryption everywhere
-   - Detect: Monitoring, auditing
-   - Comply: Certifications
-
-3. **Emphasize defaults**
-   - "Secure by default in Atlas"
-   - "Authentication required, encryption on"
-
-**Key Talking Points:**
-- Enterprise security without enterprise effort
-- Compliance-ready from day one
-- Continuous security improvements
+| Layer | What It Protects | Key Features |
+|-------|-----------------|--------------|
+| **Network** | Perimeter access | VPC isolation, Private Endpoints (AWS/Azure/GCP), IP Access List, VPC Peering |
+| **Encryption** | Data confidentiality | TLS 1.2+, AES-256 at rest, BYOK, CSFLE, Queryable Encryption |
+| **Authentication** | Identity verification | SCRAM, X.509, LDAP/AD, AWS IAM, OIDC/SAML, MFA |
+| **Authorization** | Permission control | Built-in roles, Custom roles, Field-level redaction, HashiCorp Vault |
+| **Auditing** | Accountability | Database audit logs, Activity feed, SIEM export (Splunk, Guardium) |
 
 ---
 
-### Scenario 2: Network Security Deep Dive (10 mins)
-**Goal:** Explain network isolation options
+## Demo Scenarios
 
-1. **IP Access Lists**
-   - "Allowlist specific IPs/ranges"
-   - "Block everything else"
+### Scenario 1: Security Overview (10 mins)
+Goal: High-level security posture for leadership or security teams
 
-2. **VPC Peering**
-   - "Direct private connection"
-   - "Traffic never hits public internet"
+1. Start at the Hero section — "defense in depth"
+2. Walk through the pentagon diagram — click each layer
+3. Highlight the "Secure by Default" panel (TLS, auth, encryption all on by default)
+4. Jump to Compliance grid — show relevant certifications
 
-3. **Private Endpoints**
-   - "Most secure option"
-   - "Works with AWS, Azure, GCP"
+Key Talking Points:
+- Atlas is secure by default — no opt-in required for baseline security
+- Five independent layers — compromising one never exposes the others
+- SOC 2, ISO 27001, HIPAA, PCI DSS certified
 
-**Key Talking Points:**
-- Multiple options for different needs
-- Private connectivity for production
-- Easy to configure in Atlas
+### Scenario 2: Encryption Deep Dive (15 mins)
+Goal: Address data confidentiality concerns for regulated industries
 
----
+1. Walk through the four encryption cards (Transit, Rest, CSFLE, Queryable)
+2. Show the Queryable Encryption Python code example
+3. Explain BYOK with AWS KMS / Azure Key Vault / GCP KMS
+4. Jump to Shared Responsibility to clarify who manages keys
 
-### Scenario 3: Encryption Options (15 mins)
-**Goal:** Explain encryption layers
+Key Talking Points:
+- Queryable Encryption lets you run equality and range queries on encrypted data
+- Server never sees plaintext — protects against compromised servers and backups
+- BYOK gives you full control of encryption keys
 
-1. **In Transit (TLS)**
-   - "All connections encrypted"
-   - "TLS 1.2+ enforced"
-   - "No plaintext traffic"
+### Scenario 3: Network & Access Control (15 mins)
+Goal: Satisfy network security and access management requirements
 
-2. **At Rest**
-   - "AES-256 encryption"
-   - "Atlas manages by default"
-   - "BYOK for customer-managed keys"
+1. Network section — show Terraform code for Private Endpoints and IP Access List
+2. Authentication section — walk through connection string examples
+3. Authorization section — show custom role creation code
+4. Auditing section — show audit filter JSON
 
-3. **Client-Side Field Level Encryption**
-   - "Encrypt before sending to database"
-   - "Atlas never sees plaintext"
-   - "You control the keys"
-
-4. **Queryable Encryption**
-   - "Query encrypted data directly"
-   - "No decryption on server"
-   - "Maximum security for sensitive fields"
-
-**Key Talking Points:**
-- Encryption is not optional
-- Multiple layers for defense in depth
-- CSFLE for regulated data
+Key Talking Points:
+- Private endpoints keep traffic on cloud provider backbone
+- Multiple auth mechanisms for different use cases (humans vs services)
+- Custom roles enable principle of least privilege
+- Audit logs integrate with existing SIEM infrastructure
 
 ---
 
-### Scenario 4: Compliance Discussion (10 mins)
-**Goal:** Address regulatory requirements
+## Common Questions
 
-1. **Available certifications**
-   - List relevant certifications
-   - Explain audit process
+Q: Is Atlas SOC 2 compliant?
+A: Yes. SOC 2 Type II audited annually covering security, availability, and confidentiality.
 
-2. **Dedicated clusters**
-   - "Required for some compliance"
-   - "No shared resources"
+Q: Can I use my own encryption keys?
+A: Yes. BYOK is supported via AWS KMS, Azure Key Vault, and GCP KMS.
 
-3. **Audit logging**
-   - "Track all access"
-   - "Integrate with SIEM"
+Q: Does Atlas support HIPAA?
+A: Yes. BAA is available. Atlas supports HIPAA-compliant architectures.
 
-**Key Talking Points:**
-- Compliance is customer responsibility
-- Atlas provides the tools
-- Dedicated clusters for regulated workloads
+Q: How does Queryable Encryption differ from CSFLE?
+A: CSFLE encrypts on the client but requires deterministic encryption for queries. Queryable Encryption uses a novel cryptographic scheme allowing both equality and range queries on encrypted data.
 
----
+Q: Can MongoDB employees access my data?
+A: No. Access requires MFA, management approval, is time-limited, and fully logged.
 
-## 💡 Presenter Tips
-
-### Common Questions
-
-**Q: Is Atlas SOC 2 certified?**
-A: Yes, SOC 2 Type II certified. Audit reports available under NDA.
-
-**Q: How do we meet HIPAA requirements?**
-A: Use dedicated clusters, enable encryption, sign BAA with MongoDB.
-
-**Q: Can we use our own encryption keys?**
-A: Yes, BYOK supported with AWS KMS, Azure Key Vault, or GCP KMS.
-
-**Q: What about audit logs?**
-A: Database auditing logs all operations. Export to your SIEM.
-
-**Q: How do I implement least privilege?**
-A: Use custom roles with minimal required permissions. Avoid built-in admin role.
+Q: What auth methods work for microservices?
+A: AWS IAM (for AWS workloads), X.509 certificates, or OIDC workload identity.
 
 ---
 
-## 🔒 Security Defaults
+## Security Checklist
 
-| Feature | Default Setting |
-|---------|-----------------|
-| **Authentication** | Required |
-| **TLS** | Enabled, required |
-| **Encryption at Rest** | Enabled |
-| **IP Access List** | Empty (deny all) |
-| **Audit Logging** | Available, enable as needed |
-
----
-
-## 📋 Security Checklist
-
-- [ ] Configure IP access list (dont leave open)
-- [ ] Use strong passwords or certificates
-- [ ] Enable VPC peering or private endpoints
-- [ ] Use least-privilege database roles
-- [ ] Enable audit logging
-- [ ] Consider CSFLE for sensitive fields
-- [ ] Review access regularly
-- [ ] Set up alerts for anomalies
+- [ ] Configure IP Access List (empty by default = no access)
+- [ ] Set up Private Endpoints or VPC Peering
+- [ ] Create database users with least-privilege custom roles
+- [ ] Enable MFA and SSO for Atlas UI access
+- [ ] Enable database auditing with appropriate filters
+- [ ] Configure BYOK if regulatory requirements demand it
+- [ ] Implement CSFLE or Queryable Encryption for sensitive fields
+- [ ] Integrate audit logs with your SIEM
+- [ ] Schedule regular access permission reviews
+- [ ] Set up Atlas alerts for security events
 
 ---
 
-## 📚 Additional Resources
+## Additional Resources
 
-- [Atlas Security Features](https://www.mongodb.com/docs/atlas/security/)
-- [Security Checklist](https://www.mongodb.com/docs/manual/administration/security-checklist/)
-- [Client-Side Field Level Encryption](https://www.mongodb.com/docs/manual/core/csfle/)
-- [Compliance and Certifications](https://www.mongodb.com/cloud/trust)
-
----
-
-## 🐛 Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Cant connect | Check IP access list |
-| Authentication fails | Verify credentials and authSource |
-| VPC peering not working | Check CIDR overlap, route tables |
-| Audit logs missing | Ensure auditing is enabled |
+- MongoDB Trust Center: https://www.mongodb.com/products/platform/trust
+- Atlas Network Access: https://www.mongodb.com/docs/atlas/security-whitelist/
+- Queryable Encryption: https://www.mongodb.com/docs/manual/core/queryable-encryption/
+- CSFLE: https://www.mongodb.com/docs/current/core/csfle/
+- Database Users & RBAC: https://www.mongodb.com/docs/atlas/security-add-mongodb-users/
+- Database Auditing: https://www.mongodb.com/docs/atlas/database-auditing/
+- HashiCorp Vault Integration: https://www.mongodb.com/products/integrations/hashicorp-vault
 
 ---
 
-*Built for MongoDB Solutions Architecture team*
+Built for MongoDB Solutions Architecture team
