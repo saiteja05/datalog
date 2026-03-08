@@ -1,847 +1,1196 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth">
+<html lang="en">
 <head>
-    <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
-    <meta name="referrer" content="strict-origin-when-cross-origin">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Comprehensive Report: Atlas Search vs. The Competition</title>
-    <!-- Favicon -->
-    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <!-- 
-    Application Structure Plan: 
-    This is a merged document combining comparisons for Elasticsearch, Pinecone, and Qdrant against Atlas Search.
-    A top-level tab system allows switching between three full reports: 
-    1. Atlas Search vs. Elasticsearch/OpenSearch
-    2. Atlas Search vs. Pinecone
-    3. Atlas Search vs. Qdrant
-    Each report is self-contained and follows a consistent multi-section layout: 
-    At a Glance, Deep Dive (with inner tabs), Scaling Challenges, Enterprise Readiness, and Use Cases.
-    This provides a familiar navigation model while presenting distinct comparative content.
-    -->
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #001E2B;
-            color: #d1d5db;
-        }
-        .main-tab-button.active {
-            border-color: #4f46e5;
-            color: #c7d2fe;
-            background-color: #003345;
-        }
-        .deep-dive-tab-button.active {
-            border-color: #00ED64;
-            color: #00ED64;
-            font-weight: 600;
-        }
-        .main-tab-content, .deep-dive-tab-content {
-            display: none;
-        }
-        .main-tab-content.active, .deep-dive-tab-content.active {
-            display: block;
-        }
-        .arch-component {
-            transition: all 0.2s ease-in-out;
-        }
-        .arch-component:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .feature-card {
-            transition: all 0.2s ease-in-out;
-            cursor: pointer;
-        }
-        .feature-card:hover {
-             transform: scale(1.03);
-        }
-        .chart-container {
-            position: relative;
-            width: 100%;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-            height: 350px;
-            max-height: 400px;
-        }
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 300px;
-            }
-        }
-        .section-heading {
-            border-bottom: 1px solid #374151;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.5rem;
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #e5e7eb;
-        }
-        .db-color-mongo { color: #00ED64; border-color: #00ED64; }
-        .db-color-elastic { color: #3b82f6; border-color: #3b82f6; }
-        .db-color-pinecone { color: #f97316; border-color: #f97316; }
-        .db-color-qdrant { color: #ef4444; border-color: #ef4444; }
-        code {
-            background-color: rgba(71, 85, 105, 0.5);
-            padding: 0.1em 0.3em;
-            border-radius: 4px;
-            font-family: monospace;
-            font-size: 0.9em;
-        }
-    </style>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com; frame-ancestors 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Atlas Search vs. Specialty Engines — Competitive Intelligence Briefing</title>
+<link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #080c14;
+  --bg2: #0d1219;
+  --bg-card: #111923;
+  --bg-card-h: #16202e;
+  --border: #1a2538;
+  --border2: #243348;
+  --tx: #e4e9f2;
+  --tx2: #8694a8;
+  --tx3: #4f5e72;
+  --mg: #00ed64;
+  --mg-d: #00a847;
+  --mg-g: rgba(0,237,100,0.10);
+  --ey: #fed10a;
+  --ep: #f04e98;
+  --eb: #0077cc;
+  --cy: #22d3ee;
+  --rd: #f87171;
+  --pr: #a78bfa;
+  --or: #fb923c;
+  --pn: #1a8cff;
+  --qd: #dc2626;
+}
+
+html { scroll-snap-type: y mandatory; overflow-y: scroll; scroll-behavior: smooth; font-size: 16px; }
+body { background: var(--bg); color: var(--tx); font-family: 'DM Sans', sans-serif; line-height: 1.65; overflow-x: hidden; }
+
+.slide { min-height: 100vh; height: 100vh; scroll-snap-align: start; scroll-snap-stop: always; display: flex; align-items: center; justify-content: center; padding: 3.5rem 2.5rem 2.5rem; position: relative; overflow: hidden; }
+.slide-inner { max-width: 1100px; width: 100%; margin: 0 auto; }
+.slide.scrollable { align-items: flex-start; overflow-y: auto; scroll-snap-align: start; -ms-overflow-style: none; scrollbar-width: none; }
+.slide.scrollable::-webkit-scrollbar { display: none; }
+.slide.scrollable .slide-inner { padding: 2rem 0 3rem; }
+
+.slide.divider { background: var(--bg); }
+.slide.divider .divider-icon { width: 88px; height: 88px; border-radius: 22px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+.slide.divider h1 { font-size: clamp(2.2rem, 4.5vw, 3.8rem); }
+.slide.divider .vs-label { font-size: 1.2rem; color: var(--tx3); font-weight: 400; font-style: italic; display: block; margin: 0.3rem 0; font-family: 'Playfair Display', serif; }
+
+.section-bar { position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+
+nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; background: rgba(8,12,20,0.88); backdrop-filter: blur(20px); border-bottom: 1px solid var(--border); }
+.nav-in { max-width: 1100px; margin: 0 auto; padding: 0 2.5rem; height: 52px; display: flex; align-items: center; justify-content: space-between; }
+.nav-brand { font-weight: 700; font-size: 0.8rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tx3); display: flex; align-items: center; gap: 0.6rem; }
+.nav-brand svg { flex-shrink: 0; }
+.nav-links { display: flex; gap: 0.15rem; }
+.nav-links a { color: var(--tx2); text-decoration: none; font-size: 0.72rem; font-weight: 500; padding: 0.35rem 0.65rem; border-radius: 6px; transition: all 0.2s; }
+.nav-links a:hover, .nav-links a.active { color: var(--tx); background: var(--bg-card); }
+
+.slide-counter { position: fixed; bottom: 1.5rem; right: 2rem; z-index: 1000; font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--tx3); background: rgba(8,12,20,0.8); backdrop-filter: blur(12px); padding: 0.4rem 0.8rem; border-radius: 8px; border: 1px solid var(--border); }
+.slide-counter span { color: var(--mg); }
+.progress-dots { position: fixed; right: 1rem; top: 50%; transform: translateY(-50%); z-index: 1000; display: flex; flex-direction: column; gap: 6px; }
+.progress-dots .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--tx3); transition: all 0.3s; cursor: pointer; opacity: 0.4; }
+.progress-dots .dot.active { background: var(--mg); opacity: 1; transform: scale(1.4); }
+
+h1 { font-family: 'Playfair Display', serif; font-weight: 800; font-size: clamp(2.6rem, 5.5vw, 4.5rem); line-height: 1.08; }
+h2 { font-family: 'Playfair Display', serif; font-weight: 700; font-size: clamp(1.8rem, 3.5vw, 2.6rem); line-height: 1.12; }
+h3 { font-size: 1.1rem; font-weight: 700; }
+.label { font-size: 0.68rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.25rem 0.75rem; border-radius: 100px; border: 1px solid; margin-bottom: 0.75rem; }
+.l-e { color: var(--ey); border-color: rgba(254,209,10,0.2); background: rgba(254,209,10,0.05); }
+.l-m { color: var(--mg); border-color: rgba(0,237,100,0.2); background: rgba(0,237,100,0.05); }
+.l-p { color: var(--pn); border-color: rgba(26,140,255,0.2); background: rgba(26,140,255,0.05); }
+.l-q { color: var(--qd); border-color: rgba(220,38,38,0.2); background: rgba(220,38,38,0.05); }
+.l-v { color: var(--cy); border-color: rgba(34,211,238,0.2); background: rgba(34,211,238,0.05); }
+
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; transition: all 0.3s; }
+.card:hover { border-color: var(--border2); }
+.tag { font-size: 0.65rem; padding: 0.18rem 0.5rem; border-radius: 100px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--tx3); font-weight: 500; display: inline-block; }
+.callout { background: var(--bg-card); border-radius: 0 10px 10px 0; padding: 1.1rem 1.3rem; font-size: 0.85rem; color: var(--tx2); line-height: 1.55; }
+.callout strong { color: var(--tx); }
+.callout-e { border-left: 3px solid var(--ey); }
+.callout-m { border-left: 3px solid var(--mg); }
+.callout-p { border-left: 3px solid var(--pn); }
+.callout-q { border-left: 3px solid var(--qd); }
+.callout-r { border-left: 3px solid var(--rd); }
+
+@keyframes fadeUp { from { opacity:0; transform:translateY(28px); } to { opacity:1; transform:translateY(0); } }
+@keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+@keyframes pulse { 0%,100%{ opacity:0.4; } 50%{ opacity:1; } }
+
+.reveal { opacity: 0; transform: translateY(28px); transition: all 0.7s cubic-bezier(0.16,1,0.3,1); }
+.reveal.vis { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+.reveal-d4 { transition-delay: 0.4s; }
+.reveal-d5 { transition-delay: 0.5s; }
+
+.tw { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+th { text-align:left; padding:0.75rem 1rem; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--tx3); background:var(--bg-card); border-bottom:1px solid var(--border); }
+td { padding:0.65rem 1rem; border-bottom:1px solid var(--border); color:var(--tx2); vertical-align:top; }
+tr:last-child td { border-bottom:none; }
+td:first-child { color:var(--tx); font-weight:500; }
+td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:rgba(255,255,255,0.06); padding:0.12rem 0.35rem; border-radius:4px; color:var(--cy); }
+.ck { color:var(--mg); font-weight:700; }
+.cx { color:var(--rd); font-weight:700; opacity:0.7; }
+.pt { color:var(--ey); font-weight:500; }
+
+.illust { display: flex; justify-content: center; align-items: center; }
+.illust svg { max-width: 100%; height: auto; }
+
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+.g4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+
+@media (max-width: 900px) {
+  .g2, .g3, .g4 { grid-template-columns: 1fr; }
+  .nav-links { display: none; }
+  .progress-dots { display: none; }
+  .slide { padding: 3.5rem 1.25rem 2rem; }
+}
+
+.hero-glow { position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px); }
+.adv-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.3rem; border-left: 3px solid var(--mg); }
+.adv-card h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.3rem; }
+.adv-card p { font-size: 0.8rem; color: var(--tx2); line-height: 1.5; }
+.battle-item { font-size: 0.82rem; color: var(--tx2); line-height: 1.5; padding: 0.55rem 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); margin-bottom: 0.4rem; }
+.battle-item strong { color: var(--tx); }
+.pos-card { border-radius: 12px; padding: 1.75rem; }
+.pos-card ul { list-style:none; display:flex; flex-direction:column; gap:0.4rem; }
+.pos-card li { font-size:0.82rem; color:var(--tx2); line-height:1.5; padding-left:1.2rem; position:relative; }
+.pos-card li::before { content:'→'; position:absolute; left:0; font-weight:600; }
+.pos-e { background:linear-gradient(135deg,rgba(254,209,10,0.05),rgba(240,78,152,0.03)); border:1px solid rgba(254,209,10,0.12); }
+.pos-e li::before { color:var(--ey); }
+.pos-m { background:linear-gradient(135deg,rgba(0,237,100,0.05),rgba(34,211,238,0.03)); border:1px solid rgba(0,237,100,0.12); }
+.pos-m li::before { color:var(--mg); }
+.pos-p { background:linear-gradient(135deg,rgba(26,140,255,0.05),rgba(167,139,250,0.03)); border:1px solid rgba(26,140,255,0.12); }
+.pos-p li::before { color:var(--pn); }
+.pos-q { background:linear-gradient(135deg,rgba(220,38,38,0.05),rgba(251,146,60,0.03)); border:1px solid rgba(220,38,38,0.12); }
+.pos-q li::before { color:var(--qd); }
+.icon-circle { width: 44px; height: 44px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.arch-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1rem 0.75rem; position: relative; }
+.arch-comp { cursor: pointer; transition: opacity 0.2s, filter 0.2s; }
+.arch-comp:hover { filter: brightness(1.3) drop-shadow(0 0 8px currentColor); }
+.arch-tip-box { position: fixed; z-index: 2000; max-width: 320px; background: #16202e; border: 1px solid var(--border2); border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 0.78rem; color: var(--tx2); line-height: 1.5; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.arch-tip-box.show { opacity: 1; }
+.arch-tip-box strong { color: var(--tx); display: block; margin-bottom: 0.2rem; font-size: 0.8rem; }
+.scale-tier { display: flex; align-items: center; gap: 0.5rem; padding: 0.6rem 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); font-size: 0.78rem; color: var(--tx2); line-height: 1.45; margin-bottom: 0.5rem; }
+.scale-tier .tier-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; white-space: nowrap; min-width: 52px; }
+</style>
 </head>
-<body class="bg-slate-900 text-slate-300">
+<body>
 
-    <div class="container mx-auto px-4 py-8 md:py-12">
-        
-        <header class="text-center mb-12 md:mb-16">
-            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4">Modern Search Architecture Showdown</h1>
-            <p class="text-lg md:text-xl text-slate-300 max-w-3xl mx-auto">A Comparative Analysis of Atlas Search, Elasticsearch, Pinecone, and Qdrant</p>
-        </header>
+<nav>
+  <div class="nav-in">
+    <div class="nav-brand">
+      <svg width="20" height="20" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg>
+      <span>MongoDB</span> — Competitive Intel
+    </div>
+    <div class="nav-links">
+      <a href="#s-philosophy">Philosophy</a>
+      <a href="#s-div-es">Elastic</a>
+      <a href="#s-div-pn">Pinecone</a>
+      <a href="#s-div-qd">Qdrant</a>
+      <a href="#s-vec">Vectors</a>
+      <a href="#s-scale">Scaling</a>
+      <a href="#s-matrix">Matrix</a>
+      <a href="#s-pos">Positioning</a>
+    </div>
+  </div>
+</nav>
 
-        <main>
-            <!-- MAIN TABS -->
-            <div id="main-tabs-container" class="mb-8 border-b border-slate-700 flex justify-center flex-wrap space-x-2 md:space-x-4">
-                <button class="main-tab-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-main-tab="elastic">vs. Elasticsearch</button>
-                <button class="main-tab-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-main-tab="pinecone">vs. Pinecone</button>
-                <button class="main-tab-button text-sm md:text-base font-semibold px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-indigo-300 transition-colors rounded-t-lg" data-main-tab="qdrant">vs. Qdrant</button>
-            </div>
+<div class="progress-dots" id="progDots"></div>
+<div class="slide-counter" id="slideCounter"><span>1</span> / <span id="totalSlides">—</span></div>
 
-            <!-- MAIN TAB CONTENT CONTAINER -->
-            <div id="main-tab-content-container">
+<!-- ════════════ SLIDE 1: TITLE ════════════ -->
+<div class="slide" id="s-title" data-title="Title">
+  <div class="hero-glow" style="width:60vw;height:60vw;top:-25%;left:-15%;background:radial-gradient(circle,rgba(0,237,100,0.05),transparent 65%);"></div>
+  <div class="hero-glow" style="width:50vw;height:50vw;bottom:-20%;right:-10%;background:radial-gradient(circle,rgba(26,140,255,0.04),transparent 65%);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal" style="margin-bottom:2rem;">
+      <svg width="200" height="48" viewBox="0 0 200 48" fill="none" style="opacity:0.6;">
+        <rect x="0" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#00ED64" stroke-width="1.5"/>
+        <path d="M16 14c0 0-0.3 4-0.3 5.5c0 1.5 0.8 2.8 1.7 3.8c0.9 1 1.3 2 1.3 3.2c0 2.5-1.6 4.8-3.4 5.5c0 0 0.3-2.5 0.3-3.5c0-0.8-0.7-1.8-1.5-2.8c-0.8-1-1.5-2.2-1.5-4c0-2.8 1.5-5.3 3.4-7.7z" fill="#00ED64"/>
+        <text x="46" y="30" font-family="DM Sans" font-weight="600" font-size="10" fill="#5a6578">vs</text>
+        <rect x="60" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#FED10A" stroke-width="1.5"/>
+        <path d="M72 18h10M72 24h7M72 30h10" stroke="#FED10A" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="102" y="30" font-family="DM Sans" font-weight="600" font-size="10" fill="#5a6578">vs</text>
+        <rect x="116" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#1a8cff" stroke-width="1.5"/>
+        <circle cx="132" cy="24" r="7" stroke="#1a8cff" stroke-width="1.8" fill="none"/>
+        <text x="158" y="30" font-family="DM Sans" font-weight="600" font-size="10" fill="#5a6578">vs</text>
+        <rect x="172" y="8" width="32" height="32" rx="6" fill="#1A1F2E" stroke="#dc2626" stroke-width="1.5"/>
+        <path d="M188 16l-8 16h16z" stroke="#dc2626" stroke-width="1.8" fill="none" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--mg);margin-bottom:1.5rem;">Solutions Architect Competitive Briefing</p>
+    <h1 class="reveal reveal-d2" style="margin-bottom:1.25rem;">Atlas Search vs.<br><em style="font-style:italic;background:linear-gradient(135deg,var(--ey),var(--pn));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Specialty Engines</em></h1>
+    <p class="reveal reveal-d3" style="font-size:1.1rem;color:var(--tx2);max-width:620px;margin:0 auto 2.5rem;font-weight:300;">Elasticsearch, Pinecone, and Qdrant — how MongoDB Atlas Search competes against dedicated search and vector engines.</p>
+    <div class="reveal reveal-d4" style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;">
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Duration</strong> 20–25 min</span>
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Audience</strong> Solutions Architects</span>
+      <span style="font-size:0.78rem;color:var(--tx3);"><strong style="color:var(--tx2);">Competitors</strong> 3 engines</span>
+    </div>
+    <p class="reveal reveal-d5" style="margin-top:3rem;font-size:0.7rem;color:var(--tx3);animation:pulse 2.5s ease infinite;">Scroll or press ↓ to begin</p>
+  </div>
+</div>
 
-                <!-- ELASTICSEARCH COMPARISON CONTENT -->
-                <div id="main-tab-elastic" class="main-tab-content">
-                    <section class="mb-12 md:mb-20">
-                        <h2 class="text-3xl font-bold text-center mb-8 text-white">At a Glance: Integrated vs. Bolt-On</h2>
-                        <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                                <h3 class="text-2xl font-bold text-[#00ED64] mb-4">MongoDB Atlas Search</h3>
-                                <p class="text-slate-400">The <span class="font-semibold text-[#00ED64]">Integrated Data Platform</span>. Embeds Lucene-based search directly within MongoDB to reduce complexity, eliminate data sync pipelines, and simplify operations.</p>
-                            </div>
-                            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                                <h3 class="text-2xl font-bold db-color-elastic mb-4">Elasticsearch / OpenSearch</h3>
-                                <p class="text-slate-400">The <span class="font-semibold db-color-elastic">Dedicated Search Engine</span>. A specialized, standalone system optimized for search-centric workloads like log analytics and observability.</p>
-                            </div>
-                        </div>
-                    </section>
+<!-- ════════════ SLIDE 2: AGENDA ════════════ -->
+<div class="slide" id="s-agenda" data-title="Agenda">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:2rem;">Agenda</h2>
+    <div class="g4 reveal reveal-d1">
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--mg);margin-bottom:0.5rem;">01</div>
+        <h3 style="font-size:0.95rem;">The Integrated Advantage</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Why one platform beats bolt-on search</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--ey);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--ey);margin-bottom:0.5rem;">02</div>
+        <h3 style="font-size:0.95rem;">Head-to-Head Battles</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Elastic, Pinecone, Qdrant — deep dives</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--cy);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--cy);margin-bottom:0.5rem;">03</div>
+        <h3 style="font-size:0.95rem;">Scaling &amp; Enterprise</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">Feature matrix, readiness, scaling tiers</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--pr);">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--pr);margin-bottom:0.5rem;">04</div>
+        <h3 style="font-size:0.95rem;">Positioning &amp; Battlecard</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);margin-top:0.3rem;">When to compete, when to concede</p>
+      </div>
+    </div>
+    <div class="reveal reveal-d2" style="margin-top:2rem;display:flex;justify-content:center;">
+      <svg width="600" height="56" viewBox="0 0 600 56" fill="none" style="max-width:100%;">
+        <circle cx="75" cy="28" r="18" fill="none" stroke="#00ED64" stroke-width="1.5"/><text x="75" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00ED64">01</text>
+        <line x1="93" y1="28" x2="207" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="225" cy="28" r="18" fill="none" stroke="#FED10A" stroke-width="1.5"/><text x="225" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#FED10A">02</text>
+        <line x1="243" y1="28" x2="357" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="375" cy="28" r="18" fill="none" stroke="#22D3EE" stroke-width="1.5"/><text x="375" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#22D3EE">03</text>
+        <line x1="393" y1="28" x2="507" y2="28" stroke="#1a2538" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <circle cx="525" cy="28" r="18" fill="none" stroke="#A78BFA" stroke-width="1.5"/><text x="525" y="33" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#A78BFA">04</text>
+      </svg>
+    </div>
+  </div>
+</div>
 
-                    <section class="bg-slate-800/50 p-6 md:p-8 rounded-2xl border border-slate-700 shadow-lg mb-12 md:mb-20">
-                         <h2 class="text-3xl font-bold text-center mb-2 text-white">Comparative Deep Dive</h2>
-                         <p class="text-center text-slate-400 mb-8">Select a category to explore a detailed comparison.</p>
-                        <div class="deep-dive-tabs mb-6 border-b border-slate-700 flex justify-center space-x-4 md:space-x-8" data-parent-tab="elastic">
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="architecture">Architecture</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="search-types">Search Types</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="scaling">Scaling</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="features">Features</button>
-                        </div>
+<!-- ════════════ SLIDE 3: THE INTEGRATED ADVANTAGE ════════════ -->
+<div class="slide" id="s-philosophy" data-title="Integrated Advantage">
+  <div class="slide-inner">
+    <div class="label l-m reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C12 2 12.5 7 12.5 9.5C12.5 12 14 13.5 15.3 15C16.6 16.5 17 18 17 19.5C17 23 14.3 26 11.5 27" stroke="#00ED64" stroke-width="2" fill="none" transform="scale(0.75) translate(4,2)"/></svg>
+      Section 01 — The Integrated Advantage
+    </div>
+    <h2 class="reveal reveal-d1">One Platform vs. Bolt-On Search</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.9rem;margin-bottom:1.5rem;">Every specialty engine forces you to run a separate cluster, maintain a sync pipeline, and learn a new API. Atlas Search eliminates this entire layer.</p>
 
-                        <div class="mt-8 min-h-[400px]">
-                            <div id="deep-dive-tab-architecture-elastic" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Atlas Search integrates search into the database to eliminate data sync complexity, while Elasticsearch operates as a separate, specialized system requiring a sync pipeline.</p>
-                                <div class="grid md:grid-cols-2 gap-8 items-start">
-                                     <div>
-                                        <h3 class="text-xl font-bold text-[#00ED64] mb-4 text-center">Atlas Search Architecture</h3>
-                                        <div class="arch-component bg-slate-900 p-6 rounded-lg min-h-[300px] flex flex-col items-center justify-center space-y-4 border border-slate-700">
-                                            <p class="text-indigo-300">Application</p>
-                                            <div class="text-2xl text-slate-400">&darr;</div>
-                                            <div class="p-4 bg-slate-800 rounded-lg shadow-lg border border-green-500/30 w-full text-center">
-                                                <h4 class="font-bold text-white">Atlas Unified API</h4>
-                                                <p class="text-sm text-slate-400">(Single Endpoint)</p>
-                                            </div>
-                                            <div class="flex justify-around gap-2 w-full">
-                                                <div class="w-1/2 p-3 bg-gray-800 rounded-lg border border-gray-600">DB Process (`mongod`)</div>
-                                                <div class="w-1/2 p-3 bg-gray-800 rounded-lg border border-gray-600">Search Process (`mongot`)</div>
-                                            </div>
-                                            <p class="text-xs text-slate-500 mt-2">Automatic sync via Change Streams. No external pipeline needed.</p>
-                                        </div>
-                                     </div>
-                                      <div>
-                                        <h3 class="text-xl font-bold db-color-elastic mb-4 text-center">Elasticsearch Architecture</h3>
-                                        <div class="arch-component bg-slate-900 p-6 rounded-lg min-h-[300px] flex flex-col items-center justify-center space-y-4 border border-slate-700">
-                                            <p class="text-indigo-300">Application</p>
-                                            <div class="text-2xl text-slate-400">&darr;</div>
-                                             <div class="flex justify-around gap-2 w-full">
-                                                <div class="w-1/2 p-3 bg-gray-800 rounded-lg border border-gray-600">Primary DB<br/><span class="text-xs text-slate-400">(e.g., MongoDB)</span></div>
-                                                <div class="w-1/2 p-3 bg-gray-800 rounded-lg border border-gray-600">Elasticsearch<br/><span class="text-xs text-slate-400">(Search Index)</span></div>
-                                            </div>
-                                            <div class="text-red-400 font-semibold text-sm flex items-center">
-                                                <span class="mr-2">⇅</span> Separate Sync Pipeline
-                                            </div>
-                                             <p class="text-xs text-slate-500 mt-2">Requires separate infrastructure and management for data synchronization.</p>
-                                        </div>
-                                     </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-search-types-elastic" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Both platforms share a Lucene foundation, giving them similar, mature capabilities in full-text search. The primary difference lies in the developer experience and integration.</p>
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                                        <h5 class="font-bold text-lg text-[#00ED64]">Atlas Search</h5>
-                                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
-                                            <li>**Querying:** Uses the `$search` stage within the MongoDB Aggregation Framework.</li>
-                                            <li>**Hybrid Search:** Native server-side fusion via the `$rankFusion` stage.</li>
-                                            <li>**Experience:** Unified API. Developers use familiar MQL and drivers.</li>
-                                        </ul>
-                                    </div>
-                                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                                        <h5 class="font-bold text-lg db-color-elastic">Elasticsearch / OpenSearch</h5>
-                                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
-                                            <li>**Querying:** Uses its own powerful, JSON-based Query DSL.</li>
-                                            <li>**Hybrid Search:** Server-side fusion via a top-level `rank` clause.</li>
-                                            <li>**Experience:** Requires separate client libraries and API endpoints from the primary DB.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-scaling-elastic" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Scaling both systems presents different challenges. Atlas scaling is a data modeling problem (choosing a good shard key), while Elasticsearch scaling is an operational problem (managing JVM heap and shards).</p>
-                                 <div class="grid md:grid-cols-2 gap-4">
-                                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                                        <h5 class="font-bold text-lg text-[#00ED64]">Atlas Search Scaling Challenges</h5>
-                                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
-                                            <li>**Shard Key Selection:** The most critical factor. A poor shard key leads to "hot shards" and performance bottlenecks.</li>
-                                            <li>**Scatter-Gather Queries:** Queries that don't use the shard key must be broadcast to all shards, increasing latency.</li>
-                                            <li>**Scaling Model:** Primarily a data and query design challenge.</li>
-                                        </ul>
-                                    </div>
-                                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                                        <h5 class="font-bold text-lg db-color-elastic">Elasticsearch Scaling Challenges</h5>
-                                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
-                                            <li>**JVM Heap Management:** Incorrect sizing leads to long garbage collection pauses and cluster instability.</li>
-                                            <li>**Shard Count & Size:** Must be planned in advance. Too many shards cause overhead; too few makes rebalancing difficult.</li>
-                                            <li>**Scaling Model:** Primarily an infrastructure and operational tuning challenge.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-features-elastic" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">The licensing split between Elasticsearch and OpenSearch is a critical factor. OpenSearch provides a more feature-complete open-source offering, while Atlas's key feature is its seamless integration.</p>
-                                <div id="feature-grid-elastic" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
-                                <div id="feature-details-elastic" class="mt-6 bg-slate-900 p-4 rounded-lg border border-slate-700 min-h-[100px] text-slate-400">
-                                    <p class="text-center">Select a feature to see details.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="680" height="200" viewBox="0 0 680 200" fill="none" style="max-width:100%;">
+        <rect x="230" y="0" width="220" height="36" rx="8" fill="#111923" stroke="#8694a8" stroke-width="1"/>
+        <text x="340" y="22" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="10" fill="#8694a8">Application Layer</text>
+        <path d="M280 36 L280 56 L140 56 L140 76" stroke="#00ed64" stroke-width="1.2" fill="none" marker-end="url(#arw1)"/>
+        <path d="M400 36 L400 56 L540 56 L540 76" stroke="#f87171" stroke-width="1.2" fill="none" marker-end="url(#arw2)"/>
+        <text x="200" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#00ed64">Single API (MQL)</text>
+        <text x="480" y="51" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#f87171">2nd API + SDK</text>
+        <rect x="40" y="78" width="200" height="65" rx="10" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
+        <text x="140" y="103" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#00ed64">MongoDB Atlas</text>
+        <text x="140" y="118" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">mongod + mongot (Lucene)</text>
+        <text x="140" y="131" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">OLTP + Search + Vector — unified</text>
+        <rect x="440" y="78" width="200" height="65" rx="10" fill="#111923" stroke="#f87171" stroke-width="1.5"/>
+        <text x="540" y="103" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="11" fill="#f87171">Specialty Engine</text>
+        <text x="540" y="118" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Separate cluster · Separate API</text>
+        <text x="540" y="131" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Eventually consistent</text>
+        <rect x="40" y="155" width="200" height="36" rx="8" fill="rgba(0,237,100,0.06)" stroke="rgba(0,237,100,0.2)" stroke-width="0.8"/>
+        <text x="140" y="177" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#00ed64">✓ Zero sync · Zero drift · One bill</text>
+        <rect x="440" y="155" width="200" height="36" rx="8" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.2)" stroke-width="0.8"/>
+        <text x="540" y="177" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#f87171">⚠ CDC pipeline · Data drift · 2× cost</text>
+        <defs>
+          <marker id="arw1" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#00ed64"/></marker>
+          <marker id="arw2" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#f87171"/></marker>
+        </defs>
+      </svg>
+    </div>
+    <div class="callout callout-m reveal reveal-d3">
+      <strong>The core argument:</strong> Atlas Search embeds Apache Lucene <em>inside</em> the database via the <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;background:rgba(255,255,255,0.06);padding:0.1rem 0.3rem;border-radius:4px;color:var(--cy);">mongot</code> process. Data syncs automatically via Change Streams. No Kafka, no Logstash, no stale results, no separate billing.
+    </div>
+  </div>
+</div>
 
-                <!-- PINECONE COMPARISON CONTENT -->
-                <div id="main-tab-pinecone" class="main-tab-content">
-                     <section class="mb-12 md:mb-20">
-                        <h2 class="text-3xl font-bold text-center mb-8 text-white">At a Glance: Integrated vs. Specialized</h2>
-                        <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                                <h3 class="text-2xl font-bold text-[#00ED64] mb-4">MongoDB Atlas Search</h3>
-                                <p class="text-slate-400">The <span class="font-semibold text-[#00ED64]">Integrated Data Platform</span>. Unifies vector search with a primary document database, simplifying the architecture for AI applications built on existing data.</p>
-                            </div>
-                            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                                <h3 class="text-2xl font-bold db-color-pinecone mb-4">Pinecone</h3>
-                                 <p class="text-slate-400">The <span class="font-semibold db-color-pinecone">Purpose-Built Vector Database</span>. A specialized, serverless, API-first service optimized for pure vector operations at massive scale.</p>
-                            </div>
-                        </div>
-                    </section>
+<!-- ════════════ SLIDE 4: ATLAS SEARCH ARCHITECTURE ════════════ -->
+<div class="slide" id="s-atlas-arch" data-title="Atlas Architecture">
+  <div class="slide-inner">
+    <h2 class="reveal">Atlas Search Architecture</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.9rem;margin-bottom:1.5rem;">Lucene runs natively inside MongoDB. <code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;background:rgba(255,255,255,0.06);padding:0.1rem 0.3rem;border-radius:4px;color:var(--cy);">$search</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;background:rgba(255,255,255,0.06);padding:0.1rem 0.3rem;border-radius:4px;color:var(--cy);">$vectorSearch</code> are aggregation pipeline stages — no separate endpoint.</p>
 
-                     <section class="bg-slate-800/50 p-6 md:p-8 rounded-2xl border border-slate-700 shadow-lg mb-12 md:mb-20">
-                         <h2 class="text-3xl font-bold text-center mb-2 text-white">Comparative Deep Dive</h2>
-                         <p class="text-center text-slate-400 mb-8">Select a category to explore a detailed comparison.</p>
-                        <div class="deep-dive-tabs mb-6 border-b border-slate-700 flex justify-center space-x-4 md:space-x-8" data-parent-tab="pinecone">
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="architecture">Architecture</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="search-types">Search Types</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="performance">Performance</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="features">Features</button>
-                        </div>
-                        
-                        <div class="mt-8 min-h-[400px]">
-                            <div id="deep-dive-tab-architecture-pinecone" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Atlas treats vectors as an attribute of a document, while Pinecone treats vectors as the primary entity with metadata attached. This reflects their different "centers of gravity."</p>
-                                <div class="grid md:grid-cols-2 gap-8 items-start">
-                                     <div>
-                                        <h3 class="text-xl font-bold text-[#00ED64] mb-4 text-center">Atlas Search Architecture</h3>
-                                        <div class="arch-component bg-slate-900 p-6 rounded-lg min-h-[300px] flex flex-col items-center justify-center space-y-4 border border-slate-700">
-                                            <p class="font-semibold text-white">BSON Document</p>
-                                            <div class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-left text-xs">
-                                                <pre><code>{<br>  _id: "prod123",<br>  name: "Hiking Boots",<br>  description: "...",<br>  image_embedding: [0.1, ...]<br>}</code></pre>
-                                            </div>
-                                            <p class="text-sm mt-2 text-slate-400">The vector is an attribute of a larger, primary document.</p>
-                                        </div>
-                                     </div>
-                                      <div>
-                                        <h3 class="text-xl font-bold db-color-pinecone mb-4 text-center">Pinecone Architecture</h3>
-                                        <div class="arch-component bg-slate-900 p-6 rounded-lg min-h-[300px] flex flex-col items-center justify-center space-y-4 border border-slate-700">
-                                            <p class="font-semibold text-white">Vector Record</p>
-                                            <div class="w-full bg-gray-800 p-3 rounded-lg border border-gray-600 text-left text-xs">
-                                                <pre><code>{<br>  id: "prod123",<br>  values: [0.1, ...],<br>  metadata: {<br>    name: "Hiking Boots"<br>  }<br>}</code></pre>
-                                            </div>
-                                             <p class="text-sm mt-2 text-slate-400">The vector is the primary entity; metadata is attached to it.</p>
-                                        </div>
-                                     </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-search-types-pinecone" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">The platforms differ significantly in how they approach full-text and hybrid search. Atlas leverages a mature text engine, while Pinecone models everything as a vector operation.</p>
-                                <div class="grid md:grid-cols-2 gap-4">
-                                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                                        <h5 class="font-bold text-lg text-[#00ED64]">Atlas Search</h5>
-                                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
-                                            <li>**Full-Text:** Mature, Lucene-based engine with custom analyzers for deep linguistic control.</li>
-                                            <li>**Hybrid Search:** Native server-side `$rankFusion` stage simplifies client logic.</li>
-                                        </ul>
-                                    </div>
-                                    <div class="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                                        <h5 class="font-bold text-lg db-color-pinecone">Pinecone</h5>
-                                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-400">
-                                            <li>**Full-Text:** Implemented via sparse vectors (BM25). Lacks native linguistic processing.</li>
-                                            <li>**Hybrid Search:** Supports sparse-dense vectors in a single index, enabling native hybrid queries without client-side fusion.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-performance-pinecone" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Benchmarks show purpose-built vector databases like Pinecone lead in raw vector search latency. However, end-to-end application latency, which includes fetching metadata, may be lower on an integrated platform like Atlas.</p>
-                                <div class="chart-container">
-                                    <canvas id="pineconePerformanceChart"></canvas>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-features-pinecone" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Pinecone offers more advanced, specialized vector search features, while Atlas provides the simplicity of an integrated, fully managed platform.</p>
-                                <div id="feature-grid-pinecone" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
-                                <div id="feature-details-pinecone" class="mt-6 bg-slate-900 p-4 rounded-lg border border-slate-700 min-h-[100px] text-slate-400">
-                                    <p class="text-center">Select a feature to see details.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
-                <!-- QDRANT COMPARISON CONTENT -->
-                <div id="main-tab-qdrant" class="main-tab-content">
-                    <section class="mb-12 md:mb-20">
-                        <h2 class="text-3xl font-bold text-center mb-8 text-white">At a Glance: Two Philosophies</h2>
-                        <div class="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                                <h3 class="text-2xl font-bold text-[#00ED64] mb-4">MongoDB Atlas Search</h3>
-                                <p class="text-slate-400">The <span class="font-semibold text-[#00ED64]">Integrated Data Platform</span>. Embeds search directly within MongoDB to reduce complexity and accelerate development.</p>
-                            </div>
-                            <div class="bg-slate-800 p-6 rounded-xl border border-slate-700 shadow-lg">
-                                <h3 class="text-2xl font-bold db-color-qdrant mb-4">Qdrant</h3>
-                                <p class="text-slate-400">The <span class="font-semibold db-color-qdrant">Specialized Vector Database</span>. Purpose-built for performance, scalability, and advanced vector search features.</p>
-                            </div>
-                        </div>
-                    </section>
-
-                    <section class="bg-slate-800/50 p-6 md:p-8 rounded-2xl border border-slate-700 shadow-lg mb-12 md:mb-20">
-                         <h2 class="text-3xl font-bold text-center mb-2 text-white">Comparative Deep Dive</h2>
-                         <p class="text-center text-slate-400 mb-8">Select a category to explore a detailed comparison.</p>
-                        <div class="deep-dive-tabs mb-6 border-b border-slate-700 flex justify-center space-x-4 md:space-x-8" data-parent-tab="qdrant">
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="architecture">Architecture</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="search-types">Search Types</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="performance">Performance</button>
-                            <button class="deep-dive-tab-button text-sm md:text-base px-4 py-3 border-b-2 border-transparent text-slate-400 hover:text-green-400" data-deep-dive-tab="features">Features</button>
-                        </div>
-                        
-                        <div class="mt-8 min-h-[400px]">
-                            <div id="deep-dive-tab-architecture-qdrant" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">The architectural design of each platform reflects its core philosophy. Atlas integrates search into a general-purpose database, while Qdrant is built as a specialized engine.</p>
-                                <div class="grid md:grid-cols-2 gap-8 items-start">
-                                     <div>
-                                        <h3 class="text-xl font-bold text-[#00ED64] mb-4 text-center">Atlas Search Architecture</h3>
-                                        <div id="atlas-arch-diagram-qdrant" class="arch-component bg-slate-900 p-6 rounded-lg min-h-[300px] flex flex-col items-center justify-center space-y-4 border border-slate-700 relative">
-                                            <div class="bg-slate-800 p-4 rounded-lg shadow-lg border border-green-500/30 w-48 text-center" data-info="atlas-mongod">
-                                                <h4 class="font-bold text-white">`mongod`</h4>
-                                                <p class="text-sm text-slate-400">Primary DB Process</p>
-                                            </div>
-                                            <div class="text-green-400 font-semibold text-sm flex items-center">
-                                                <span class="mr-2">⇅</span> Change Streams Sync
-                                            </div>
-                                             <div class="bg-slate-800 p-4 rounded-lg shadow-lg border border-green-500/30 w-48 text-center" data-info="atlas-mongot">
-                                                <h4 class="font-bold text-white">`mongot`</h4>
-                                                <p class="text-sm text-slate-400">Search Process (Lucene)</p>
-                                            </div>
-                                             <div class="absolute bottom-2 right-2 bg-yellow-400/10 text-yellow-300 text-xs px-2 py-1 rounded-full border border-yellow-400/30" data-info="atlas-nodes">
-                                               💡 Deployed on Search Nodes
-                                            </div>
-                                        </div>
-                                        <div id="atlas-arch-info-qdrant" class="mt-4 p-4 bg-green-500/10 rounded-lg text-sm text-green-200 border border-green-500/20 min-h-[100px] transition-opacity">
-                                            Select a component to see details.
-                                        </div>
-                                     </div>
-                                      <div>
-                                        <h3 class="text-xl font-bold db-color-qdrant mb-4 text-center">Qdrant Architecture</h3>
-                                        <div id="qdrant-arch-diagram-qdrant" class="arch-component bg-slate-900 p-6 rounded-lg min-h-[300px] flex flex-col items-center justify-center border border-slate-700 relative">
-                                            <div class="bg-slate-800 p-4 rounded-lg shadow-lg border border-slate-700 w-48 text-center" data-info="qdrant-core">
-                                                <h4 class="font-bold text-white">Rust-Based Core</h4>
-                                                <p class="text-sm text-slate-400">Vector-Native Engine</p>
-                                            </div>
-                                            <div class="grid grid-cols-2 gap-2 mt-4 text-center">
-                                                 <div class="bg-slate-800 text-xs px-2 py-1 rounded-md shadow-lg border border-slate-700" data-info="qdrant-sharding">Sharding</div>
-                                                 <div class="bg-slate-800 text-xs px-2 py-1 rounded-md shadow-lg border border-slate-700" data-info="qdrant-replication">Replication</div>
-                                                 <div class="bg-slate-800 text-xs px-2 py-1 rounded-md shadow-lg border border-slate-700" data-info="qdrant-raft">Raft Consensus</div>
-                                                 <div class="bg-slate-800 text-xs px-2 py-1 rounded-md shadow-lg border border-slate-700" data-info="qdrant-storage">Memmap Storage</div>
-                                            </div>
-                                        </div>
-                                         <div id="qdrant-arch-info-qdrant" class="mt-4 p-4 bg-slate-800 rounded-lg text-sm text-slate-300 border border-slate-700 min-h-[100px] transition-opacity">
-                                            Select a component to see details.
-                                         </div>
-                                     </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-search-types-qdrant" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Both platforms support keyword and vector search, but their approaches differ. Atlas relies on a mature search library, while Qdrant uses a unified vector-native model.</p>
-                                <div class="space-y-8">
-                                    <div>
-                                        <h4 class="text-lg font-bold text-center mb-4 text-white">Full-Text (Lexical) Search</h4>
-                                        <div class="grid md:grid-cols-2 gap-4">
-                                            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                                                <h5 class="font-bold text-[#00ED64]">Atlas: The Traditionalist</h5>
-                                                <p class="text-sm mt-1 text-slate-400">Leverages <span class="font-semibold text-slate-200">Apache Lucene</span>, offering a rich, mature feature set with a highly configurable analysis pipeline.</p>
-                                            </div>
-                                            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                                                <h5 class="font-bold db-color-qdrant">Qdrant: The Vector-Native</h5>
-                                                <p class="text-sm mt-1 text-slate-400">Models keywords using <span class="font-semibold text-slate-200">sparse vectors</span> (e.g., BM25), creating a unified API but abstracting analysis to the external vectorization model.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h4 class="text-lg font-bold text-center mb-4 text-white">Vector Search & Filtering</h4>
-                                         <div class="grid md:grid-cols-2 gap-4">
-                                            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                                                <h5 class="font-bold text-[#00ED64]">Atlas: Pre-Filter</h5>
-                                                <p class="text-sm mt-1 text-slate-400">Applies metadata filters <span class="font-semibold text-slate-200">before</span> the vector search. Simple and effective, but can sometimes reduce accuracy on restrictive queries.</p>
-                                            </div>
-                                            <div class="bg-slate-800 p-4 rounded-lg border border-slate-700">
-                                                <h5 class="font-bold db-color-qdrant">Qdrant: Filterable HNSW</h5>
-                                                <p class="text-sm mt-1 text-slate-400">A key advantage. Builds the HNSW index with awareness of metadata, leading to <span class="font-semibold text-slate-200">higher accuracy and performance</span> on complex filtered queries.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-performance-qdrant" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Performance is a key differentiator. Qdrant's specialized Rust-based architecture generally leads in raw vector search speed, while Atlas offers robust performance optimized through its managed platform.</p>
-                                <div class="chart-container">
-                                    <canvas id="qdrantPerformanceChart"></canvas>
-                                </div>
-                            </div>
-                            <div id="deep-dive-tab-features-qdrant" class="deep-dive-tab-content">
-                                <p class="text-center text-slate-400 mb-8 max-w-3xl mx-auto">Beyond core search, the platforms differ in key features like vector compression (quantization), deployment flexibility, and operational models. Click on a feature card below to see a detailed comparison.</p>
-                                <div id="feature-grid-qdrant" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
-                                <div id="feature-details-qdrant" class="mt-6 bg-slate-800 p-4 rounded-lg border border-slate-700 min-h-[100px] text-slate-400">
-                                    <p class="text-center">Select a feature to see details.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                </div>
-
-            </div> <!-- End Main Tab Content Container -->
-            
-            <section id="common-sections">
-                <div id="scaling-challenges" class="mt-16">
-                    <div class="text-center mb-10">
-                        <h2 class="text-3xl font-bold text-white">Scaling from Gigabytes to Terabytes</h2>
-                        <p class="text-slate-400 mt-2 max-w-3xl mx-auto">A practical analysis of the challenges and pitfalls of scaling each search architecture.</p>
-                    </div>
-                    <div class="space-y-12">
-                        <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                            <h3 class="text-2xl font-bold mb-6 db-color-mongo">Atlas Search: The Integrated Scaling Path</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">10GB to 1TB: The First Search Nodes</h4>
-                                    <p class="mt-2 text-slate-400">At this scale, the main challenge is managing the resources of the dedicated Search Nodes. The HNSW index must fit in the RAM of these nodes to avoid performance-killing page faults. This often requires scaling up the Search Node tier and enabling <span class="font-bold text-white">Quantization</span> to reduce the memory footprint of vectors. The focus is on vertical scaling of the search tier.</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">1TB to 10TB+: The Sharded Search Cluster</h4>
-                                    <p class="mt-2 text-slate-400">At multi-terabyte scale, vertical scaling reaches its limits. The challenges mirror those of scaling the core database: sharding the primary collection and dealing with scatter-gather overhead for queries that cannot be targeted to a single shard.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                            <h3 class="text-2xl font-bold mb-6 db-color-elastic">Elasticsearch / OpenSearch: The Operational Gauntlet</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">10GB to 1TB: Shard Count & JVM Tuning</h4>
-                                    <p class="mt-2 text-slate-400">The number of primary shards per index must be chosen at creation and cannot be changed. Correctly sizing the <span class="font-bold text-white">JVM heap</span> is critical to avoid long garbage collection pauses. This is a significant operational challenge.</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Cluster Coordination & Data Tiers</h4>
-                                    <p class="mt-2 text-slate-400">At this scale, managing cluster state and inter-node communication becomes a significant burden. Implementing <span class="font-bold text-white">data tiers</span> (hot, warm, cold) becomes essential for efficiency, adding operational complexity.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                            <h3 class="text-2xl font-bold mb-6 db-color-pinecone">Pinecone: The Serverless Scale</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">10GB to 1TB: Pods, Replicas, and Metadata</h4>
-                                    <p class="mt-2 text-slate-400">Pinecone's scaling is managed by selecting pod types and sizes. The main challenge is <span class="font-bold text-white">performance tuning</span>. Inefficient metadata filtering can degrade performance significantly as the dataset grows.</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Advanced Quantization and Memory Management</h4>
-                                    <p class="mt-2 text-slate-400">At massive scale, storing full-precision vectors in RAM becomes impractical. The primary challenge is implementing an effective <span class="font-bold text-white">quantization strategy</span> to dramatically reduce memory footprint while maintaining acceptable recall accuracy.</p>
-                                </div>
-                            </div>
-                        </div>
-                         <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                            <h3 class="text-2xl font-bold mb-6 db-color-qdrant">Qdrant: The Distributed Scale-Out</h3>
-                            <div class="space-y-6">
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">10GB to 1TB: Sharding and Filtering</h4>
-                                    <p class="mt-2 text-slate-400">Qdrant scales horizontally by adding more nodes and sharding collections. The primary challenge is designing an effective <span class="font-bold text-white">sharding strategy</span>. Leveraging Qdrant's <span class="font-bold text-white">Filterable HNSW</span> is critical for performance.</p>
-                                </div>
-                                <div>
-                                    <h4 class="font-semibold text-lg text-white">1TB to 10TB+: Quantization and Operational Tuning</h4>
-                                    <p class="mt-2 text-slate-400">At massive scale, using <span class="font-bold text-white">Product Quantization (PQ)</span> and on-disk <code>memmap</code> storage becomes essential to manage memory requirements and operational overhead, trading a small amount of accuracy for massive efficiency gains.</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="operational-comparison" class="mt-16">
-                    <div class="text-center mb-10">
-                        <h2 class="text-3xl font-bold text-white">Enterprise Readiness Comparison</h2>
-                        <p class="text-slate-400 mt-2 max-w-3xl mx-auto">Key enterprise considerations beyond core search functionality.</p>
-                    </div>
-                    <div class="overflow-x-auto bg-gray-900 rounded-2xl border border-gray-700 p-2">
-                        <table class="w-full text-sm text-left">
-                            <thead class="bg-gray-800 text-xs text-slate-300 uppercase">
-                                <tr>
-                                    <th class="px-6 py-4">Capability</th>
-                                    <th class="px-6 py-4">Atlas Search</th>
-                                    <th class="px-6 py-4">Elasticsearch / OpenSearch</th>
-                                    <th class="px-6 py-4">Pinecone</th>
-                                    <th class="px-6 py-4">Qdrant</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-700">
-                                <tr>
-                                    <td class="px-6 py-4 font-bold text-white">SLA</td>
-                                    <td class="px-6 py-4">99.995% (Atlas)</td>
-                                    <td class="px-6 py-4">99.95% (Elastic Cloud)</td>
-                                    <td class="px-6 py-4">99.95% (Enterprise)</td>
-                                    <td class="px-6 py-4">99.5% (Qdrant Cloud)</td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 font-bold text-white">Security & Compliance</td>
-                                    <td class="px-6 py-4">SOC 2, HIPAA, PCI DSS, GDPR, ISO 27001, FedRAMP; Field-Level Encryption, RBAC, VPC Peering, PrivateLink</td>
-                                    <td class="px-6 py-4">SOC 2, HIPAA, PCI DSS; TLS, RBAC, Field-Level Security</td>
-                                    <td class="px-6 py-4">SOC 2 Type II, GDPR; API-key auth, encryption at rest/transit</td>
-                                    <td class="px-6 py-4">SOC 2 (Cloud); API-key/JWT auth, TLS, encryption at rest</td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 font-bold text-white">Operational Complexity</td>
-                                    <td class="px-6 py-4">Single platform — no sync pipeline to manage. Atlas handles upgrades, patching, and backups.</td>
-                                    <td class="px-6 py-4">Separate cluster — requires sync pipeline (Kafka/Logstash), JVM tuning, shard management, and index lifecycle.</td>
-                                    <td class="px-6 py-4">Serverless API — minimal ops for vector layer. Still requires a separate primary database.</td>
-                                    <td class="px-6 py-4">Self-managed or cloud — requires cluster management, tuning, and a separate primary database.</td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 font-bold text-white">Multi-Cloud</td>
-                                    <td class="px-6 py-4">AWS, Azure, GCP — 100+ regions</td>
-                                    <td class="px-6 py-4">AWS, Azure, GCP (Elastic Cloud)</td>
-                                    <td class="px-6 py-4">AWS, Azure, GCP</td>
-                                    <td class="px-6 py-4">AWS, Azure, GCP (Cloud); any infra (self-hosted)</td>
-                                </tr>
-                                <tr>
-                                    <td class="px-6 py-4 font-bold text-white">Backup & DR</td>
-                                    <td class="px-6 py-4">Continuous cloud backup with point-in-time recovery; search indexes rebuilt automatically from source data.</td>
-                                    <td class="px-6 py-4">Snapshot API; requires separate backup strategy and restore procedures.</td>
-                                    <td class="px-6 py-4">Managed backups with collections; restore creates a new index.</td>
-                                    <td class="px-6 py-4">Snapshot-based backups; self-managed restore process for self-hosted.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="use-cases" class="mt-16">
-                     <div class="text-center mb-10">
-                        <h2 class="text-3xl font-bold text-white">Key Takeaways & Use Cases</h2>
-                    </div>
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-mongo">
-                            <h5 class="font-bold text-xl mb-3">Choose Atlas Search for...</h5>
-                            <p class="mb-4 font-semibold">One Platform — Zero Sync Lag — Full Developer Experience.</p>
-                            <ul class="list-disc list-inside space-y-2 text-slate-300">
-                                <li>**Real-Time Search:** Search indexes update in near real-time via Change Streams — no sync pipeline lag or stale results.</li>
-                                <li>**Single-Query Power:** Combine <code>$search</code>, <code>$vectorSearch</code>, <code>$lookup</code>, and transformations in one aggregation pipeline — one round-trip, one API.</li>
-                                <li>**AI & RAG-Ready:** Full-text search + vector search + transactional data in one platform — no separate vector DB to manage.</li>
-                                <li>**Operational Simplicity:** No Kafka, Logstash, or external sync pipeline. One vendor, one billing, one security model.</li>
-                                <li>**Existing MongoDB Teams:** Add enterprise search to your current stack without learning a new system or managing new infrastructure.</li>
-                            </ul>
-                        </div>
-                         <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-elastic">
-                            <h5 class="font-bold text-xl mb-3">Choose Elasticsearch / OpenSearch for...</h5>
-                            <p class="mb-4 font-semibold">Specialized Log Analytics and Text-Heavy Search.</p>
-                            <ul class="list-disc list-inside space-y-2 text-slate-300">
-                                <li>**Log Analytics & Observability:** The canonical use case for the ELK/OpenSearch stack.</li>
-                                <li>**Enterprise Search:** Building a search engine across diverse, unstructured internal documents.</li>
-                                <li>**Complex Textual Analysis:** Applications requiring deep linguistic customization and relevance engineering.</li>
-                            </ul>
-                        </div>
-                        <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-pinecone">
-                            <h5 class="font-bold text-xl mb-3">Choose Pinecone for...</h5>
-                            <p class="mb-4 font-semibold">Peak Performance and AI-Native Focus.</p>
-                            <ul class="list-disc list-inside space-y-2 text-slate-300">
-                                <li>**Performance-Critical AI:** When every millisecond of vector search latency matters (e.g., RAG).</li>
-                                <li>**Greenfield AI Applications:** For new projects where vector search is the central component.</li>
-                                <li>**Serverless & API-First:** When abstracting away all infrastructure management is the goal.</li>
-                            </ul>
-                        </div>
-                        <div class="bg-gray-900 p-6 rounded-lg border-2 db-color-qdrant">
-                            <h5 class="font-bold text-xl mb-3">Choose Qdrant for...</h5>
-                            <p class="mb-4 font-semibold">Peak Performance and Architectural Flexibility.</p>
-                            <ul class="list-disc list-inside space-y-2 text-slate-300">
-                                <li>**Complex Filtering:** For multi-tenant SaaS or e-commerce apps with heavy metadata filtering.</li>
-                                <li>**Deployment Flexibility:** When you require self-hosting, on-premise, or hybrid cloud.</li>
-                                <li>**Best-of-Breed Architecture:** In a microservices environment for a specialized search component.</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <section id="references" class="mt-16">
-                    <div class="text-center mb-10">
-                        <h2 class="text-3xl font-bold text-white">References & Further Reading</h2>
-                    </div>
-                    <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-                        <div>
-                            <h4 class="font-bold text-lg mb-3 db-color-mongo">MongoDB Atlas</h4>
-                            <ul class="space-y-2 text-sm">
-                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-search/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Official Atlas Search Documentation</a></li>
-                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Official Atlas Vector Search Documentation</a></li>
-                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Atlas Search Architecture Overview</a></li>
-                                <li><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Vector Search Tutorials</a></li>
-                                <li><a href="https://www.mongodb.com/resources/products/capabilities/semantic-search" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Semantic Search with MongoDB</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-lg mb-3 db-color-elastic">Elasticsearch / OpenSearch</h4>
-                            <ul class="space-y-2 text-sm">
-                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Official Elasticsearch Documentation</a></li>
-                                <li><a href="https://opensearch.org/docs/latest/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Official OpenSearch Documentation</a></li>
-                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-your-data.html" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Elasticsearch Query DSL</a></li>
-                                <li><a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Elasticsearch kNN Vector Search</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-lg mb-3 db-color-pinecone">Pinecone</h4>
-                            <ul class="space-y-2 text-sm">
-                                <li><a href="https://docs.pinecone.io/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Official Pinecone Documentation</a></li>
-                                <li><a href="https://docs.pinecone.io/guides/data/understanding-hybrid-search" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Understanding Hybrid Search</a></li>
-                                <li><a href="https://docs.pinecone.io/guides/indexes/understanding-indexes" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Understanding Pinecone Indexes</a></li>
-                            </ul>
-                        </div>
-                        <div>
-                            <h4 class="font-bold text-lg mb-3 db-color-qdrant">Qdrant</h4>
-                            <ul class="space-y-2 text-sm">
-                                <li><a href="https://qdrant.tech/documentation/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Official Qdrant Documentation</a></li>
-                                <li><a href="https://qdrant.tech/articles/filtrable-hnsw/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Filterable HNSW Explained</a></li>
-                                <li><a href="https://qdrant.tech/benchmarks/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Qdrant Performance Benchmarks</a></li>
-                                <li><a href="https://qdrant.tech/documentation/concepts/quantization/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">Qdrant Quantization Guide</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-            </section>
-        </main>
-
-        <footer class="text-center mt-16 text-slate-500 text-sm">
-            <p>Interactive report generated from a comparative analysis of modern search architectures.</p>
-        </footer>
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
+      <svg width="600" height="180" viewBox="0 0 600 180" fill="none" style="max-width:100%;">
+        <rect x="200" y="0" width="200" height="36" rx="8" fill="#111923" stroke="#8694a8" stroke-width="1"/>
+        <text x="300" y="22" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="10" fill="#8694a8">Application (MQL Driver)</text>
+        <path d="M300 36 L300 56" stroke="#00ed64" stroke-width="1.2" fill="none" marker-end="url(#arw3)"/>
+        <rect x="150" y="60" width="300" height="42" rx="10" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+        <text x="300" y="78" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#00ed64">Atlas Unified API</text>
+        <text x="300" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">$match · $search · $vectorSearch · $lookup · $project</text>
+        <path d="M225 102 L225 122" stroke="#00ed64" stroke-width="1" fill="none" marker-end="url(#arw3)"/>
+        <path d="M375 102 L375 122" stroke="#00ed64" stroke-width="1" fill="none" marker-end="url(#arw3)"/>
+        <rect x="140" y="125" width="160" height="50" rx="8" fill="#111923" stroke="#243348" stroke-width="1"/>
+        <text x="220" y="147" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9.5" fill="#e4e9f2">mongod</text>
+        <text x="220" y="163" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">WiredTiger · CRUD · ACID</text>
+        <rect x="320" y="125" width="160" height="50" rx="8" fill="#111923" stroke="#243348" stroke-width="1"/>
+        <text x="400" y="147" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9.5" fill="#e4e9f2">mongot</text>
+        <text x="400" y="163" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Apache Lucene · HNSW · BM25</text>
+        <line x1="270" y1="150" x2="350" y2="150" stroke="#00ed64" stroke-width="1" stroke-dasharray="4 2" opacity="0.5"/>
+        <text x="310" y="145" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#00ed64" opacity="0.7">Change Streams</text>
+        <defs><marker id="arw3" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#00ed64"/></marker></defs>
+      </svg>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            Chart.defaults.color = '#94a3b8';
-            Chart.defaults.borderColor = 'rgba(100, 116, 139, 0.2)';
+    <div class="g3 reveal reveal-d3">
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.88rem;color:var(--mg);margin-bottom:0.4rem;">$search</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Full-text search powered by Lucene. BM25 scoring, custom analyzers, autocomplete, fuzzy, phrase, compound queries — all via the aggregation pipeline.</p>
+        <p style="font-size:0.7rem;color:var(--tx3);margin-top:0.5rem;"><a href="https://www.mongodb.com/docs/atlas/atlas-search/" target="_blank" style="color:var(--cy);text-decoration:none;">Atlas Search Docs →</a></p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--cy);">
+        <h3 style="font-size:0.88rem;color:var(--cy);margin-bottom:0.4rem;">$vectorSearch</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">HNSW-based approximate nearest neighbor. Cosine, euclidean, dotProduct. Scalar &amp; binary quantization. Pre-filtering via Atlas Search index.</p>
+        <p style="font-size:0.7rem;color:var(--tx3);margin-top:0.5rem;"><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" target="_blank" style="color:var(--cy);text-decoration:none;">Vector Search Docs →</a></p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--pr);">
+        <h3 style="font-size:0.88rem;color:var(--pr);margin-bottom:0.4rem;">Hybrid (RRF)</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Combine full-text and vector results server-side with Reciprocal Rank Fusion. One pipeline, one round-trip. No client-side merging.</p>
+        <p style="font-size:0.7rem;color:var(--tx3);margin-top:0.5rem;"><a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/reciprocal-rank-fusion/" target="_blank" style="color:var(--cy);text-decoration:none;">Hybrid Search Tutorial →</a></p>
+      </div>
+    </div>
+  </div>
+</div>
 
-            const mainTabsContainer = document.getElementById('main-tabs-container');
-            let activeMainTab = 'elastic';
-            let pineconeChart = null;
-            let qdrantChart = null;
+<!-- ════════════ SLIDE: RADAR CHART ════════════ -->
+<div class="slide scrollable" id="s-radar" data-title="High-Level Comparison">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:0.25rem;text-align:center;">High-Level Comparison</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.85rem;margin-bottom:0.75rem;text-align:center;">At-a-glance summary across five architectural dimensions (hover for scores).</p>
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;">
+      <svg width="820" height="530" viewBox="0 0 820 530" fill="none" style="max-width:100%;display:block;">
+        <!-- center=(410,260), R=210 -->
+        <!-- R=210: top(410,50) tr(610,195) br(533,430) bl(287,430) tl(210,195) -->
+        <!-- R=168(8): top(410,92) tr(570,208) br(509,396) bl(311,396) tl(250,208) -->
+        <!-- R=126(6): top(410,134) tr(530,221) br(484,362) bl(336,362) tl(290,221) -->
+        <!-- R=84(4):  top(410,176) tr(490,234) br(459,328) bl(361,328) tl(330,234) -->
+        <!-- R=42(2):  top(410,218) tr(450,247) br(435,294) bl(385,294) tl(370,247) -->
+        <polygon points="410,50 610,195 533,430 287,430 210,195" fill="none" stroke="var(--border)" stroke-width="1"/>
+        <polygon points="410,92 570,208 509,396 311,396 250,208" fill="none" stroke="var(--border)" stroke-width="0.7" stroke-dasharray="4 3"/>
+        <polygon points="410,134 530,221 484,362 336,362 290,221" fill="none" stroke="var(--border)" stroke-width="0.7" stroke-dasharray="4 3"/>
+        <polygon points="410,176 490,234 459,328 361,328 330,234" fill="none" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3 4"/>
+        <polygon points="410,218 450,247 435,294 385,294 370,247" fill="none" stroke="var(--border)" stroke-width="0.4" stroke-dasharray="2 4"/>
+        <!-- Axis spokes -->
+        <line x1="410" y1="260" x2="410" y2="50" stroke="var(--border)" stroke-width="0.7"/>
+        <line x1="410" y1="260" x2="610" y2="195" stroke="var(--border)" stroke-width="0.7"/>
+        <line x1="410" y1="260" x2="533" y2="430" stroke="var(--border)" stroke-width="0.7"/>
+        <line x1="410" y1="260" x2="287" y2="430" stroke="var(--border)" stroke-width="0.7"/>
+        <line x1="410" y1="260" x2="210" y2="195" stroke="var(--border)" stroke-width="0.7"/>
+        <!-- Ring labels -->
+        <text x="418" y="220" font-family="JetBrains Mono" font-size="9" fill="var(--tx3)">2</text>
+        <text x="418" y="178" font-family="JetBrains Mono" font-size="9" fill="var(--tx3)">4</text>
+        <text x="418" y="136" font-family="JetBrains Mono" font-size="9" fill="var(--tx3)">6</text>
+        <text x="418" y="94" font-family="JetBrains Mono" font-size="9" fill="var(--tx3)">8</text>
+        <text x="418" y="52" font-family="JetBrains Mono" font-size="9" fill="var(--tx3)">10</text>
+        <!-- Axis labels -->
+        <text x="410" y="32" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="13" fill="var(--tx)">Full-Text Search</text>
+        <text x="625" y="195" text-anchor="start" font-family="DM Sans" font-weight="700" font-size="13" fill="var(--tx)">Vector Search</text>
+        <text x="545" y="448" text-anchor="start" font-family="DM Sans" font-weight="700" font-size="13" fill="var(--tx)">Platform Breadth</text>
+        <text x="275" y="448" text-anchor="end" font-family="DM Sans" font-weight="700" font-size="13" fill="var(--tx)">Operations</text>
+        <text x="196" y="195" text-anchor="end" font-family="DM Sans" font-weight="700" font-size="13" fill="var(--tx)">Ecosystem</text>
+        <text x="410" y="44" text-anchor="middle" font-family="DM Sans" font-size="9" fill="var(--tx3)">Lucene quality, analyzers</text>
+        <text x="625" y="209" text-anchor="start" font-family="DM Sans" font-size="9" fill="var(--tx3)">ANN, quantization, filtering</text>
+        <text x="545" y="462" text-anchor="start" font-family="DM Sans" font-size="9" fill="var(--tx3)">ACID, joins, aggregation</text>
+        <text x="275" y="462" text-anchor="end" font-family="DM Sans" font-size="9" fill="var(--tx3)">Managed, low ops burden</text>
+        <text x="196" y="209" text-anchor="end" font-family="DM Sans" font-size="9" fill="var(--tx3)">Drivers, integrations, community</text>
 
-            // --- Data for Feature Grids ---
-            const featuresDataElastic = {
-                tco: { title: 'Architecture', icon: '🏗️', content: `<strong>Atlas:</strong> Integrated platform — single vendor, no sync pipeline, fewer moving parts to manage.<br><strong>Elasticsearch:</strong> Requires a separate primary DB, a dedicated search cluster, and a sync pipeline (Kafka/Logstash) to keep data in sync.` },
-                licensing: { title: 'Licensing', icon: '📜', content: `<strong>Atlas:</strong> Proprietary (SSPL).<br><strong>OpenSearch:</strong> Permissive Apache 2.0 license.<br><strong>Elasticsearch:</strong> Restrictive SSPL/Elastic License.` },
-                ecosystem: { title: 'Ecosystem', icon: '🌐', content: `<strong>Atlas:</strong> Broad data platform (DB, Search, Mobile, etc.).<br><strong>Elasticsearch:</strong> Focused on observability and security (ELK Stack, SIEM).` },
-                dev_exp: { title: 'Dev Experience', icon: '🧑‍💻', content: `<strong>Atlas:</strong> Unified via MQL Aggregations. Familiar for Mongo users.<br><strong>Elasticsearch:</strong> Separate, powerful Query DSL. Requires learning a new system.` },
-                scalability: { title: 'Scalability', icon: '🚀', content: `<strong>Atlas:</strong> Scales with the database via sharding. A data modeling challenge.<br><strong>Elasticsearch:</strong> Scales independently. An operational/infrastructure challenge.` },
-                data_sync: { title: 'Data Sync', icon: '🔄', content: `<strong>Atlas:</strong> Automatic, managed sync via Change Streams.<br><strong>Elasticsearch:</strong> Requires a separate, self-managed sync pipeline (e.g., Kafka, Logstash).` }
-            };
+        <!-- Atlas Search (9, 8, 10, 9, 8) -->
+        <polygon points="410,71 570,208 533,430 299,404 250,208" fill="rgba(0,237,100,0.13)" stroke="#00ed64" stroke-width="2.5"/>
+        <circle cx="410" cy="71" r="4.5" fill="#00ed64"/>
+        <circle cx="570" cy="208" r="4.5" fill="#00ed64"/>
+        <circle cx="533" cy="430" r="4.5" fill="#00ed64"/>
+        <circle cx="299" cy="404" r="4.5" fill="#00ed64"/>
+        <circle cx="250" cy="208" r="4.5" fill="#00ed64"/>
 
-            const featuresDataPinecone = {
-                quantization: { title: 'Quantization', icon: '⚡️', content: `<strong>Atlas:</strong> Simple, automatic Scalar & Binary quantization.<br><strong>Pinecone:</strong> Offers more advanced options like Product Quantization for higher compression.` },
-                filtering: { title: 'Filtering', icon: '🔍', content: `<strong>Atlas:</strong> Uses pre-filtering to narrow the candidate set before vector search.<br><strong>Pinecone:</strong> Single-stage filtering evaluates metadata and vectors together for efficient filtered queries.` },
-                deployment: { title: 'Deployment', icon: '☁️', content: `<strong>Atlas:</strong> Managed multi-cloud DBaaS.<br><strong>Pinecone:</strong> Cloud-only, proprietary, serverless API.` },
-                dev_exp: { title: 'Dev Experience', icon: '🧑‍💻', content: `<strong>Atlas:</strong> Unified API within MongoDB ecosystem.<br><strong>Pinecone:</strong> Simple, clean Python-first SDK for AI/ML workflows.`},
-                data_model: { title: 'Data Model', icon: '📦', content: `<strong>Atlas:</strong> Vector is an attribute within a rich BSON document.<br><strong>Pinecone:</strong> Vector is the primary entity with attached metadata.`},
-                hybrid_search: { title: 'Hybrid Search', icon: '🧬', content: `<strong>Atlas:</strong> Native, server-side fusion with $rankFusion within the aggregation pipeline.<br><strong>Pinecone:</strong> Supports sparse-dense vectors in a single index for native hybrid queries.`}
-            };
+        <!-- Elasticsearch (10, 7, 4, 5, 9) -->
+        <polygon points="410,50 550,214 459,328 336,362 230,201" fill="rgba(254,209,10,0.08)" stroke="#fed10a" stroke-width="1.8"/>
+        <circle cx="410" cy="50" r="3.5" fill="#fed10a"/>
+        <circle cx="550" cy="214" r="3.5" fill="#fed10a"/>
+        <circle cx="459" cy="328" r="3.5" fill="#fed10a"/>
+        <circle cx="336" cy="362" r="3.5" fill="#fed10a"/>
+        <circle cx="230" cy="201" r="3.5" fill="#fed10a"/>
 
-            const featuresDataQdrant = {
-                quantization: { title: 'Quantization', icon: '⚡️', content: `<strong>Atlas:</strong> Offers simplified Scalar & Binary quantization.<br><strong>Qdrant:</strong> Provides granular control with Scalar, Binary, and advanced Product Quantization.`},
-                deployment: { title: 'Deployment', icon: '☁️', content: `<strong>Atlas:</strong> A fully managed, multi-cloud DBaaS.<br><strong>Qdrant:</strong> Maximum flexibility with Cloud, Hybrid, and open-source self-hosted options.`},
-                filtering: { title: 'Filtering', icon: '🔍', content: `<strong>Atlas:</strong> Uses pre-filtering before the search.<br><strong>Qdrant:</strong> Advanced "Filterable HNSW" provides superior performance and accuracy on filtered queries.`},
-                dev_exp: { title: 'Dev Experience', icon: '🧑‍💻', content: `<strong>Atlas:</strong> Unified via MQL. Low barrier for existing users.<br><strong>Qdrant:</strong> Feature-rich SDKs (Python, Rust, etc.) with a powerful Query API.`},
-                scalability: { title: 'Scalability', icon: '🚀', content: `<strong>Atlas:</strong> Vertical scaling of Search Nodes, horizontal via DB sharding.<br><strong>Qdrant:</strong> Designed for horizontal scaling by adding nodes to a distributed cluster.`},
-                ram_req: { title: 'RAM Needs', icon: '💾', content: `<strong>Atlas:</strong> HNSW index must fit in RAM for performance.<br><strong>Qdrant:</strong> Can handle datasets larger than RAM with <code>memmap</code> storage.`}
-            };
+        <!-- Pinecone (2, 9, 2, 9, 5) -->
+        <polygon points="410,218 590,201 435,294 299,404 310,228" fill="rgba(26,140,255,0.07)" stroke="#1a8cff" stroke-width="1.8"/>
+        <circle cx="410" cy="218" r="3.5" fill="#1a8cff"/>
+        <circle cx="590" cy="201" r="3.5" fill="#1a8cff"/>
+        <circle cx="435" cy="294" r="3.5" fill="#1a8cff"/>
+        <circle cx="299" cy="404" r="3.5" fill="#1a8cff"/>
+        <circle cx="310" cy="228" r="3.5" fill="#1a8cff"/>
 
-            // --- Data for Qdrant Architecture Diagram ---
-            const atlasArchInfoQdrant = {
-                'atlas-mongod': 'The standard MongoDB database daemon. It handles all core database operations.',
-                'atlas-mongot': 'A separate Java-based process that manages the Apache Lucene search library.',
-                'atlas-nodes': 'For production workloads, `mongot` runs on dedicated Search Nodes for workload isolation.'
-            };
-             const qdrantArchInfoQdrant = {
-                'qdrant-core': 'The engine is written in Rust, renowned for performance and memory safety.',
-                'qdrant-sharding': 'Collections are broken into shards to distribute data and load across a cluster.',
-                'qdrant-replication': 'Shards can be replicated for high availability.',
-                'qdrant-raft': 'The Raft consensus protocol is used to ensure cluster metadata is kept consistent.',
-                'qdrant-storage': 'Supports both in-memory and memory-mapped (memmap) files for handling large datasets.'
-            };
+        <!-- Qdrant (3, 9.5, 2, 6, 4) -->
+        <polygon points="410,197 600,198 435,294 336,362 330,234" fill="rgba(220,38,38,0.06)" stroke="#dc2626" stroke-width="1.8"/>
+        <circle cx="410" cy="197" r="3.5" fill="#dc2626"/>
+        <circle cx="600" cy="198" r="3.5" fill="#dc2626"/>
+        <circle cx="435" cy="294" r="3.5" fill="#dc2626"/>
+        <circle cx="336" cy="362" r="3.5" fill="#dc2626"/>
+        <circle cx="330" cy="234" r="3.5" fill="#dc2626"/>
 
-            function populateFeatureGrid(containerId, detailsId, data) {
-                const grid = document.getElementById(containerId);
-                const details = document.getElementById(detailsId);
-                if (!grid || !details) return;
-                
-                grid.innerHTML = ''; 
-                Object.entries(data).forEach(([key, value]) => {
-                    const card = document.createElement('div');
-                    card.className = 'feature-card bg-slate-800 p-4 rounded-lg border border-slate-700 shadow-lg flex flex-col items-center justify-center text-center';
-                    card.dataset.feature = key;
-                    card.innerHTML = `<div class="text-3xl mb-2">${value.icon}</div><h5 class="font-semibold text-sm text-slate-200">${value.title}</h5>`;
-                    grid.appendChild(card);
-                });
+        <circle cx="410" cy="260" r="3" fill="var(--tx3)"/>
+      </svg>
+    </div>
+    <div class="reveal reveal-d3" style="display:flex;justify-content:center;margin-top:0.5rem;">
+      <table style="border-collapse:collapse;font-size:0.76rem;width:auto;">
+        <thead><tr>
+          <th style="text-align:left;padding:0.4rem 0.7rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);">Engine</th>
+          <th style="text-align:center;padding:0.4rem 0.5rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);">FTS</th>
+          <th style="text-align:center;padding:0.4rem 0.5rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);">Vec</th>
+          <th style="text-align:center;padding:0.4rem 0.5rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);">Platform</th>
+          <th style="text-align:center;padding:0.4rem 0.5rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);">Ops</th>
+          <th style="text-align:center;padding:0.4rem 0.5rem;font-size:0.65rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);">Eco</th>
+        </tr></thead>
+        <tbody>
+          <tr><td style="padding:0.35rem 0.7rem;border-bottom:1px solid var(--border);color:#00ed64;font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00ed64;margin-right:0.4rem;vertical-align:middle;"></span>Atlas Search</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">9</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">8</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">10</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">9</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">8</td></tr>
+          <tr><td style="padding:0.35rem 0.7rem;border-bottom:1px solid var(--border);color:#fed10a;font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#fed10a;margin-right:0.4rem;vertical-align:middle;"></span>Elasticsearch</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">10</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx2);">7</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx2);">4</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx2);">5</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">9</td></tr>
+          <tr><td style="padding:0.35rem 0.7rem;border-bottom:1px solid var(--border);color:#1a8cff;font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#1a8cff;margin-right:0.4rem;vertical-align:middle;"></span>Pinecone</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx2);">2</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">9</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx2);">2</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx);">9</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:1px solid var(--border);color:var(--tx2);">5</td></tr>
+          <tr><td style="padding:0.35rem 0.7rem;border-bottom:none;color:#dc2626;font-weight:600;"><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#dc2626;margin-right:0.4rem;vertical-align:middle;"></span>Qdrant</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:none;color:var(--tx2);">3</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:none;color:var(--tx);">9.5</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:none;color:var(--tx2);">2</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:none;color:var(--tx2);">6</td><td style="text-align:center;padding:0.35rem 0.5rem;border-bottom:none;color:var(--tx2);">4</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal reveal-d4" style="font-size:0.7rem;color:var(--tx3);margin-top:0.5rem;text-align:center;">Scores are directional estimates based on architecture, not absolute benchmarks. Use the head-to-head slides for nuance.</p>
+  </div>
+</div>
 
-                grid.addEventListener('click', e => {
-                    const card = e.target.closest('.feature-card');
-                    if (card) {
-                        const featureKey = card.dataset.feature;
-                        details.innerHTML = `<h4 class="text-md font-bold text-white mb-2">${data[featureKey].title}</h4><p class="text-slate-400">${data[featureKey].content}</p>`;
-                    }
-                });
-            }
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ██  DIVIDER: ELASTICSEARCH                              ██ -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide divider" id="s-div-es" data-title="→ Elasticsearch" style="background:linear-gradient(135deg, rgba(254,209,10,0.04), var(--bg) 60%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--ey),transparent);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal">
+      <div class="divider-icon" style="background:rgba(254,209,10,0.08);border:2px solid rgba(254,209,10,0.25);">
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none"><path d="M8 16h32M8 24h24M8 32h32" stroke="#FED10A" stroke-width="3.5" stroke-linecap="round"/></svg>
+      </div>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.7rem;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:var(--ey);margin-bottom:0.75rem;">Head to Head</p>
+    <h1 class="reveal reveal-d2">MongoDB Atlas<span class="vs-label">vs</span><span style="color:var(--ey);">Elasticsearch</span></h1>
+    <p class="reveal reveal-d3" style="font-size:0.95rem;color:var(--tx2);max-width:520px;margin:1rem auto 0;font-weight:300;">Both use Lucene. The difference is where it runs and what it costs to operate.</p>
+  </div>
+</div>
 
-            function switchDeepDiveTab(parentTab, tabId) {
-                const parentElement = document.getElementById(`main-tab-${parentTab}`);
-                if (!parentElement) return;
-                parentElement.querySelectorAll('.deep-dive-tab-button').forEach(button => button.classList.remove('active'));
-                const buttonToActivate = parentElement.querySelector(`.deep-dive-tab-button[data-deep-dive-tab="${tabId}"]`);
-                if(buttonToActivate) buttonToActivate.classList.add('active');
+<!-- ════════════ SLIDE: vs ELASTICSEARCH — ARCHITECTURE ════════════ -->
+<div class="slide scrollable" id="s-es" data-title="vs Elasticsearch" style="background:linear-gradient(180deg, rgba(254,209,10,0.02) 0%, var(--bg) 25%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--ey),transparent);"></div>
+  <div class="slide-inner">
+    <div class="label l-e reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M4 8h16M4 12h12M4 16h16" stroke="#FED10A" stroke-width="2" stroke-linecap="round"/></svg>
+      Elasticsearch — Architecture Comparison
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Integrated Search vs. Dedicated Engine</h2>
 
-                parentElement.querySelectorAll('.deep-dive-tab-content').forEach(content => content.classList.remove('active'));
-                const contentToActivate = parentElement.querySelector(`#deep-dive-tab-${tabId}-${parentTab}`);
-                if(contentToActivate) contentToActivate.classList.add('active');
-            }
+    <div class="arch-wrap reveal reveal-d1" style="margin-bottom:1.25rem;">
+      <p style="font-size:0.68rem;color:var(--tx3);margin-bottom:0.6rem;text-align:center;">Hover over any component to learn more</p>
+      <svg width="700" height="240" viewBox="0 0 700 240" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+        <!-- MongoDB side -->
+        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">MongoDB Atlas Search</text>
+        <g class="arch-comp" style="color:#8694a8" data-tip="Application Layer|Your app connects via a standard MongoDB driver. The same MQL connection handles CRUD, search, and vector queries. No second SDK, no second endpoint, no second API to learn.">
+          <rect x="55" y="28" width="220" height="34" rx="7" fill="#111923" stroke="#8694a8" stroke-width="1"/>
+          <text x="165" y="49" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#8694a8">Application (MQL Driver)</text>
+        </g>
+        <path d="M165 62 L165 78" stroke="#00ed64" stroke-width="1.2" marker-end="url(#arwMg)"/>
+        <g class="arch-comp" style="color:#00ed64" data-tip="Atlas Unified API|One aggregation pipeline for everything: $match for CRUD filtering, $search for full-text, $vectorSearch for ANN, $lookup for joins, $project for reshaping — all in a single round-trip.">
+          <rect x="40" y="80" width="250" height="44" rx="9" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+          <text x="165" y="100" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#00ed64">Atlas Unified API</text>
+          <text x="165" y="117" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">$match · $search · $vectorSearch · $lookup</text>
+        </g>
+        <path d="M115 124 L85 146" stroke="#00ed64" stroke-width="1" stroke-dasharray="4 2"/>
+        <path d="M215 124 L245 146" stroke="#00ed64" stroke-width="1" stroke-dasharray="4 2"/>
+        <text x="165" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#00ed64" opacity="0.6">Change Streams</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongod|The core database process. WiredTiger storage engine with B-Tree indexes, document-level concurrency, ACID transactions, and snappy/zstd compression. Handles all CRUD operations.">
+          <rect x="15" y="148" width="135" height="44" rx="7" fill="#111923" stroke="#243348" stroke-width="1.2"/>
+          <text x="82" y="168" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9.5" fill="#e4e9f2">mongod</text>
+          <text x="82" y="183" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">WiredTiger · CRUD · ACID</text>
+        </g>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongot (Lucene)|Colocated Lucene process that powers $search and $vectorSearch. Data syncs automatically from mongod via Change Streams — no Kafka, no Logstash, no CDC pipeline. Scales independently with dedicated Search Nodes.">
+          <rect x="180" y="148" width="135" height="44" rx="7" fill="#111923" stroke="#243348" stroke-width="1.2"/>
+          <text x="247" y="168" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9.5" fill="#e4e9f2">mongot</text>
+          <text x="247" y="183" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Lucene · HNSW · BM25</text>
+        </g>
+        <text x="165" y="215" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">Zero sync · Zero drift · One bill</text>
+        <!-- VS -->
+        <line x1="350" y1="20" x2="350" y2="220" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="350" y="128" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+        <!-- Elasticsearch side -->
+        <text x="535" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#fed10a">Elasticsearch / OpenSearch</text>
+        <g class="arch-comp" style="color:#8694a8" data-tip="Application Layer (2 SDKs)|Your app needs two client libraries: one for the primary database (MongoDB/Postgres/MySQL) and one for Elasticsearch. Two connection pools, two error handling paths, two query languages.">
+          <rect x="425" y="28" width="220" height="34" rx="7" fill="#111923" stroke="#8694a8" stroke-width="1"/>
+          <text x="535" y="49" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#8694a8">App (DB SDK + ES SDK)</text>
+        </g>
+        <path d="M495 62 L470 78" stroke="#f87171" stroke-width="1" marker-end="url(#arwRd)"/>
+        <path d="M575 62 L600 78" stroke="#f87171" stroke-width="1" marker-end="url(#arwRd)"/>
+        <g class="arch-comp" style="color:#f87171" data-tip="CDC Pipeline (Kafka/Logstash)|You must build and maintain a sync pipeline: Kafka Connect, Logstash, or custom code. Failures cause data drift — search results diverge from the primary DB. Always eventually consistent.">
+          <rect x="390" y="80" width="120" height="34" rx="7" fill="#111923" stroke="#f87171" stroke-width="1.2"/>
+          <text x="450" y="95" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f87171">Primary DB</text>
+          <text x="450" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">source of truth</text>
+        </g>
+        <g class="arch-comp" style="color:#fed10a" data-tip="Elasticsearch Cluster|Standalone JVM-based Lucene cluster. Requires JVM heap sizing (half of RAM, max 32GB), shard count planning (immutable!), segment merge tuning, ILM lifecycle policies, and mapping management. Changing a field type = full reindex.">
+          <rect x="540" y="80" width="120" height="34" rx="7" fill="#111923" stroke="#fed10a" stroke-width="1.5"/>
+          <text x="600" y="95" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#fed10a">ES Cluster</text>
+          <text x="600" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">JVM · Lucene</text>
+        </g>
+        <path d="M510 97 L540 97" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="525" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#f87171">CDC</text>
+        <g class="arch-comp" style="color:#f87171" data-tip="Operational Overhead|JVM heap tuning, GC pauses, immutable shard counts, full reindex for field type changes, ILM lifecycle policies, cluster health monitoring, separate backup/restore, cross-cluster replication configuration.">
+          <rect x="420" y="130" width="230" height="30" rx="6" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.2)" stroke-width="1"/>
+          <text x="535" y="149" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f87171">⚠ CDC pipeline · Data drift · 2× ops cost</text>
+        </g>
+        <g class="arch-comp" style="color:#f87171" data-tip="Immutable Shards|Primary shard count is fixed at index creation. Changing it requires a full reindex — expensive, disruptive, and the index is read-only during the process. MongoDB Atlas does live resharding online.">
+          <rect x="420" y="170" width="230" height="26" rx="5" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="0.8"/>
+          <text x="535" y="187" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#f87171">Shard count immutable · Full reindex for changes</text>
+        </g>
+        <defs>
+          <marker id="arwMg" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#00ed64"/></marker>
+          <marker id="arwRd" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#f87171"/></marker>
+        </defs>
+      </svg>
+    </div>
 
-            function renderPerformanceChart(canvasId, chartInstance, data, colors) {
-                const canvas = document.getElementById(canvasId);
-                if (!canvas) return null;
-                if (chartInstance) chartInstance.destroy();
-                
-                const ctx = canvas.getContext('2d');
-                return new Chart(ctx, {
-                    type: 'bar',
-                    data: {
-                        labels: ['Atlas Vector Search', data.label],
-                        datasets: [{
-                            label: 'p99 Query Latency (ms)',
-                            data: [75, data.value],
-                            backgroundColor: ['rgba(0, 237, 100, 0.5)', colors.bg],
-                            borderColor: ['#00ED64', colors.border],
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false, indexAxis: 'y',
-                        plugins: { legend: { display: false }, title: { display: true, text: 'Comparative Raw Vector Search Latency (Illustrative)', font: { size: 16 }, color: '#e2e8f0' }},
-                        scales: { x: { beginAtZero: true, title: { display: true, text: 'Latency (ms) - Lower is Better' } } }
-                    }
-                });
-            }
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.92rem;color:var(--mg);margin-bottom:0.6rem;">MongoDB Atlas Search</h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Architecture:</strong> Lucene embedded via <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">mongot</code>. Automatic sync via Change Streams. Zero pipeline.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Query:</strong> <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$search</code> in the aggregation pipeline. Chain with <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$match</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$lookup</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$project</code> in one round-trip.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;"><strong style="color:var(--tx);">Ops:</strong> One cluster, one vendor, one bill. Atlas automates scaling, patching, backups. No JVM tuning.</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--ey);">
+        <h3 style="font-size:0.92rem;color:var(--ey);margin-bottom:0.6rem;">Elasticsearch / OpenSearch</h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Architecture:</strong> Standalone Lucene cluster. Requires a primary DB + CDC sync pipeline (Kafka, Logstash, or custom). Data always eventually consistent.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.5rem;"><strong style="color:var(--tx);">Query:</strong> Separate JSON Query DSL or ES|QL. Separate client library. Separate endpoint. Separate mental model.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;"><strong style="color:var(--tx);">Ops:</strong> JVM heap sizing, shard count planning, segment merge tuning, ILM lifecycle, mapping management. Immutable shard count — changing requires full reindex.</p>
+      </div>
+    </div>
+    <div class="callout callout-r reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Elastic's Achilles' heel:</strong> Primary shard count is fixed at index creation. Changing it requires a full reindex — expensive, disruptive, and read-only during the process. Schema changes (field type modifications) also require a full reindex.
+    </div>
+  </div>
+</div>
 
-            function setupArchDiagramInteraction(diagramId, infoBoxId, infoData) {
-                const diagram = document.getElementById(diagramId);
-                const infoBox = document.getElementById(infoBoxId);
-                if (!diagram || !infoBox) return;
+<!-- ════════════ SLIDE: vs ELASTICSEARCH — FEATURES ════════════ -->
+<div class="slide scrollable" id="s-es-feat" data-title="Elastic Features" style="background:linear-gradient(180deg, rgba(254,209,10,0.02) 0%, var(--bg) 25%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--ey),transparent);"></div>
+  <div class="slide-inner">
+    <h2 class="reveal">Elasticsearch — Where It Shines</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Know where Elastic genuinely leads so you can compete honestly and pivot the conversation when needed.</p>
+    <div class="g2 reveal reveal-d2" style="gap:0.85rem;">
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--ey);margin-bottom:0.4rem;">Observability &amp; SIEM</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Beats, Elastic Agent, APM, log analytics, SIEM with 700+ detection rules, AI-assisted threat hunting. This is Elastic's home turf — don't compete here.</p>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--ey);margin-bottom:0.4rem;">Statistical Aggregations</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Moving averages, percentiles, t-tests, derivatives, cumulative sums — built-in pipeline aggregations that MongoDB handles via <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$accumulator</code> or Spark.</p>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--ey);margin-bottom:0.4rem;">ILM &amp; Data Tiers</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Hot → Warm → Cold → Frozen → Delete lifecycle. Searchable snapshots on S3. Purpose-built for time-series log retention. MongoDB uses TTL indexes and <a href="https://www.mongodb.com/docs/manual/core/timeseries-collections/" target="_blank" style="color:var(--cy);text-decoration:none;">time series collections</a>.</p>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--ey);margin-bottom:0.4rem;">Integrations Marketplace</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">300+ pre-built integrations (AWS, Kubernetes, Okta, GitHub) with dashboards, ingest pipelines, and detection rules included out of the box.</p>
+      </div>
+    </div>
+    <div class="callout callout-e reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Licensing watch:</strong> Elasticsearch moved to SSPL/Elastic License (not OSI-approved). OpenSearch (AWS fork) remains Apache 2.0. This matters for customers with strict open-source policies. <a href="https://www.elastic.co/pricing/faq/licensing" target="_blank" style="color:var(--cy);text-decoration:none;">Elastic licensing FAQ →</a>
+    </div>
+  </div>
+</div>
 
-                diagram.addEventListener('mouseover', e => {
-                    const component = e.target.closest('[data-info]');
-                    if (component && infoData[component.dataset.info]) {
-                        infoBox.innerHTML = infoData[component.dataset.info];
-                    }
-                });
-            }
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ██  DIVIDER: PINECONE                                   ██ -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide divider" id="s-div-pn" data-title="→ Pinecone" style="background:linear-gradient(135deg, rgba(26,140,255,0.04), var(--bg) 60%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--pn),transparent);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal">
+      <div class="divider-icon" style="background:rgba(26,140,255,0.08);border:2px solid rgba(26,140,255,0.25);">
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="14" stroke="#1a8cff" stroke-width="3.5" fill="none"/><circle cx="24" cy="24" r="5" fill="#1a8cff"/></svg>
+      </div>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.7rem;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:var(--pn);margin-bottom:0.75rem;">Head to Head</p>
+    <h1 class="reveal reveal-d2">MongoDB Atlas<span class="vs-label">vs</span><span style="color:var(--pn);">Pinecone</span></h1>
+    <p class="reveal reveal-d3" style="font-size:0.95rem;color:var(--tx2);max-width:520px;margin:1rem auto 0;font-weight:300;">Document-first platform vs. vector-first API. Atlas treats vectors as an attribute; Pinecone treats them as the primary entity.</p>
+  </div>
+</div>
 
-            function switchMainTab(tabId) {
-                activeMainTab = tabId;
-                document.querySelectorAll('.main-tab-button').forEach(button => button.classList.remove('active'));
-                document.querySelector(`.main-tab-button[data-main-tab="${tabId}"]`).classList.add('active');
+<!-- ════════════ SLIDE: vs PINECONE — ARCHITECTURE ════════════ -->
+<div class="slide scrollable" id="s-pn" data-title="vs Pinecone" style="background:linear-gradient(180deg, rgba(26,140,255,0.02) 0%, var(--bg) 25%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--pn),transparent);"></div>
+  <div class="slide-inner">
+    <div class="label l-p reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#1a8cff" stroke-width="2" fill="none"/></svg>
+      Pinecone — Architecture Comparison
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Document-First vs. Vector-First</h2>
 
-                document.querySelectorAll('.main-tab-content').forEach(content => content.classList.remove('active'));
-                document.getElementById(`main-tab-${tabId}`).classList.add('active');
-                
-                if (tabId === 'elastic') {
-                    switchDeepDiveTab('elastic', 'architecture');
-                    populateFeatureGrid('feature-grid-elastic', 'feature-details-elastic', featuresDataElastic);
-                } else if (tabId === 'pinecone') {
-                    switchDeepDiveTab('pinecone', 'architecture');
-                    populateFeatureGrid('feature-grid-pinecone', 'feature-details-pinecone', featuresDataPinecone);
-                    setTimeout(() => {
-                        pineconeChart = renderPerformanceChart('pineconePerformanceChart', pineconeChart, 
-                            { label: 'Pinecone', value: 30 }, 
-                            { bg: 'rgba(249, 115, 22, 0.5)', border: '#f97316' }
-                        );
-                    }, 0);
-                } else if (tabId === 'qdrant') {
-                    switchDeepDiveTab('qdrant', 'architecture');
-                    populateFeatureGrid('feature-grid-qdrant', 'feature-details-qdrant', featuresDataQdrant);
-                    setupArchDiagramInteraction('atlas-arch-diagram-qdrant', 'atlas-arch-info-qdrant', atlasArchInfoQdrant);
-                    setupArchDiagramInteraction('qdrant-arch-diagram-qdrant', 'qdrant-arch-info-qdrant', qdrantArchInfoQdrant);
-                    setTimeout(() => {
-                        qdrantChart = renderPerformanceChart('qdrantPerformanceChart', qdrantChart,
-                            { label: 'Qdrant', value: 38 },
-                            { bg: 'rgba(239, 68, 68, 0.5)', border: '#ef4444' }
-                        );
-                    }, 0);
-                }
-            }
+    <div class="arch-wrap reveal reveal-d1" style="margin-bottom:1.25rem;">
+      <p style="font-size:0.68rem;color:var(--tx3);margin-bottom:0.6rem;text-align:center;">Hover over any component to learn more</p>
+      <svg width="700" height="230" viewBox="0 0 700 230" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+        <!-- MongoDB side -->
+        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">MongoDB Atlas — Document + Vector</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="BSON Document with Embedding|A single document stores all data: user fields, nested objects, arrays, AND the vector embedding. One write = atomic. One read = complete context. No second round-trip to fetch metadata after a vector search.">
+          <rect x="30" y="28" width="270" height="130" rx="9" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+          <text x="52" y="50" font-family="JetBrains Mono" font-size="8" fill="#5a6578">{</text>
+          <text x="62" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">_id</text><text x="82" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: "prod_123",</text>
+          <text x="62" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">name</text><text x="92" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: "Hiking Boots",</text>
+          <text x="62" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">price</text><text x="94" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: 129.99,</text>
+          <text x="62" y="106" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">reviews</text><text x="108" y="106" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: [{ ... }],</text>
+          <text x="62" y="120" font-family="JetBrains Mono" font-size="7.5" fill="#00ed64">embedding</text><text x="126" y="120" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: [0.12, -0.34, ...]</text>
+          <text x="52" y="150" font-family="JetBrains Mono" font-size="8" fill="#5a6578">}</text>
+        </g>
+        <text x="165" y="178" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">ACID · Full-text · Vector — one document, one query</text>
+        <text x="165" y="195" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">$vectorSearch returns full docs — no second lookup</text>
+        <!-- VS -->
+        <line x1="350" y1="20" x2="350" y2="210" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="350" y="108" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+        <!-- Pinecone side -->
+        <text x="535" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#1a8cff">Pinecone — Vector-First</text>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="Vector Record|The vector is the primary citizen. Metadata is flat key-value pairs attached to the vector. No nested objects, no arrays, no ACID, no joins. You search for neighbors, get back IDs + flat metadata, then must look up the actual data from another database.">
+          <rect x="400" y="28" width="270" height="90" rx="9" fill="#111923" stroke="#1a8cff" stroke-width="1.5"/>
+          <text x="420" y="50" font-family="JetBrains Mono" font-size="8" fill="#5a6578">{</text>
+          <text x="430" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">id</text><text x="446" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: "prod_123",</text>
+          <text x="430" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#1a8cff">values</text><text x="472" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: [0.12, -0.34, ...],</text>
+          <text x="430" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">metadata</text><text x="488" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: { name: "...", cat: "..." }</text>
+          <text x="420" y="110" font-family="JetBrains Mono" font-size="8" fill="#5a6578">}</text>
+        </g>
+        <g class="arch-comp" style="color:#f87171" data-tip="Separate Primary Database|Pinecone only stores vectors + flat metadata. Your actual application data (users, orders, products, reviews) lives in a separate database. After a vector search, you need a second round-trip to fetch the full context.">
+          <rect x="400" y="130" width="130" height="40" rx="7" fill="#111923" stroke="#f87171" stroke-width="1.2"/>
+          <text x="465" y="148" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f87171">Primary DB</text>
+          <text x="465" y="162" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">separate system</text>
+        </g>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="Pinecone API|REST/gRPC API for upsert, query, delete. Serverless — no infrastructure to manage. But limited: no full-text Lucene, no aggregation, no joins. Metadata filters are basic equality/range only.">
+          <rect x="545" y="130" width="125" height="40" rx="7" fill="#111923" stroke="#1a8cff" stroke-width="1.2"/>
+          <text x="607" y="148" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#1a8cff">Pinecone API</text>
+          <text x="607" y="162" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">vectors only</text>
+        </g>
+        <path d="M530 150 L545 150" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="537" y="145" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#f87171">sync</text>
+        <text x="535" y="195" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#1a8cff">Two systems · Two bills · One sync problem</text>
+      </svg>
+    </div>
 
-            mainTabsContainer.addEventListener('click', (e) => {
-                const button = e.target.closest('.main-tab-button');
-                if (button) {
-                    switchMainTab(button.dataset.mainTab);
-                }
-            });
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--mg);padding:1.3rem;">
+        <h3 style="font-size:0.88rem;color:var(--mg);margin-bottom:0.5rem;">MongoDB Atlas — BSON Document</h3>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;background:var(--bg2);padding:0.75rem;border-radius:8px;color:var(--tx2);line-height:1.6;border:1px solid var(--border);">
+          {<br>
+          &nbsp;&nbsp;_id: <span style="color:var(--or);">"prod_123"</span>,<br>
+          &nbsp;&nbsp;name: <span style="color:var(--or);">"Hiking Boots"</span>,<br>
+          &nbsp;&nbsp;price: <span style="color:var(--cy);">129.99</span>,<br>
+          &nbsp;&nbsp;category: <span style="color:var(--or);">"footwear"</span>,<br>
+          &nbsp;&nbsp;reviews: [{ ... }],<br>
+          &nbsp;&nbsp;<span style="color:var(--mg);">embedding</span>: [0.12, -0.34, ...]<br>
+          }
+        </div>
+        <p style="font-size:0.75rem;color:var(--tx3);margin-top:0.5rem;">Vector is one attribute among many. Full ACID. Rich querying on all fields.</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--pn);padding:1.3rem;">
+        <h3 style="font-size:0.88rem;color:var(--pn);margin-bottom:0.5rem;">Pinecone — Vector Record</h3>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.72rem;background:var(--bg2);padding:0.75rem;border-radius:8px;color:var(--tx2);line-height:1.6;border:1px solid var(--border);">
+          {<br>
+          &nbsp;&nbsp;id: <span style="color:var(--or);">"prod_123"</span>,<br>
+          &nbsp;&nbsp;<span style="color:var(--pn);">values</span>: [0.12, -0.34, ...],<br>
+          &nbsp;&nbsp;metadata: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;name: <span style="color:var(--or);">"Hiking Boots"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;category: <span style="color:var(--or);">"footwear"</span><br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+        <p style="font-size:0.75rem;color:var(--tx3);margin-top:0.5rem;">Vector is the primary citizen. Metadata is attached. No joins, no ACID, no full-text engine.</p>
+      </div>
+    </div>
+    <div class="callout callout-p reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Pinecone's model:</strong> Serverless, API-first. Sparse-dense vectors in a single index enable hybrid search without client-side fusion. But full-text is modeled via BM25 sparse vectors — <strong style="color:var(--rd);">no native linguistic analysis, no custom analyzers, no stemming control</strong>.
+      <span style="font-size:0.75rem;display:block;margin-top:0.3rem;"><a href="https://docs.pinecone.io/" target="_blank" style="color:var(--cy);text-decoration:none;">Pinecone Docs →</a></span>
+    </div>
+  </div>
+</div>
 
-            document.querySelectorAll('.deep-dive-tabs').forEach(container => {
-                container.addEventListener('click', (e) => {
-                    const button = e.target.closest('.deep-dive-tab-button');
-                    if (button) {
-                        switchDeepDiveTab(button.parentElement.dataset.parentTab, button.dataset.deepDiveTab);
-                    }
-                });
-            });
+<!-- ════════════ SLIDE: vs PINECONE — LIMITATIONS ════════════ -->
+<div class="slide" id="s-pn-limits" data-title="Pinecone Limits" style="background:linear-gradient(180deg, rgba(26,140,255,0.02) 0%, var(--bg) 25%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--pn),transparent);"></div>
+  <div class="slide-inner">
+    <h2 class="reveal">What Pinecone Can't Do</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Pinecone excels at raw vector latency. But every real application needs more than nearest-neighbor search.</p>
+    <div class="g2 reveal reveal-d2" style="gap:0.85rem;">
+      <div class="adv-card"><h4 style="color:var(--rd);">No ACID Transactions</h4><p>Zero transactional guarantees. You can't atomically update a product record and its embedding. Every write is fire-and-forget.</p></div>
+      <div class="adv-card"><h4 style="color:var(--rd);">No Rich Querying</h4><p>No aggregation pipeline, no joins, no grouping, no $facet. Metadata filtering is basic key-value equality/range only.</p></div>
+      <div class="adv-card"><h4 style="color:var(--rd);">No Native Full-Text Search</h4><p>Text search is modeled as sparse vectors (BM25). No Lucene analyzers, no phonetic matching, no synonym maps, no compound scoring.</p></div>
+      <div class="adv-card"><h4 style="color:var(--rd);">Requires a Primary Database</h4><p>Pinecone stores vectors + flat metadata. Your actual data (users, orders, products) still needs a separate DB. That's two systems, two bills, one sync problem.</p></div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>End-to-end latency vs. raw latency:</strong> Pinecone leads in isolated vector search benchmarks (~30ms p99). But real RAG applications need to fetch document context after the search — that's a second round-trip to a separate DB. Atlas returns the full document in one pipeline stage.
+    </div>
+  </div>
+</div>
 
-            // Initial setup
-            switchMainTab('elastic');
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- ██  DIVIDER: QDRANT                                     ██ -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide divider" id="s-div-qd" data-title="→ Qdrant" style="background:linear-gradient(135deg, rgba(220,38,38,0.04), var(--bg) 60%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--qd),transparent);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal">
+      <div class="divider-icon" style="background:rgba(220,38,38,0.08);border:2px solid rgba(220,38,38,0.25);">
+        <svg width="40" height="40" viewBox="0 0 48 48" fill="none"><path d="M24 8l-16 32h32z" stroke="#dc2626" stroke-width="3.5" fill="none" stroke-linejoin="round"/></svg>
+      </div>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.7rem;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:var(--qd);margin-bottom:0.75rem;">Head to Head</p>
+    <h1 class="reveal reveal-d2">MongoDB Atlas<span class="vs-label">vs</span><span style="color:var(--qd);">Qdrant</span></h1>
+    <p class="reveal reveal-d3" style="font-size:0.95rem;color:var(--tx2);max-width:520px;margin:1rem auto 0;font-weight:300;">Managed platform vs. Rust-based, open-source vector engine with Filterable HNSW.</p>
+  </div>
+</div>
 
+<!-- ════════════ SLIDE: vs QDRANT — ARCHITECTURE ════════════ -->
+<div class="slide scrollable" id="s-qd" data-title="vs Qdrant" style="background:linear-gradient(180deg, rgba(220,38,38,0.02) 0%, var(--bg) 25%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--qd),transparent);"></div>
+  <div class="slide-inner">
+    <div class="label l-q reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 4l-8 16h16z" stroke="#dc2626" stroke-width="2" fill="none" stroke-linejoin="round"/></svg>
+      Qdrant — Architecture Comparison
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Managed Platform vs. Vector-Native Engine</h2>
+
+    <div class="arch-wrap reveal reveal-d1" style="margin-bottom:1.25rem;">
+      <p style="font-size:0.68rem;color:var(--tx3);margin-bottom:0.6rem;text-align:center;">Hover over any component to learn more</p>
+      <svg width="700" height="230" viewBox="0 0 700 230" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+        <!-- MongoDB side -->
+        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">MongoDB Atlas — HNSW via Lucene</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongot (Lucene HNSW)|Atlas Vector Search uses HNSW implemented in Apache Lucene via the mongot process. Pre-filtering: metadata filters are applied BEFORE the ANN graph traversal, narrowing the search space. Supports cosine, euclidean, and dotProduct distance metrics.">
+          <rect x="30" y="30" width="270" height="52" rx="9" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+          <text x="165" y="52" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#00ed64">mongot — Lucene HNSW</text>
+          <text x="165" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">Pre-filter → ANN traversal → cosine/euclidean/dot</text>
+        </g>
+        <g class="arch-comp" style="color:#22d3ee" data-tip="Scalar &amp; Binary Quantization|Reduces vector memory by 4× (scalar int8) or 32× (binary). Sufficient for most production workloads. Trades minimal recall for significant memory savings. Applied at the Search Node level.">
+          <rect x="30" y="96" width="130" height="36" rx="6" fill="#111923" stroke="#243348" stroke-width="1.2"/>
+          <text x="95" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#22d3ee">Scalar / Binary Quant</text>
+          <text x="95" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">4× / 32× compression</text>
+        </g>
+        <g class="arch-comp" style="color:#00ed64" data-tip="Full Lucene Engine|$search provides mature full-text search: custom analyzers, synonym maps, phonetic matching, autocomplete, fuzzy, compound queries, facets. Hybrid search via RRF combines text + vector in one pipeline.">
+          <rect x="170" y="96" width="130" height="36" rx="6" fill="#111923" stroke="#243348" stroke-width="1.2"/>
+          <text x="235" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#00ed64">Full Lucene FTS</text>
+          <text x="235" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">analyzers · synonyms · RRF</text>
+        </g>
+        <g class="arch-comp" style="color:#00ed64" data-tip="WiredTiger + ACID|Vectors live alongside your transactional data. Multi-document ACID transactions, change streams, aggregation pipeline, $lookup joins — all on the same cluster. No sidecar database needed.">
+          <rect x="30" y="146" width="270" height="36" rx="6" fill="rgba(0,237,100,0.04)" stroke="rgba(0,237,100,0.2)" stroke-width="1"/>
+          <text x="165" y="168" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8.5" fill="#00ed64">WiredTiger · ACID · Aggregation · Joins</text>
+        </g>
+        <text x="165" y="205" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#5a6578">One platform — no sidecar database needed</text>
+        <!-- VS -->
+        <line x1="350" y1="20" x2="350" y2="210" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="350" y="118" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+        <!-- Qdrant side -->
+        <text x="535" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#dc2626">Qdrant — Rust HNSW Engine</text>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Filterable HNSW (Rust)|Qdrant's key innovation: the HNSW graph is built WITH payload awareness. During ANN traversal, filtered-out nodes are skipped WITHOUT breaking graph connectivity. This maintains high recall even with very restrictive metadata filters — superior to standard pre-filtering.">
+          <rect x="400" y="30" width="270" height="52" rx="9" fill="#111923" stroke="#dc2626" stroke-width="1.8"/>
+          <text x="535" y="52" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#dc2626">Filterable HNSW (Rust)</text>
+          <text x="535" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">Payload-aware graph · cosine/euclid/dot/manhattan</text>
+        </g>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Product Quantization (PQ)|Compresses vectors to ~5% of original size via subspace decomposition. More aggressive than scalar quantization — enables massive datasets on limited RAM. Atlas doesn't offer PQ.">
+          <rect x="400" y="96" width="130" height="36" rx="6" fill="#111923" stroke="rgba(220,38,38,0.5)" stroke-width="1.2"/>
+          <text x="465" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#dc2626">Product Quantization</text>
+          <text x="465" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">~5% size · PQ + SQ + BQ</text>
+        </g>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Named Vectors|Store multiple named vector fields per point (e.g., image_vec + text_vec). Search any vector or combine results. Atlas currently supports one vector field per $vectorSearch stage.">
+          <rect x="540" y="96" width="130" height="36" rx="6" fill="#111923" stroke="rgba(220,38,38,0.5)" stroke-width="1.2"/>
+          <text x="605" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#dc2626">Named Vectors</text>
+          <text x="605" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">multi-modal per point</text>
+        </g>
+        <g class="arch-comp" style="color:#f87171" data-tip="Sidecar Problem|Like Pinecone, Qdrant is a vector store — not a general-purpose database. Your transactional data (users, orders, products) still needs a separate DB. That's two systems, two bills, and a sync pipeline to maintain.">
+          <rect x="400" y="146" width="270" height="36" rx="6" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="1"/>
+          <text x="535" y="168" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8.5" fill="#f87171">⚠ Requires a separate primary database</text>
+        </g>
+        <text x="535" y="205" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#5a6578">Open-source (Apache 2.0) · Self-host or Qdrant Cloud</text>
+      </svg>
+    </div>
+
+    <div class="g2 reveal reveal-d2">
+      <div class="card" style="border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.92rem;color:var(--mg);margin-bottom:0.6rem;">MongoDB Atlas</h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.4rem;"><strong style="color:var(--tx);">Index:</strong> HNSW via Lucene. Pre-filtering: metadata filters applied <em>before</em> ANN traversal.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.4rem;"><strong style="color:var(--tx);">Quantization:</strong> Scalar (int8) and binary quantization for memory reduction.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.4rem;"><strong style="color:var(--tx);">Storage:</strong> WiredTiger engine. Vectors alongside transactional data.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;"><strong style="color:var(--tx);">Full-text:</strong> Mature Lucene engine with rich analyzers, compound queries, facets.</p>
+      </div>
+      <div class="card" style="border-top:2px solid var(--qd);">
+        <h3 style="font-size:0.92rem;color:var(--qd);margin-bottom:0.6rem;">Qdrant</h3>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.4rem;"><strong style="color:var(--tx);">Index:</strong> Custom HNSW with <strong style="color:var(--qd);">Filterable HNSW</strong> — graph built with metadata awareness. Superior accuracy on filtered queries.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.4rem;"><strong style="color:var(--tx);">Quantization:</strong> Scalar, binary, <em>and</em> Product Quantization (PQ) — more granular compression options.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;margin-bottom:0.4rem;"><strong style="color:var(--tx);">Storage:</strong> In-memory or <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">memmap</code> files. Handles datasets larger than RAM.</p>
+        <p style="font-size:0.8rem;color:var(--tx2);line-height:1.55;"><strong style="color:var(--tx);">Full-text:</strong> BM25 via sparse vectors. No native Lucene — analysis offloaded to external models.</p>
+      </div>
+    </div>
+    <div class="callout callout-q reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Filterable HNSW</strong> is Qdrant's standout feature. Standard pre-filtering (Atlas, Elastic) can miss relevant vectors when filters are restrictive. Qdrant builds the HNSW graph with payload awareness, maintaining recall even with tight filters. <a href="https://qdrant.tech/articles/filtrable-hnsw/" target="_blank" style="color:var(--cy);text-decoration:none;">Read the paper →</a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: vs QDRANT — FEATURES ════════════ -->
+<div class="slide" id="s-qd-feat" data-title="Qdrant Features" style="background:linear-gradient(180deg, rgba(220,38,38,0.02) 0%, var(--bg) 25%);">
+  <div class="section-bar" style="background:linear-gradient(90deg,var(--qd),transparent);"></div>
+  <div class="slide-inner">
+    <h2 class="reveal">Qdrant — Where It Shines</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.5rem;">Know Qdrant's genuine advantages — deployment flexibility and vector-specific optimizations.</p>
+    <div class="g2 reveal reveal-d2" style="gap:0.85rem;">
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--qd);margin-bottom:0.4rem;">Deployment Flexibility</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Open-source (Apache 2.0). Self-host on-prem, hybrid cloud, or use Qdrant Cloud. Docker, Kubernetes, bare metal. MongoDB Atlas is managed-only. <a href="https://qdrant.tech/documentation/guides/installation/" target="_blank" style="color:var(--cy);text-decoration:none;">Deployment guide →</a></p>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--qd);margin-bottom:0.4rem;">Multi-Vector &amp; Named Vectors</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Store multiple named vectors per point (e.g., <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">image_vec</code> + <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">text_vec</code>). Search any or combine. Useful for multi-modal applications.</p>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--qd);margin-bottom:0.4rem;">Product Quantization</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">PQ compresses vectors to ~5% of original size with minimal recall loss. Atlas offers scalar/binary only — sufficient for most, but PQ enables massive-scale datasets on limited RAM.</p>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.88rem;color:var(--qd);margin-bottom:0.4rem;">Memmap Storage</h3>
+        <p style="font-size:0.78rem;color:var(--tx2);line-height:1.5;">Handle datasets larger than available RAM via memory-mapped files. The OS manages page caching. Atlas requires the HNSW index to fit in Search Node RAM for optimal performance.</p>
+      </div>
+    </div>
+    <div class="callout callout-m reveal reveal-d3" style="margin-top:1rem;">
+      <strong>Qdrant's limitation:</strong> Like Pinecone, Qdrant is a vector database — not a general-purpose DB. You still need a primary database for ACID, joins, aggregations, and business logic. That's the sidecar problem all over again.
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: VECTOR SEARCH DEEP DIVE ════════════ -->
+<div class="slide" id="s-vec" data-title="Vector Deep Dive">
+  <div class="slide-inner">
+    <div class="label l-v reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8" stroke="#22D3EE" stroke-width="2" fill="none"/><circle cx="12" cy="12" r="3" fill="#22D3EE"/></svg>
+      Vector Search Comparison
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">Vector Search — Four Engines Compared</h2>
+    <div class="tw reveal reveal-d2">
+      <table>
+        <thead><tr><th>Feature</th><th style="color:var(--mg);">Atlas</th><th style="color:var(--ey);">Elasticsearch</th><th style="color:var(--pn);">Pinecone</th><th style="color:var(--qd);">Qdrant</th></tr></thead>
+        <tbody>
+          <tr><td>Algorithm</td><td>HNSW (Lucene)</td><td>HNSW (Lucene)</td><td>Proprietary ANN</td><td>Custom HNSW</td></tr>
+          <tr><td>Max dimensions</td><td>4096</td><td>4096</td><td>20,000</td><td>65,536</td></tr>
+          <tr><td>Distance metrics</td><td>cosine, euclidean, dotProduct</td><td>cosine, dot_product, l2_norm, max_inner_product</td><td>cosine, euclidean, dotProduct</td><td>cosine, euclid, dot, manhattan</td></tr>
+          <tr><td>Quantization</td><td>Scalar, binary</td><td>int8, int4, BBQ</td><td>PQ (managed)</td><td>Scalar, binary, PQ</td></tr>
+          <tr><td>Filtering</td><td>Pre-filter via index</td><td>Pre-filter via index</td><td>Single-stage</td><td class="ck">Filterable HNSW</td></tr>
+          <tr><td>Hybrid search</td><td class="ck">✓ RRF pipeline</td><td class="ck">✓ RRF / ES|QL</td><td class="ck">✓ Sparse-dense</td><td class="ck">✓ Sparse + dense</td></tr>
+          <tr><td>Full-text engine</td><td class="ck">Lucene (rich)</td><td class="ck">Lucene (rich)</td><td class="pt">BM25 sparse vectors</td><td class="pt">BM25 sparse vectors</td></tr>
+          <tr><td>ACID transactions</td><td class="ck">✓ Multi-document</td><td class="cx">✗ None</td><td class="cx">✗ None</td><td class="cx">✗ None</td></tr>
+          <tr><td>Multi-vector per doc</td><td class="cx">✗ Single field</td><td class="pt">△ Multiple dense_vector fields</td><td class="cx">✗ Single vector</td><td class="ck">✓ Named vectors</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal reveal-d3" style="font-size:0.78rem;color:var(--tx3);margin-top:1rem;text-align:center;">Sources: <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" target="_blank" style="color:var(--cy);text-decoration:none;">Atlas Vector Search</a> · <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html" target="_blank" style="color:var(--cy);text-decoration:none;">Elastic kNN</a> · <a href="https://docs.pinecone.io/" target="_blank" style="color:var(--cy);text-decoration:none;">Pinecone</a> · <a href="https://qdrant.tech/documentation/" target="_blank" style="color:var(--cy);text-decoration:none;">Qdrant</a></p>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: SCALING COMPARISON ════════════ -->
+<div class="slide scrollable" id="s-scale" data-title="Scaling">
+  <div class="slide-inner">
+    <div class="label l-v reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><polyline points="3,17 8,11 13,14 21,6" stroke="#22D3EE" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+      Section 03 — Scaling Deep Dive
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Scaling from GB to TB+</h2>
+    <p class="reveal reveal-d2" style="color:var(--tx2);font-size:0.85rem;margin-bottom:1.5rem;">How each engine handles data growth — and where the pain points emerge.</p>
+
+    <!-- Atlas Search -->
+    <div class="card reveal reveal-d3" style="border-left:3px solid var(--mg);margin-bottom:0.75rem;padding:1.25rem;">
+      <h3 style="font-size:0.9rem;color:var(--mg);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg> Atlas Search</h3>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">≤ 50 GB</span> Default Search Node tier. HNSW index fits in memory. Quantization optional.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">50–500 GB</span> Scale up Search Node tier (S20–S60). Enable scalar quantization for vectors. Dedicated Search Nodes scale independently from DB tier.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">0.5–5 TB</span> Shard the collection. <strong style="color:var(--tx);">Live resharding</strong> lets you change shard keys without downtime. Scatter-gather for non-targeted queries.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">5 TB+</span> Zone-sharding for geo-distribution. Auto-scaling tiers. Search Nodes per shard. Binary quantization for massive vector indexes (32× compression).</div>
+      <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://www.mongodb.com/docs/atlas/atlas-search/manage-indexes/" target="_blank" style="color:var(--cy);text-decoration:none;">Search Node sizing</a> · <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" style="color:var(--cy);text-decoration:none;">Sharding docs</a></p>
+    </div>
+
+    <!-- Elasticsearch -->
+    <div class="card reveal reveal-d4" style="border-left:3px solid var(--ey);margin-bottom:0.75rem;padding:1.25rem;">
+      <h3 style="font-size:0.9rem;color:var(--ey);margin-bottom:0.6rem;">Elasticsearch</h3>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">≤ 50 GB</span> Single cluster. JVM heap = 50% of RAM (max 32 GB). Shard count fixed at index creation.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">50–500 GB</span> Shard sizing critical (target 10-50 GB/shard). Too many shards = cluster state overhead. Too few = hot nodes. GC tuning becomes necessary.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">0.5–5 TB</span> <strong style="color:var(--rd);">Pain point:</strong> ILM (hot/warm/cold/frozen) tiers required. Changing shard count = full reindex. Coordination overhead grows with node count.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">5 TB+</span> Cross-cluster search. Searchable snapshots on S3 for cold data. Cluster coordination becomes the bottleneck. Segment merge storms during off-peak hours.</div>
+      <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/size-your-shards.html" target="_blank" style="color:var(--cy);text-decoration:none;">Shard sizing guide</a></p>
+    </div>
+
+    <!-- Two-col: Pinecone + Qdrant -->
+    <div class="g2" style="gap:0.75rem;">
+      <div class="card reveal" style="border-left:3px solid var(--pn);padding:1.25rem;">
+        <h3 style="font-size:0.9rem;color:var(--pn);margin-bottom:0.6rem;">Pinecone</h3>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">≤ 50 GB</span> Serverless — auto-scales. Simple and hands-off for small datasets.</div>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">50–500 GB</span> Pod type/size selection. Metadata filtering degrades with dataset size. Managed PQ helps.</div>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">0.5–5 TB</span> Cost scales linearly with vector count. No volume discounts. Each namespace has limits.</div>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">5 TB+</span> <strong style="color:var(--rd);">Pain point:</strong> Expensive at scale. No data locality controls. Still need a separate DB for context.</div>
+        <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://docs.pinecone.io/guides/indexes/choose-a-pod-type-and-size" target="_blank" style="color:var(--cy);text-decoration:none;">Pod sizing guide</a></p>
+      </div>
+      <div class="card reveal" style="border-left:3px solid var(--qd);padding:1.25rem;">
+        <h3 style="font-size:0.9rem;color:var(--qd);margin-bottom:0.6rem;">Qdrant</h3>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">≤ 50 GB</span> Single node with in-memory HNSW. Fast and simple. Filterable HNSW shines.</div>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">50–500 GB</span> Horizontal sharding across nodes. Memmap storage for datasets larger than RAM. PQ for compression.</div>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">0.5–5 TB</span> PQ reduces memory to ~5% of original. Raft consensus for cluster metadata. Trade accuracy for scale.</div>
+        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">5 TB+</span> <strong style="color:var(--rd);">Pain point:</strong> Self-hosting at this scale = serious ops. Qdrant Cloud SLA is 99.5% vs Atlas 99.995%.</div>
+        <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://qdrant.tech/documentation/guides/distributed_deployment/" target="_blank" style="color:var(--cy);text-decoration:none;">Distributed deployment</a></p>
+      </div>
+    </div>
+
+    <div class="callout callout-m reveal" style="margin-top:0.75rem;">
+      <strong>Atlas Search's scaling advantage:</strong> Search Nodes scale independently from the database tier. Shard when you need to, with live resharding. No immutable shard counts, no full reindexes, no JVM heap tuning. Competitors either require upfront sizing decisions (Elasticsearch) or are vector-only (Pinecone/Qdrant).
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: FEATURE MATRIX ════════════ -->
+<div class="slide scrollable" id="s-matrix" data-title="Feature Matrix">
+  <div class="slide-inner">
+    <h2 class="reveal">Feature Comparison Matrix</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.25rem;">Quick reference for solutions architects during customer conversations.</p>
+    <div class="tw reveal reveal-d2">
+      <table>
+        <thead><tr><th>Capability</th><th style="color:var(--mg);">Atlas Search</th><th style="color:var(--ey);">Elasticsearch</th><th style="color:var(--pn);">Pinecone</th><th style="color:var(--qd);">Qdrant</th></tr></thead>
+        <tbody>
+          <tr><td>Multi-document ACID</td><td class="ck">✓ Full</td><td class="cx">✗ None</td><td class="cx">✗ None</td><td class="cx">✗ None</td></tr>
+          <tr><td>Strong consistency</td><td class="ck">✓ Read-your-writes</td><td class="cx">✗ ~1s refresh</td><td class="pt">△ Eventually</td><td class="ck">✓ Raft consensus</td></tr>
+          <tr><td>Full-text search (Lucene)</td><td class="ck">✓ Native</td><td class="ck">✓ Native</td><td class="cx">✗ Sparse vectors</td><td class="pt">△ BM25 sparse</td></tr>
+          <tr><td>Vector search (HNSW)</td><td class="ck">✓ $vectorSearch</td><td class="ck">✓ dense_vector</td><td class="ck">✓ Core feature</td><td class="ck">✓ Filterable HNSW</td></tr>
+          <tr><td>Hybrid search (text + vector)</td><td class="ck">✓ RRF pipeline</td><td class="ck">✓ RRF / ES|QL</td><td class="ck">✓ Sparse-dense</td><td class="ck">✓ Sparse + dense</td></tr>
+          <tr><td>Aggregation pipeline</td><td class="ck">✓ Rich</td><td class="ck">✓ Bucket/metric/pipeline</td><td class="cx">✗ None</td><td class="cx">✗ None</td></tr>
+          <tr><td>Joins / $lookup</td><td class="ck">✓ $lookup, $graphLookup</td><td class="pt">△ join field type</td><td class="cx">✗ None</td><td class="cx">✗ None</td></tr>
+          <tr><td>Schema flexibility</td><td class="ck">✓ Flexible + validation</td><td class="cx">✗ Rigid mappings</td><td class="pt">△ Flat metadata</td><td class="pt">△ Payload schema</td></tr>
+          <tr><td>Change streams / CDC</td><td class="ck">✓ Real-time</td><td class="cx">✗ Watcher only</td><td class="cx">✗ None</td><td class="cx">✗ None</td></tr>
+          <tr><td>Field-level encryption</td><td class="ck">✓ Client-side FLE</td><td class="cx">✗ Not available</td><td class="cx">✗ Not available</td><td class="cx">✗ Not available</td></tr>
+          <tr><td>Self-hosted option</td><td class="pt">△ Community Server</td><td class="ck">✓ OSS / SSPL</td><td class="cx">✗ Cloud-only</td><td class="ck">✓ Apache 2.0</td></tr>
+          <tr><td>Observability / SIEM</td><td class="cx">✗ Not a focus</td><td class="ck">✓ World-class</td><td class="cx">✗ None</td><td class="cx">✗ None</td></tr>
+          <tr><td>Product quantization</td><td class="cx">✗ Scalar/binary</td><td class="pt">△ int4/BBQ</td><td class="ck">✓ Managed PQ</td><td class="ck">✓ Configurable PQ</td></tr>
+          <tr><td>Live resharding</td><td class="ck">✓ Online</td><td class="cx">✗ Full reindex</td><td class="pt">△ Managed</td><td class="pt">△ Shard redistribution</td></tr>
+          <tr><td>Multi-cloud</td><td class="ck">✓ AWS/Azure/GCP</td><td class="ck">✓ AWS/Azure/GCP</td><td class="ck">✓ AWS/Azure/GCP</td><td class="ck">✓ AWS/Azure/GCP</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: ENTERPRISE READINESS ════════════ -->
+<div class="slide scrollable" id="s-enterprise" data-title="Enterprise">
+  <div class="slide-inner">
+    <h2 class="reveal">Enterprise Readiness</h2>
+    <p class="reveal reveal-d1" style="color:var(--tx2);font-size:0.88rem;margin-bottom:1.25rem;">Key enterprise considerations beyond core search functionality.</p>
+    <div class="tw reveal reveal-d2">
+      <table>
+        <thead><tr><th>Capability</th><th style="color:var(--mg);">Atlas Search</th><th style="color:var(--ey);">Elasticsearch</th><th style="color:var(--pn);">Pinecone</th><th style="color:var(--qd);">Qdrant</th></tr></thead>
+        <tbody>
+          <tr><td>SLA</td><td class="ck">99.995%</td><td>99.95% (Cloud)</td><td>99.95% (Enterprise)</td><td>99.5% (Cloud)</td></tr>
+          <tr><td>Compliance</td><td>SOC 2, HIPAA, PCI DSS, GDPR, ISO 27001, FedRAMP</td><td>SOC 2, HIPAA, PCI DSS</td><td>SOC 2 Type II, GDPR</td><td>SOC 2 (Cloud)</td></tr>
+          <tr><td>Security</td><td>FLE, RBAC, VPC Peering, PrivateLink, x.509, LDAP</td><td>TLS, RBAC, Field-Level Security, SAML</td><td>API-key auth, encryption at rest/transit</td><td>API-key/JWT, TLS, encryption at rest</td></tr>
+          <tr><td>Ops complexity</td><td class="ck">Single platform — no sync pipeline</td><td class="cx">Separate cluster + sync pipeline + JVM tuning</td><td class="ck">Serverless — minimal ops for vectors</td><td class="pt">Self-managed or cloud — cluster tuning required</td></tr>
+          <tr><td>Backup &amp; DR</td><td>Continuous PITR; search indexes auto-rebuilt</td><td>Snapshot API; manual restore</td><td>Managed backups; restore = new index</td><td>Snapshot-based; self-managed restore</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: POSITIONING ════════════ -->
+<div class="slide scrollable" id="s-pos" data-title="Positioning">
+  <div class="slide-inner">
+    <div class="label l-v reveal">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 9l10 6 10-6-10-6z" stroke="#22D3EE" stroke-width="2" fill="none"/></svg>
+      Section 04 — Competitive Positioning
+    </div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1.25rem;">When to Compete, When to Concede</h2>
+    <div class="g2 reveal reveal-d2" style="gap:0.85rem;margin-bottom:0.85rem;">
+      <div class="pos-card pos-m">
+        <h3 style="color:var(--mg);font-size:0.95rem;margin-bottom:0.6rem;">Atlas Search Wins When…</h3>
+        <ul>
+          <li>App needs <strong>OLTP + search</strong> on the same data — eliminate the sidecar</li>
+          <li><strong>ACID transactions</strong> required alongside search results</li>
+          <li>Developers want <strong>one API (MQL)</strong> for CRUD, search, and vectors</li>
+          <li>Data model has <strong>deeply nested documents and arrays</strong></li>
+          <li><strong>RAG/AI applications</strong> that read, write, and search in one pipeline</li>
+          <li>Enterprise requirements: <strong>FLE, PITR, live resharding, RBAC</strong></li>
+        </ul>
+      </div>
+      <div class="pos-card pos-e">
+        <h3 style="color:var(--ey);font-size:0.95rem;margin-bottom:0.6rem;">Elastic Wins When…</h3>
+        <ul>
+          <li>Primary need is <strong>log analytics, metrics, or observability</strong></li>
+          <li>Customer needs a full <strong>SIEM / endpoint security</strong> platform</li>
+          <li>Workload is <strong>write-once, read-many</strong> with no ACID requirement</li>
+          <li>Advanced <strong>statistical aggregations</strong> are core requirements</li>
+          <li>Customer already has an OLTP DB and only needs a search sidecar</li>
+        </ul>
+      </div>
+    </div>
+    <div class="g2 reveal reveal-d3" style="gap:0.85rem;">
+      <div class="pos-card pos-p">
+        <h3 style="color:var(--pn);font-size:0.95rem;margin-bottom:0.6rem;">Pinecone Wins When…</h3>
+        <ul>
+          <li><strong>Raw vector latency</strong> is the #1 non-negotiable requirement</li>
+          <li>Greenfield AI project with <strong>vectors as the core primitive</strong></li>
+          <li>Team wants <strong>fully serverless</strong> with zero infrastructure management</li>
+          <li>Application only needs vector search — no full-text, no aggregation</li>
+        </ul>
+      </div>
+      <div class="pos-card pos-q">
+        <h3 style="color:var(--qd);font-size:0.95rem;margin-bottom:0.6rem;">Qdrant Wins When…</h3>
+        <ul>
+          <li><strong>Self-hosting</strong> or on-premise deployment is required</li>
+          <li><strong>Heavy metadata filtering</strong> in multi-tenant SaaS applications</li>
+          <li>Need for <strong>Product Quantization</strong> at massive vector scale</li>
+          <li>Team requires <strong>open-source (Apache 2.0)</strong> licensing</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: BATTLECARD ════════════ -->
+<div class="slide scrollable" id="s-battle" data-title="Battlecard">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:1.5rem;">Battlecard — Key Talking Points</h2>
+    <div class="g2 reveal reveal-d1" style="gap:1.5rem;">
+      <div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--ey);margin-bottom:0.75rem;">Against Elasticsearch</h3>
+        <div class="battle-item"><strong>"You're maintaining two systems."</strong> Two clusters, two APIs, a CDC pipeline to build and maintain, two cost centers.</div>
+        <div class="battle-item"><strong>"What happens when data drifts?"</strong> CDC pipelines fail silently. Search results don't match the app's view from the DB.</div>
+        <div class="battle-item"><strong>"Schema changes are destructive."</strong> Changing a field type = full reindex. Shard count is immutable at creation.</div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--pn);margin-bottom:0.75rem;margin-top:1rem;">Against Pinecone</h3>
+        <div class="battle-item"><strong>"Where's your data?"</strong> Pinecone stores vectors. You still need a database for users, orders, products. That's two bills and one sync problem.</div>
+        <div class="battle-item"><strong>"No full-text search."</strong> BM25 sparse vectors aren't Lucene. No analyzers, no synonyms, no compound scoring.</div>
+      </div>
+      <div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--qd);margin-bottom:0.75rem;">Against Qdrant</h3>
+        <div class="battle-item"><strong>"Same sidecar problem."</strong> Qdrant is a vector store. Your OLTP data still needs a separate database.</div>
+        <div class="battle-item"><strong>"Who runs it?"</strong> Self-hosting means you own uptime, patching, backups, scaling. Qdrant Cloud SLA is 99.5% vs Atlas 99.995%.</div>
+        <div class="battle-item"><strong>"Filterable HNSW is impressive — but niche."</strong> Pre-filtering works well for >95% of use cases. The edge matters for multi-tenant SaaS with very restrictive filters.</div>
+        <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--mg);margin-bottom:0.75rem;margin-top:1rem;">The One-Liner</h3>
+        <div class="battle-item" style="border-left:2px solid var(--mg);"><strong>"Need OLTP + search + vectors in one platform? MongoDB. Need a standalone log analytics platform? Elastic. Need raw vector latency above all else? Evaluate Pinecone/Qdrant — but budget for the sidecar."</strong></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: REFERENCES ════════════ -->
+<div class="slide scrollable" id="s-refs" data-title="References">
+  <div class="slide-inner">
+    <h2 class="reveal" style="margin-bottom:1.5rem;">References &amp; Further Reading</h2>
+    <div class="g4 reveal reveal-d1" style="gap:1.25rem;">
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--mg);margin-bottom:0.6rem;">MongoDB Atlas</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://www.mongodb.com/docs/atlas/atlas-search/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Atlas Search Documentation</a>
+          <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Vector Search Documentation</a>
+          <a href="https://www.mongodb.com/docs/atlas/atlas-search/atlas-search-overview/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Architecture Overview</a>
+          <a href="https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Vector Search Tutorials</a>
+          <a href="https://www.mongodb.com/resources/products/capabilities/semantic-search" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Semantic Search Guide</a>
+        </div>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--ey);margin-bottom:0.6rem;">Elasticsearch</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Elasticsearch Reference</a>
+          <a href="https://opensearch.org/docs/latest/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">OpenSearch Documentation</a>
+          <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-your-data.html" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Query DSL Reference</a>
+          <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/knn-search.html" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">kNN Vector Search</a>
+          <a href="https://www.elastic.co/pricing/faq/licensing" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Licensing FAQ</a>
+        </div>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--pn);margin-bottom:0.6rem;">Pinecone</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://docs.pinecone.io/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Pinecone Documentation</a>
+          <a href="https://docs.pinecone.io/guides/data/understanding-hybrid-search" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Hybrid Search Guide</a>
+          <a href="https://docs.pinecone.io/guides/indexes/understanding-indexes" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Understanding Indexes</a>
+        </div>
+      </div>
+      <div class="card" style="padding:1.25rem;">
+        <h3 style="font-size:0.85rem;color:var(--qd);margin-bottom:0.6rem;">Qdrant</h3>
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <a href="https://qdrant.tech/documentation/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Qdrant Documentation</a>
+          <a href="https://qdrant.tech/articles/filtrable-hnsw/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Filterable HNSW Paper</a>
+          <a href="https://qdrant.tech/benchmarks/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Performance Benchmarks</a>
+          <a href="https://qdrant.tech/documentation/concepts/quantization/" target="_blank" style="font-size:0.75rem;color:var(--cy);text-decoration:none;">Quantization Guide</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: Q&A ════════════ -->
+<div class="slide" id="s-end" data-title="Q&A">
+  <div class="hero-glow" style="width:50vw;height:50vw;top:10%;left:25%;background:radial-gradient(circle,rgba(0,237,100,0.04),transparent 65%);"></div>
+  <div class="slide-inner" style="text-align:center;">
+    <div class="reveal" style="margin-bottom:2rem;">
+      <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+        <path d="M32 4C32 4 33.2 14 33.2 19C33.2 24 36.2 27 38.8 30C41.4 33 42.4 36 42.4 39.5C42.4 46 37.4 52 32 54C32 54 33 47 33 44.5C33 42 30.5 39 28.5 37C26.5 35 24 32 24 27.5C24 19 28.5 11 32 4Z" fill="#00ED64" opacity="0.8"/>
+      </svg>
+    </div>
+    <p class="reveal reveal-d1" style="font-size:0.72rem;font-weight:600;letter-spacing:0.2em;text-transform:uppercase;color:var(--mg);margin-bottom:1rem;">End of Briefing</p>
+    <h2 class="reveal reveal-d2" style="margin-bottom:1rem;">Questions &amp; Discussion</h2>
+    <p class="reveal reveal-d3" style="color:var(--tx2);font-size:1rem;max-width:460px;margin:0 auto 2.5rem;font-weight:300;">Know the landscape. Compete on architecture, not features. Win where integration matters most.</p>
+    <div class="reveal reveal-d4" style="display:inline-flex;align-items:center;gap:0.5rem;padding:0.6rem 1.3rem;border-radius:100px;border:1px solid var(--mg);color:var(--mg);font-weight:600;font-size:0.85rem;">
+      MongoDB Solutions Architecture
+    </div>
+  </div>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const totalSlides = slides.length;
+document.getElementById('totalSlides').textContent = totalSlides;
+
+const dotsContainer = document.getElementById('progDots');
+slides.forEach((s, i) => {
+  const dot = document.createElement('div');
+  dot.className = 'dot';
+  if (s.classList.contains('divider')) dot.style.background = getComputedStyle(s.querySelector('.section-bar')).background.includes('ey') ? 'var(--ey)' : 'var(--tx3)';
+  dot.addEventListener('click', () => slides[i].scrollIntoView({ behavior: 'smooth' }));
+  dotsContainer.appendChild(dot);
+});
+const dots = dotsContainer.querySelectorAll('.dot');
+
+let currentSlide = 0;
+const slideObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting && entry.intersectionRatio > 0.4) {
+      const idx = Array.from(slides).indexOf(entry.target);
+      if (idx >= 0) {
+        currentSlide = idx;
+        document.querySelector('#slideCounter span:first-child').textContent = idx + 1;
+        dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+        const id = entry.target.id;
+        document.querySelectorAll('.nav-links a').forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
         });
-    </script>
-    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+      }
+    }
+  });
+}, { threshold: 0.4 });
+slides.forEach(s => slideObserver.observe(s));
+
+const revealEls = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); });
+}, { threshold: 0.1 });
+revealEls.forEach(el => revealObs.observe(el));
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+    e.preventDefault();
+    const next = Math.min(currentSlide + 1, totalSlides - 1);
+    slides[next].scrollIntoView({ behavior: 'smooth' });
+  } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault();
+    const prev = Math.max(currentSlide - 1, 0);
+    slides[prev].scrollIntoView({ behavior: 'smooth' });
+  }
+});
+
+/* Architecture diagram tooltips */
+(function(){
+  const tip=document.createElement('div');tip.className='arch-tip-box';document.body.appendChild(tip);
+  document.querySelectorAll('.arch-comp').forEach(g=>{
+    const raw=g.getAttribute('data-tip');if(!raw)return;
+    const idx=raw.indexOf('|');const title=idx>0?raw.slice(0,idx):raw;const desc=idx>0?raw.slice(idx+1):'';
+    g.addEventListener('mouseenter',e=>{
+      tip.innerHTML='<strong>'+title+'</strong>'+desc;tip.classList.add('show');
+    });
+    g.addEventListener('mousemove',e=>{
+      const x=e.clientX,y=e.clientY;
+      tip.style.left=Math.min(x+14,window.innerWidth-tip.offsetWidth-16)+'px';
+      tip.style.top=(y>window.innerHeight/2?y-tip.offsetHeight-10:y+18)+'px';
+    });
+    g.addEventListener('mouseleave',()=>{tip.classList.remove('show');});
+  });
+})();
+</script>
+<script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 </body>
 </html>
-�
