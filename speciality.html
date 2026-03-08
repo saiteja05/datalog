@@ -168,7 +168,7 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
       <a href="#s-div-pn">Pinecone</a>
       <a href="#s-div-qd">Qdrant</a>
       <a href="#s-vec">Vectors</a>
-      <a href="#s-scale">Scaling</a>
+      <a href="#s-scale">Scale</a>
       <a href="#s-matrix">Matrix</a>
       <a href="#s-pos">Positioning</a>
     </div>
@@ -468,64 +468,82 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
 
     <div class="arch-wrap reveal reveal-d1" style="margin-bottom:1.25rem;">
       <p style="font-size:0.68rem;color:var(--tx3);margin-bottom:0.6rem;text-align:center;">Hover over any component to learn more</p>
-      <svg width="700" height="240" viewBox="0 0 700 240" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+      <svg width="700" height="260" viewBox="0 0 700 260" fill="none" style="max-width:100%;display:block;margin:0 auto;">
         <!-- MongoDB side -->
-        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">MongoDB Atlas Search</text>
-        <g class="arch-comp" style="color:#8694a8" data-tip="Application Layer|Your app connects via a standard MongoDB driver. The same MQL connection handles CRUD, search, and vector queries. No second SDK, no second endpoint, no second API to learn.">
-          <rect x="55" y="28" width="220" height="34" rx="7" fill="#111923" stroke="#8694a8" stroke-width="1"/>
-          <text x="165" y="49" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#8694a8">Application (MQL Driver)</text>
+        <text x="155" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">Atlas Search Internals</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongod (WiredTiger)|The OLTP database process. B-Tree indexes with document-level concurrency, snappy/zstd compression, snapshot isolation, and multi-document ACID transactions. Handles all CRUD reads and writes. Data is the source of truth.">
+          <rect x="15" y="28" width="130" height="68" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+          <text x="80" y="50" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">mongod</text>
+          <text x="80" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">WiredTiger</text>
+          <text x="80" y="76" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">B-Tree · ACID</text>
+          <text x="80" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Compression</text>
         </g>
-        <path d="M165 62 L165 78" stroke="#00ed64" stroke-width="1.2" marker-end="url(#arwMg)"/>
-        <g class="arch-comp" style="color:#00ed64" data-tip="Atlas Unified API|One aggregation pipeline for everything: $match for CRUD filtering, $search for full-text, $vectorSearch for ANN, $lookup for joins, $project for reshaping — all in a single round-trip.">
-          <rect x="40" y="80" width="250" height="44" rx="9" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
-          <text x="165" y="100" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#00ed64">Atlas Unified API</text>
-          <text x="165" y="117" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">$match · $search · $vectorSearch · $lookup</text>
+        <path d="M145 62 L172 62" stroke="#00ed64" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="158" y="56" font-family="JetBrains Mono" font-size="5.5" fill="#00ed64">Change Streams</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongot (Apache Lucene)|Colocated search process. Runs Apache Lucene internally. Receives data changes automatically via Change Streams (oplog-based) — no Kafka, no Logstash. Builds and maintains inverted indexes, BM25 scoring structures, and HNSW vector graphs. Scales independently with dedicated Search Nodes.">
+          <rect x="175" y="28" width="130" height="68" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
+          <text x="240" y="50" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">mongot</text>
+          <text x="240" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Apache Lucene</text>
+          <text x="240" y="76" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">BM25 · HNSW</text>
+          <text x="240" y="88" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Analyzers</text>
         </g>
-        <path d="M115 124 L85 146" stroke="#00ed64" stroke-width="1" stroke-dasharray="4 2"/>
-        <path d="M215 124 L245 146" stroke="#00ed64" stroke-width="1" stroke-dasharray="4 2"/>
-        <text x="165" y="140" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#00ed64" opacity="0.6">Change Streams</text>
-        <g class="arch-comp" style="color:#00ed64" data-tip="mongod|The core database process. WiredTiger storage engine with B-Tree indexes, document-level concurrency, ACID transactions, and snappy/zstd compression. Handles all CRUD operations.">
-          <rect x="15" y="148" width="135" height="44" rx="7" fill="#111923" stroke="#243348" stroke-width="1.2"/>
-          <text x="82" y="168" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9.5" fill="#e4e9f2">mongod</text>
-          <text x="82" y="183" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">WiredTiger · CRUD · ACID</text>
+        <g class="arch-comp" style="color:#22d3ee" data-tip="Inverted Index|Lucene segment-based inverted index for full-text search. Supports custom analyzers (standard, keyword, autocomplete, phonetic), synonym maps, stop words, stemming. Segment merges are handled automatically by mongot — no manual tuning.">
+          <rect x="15" y="110" width="90" height="34" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="60" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#22d3ee">Inverted Idx</text>
+          <text x="60" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">BM25 · fuzzy</text>
         </g>
-        <g class="arch-comp" style="color:#00ed64" data-tip="mongot (Lucene)|Colocated Lucene process that powers $search and $vectorSearch. Data syncs automatically from mongod via Change Streams — no Kafka, no Logstash, no CDC pipeline. Scales independently with dedicated Search Nodes.">
-          <rect x="180" y="148" width="135" height="44" rx="7" fill="#111923" stroke="#243348" stroke-width="1.2"/>
-          <text x="247" y="168" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9.5" fill="#e4e9f2">mongot</text>
-          <text x="247" y="183" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#5a6578">Lucene · HNSW · BM25</text>
+        <g class="arch-comp" style="color:#a78bfa" data-tip="HNSW Vector Index|Hierarchical Navigable Small World graph for approximate nearest neighbor search. Supports cosine, euclidean, and dotProduct. Scalar (int8) and binary quantization for memory reduction. Pre-filtering applies metadata filters BEFORE ANN traversal.">
+          <rect x="115" y="110" width="90" height="34" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="160" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#a78bfa">HNSW Vec</text>
+          <text x="160" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">pre-filter · quant</text>
         </g>
-        <text x="165" y="215" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">Zero sync · Zero drift · One bill</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="Aggregation Pipeline|$search and $vectorSearch are stages in the aggregation pipeline. Chain them with $match, $lookup (joins), $group, $facet, $project in one round-trip. No client-side result merging. RRF hybrid search combines text + vector server-side.">
+          <rect x="215" y="110" width="90" height="34" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="260" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#00ed64">Pipeline</text>
+          <text x="260" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">$search · RRF</text>
+        </g>
+        <text x="155" y="168" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">Auto-sync · No JVM tuning · Live resharding</text>
         <!-- VS -->
-        <line x1="350" y1="20" x2="350" y2="220" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
-        <text x="350" y="128" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+        <line x1="340" y1="14" x2="340" y2="245" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="340" y="128" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
         <!-- Elasticsearch side -->
-        <text x="535" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#fed10a">Elasticsearch / OpenSearch</text>
-        <g class="arch-comp" style="color:#8694a8" data-tip="Application Layer (2 SDKs)|Your app needs two client libraries: one for the primary database (MongoDB/Postgres/MySQL) and one for Elasticsearch. Two connection pools, two error handling paths, two query languages.">
-          <rect x="425" y="28" width="220" height="34" rx="7" fill="#111923" stroke="#8694a8" stroke-width="1"/>
-          <text x="535" y="49" text-anchor="middle" font-family="DM Sans" font-size="9" fill="#8694a8">App (DB SDK + ES SDK)</text>
+        <text x="530" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#fed10a">Elasticsearch Internals</text>
+        <g class="arch-comp" style="color:#fed10a" data-tip="Coordinating Node|Receives all client requests, parses the query, routes it to the relevant data nodes holding the target shards, then merges (reduces) partial results from each shard into a final response. In large clusters, dedicated coordinating nodes are needed to avoid becoming a bottleneck.">
+          <rect x="450" y="28" width="160" height="36" rx="7" fill="#111923" stroke="#fed10a" stroke-width="1.5"/>
+          <text x="530" y="44" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9" fill="#fed10a">Coordinating Node</text>
+          <text x="530" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Query routing · scatter-gather</text>
         </g>
-        <path d="M495 62 L470 78" stroke="#f87171" stroke-width="1" marker-end="url(#arwRd)"/>
-        <path d="M575 62 L600 78" stroke="#f87171" stroke-width="1" marker-end="url(#arwRd)"/>
-        <g class="arch-comp" style="color:#f87171" data-tip="CDC Pipeline (Kafka/Logstash)|You must build and maintain a sync pipeline: Kafka Connect, Logstash, or custom code. Failures cause data drift — search results diverge from the primary DB. Always eventually consistent.">
-          <rect x="390" y="80" width="120" height="34" rx="7" fill="#111923" stroke="#f87171" stroke-width="1.2"/>
-          <text x="450" y="95" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f87171">Primary DB</text>
-          <text x="450" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">source of truth</text>
+        <path d="M490 64 L440 78" stroke="#fed10a" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <path d="M570 64 L620 78" stroke="#fed10a" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <g class="arch-comp" style="color:#fed10a" data-tip="Data Node (JVM)|Each data node is a JVM process. Heap must be ≤50% of RAM (max 32 GB per node). Garbage collection pauses can cause cluster instability. Holds primary and replica shards. Manages Lucene segment files, translog, and field data cache.">
+          <rect x="375" y="80" width="135" height="62" rx="7" fill="#111923" stroke="rgba(254,209,10,0.5)" stroke-width="1.2"/>
+          <text x="442" y="96" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#fed10a">Data Node 1</text>
+          <text x="442" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">JVM (≤32 GB heap)</text>
+          <text x="442" y="122" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">GC pauses · Translog</text>
+          <text x="442" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Primary Shard P0</text>
         </g>
-        <g class="arch-comp" style="color:#fed10a" data-tip="Elasticsearch Cluster|Standalone JVM-based Lucene cluster. Requires JVM heap sizing (half of RAM, max 32GB), shard count planning (immutable!), segment merge tuning, ILM lifecycle policies, and mapping management. Changing a field type = full reindex.">
-          <rect x="540" y="80" width="120" height="34" rx="7" fill="#111923" stroke="#fed10a" stroke-width="1.5"/>
-          <text x="600" y="95" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#fed10a">ES Cluster</text>
-          <text x="600" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">JVM · Lucene</text>
+        <g class="arch-comp" style="color:#fed10a" data-tip="Data Node 2 (JVM)|Holds replica shards for high availability. Shard allocation is managed by the master node. Cross-shard queries require scatter-gather across all nodes holding relevant shards — latency grows with shard count.">
+          <rect x="550" y="80" width="135" height="62" rx="7" fill="#111923" stroke="rgba(254,209,10,0.5)" stroke-width="1.2"/>
+          <text x="617" y="96" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8" fill="#fed10a">Data Node 2</text>
+          <text x="617" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">JVM (≤32 GB heap)</text>
+          <text x="617" y="122" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Replica R0 · Primary P1</text>
+          <text x="617" y="134" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Segment merge storms</text>
         </g>
-        <path d="M510 97 L540 97" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2"/>
-        <text x="525" y="92" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#f87171">CDC</text>
-        <g class="arch-comp" style="color:#f87171" data-tip="Operational Overhead|JVM heap tuning, GC pauses, immutable shard counts, full reindex for field type changes, ILM lifecycle policies, cluster health monitoring, separate backup/restore, cross-cluster replication configuration.">
-          <rect x="420" y="130" width="230" height="30" rx="6" fill="rgba(248,113,113,0.06)" stroke="rgba(248,113,113,0.2)" stroke-width="1"/>
-          <text x="535" y="149" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f87171">⚠ CDC pipeline · Data drift · 2× ops cost</text>
+        <g class="arch-comp" style="color:#fed10a" data-tip="Lucene Shard (Immutable Count)|Each ES index is split into N primary shards at creation. This number is IMMUTABLE — changing it requires a full reindex. Each shard is a standalone Lucene index with its own inverted index, segment files, and field data. Typical target: 10-50 GB per shard.">
+          <rect x="375" y="156" width="152" height="34" rx="6" fill="#111923" stroke="rgba(254,209,10,0.3)" stroke-width="1"/>
+          <text x="451" y="172" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#fed10a">Lucene Shards</text>
+          <text x="451" y="184" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Inverted idx · Segments · BKD</text>
         </g>
-        <g class="arch-comp" style="color:#f87171" data-tip="Immutable Shards|Primary shard count is fixed at index creation. Changing it requires a full reindex — expensive, disruptive, and the index is read-only during the process. MongoDB Atlas does live resharding online.">
-          <rect x="420" y="170" width="230" height="26" rx="5" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="0.8"/>
-          <text x="535" y="187" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#f87171">Shard count immutable · Full reindex for changes</text>
+        <g class="arch-comp" style="color:#fed10a" data-tip="Mappings (Strict)|Field types are defined in mappings and are immutable once set. Changing a field from text to keyword, or adding a new analyzer, requires creating a new index and reindexing all documents. No schema flexibility.">
+          <rect x="537" y="156" width="148" height="34" rx="6" fill="#111923" stroke="rgba(254,209,10,0.3)" stroke-width="1"/>
+          <text x="611" y="172" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#fed10a">Mappings</text>
+          <text x="611" y="184" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Strict types · Immutable</text>
         </g>
+        <g class="arch-comp" style="color:#fed10a" data-tip="ILM Data Tiers|Index Lifecycle Management automates data movement: Hot (fast SSDs for active writes) → Warm (cheaper storage, read-only) → Cold (minimal resources) → Frozen (searchable snapshots on S3) → Delete. Purpose-built for time-series log data retention.">
+          <rect x="375" y="200" width="310" height="30" rx="6" fill="rgba(254,209,10,0.04)" stroke="rgba(254,209,10,0.15)" stroke-width="0.8"/>
+          <text x="530" y="219" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#fed10a">ILM: Hot → Warm → Cold → Frozen → Delete</text>
+        </g>
+        <text x="530" y="250" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">JVM tuning · Immutable shards · Full reindex for schema changes</text>
         <defs>
           <marker id="arwMg" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#00ed64"/></marker>
           <marker id="arwRd" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#f87171"/></marker>
@@ -612,47 +630,81 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
 
     <div class="arch-wrap reveal reveal-d1" style="margin-bottom:1.25rem;">
       <p style="font-size:0.68rem;color:var(--tx3);margin-bottom:0.6rem;text-align:center;">Hover over any component to learn more</p>
-      <svg width="700" height="230" viewBox="0 0 700 230" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+      <svg width="700" height="250" viewBox="0 0 700 250" fill="none" style="max-width:100%;display:block;margin:0 auto;">
         <!-- MongoDB side -->
-        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">MongoDB Atlas — Document + Vector</text>
-        <g class="arch-comp" style="color:#00ed64" data-tip="BSON Document with Embedding|A single document stores all data: user fields, nested objects, arrays, AND the vector embedding. One write = atomic. One read = complete context. No second round-trip to fetch metadata after a vector search.">
-          <rect x="30" y="28" width="270" height="130" rx="9" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
-          <text x="52" y="50" font-family="JetBrains Mono" font-size="8" fill="#5a6578">{</text>
-          <text x="62" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">_id</text><text x="82" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: "prod_123",</text>
-          <text x="62" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">name</text><text x="92" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: "Hiking Boots",</text>
-          <text x="62" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">price</text><text x="94" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: 129.99,</text>
-          <text x="62" y="106" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">reviews</text><text x="108" y="106" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: [{ ... }],</text>
-          <text x="62" y="120" font-family="JetBrains Mono" font-size="7.5" fill="#00ed64">embedding</text><text x="126" y="120" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: [0.12, -0.34, ...]</text>
-          <text x="52" y="150" font-family="JetBrains Mono" font-size="8" fill="#5a6578">}</text>
+        <text x="155" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">Atlas Vector Search Internals</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongod (WiredTiger)|Source of truth for all data. BSON documents store the vector embedding as one field alongside all other data (name, price, reviews, nested objects). One atomic write updates everything. No sync pipeline needed.">
+          <rect x="15" y="30" width="130" height="56" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+          <text x="80" y="52" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">mongod</text>
+          <text x="80" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">WiredTiger · ACID</text>
+          <text x="80" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">BSON docs + embeddings</text>
         </g>
-        <text x="165" y="178" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">ACID · Full-text · Vector — one document, one query</text>
-        <text x="165" y="195" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">$vectorSearch returns full docs — no second lookup</text>
+        <path d="M145 58 L172 58" stroke="#00ed64" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="158" y="52" font-family="JetBrains Mono" font-size="5.5" fill="#00ed64">Change Streams</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongot — Lucene HNSW + BM25|The search engine process colocated with mongod. Builds HNSW graphs for vector search and inverted indexes for full-text. Receives all data changes automatically via Change Streams. Scales independently via dedicated Search Nodes — add search capacity without scaling the DB tier.">
+          <rect x="175" y="30" width="130" height="56" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
+          <text x="240" y="52" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">mongot</text>
+          <text x="240" y="66" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">HNSW · BM25 · Lucene</text>
+          <text x="240" y="78" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Search Nodes (indep.)</text>
+        </g>
+        <g class="arch-comp" style="color:#a78bfa" data-tip="$vectorSearch Pipeline Stage|ANN query executes as a stage in the aggregation pipeline. Pre-filtering narrows the HNSW search space BEFORE traversal. Results flow directly into subsequent pipeline stages ($match, $lookup, $project) — no client-side merging, no second round-trip. Returns complete BSON documents, not just IDs.">
+          <rect x="15" y="100" width="90" height="38" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="60" y="116" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#a78bfa">$vectorSearch</text>
+          <text x="60" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">pre-filter ANN</text>
+        </g>
+        <g class="arch-comp" style="color:#22d3ee" data-tip="$search Pipeline Stage|Full-text search powered by Lucene. BM25 scoring, custom analyzers, fuzzy matching, autocomplete, phrase, compound queries, facets — all via the aggregation pipeline. Can be combined with $vectorSearch using RRF for hybrid search.">
+          <rect x="115" y="100" width="90" height="38" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="160" y="116" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#22d3ee">$search</text>
+          <text x="160" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Lucene FTS · RRF</text>
+        </g>
+        <g class="arch-comp" style="color:#00ed64" data-tip="Quantization|Scalar quantization compresses float32 vectors to int8 (4× memory savings). Binary quantization further reduces to 1 bit per dimension (32× savings). Applied at the Search Node level, configurable per index. Sufficient for most production workloads.">
+          <rect x="215" y="100" width="90" height="38" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="260" y="116" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#00ed64">Quantization</text>
+          <text x="260" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">scalar · binary</text>
+        </g>
+        <text x="155" y="160" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">Returns full BSON docs — no second lookup needed</text>
         <!-- VS -->
-        <line x1="350" y1="20" x2="350" y2="210" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
-        <text x="350" y="108" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+        <line x1="340" y1="14" x2="340" y2="238" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="340" y="118" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
         <!-- Pinecone side -->
-        <text x="535" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#1a8cff">Pinecone — Vector-First</text>
-        <g class="arch-comp" style="color:#1a8cff" data-tip="Vector Record|The vector is the primary citizen. Metadata is flat key-value pairs attached to the vector. No nested objects, no arrays, no ACID, no joins. You search for neighbors, get back IDs + flat metadata, then must look up the actual data from another database.">
-          <rect x="400" y="28" width="270" height="90" rx="9" fill="#111923" stroke="#1a8cff" stroke-width="1.5"/>
-          <text x="420" y="50" font-family="JetBrains Mono" font-size="8" fill="#5a6578">{</text>
-          <text x="430" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">id</text><text x="446" y="64" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: "prod_123",</text>
-          <text x="430" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#1a8cff">values</text><text x="472" y="78" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: [0.12, -0.34, ...],</text>
-          <text x="430" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#fb923c">metadata</text><text x="488" y="92" font-family="JetBrains Mono" font-size="7.5" fill="#5a6578">: { name: "...", cat: "..." }</text>
-          <text x="420" y="110" font-family="JetBrains Mono" font-size="8" fill="#5a6578">}</text>
+        <text x="530" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#1a8cff">Pinecone Internals</text>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="API Gateway (REST/gRPC)|Stateless API layer that receives all requests (upsert, query, delete, fetch). Routes to the correct index and namespace. Handles authentication (API key). The only interface — no query language, no aggregation pipeline, no joins.">
+          <rect x="400" y="30" width="260" height="34" rx="7" fill="#111923" stroke="#1a8cff" stroke-width="1.5"/>
+          <text x="530" y="46" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9" fill="#1a8cff">API Gateway (REST / gRPC)</text>
+          <text x="530" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">upsert · query · delete · fetch</text>
         </g>
-        <g class="arch-comp" style="color:#f87171" data-tip="Separate Primary Database|Pinecone only stores vectors + flat metadata. Your actual application data (users, orders, products, reviews) lives in a separate database. After a vector search, you need a second round-trip to fetch the full context.">
-          <rect x="400" y="130" width="130" height="40" rx="7" fill="#111923" stroke="#f87171" stroke-width="1.2"/>
-          <text x="465" y="148" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f87171">Primary DB</text>
-          <text x="465" y="162" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">separate system</text>
+        <path d="M530 64 L530 76" stroke="#1a8cff" stroke-width="1" marker-end="url(#arwPn)"/>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="Index Router|Routes queries to the correct namespace and pod/serverless worker. In serverless mode, compute scales automatically. In pod-based mode, you choose pod type (s1, p1, p2) and replicas. Shards data across pods by vector ID.">
+          <rect x="440" y="78" width="180" height="30" rx="7" fill="#111923" stroke="rgba(26,140,255,0.5)" stroke-width="1.2"/>
+          <text x="530" y="97" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#1a8cff">Index Router → Namespace</text>
         </g>
-        <g class="arch-comp" style="color:#1a8cff" data-tip="Pinecone API|REST/gRPC API for upsert, query, delete. Serverless — no infrastructure to manage. But limited: no full-text Lucene, no aggregation, no joins. Metadata filters are basic equality/range only.">
-          <rect x="545" y="130" width="125" height="40" rx="7" fill="#111923" stroke="#1a8cff" stroke-width="1.2"/>
-          <text x="607" y="148" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#1a8cff">Pinecone API</text>
-          <text x="607" y="162" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">vectors only</text>
+        <path d="M490 108 L440 122" stroke="#1a8cff" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <path d="M530 108 L530 122" stroke="#1a8cff" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <path d="M570 108 L620 122" stroke="#1a8cff" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="Dense ANN Index|Proprietary approximate nearest neighbor index for dense vectors. Supports cosine, euclidean, and dotProduct. Up to 20,000 dimensions. Managed PQ applied automatically in serverless mode. ~30ms p99 query latency for isolated vector lookups.">
+          <rect x="385" y="124" width="82" height="44" rx="6" fill="#111923" stroke="rgba(26,140,255,0.4)" stroke-width="1"/>
+          <text x="426" y="142" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#1a8cff">Dense ANN</text>
+          <text x="426" y="156" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">20K dims</text>
+          <text x="426" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">managed PQ</text>
         </g>
-        <path d="M530 150 L545 150" stroke="#f87171" stroke-width="1" stroke-dasharray="3 2"/>
-        <text x="537" y="145" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#f87171">sync</text>
-        <text x="535" y="195" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#1a8cff">Two systems · Two bills · One sync problem</text>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="Sparse Index (BM25)|Models text search as sparse vectors — each dimension corresponds to a token's BM25 weight. Enables 'hybrid search' by combining sparse + dense in a single query. BUT: no Lucene analyzers, no phonetic matching, no synonym maps, no stemming control, no custom tokenizers.">
+          <rect x="477" y="124" width="82" height="44" rx="6" fill="#111923" stroke="rgba(26,140,255,0.4)" stroke-width="1"/>
+          <text x="518" y="142" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#1a8cff">Sparse Idx</text>
+          <text x="518" y="156" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">BM25 vectors</text>
+          <text x="518" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">no analyzers</text>
+        </g>
+        <g class="arch-comp" style="color:#1a8cff" data-tip="Metadata Index|Flat key-value metadata stored alongside each vector. Supports equality, range, and $in filters. No nested objects, no arrays, no full-text search on metadata. Filter performance degrades with high cardinality metadata and large datasets.">
+          <rect x="569" y="124" width="82" height="44" rx="6" fill="#111923" stroke="rgba(26,140,255,0.4)" stroke-width="1"/>
+          <text x="610" y="142" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#1a8cff">Metadata</text>
+          <text x="610" y="156" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">flat k-v only</text>
+          <text x="610" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">eq · range · $in</text>
+        </g>
+        <g class="arch-comp" style="color:#f87171" data-tip="No OLTP Capabilities|Pinecone stores vectors + flat metadata only. No ACID transactions, no joins, no aggregation, no rich querying, no nested documents. Your actual business data must live in a separate primary database — adding a second system, a sync pipeline, and a second bill.">
+          <rect x="385" y="182" width="266" height="30" rx="6" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="0.8"/>
+          <text x="518" y="201" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#f87171">⚠ No ACID · No joins · No aggregation · Needs a primary DB</text>
+        </g>
+        <text x="530" y="235" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Serverless · API-first · Vector-only · ~30ms p99</text>
+        <defs><marker id="arwPn" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#1a8cff"/></marker></defs>
       </svg>
     </div>
 
@@ -740,54 +792,103 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
 
     <div class="arch-wrap reveal reveal-d1" style="margin-bottom:1.25rem;">
       <p style="font-size:0.68rem;color:var(--tx3);margin-bottom:0.6rem;text-align:center;">Hover over any component to learn more</p>
-      <svg width="700" height="230" viewBox="0 0 700 230" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+      <svg width="700" height="270" viewBox="0 0 700 270" fill="none" style="max-width:100%;display:block;margin:0 auto;">
         <!-- MongoDB side -->
-        <text x="165" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">MongoDB Atlas — HNSW via Lucene</text>
-        <g class="arch-comp" style="color:#00ed64" data-tip="mongot (Lucene HNSW)|Atlas Vector Search uses HNSW implemented in Apache Lucene via the mongot process. Pre-filtering: metadata filters are applied BEFORE the ANN graph traversal, narrowing the search space. Supports cosine, euclidean, and dotProduct distance metrics.">
-          <rect x="30" y="30" width="270" height="52" rx="9" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
-          <text x="165" y="52" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#00ed64">mongot — Lucene HNSW</text>
-          <text x="165" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">Pre-filter → ANN traversal → cosine/euclidean/dot</text>
+        <text x="155" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#00ed64">Atlas Vector Search Internals</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongot (Lucene HNSW)|Colocated search process running Apache Lucene. Builds HNSW graphs for vector ANN and inverted indexes for BM25. Data syncs from mongod automatically via Change Streams. Scales independently with dedicated Search Nodes.">
+          <rect x="15" y="30" width="130" height="56" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.8"/>
+          <text x="80" y="50" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">mongot</text>
+          <text x="80" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Apache Lucene</text>
+          <text x="80" y="76" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">HNSW · BM25</text>
         </g>
-        <g class="arch-comp" style="color:#22d3ee" data-tip="Scalar &amp; Binary Quantization|Reduces vector memory by 4× (scalar int8) or 32× (binary). Sufficient for most production workloads. Trades minimal recall for significant memory savings. Applied at the Search Node level.">
-          <rect x="30" y="96" width="130" height="36" rx="6" fill="#111923" stroke="#243348" stroke-width="1.2"/>
-          <text x="95" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#22d3ee">Scalar / Binary Quant</text>
-          <text x="95" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">4× / 32× compression</text>
+        <path d="M145 58 L172 58" stroke="#00ed64" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="158" y="52" font-family="JetBrains Mono" font-size="5.5" fill="#00ed64">auto-sync</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="mongod (WiredTiger)|Source of truth. BSON documents store vectors as one field alongside all other data. B-Tree indexes, ACID transactions, document-level concurrency. Vectors and business data in one atomic unit.">
+          <rect x="175" y="30" width="130" height="56" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
+          <text x="240" y="50" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ed64">mongod</text>
+          <text x="240" y="64" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">WiredTiger · ACID</text>
+          <text x="240" y="76" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Docs + Embeddings</text>
         </g>
-        <g class="arch-comp" style="color:#00ed64" data-tip="Full Lucene Engine|$search provides mature full-text search: custom analyzers, synonym maps, phonetic matching, autocomplete, fuzzy, compound queries, facets. Hybrid search via RRF combines text + vector in one pipeline.">
-          <rect x="170" y="96" width="130" height="36" rx="6" fill="#111923" stroke="#243348" stroke-width="1.2"/>
-          <text x="235" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#00ed64">Full Lucene FTS</text>
-          <text x="235" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">analyzers · synonyms · RRF</text>
+        <g class="arch-comp" style="color:#a78bfa" data-tip="Pre-filter → HNSW|Metadata filters from $vectorSearch are applied BEFORE the HNSW graph traversal, narrowing the candidate set. Works well for >95% of use cases. Can lose recall with very restrictive filters (Qdrant's Filterable HNSW handles this edge case better).">
+          <rect x="15" y="100" width="90" height="38" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="60" y="116" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#a78bfa">Pre-filter</text>
+          <text x="60" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">then HNSW</text>
         </g>
-        <g class="arch-comp" style="color:#00ed64" data-tip="WiredTiger + ACID|Vectors live alongside your transactional data. Multi-document ACID transactions, change streams, aggregation pipeline, $lookup joins — all on the same cluster. No sidecar database needed.">
-          <rect x="30" y="146" width="270" height="36" rx="6" fill="rgba(0,237,100,0.04)" stroke="rgba(0,237,100,0.2)" stroke-width="1"/>
-          <text x="165" y="168" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8.5" fill="#00ed64">WiredTiger · ACID · Aggregation · Joins</text>
+        <g class="arch-comp" style="color:#22d3ee" data-tip="Scalar + Binary Quantization|Scalar (int8) reduces memory 4×. Binary (1-bit) reduces 32×. Applied at the Search Node level. Sufficient for most production workloads — PQ is rarely needed outside extreme scale.">
+          <rect x="115" y="100" width="90" height="38" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="160" y="116" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#22d3ee">Quantization</text>
+          <text x="160" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">scalar · binary</text>
         </g>
-        <text x="165" y="205" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#5a6578">One platform — no sidecar database needed</text>
+        <g class="arch-comp" style="color:#00ed64" data-tip="Full Lucene FTS + RRF Hybrid|Mature full-text search: custom analyzers, synonym maps, phonetic matching, autocomplete, fuzzy, compound queries, facets. Hybrid search via RRF combines text + vector results server-side in one pipeline stage.">
+          <rect x="215" y="100" width="90" height="38" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="260" y="116" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#00ed64">Lucene FTS</text>
+          <text x="260" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">RRF hybrid</text>
+        </g>
+        <g class="arch-comp" style="color:#00ed64" data-tip="Platform Layer|Vectors live alongside transactional data. Multi-document ACID, $lookup joins, aggregation pipeline, change streams, live resharding — all on the same cluster. No sidecar needed.">
+          <rect x="15" y="150" width="290" height="30" rx="6" fill="rgba(0,237,100,0.04)" stroke="rgba(0,237,100,0.2)" stroke-width="1"/>
+          <text x="160" y="169" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8" fill="#00ed64">ACID · Joins · Aggregation · Change Streams</text>
+        </g>
+        <text x="155" y="205" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">One platform — no sidecar database needed</text>
+
         <!-- VS -->
-        <line x1="350" y1="20" x2="350" y2="210" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
-        <text x="350" y="118" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+        <line x1="340" y1="14" x2="340" y2="255" stroke="var(--border)" stroke-width="1" stroke-dasharray="6 4"/>
+        <text x="340" y="130" text-anchor="middle" font-family="Playfair Display" font-size="16" fill="#4f5e72" font-style="italic">vs</text>
+
         <!-- Qdrant side -->
-        <text x="535" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#dc2626">Qdrant — Rust HNSW Engine</text>
-        <g class="arch-comp" style="color:#dc2626" data-tip="Filterable HNSW (Rust)|Qdrant's key innovation: the HNSW graph is built WITH payload awareness. During ANN traversal, filtered-out nodes are skipped WITHOUT breaking graph connectivity. This maintains high recall even with very restrictive metadata filters — superior to standard pre-filtering.">
-          <rect x="400" y="30" width="270" height="52" rx="9" fill="#111923" stroke="#dc2626" stroke-width="1.8"/>
-          <text x="535" y="52" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10.5" fill="#dc2626">Filterable HNSW (Rust)</text>
-          <text x="535" y="70" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">Payload-aware graph · cosine/euclid/dot/manhattan</text>
+        <text x="530" y="16" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="12" fill="#dc2626">Qdrant Internals (Rust)</text>
+        <g class="arch-comp" style="color:#dc2626" data-tip="gRPC / REST API|Stateless API layer. Supports upsert, search, scroll, delete, and batch operations. Search requests specify the collection, vector name, filter, and top-K. No query language — all operations are API calls with JSON payloads.">
+          <rect x="400" y="30" width="260" height="30" rx="7" fill="#111923" stroke="#dc2626" stroke-width="1.5"/>
+          <text x="530" y="49" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9" fill="#dc2626">gRPC / REST API</text>
         </g>
-        <g class="arch-comp" style="color:#dc2626" data-tip="Product Quantization (PQ)|Compresses vectors to ~5% of original size via subspace decomposition. More aggressive than scalar quantization — enables massive datasets on limited RAM. Atlas doesn't offer PQ.">
-          <rect x="400" y="96" width="130" height="36" rx="6" fill="#111923" stroke="rgba(220,38,38,0.5)" stroke-width="1.2"/>
-          <text x="465" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#dc2626">Product Quantization</text>
-          <text x="465" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">~5% size · PQ + SQ + BQ</text>
+        <path d="M530 60 L530 72" stroke="#dc2626" stroke-width="0.8" marker-end="url(#arwQd)"/>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Collection Manager|A collection is Qdrant's equivalent of a table. Each collection has its own HNSW configuration (ef_construct, m), distance metric, and quantization settings. Collections are split into shards for distribution across nodes. Each shard contains multiple segments.">
+          <rect x="400" y="74" width="260" height="30" rx="7" fill="#111923" stroke="rgba(220,38,38,0.5)" stroke-width="1.2"/>
+          <text x="530" y="88" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#dc2626">Collection Manager → Shards</text>
+          <text x="530" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">HNSW config · distance metric · shard routing</text>
         </g>
-        <g class="arch-comp" style="color:#dc2626" data-tip="Named Vectors|Store multiple named vector fields per point (e.g., image_vec + text_vec). Search any vector or combine results. Atlas currently supports one vector field per $vectorSearch stage.">
-          <rect x="540" y="96" width="130" height="36" rx="6" fill="#111923" stroke="rgba(220,38,38,0.5)" stroke-width="1.2"/>
-          <text x="605" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#dc2626">Named Vectors</text>
-          <text x="605" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">multi-modal per point</text>
+        <path d="M470 104 L430 118" stroke="#dc2626" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <path d="M530 104 L530 118" stroke="#dc2626" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <path d="M590 104 L630 118" stroke="#dc2626" stroke-width="0.8" stroke-dasharray="3 2"/>
+        <!-- Segment internals -->
+        <g class="arch-comp" style="color:#dc2626" data-tip="Filterable HNSW Graph|Qdrant's standout innovation. The HNSW graph is built WITH payload awareness — during traversal, filtered-out nodes are skipped without breaking graph connectivity. This maintains high recall even with very restrictive metadata filters (~2% selectivity). Standard pre-filtering (Atlas, Elastic) can miss relevant vectors at this level.">
+          <rect x="385" y="120" width="82" height="50" rx="6" fill="#111923" stroke="rgba(220,38,38,0.5)" stroke-width="1.2"/>
+          <text x="426" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#dc2626">Filterable</text>
+          <text x="426" y="149" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#dc2626">HNSW</text>
+          <text x="426" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">payload-aware</text>
         </g>
-        <g class="arch-comp" style="color:#f87171" data-tip="Sidecar Problem|Like Pinecone, Qdrant is a vector store — not a general-purpose database. Your transactional data (users, orders, products) still needs a separate DB. That's two systems, two bills, and a sync pipeline to maintain.">
-          <rect x="400" y="146" width="270" height="36" rx="6" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="1"/>
-          <text x="535" y="168" text-anchor="middle" font-family="DM Sans" font-weight="500" font-size="8.5" fill="#f87171">⚠ Requires a separate primary database</text>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Payload Index|Indexes for metadata filtering. Supports keyword, integer, float, geo, datetime, and boolean payload types. Indexed payloads enable fast filtering during HNSW traversal. Without indexing, filters fall back to brute-force scan of matching points.">
+          <rect x="477" y="120" width="82" height="50" rx="6" fill="#111923" stroke="rgba(220,38,38,0.4)" stroke-width="1"/>
+          <text x="518" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#dc2626">Payload Idx</text>
+          <text x="518" y="149" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">keyword · int</text>
+          <text x="518" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">geo · datetime</text>
         </g>
-        <text x="535" y="205" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#5a6578">Open-source (Apache 2.0) · Self-host or Qdrant Cloud</text>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Vector Storage (Memmap / In-Memory)|Vectors can be stored fully in RAM for maximum speed, or via memory-mapped files (memmap) for datasets exceeding available RAM. The OS manages page caching. Named vectors allow multiple vector fields per point (e.g., image_vec + text_vec) with independent HNSW graphs.">
+          <rect x="569" y="120" width="82" height="50" rx="6" fill="#111923" stroke="rgba(220,38,38,0.4)" stroke-width="1"/>
+          <text x="610" y="138" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#dc2626">Vec Storage</text>
+          <text x="610" y="149" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">memmap / RAM</text>
+          <text x="610" y="164" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">named vectors</text>
+        </g>
+        <!-- Bottom layer -->
+        <g class="arch-comp" style="color:#dc2626" data-tip="WAL (Write-Ahead Log)|All writes go through a WAL before being applied to segments. Ensures crash recovery and durability. Segments are periodically optimized (merged) — similar to Lucene segment merges but for vector data.">
+          <rect x="385" y="184" width="105" height="30" rx="6" fill="#111923" stroke="rgba(220,38,38,0.3)" stroke-width="1"/>
+          <text x="437" y="200" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#dc2626">WAL</text>
+          <text x="437" y="210" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">crash recovery</text>
+        </g>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Quantization Engine|Supports Scalar (int8), Binary (1-bit), AND Product Quantization (PQ). PQ compresses vectors to ~5% of original size via subspace decomposition — more aggressive than Atlas's scalar/binary. Configurable per collection. Enables massive-scale datasets on limited RAM.">
+          <rect x="500" y="184" width="80" height="30" rx="6" fill="#111923" stroke="rgba(220,38,38,0.3)" stroke-width="1"/>
+          <text x="540" y="200" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#dc2626">Quant</text>
+          <text x="540" y="210" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">SQ · BQ · PQ</text>
+        </g>
+        <g class="arch-comp" style="color:#dc2626" data-tip="Raft Consensus|In distributed mode, Qdrant uses Raft for cluster metadata consensus: shard placement, collection config, and node membership. Data replication uses a separate protocol. Requires a minimum of 3 nodes for fault tolerance.">
+          <rect x="590" y="184" width="68" height="30" rx="6" fill="#111923" stroke="rgba(220,38,38,0.3)" stroke-width="1"/>
+          <text x="624" y="200" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#dc2626">Raft</text>
+          <text x="624" y="210" text-anchor="middle" font-family="JetBrains Mono" font-size="5.5" fill="#5a6578">consensus</text>
+        </g>
+        <g class="arch-comp" style="color:#f87171" data-tip="No OLTP Layer|Qdrant is a vector database only. No ACID transactions, no joins, no aggregation pipeline, no full-text Lucene engine. Sparse vector support provides basic BM25, but without analyzers. Your transactional data must live in a separate primary database.">
+          <rect x="385" y="226" width="273" height="26" rx="5" fill="rgba(248,113,113,0.04)" stroke="rgba(248,113,113,0.15)" stroke-width="0.8"/>
+          <text x="521" y="243" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#f87171">⚠ No ACID · No Lucene FTS · Needs a primary DB</text>
+        </g>
+        <defs><marker id="arwQd" viewBox="0 0 6 6" refX="6" refY="3" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0 L6,3 L0,6Z" fill="#dc2626"/></marker></defs>
       </svg>
     </div>
 
@@ -871,58 +972,110 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
   </div>
 </div>
 
-<!-- ════════════ SLIDE: SCALING COMPARISON ════════════ -->
+<!-- ════════════ SLIDE: SCALING — QUERY THROUGHPUT & INDEX ════════════ -->
 <div class="slide scrollable" id="s-scale" data-title="Scaling">
   <div class="slide-inner">
     <div class="label l-v reveal">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><polyline points="3,17 8,11 13,14 21,6" stroke="#22D3EE" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
-      Section 03 — Scaling Deep Dive
+      Section 03 — Scaling for Search &amp; Vector Workloads
     </div>
-    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Scaling from GB to TB+</h2>
-    <p class="reveal reveal-d2" style="color:var(--tx2);font-size:0.85rem;margin-bottom:1.5rem;">How each engine handles data growth — and where the pain points emerge.</p>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Scaling Search Infrastructure</h2>
+    <p class="reveal reveal-d2" style="color:var(--tx2);font-size:0.85rem;margin-bottom:1.25rem;">Search engines scale across five axes: query throughput, index size, freshness, hybrid workload pressure, and cost. Raw data size is secondary.</p>
 
-    <!-- Atlas Search -->
-    <div class="card reveal reveal-d3" style="border-left:3px solid var(--mg);margin-bottom:0.75rem;padding:1.25rem;">
-      <h3 style="font-size:0.9rem;color:var(--mg);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg> Atlas Search</h3>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">≤ 50 GB</span> Default Search Node tier. HNSW index fits in memory. Quantization optional.</div>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">50–500 GB</span> Scale up Search Node tier (S20–S60). Enable scalar quantization for vectors. Dedicated Search Nodes scale independently from DB tier.</div>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">0.5–5 TB</span> Shard the collection. <strong style="color:var(--tx);">Live resharding</strong> lets you change shard keys without downtime. Scatter-gather for non-targeted queries.</div>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">5 TB+</span> Zone-sharding for geo-distribution. Auto-scaling tiers. Search Nodes per shard. Binary quantization for massive vector indexes (32× compression).</div>
-      <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://www.mongodb.com/docs/atlas/atlas-search/manage-indexes/" target="_blank" style="color:var(--cy);text-decoration:none;">Search Node sizing</a> · <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" style="color:var(--cy);text-decoration:none;">Sharding docs</a></p>
-    </div>
-
-    <!-- Elasticsearch -->
-    <div class="card reveal reveal-d4" style="border-left:3px solid var(--ey);margin-bottom:0.75rem;padding:1.25rem;">
-      <h3 style="font-size:0.9rem;color:var(--ey);margin-bottom:0.6rem;">Elasticsearch</h3>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">≤ 50 GB</span> Single cluster. JVM heap = 50% of RAM (max 32 GB). Shard count fixed at index creation.</div>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">50–500 GB</span> Shard sizing critical (target 10-50 GB/shard). Too many shards = cluster state overhead. Too few = hot nodes. GC tuning becomes necessary.</div>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">0.5–5 TB</span> <strong style="color:var(--rd);">Pain point:</strong> ILM (hot/warm/cold/frozen) tiers required. Changing shard count = full reindex. Coordination overhead grows with node count.</div>
-      <div class="scale-tier"><span class="tier-label" style="color:var(--ey);">5 TB+</span> Cross-cluster search. Searchable snapshots on S3 for cold data. Cluster coordination becomes the bottleneck. Segment merge storms during off-peak hours.</div>
-      <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/size-your-shards.html" target="_blank" style="color:var(--cy);text-decoration:none;">Shard sizing guide</a></p>
+    <!-- Dimension 1: Query Throughput -->
+    <h3 class="reveal" style="font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cy);margin-bottom:0.6rem;">① Query Throughput (QPS)</h3>
+    <div class="tw reveal reveal-d1" style="margin-bottom:1.25rem;">
+      <table>
+        <thead><tr><th style="width:18%;">Scale</th><th style="color:var(--mg);">Atlas Search</th><th style="color:var(--ey);">Elasticsearch</th><th style="color:var(--pn);">Pinecone</th><th style="color:var(--qd);">Qdrant</th></tr></thead>
+        <tbody>
+          <tr><td><strong>100 QPS</strong></td><td>Single Search Node tier handles it. No special config.</td><td>Single cluster. Monitor JVM heap pressure.</td><td>Serverless auto-scales. Straightforward.</td><td>Single node. In-memory HNSW is fast.</td></tr>
+          <tr><td><strong>1K QPS</strong></td><td>Scale Search Node tier up (S30+). Add replicas for read distribution.</td><td>Add data node replicas. Coordinating nodes may be needed. <span style="color:var(--rd);">GC pause risk grows.</span></td><td>Serverless handles well. Pod mode: add replicas (p2 pods).</td><td>Horizontal sharding + replicas. Memmap if RAM-bound.</td></tr>
+          <tr><td><strong>10K+ QPS</strong></td><td>Shard + dedicated Search Nodes per shard. Search tier scales independently from DB. <span style="color:var(--mg);">CRUD unaffected.</span></td><td>Large cluster (20+ nodes). Dedicated coordinating/master nodes. <span style="color:var(--rd);">Segment merge + GC storms can spike p99.</span></td><td>Cost scales linearly. <span style="color:var(--rd);">No QPS volume discounts.</span> Metadata filter complexity degrades throughput.</td><td>Multi-node cluster. PQ essential for memory. <span style="color:var(--rd);">Self-hosted ops burden significant.</span></td></tr>
+        </tbody>
+      </table>
     </div>
 
-    <!-- Two-col: Pinecone + Qdrant -->
-    <div class="g2" style="gap:0.75rem;">
-      <div class="card reveal" style="border-left:3px solid var(--pn);padding:1.25rem;">
-        <h3 style="font-size:0.9rem;color:var(--pn);margin-bottom:0.6rem;">Pinecone</h3>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">≤ 50 GB</span> Serverless — auto-scales. Simple and hands-off for small datasets.</div>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">50–500 GB</span> Pod type/size selection. Metadata filtering degrades with dataset size. Managed PQ helps.</div>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">0.5–5 TB</span> Cost scales linearly with vector count. No volume discounts. Each namespace has limits.</div>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--pn);">5 TB+</span> <strong style="color:var(--rd);">Pain point:</strong> Expensive at scale. No data locality controls. Still need a separate DB for context.</div>
-        <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://docs.pinecone.io/guides/indexes/choose-a-pod-type-and-size" target="_blank" style="color:var(--cy);text-decoration:none;">Pod sizing guide</a></p>
+    <!-- Dimension 2: Index Size (Docs & Vectors) -->
+    <h3 class="reveal" style="font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cy);margin-bottom:0.6rem;">② Index Size (Documents &amp; Vectors)</h3>
+    <div class="tw reveal reveal-d1" style="margin-bottom:1.25rem;">
+      <table>
+        <thead><tr><th style="width:18%;">Scale</th><th style="color:var(--mg);">Atlas Search</th><th style="color:var(--ey);">Elasticsearch</th><th style="color:var(--pn);">Pinecone</th><th style="color:var(--qd);">Qdrant</th></tr></thead>
+        <tbody>
+          <tr><td><strong>1M docs</strong></td><td>Trivial. Any tier.</td><td>Trivial. 1-2 shards.</td><td>Serverless handles well.</td><td>Single node, in-memory.</td></tr>
+          <tr><td><strong>100M docs</strong></td><td>Larger Search Nodes. Scalar quantization for vectors. HNSW index must fit in Search Node RAM.</td><td>Careful shard planning (target 10-50 GB/shard). Immutable shard count — <span style="color:var(--rd);">wrong sizing = full reindex.</span></td><td>Managed PQ kicks in. Metadata filter perf degrades with high cardinality.</td><td>PQ + memmap. Filterable HNSW graph gets large — build time grows.</td></tr>
+          <tr><td><strong>1B+ docs</strong></td><td>Sharded collection. Binary quantization (32×). Dedicated Search Nodes per shard. <span style="color:var(--mg);">Live resharding if shard key needs changing.</span></td><td>ILM tiers mandatory. Cross-cluster search. <span style="color:var(--rd);">Cluster state metadata itself becomes a scaling concern.</span></td><td><span style="color:var(--rd);">$$$. Each vector costs.</span> Namespace limits. Multiple indexes needed.</td><td>Multi-node + PQ. <span style="color:var(--rd);">Segment optimization time grows significantly.</span> Raft consensus overhead.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Dimension 3: Index Freshness -->
+    <h3 class="reveal" style="font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cy);margin-bottom:0.6rem;">③ Index Freshness (Write → Searchable Latency)</h3>
+    <div class="g4 reveal reveal-d1" style="gap:0.6rem;margin-bottom:1.25rem;">
+      <div class="card" style="padding:1rem;border-top:2px solid var(--mg);">
+        <h3 style="font-size:0.8rem;color:var(--mg);margin-bottom:0.3rem;">Atlas Search</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--tx);">~ms delay.</strong> Change Streams propagate writes to mongot automatically. Near-real-time. No batch ingest pipeline to manage.</p>
       </div>
-      <div class="card reveal" style="border-left:3px solid var(--qd);padding:1.25rem;">
-        <h3 style="font-size:0.9rem;color:var(--qd);margin-bottom:0.6rem;">Qdrant</h3>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">≤ 50 GB</span> Single node with in-memory HNSW. Fast and simple. Filterable HNSW shines.</div>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">50–500 GB</span> Horizontal sharding across nodes. Memmap storage for datasets larger than RAM. PQ for compression.</div>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">0.5–5 TB</span> PQ reduces memory to ~5% of original. Raft consensus for cluster metadata. Trade accuracy for scale.</div>
-        <div class="scale-tier"><span class="tier-label" style="color:var(--qd);">5 TB+</span> <strong style="color:var(--rd);">Pain point:</strong> Self-hosting at this scale = serious ops. Qdrant Cloud SLA is 99.5% vs Atlas 99.995%.</div>
-        <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://qdrant.tech/documentation/guides/distributed_deployment/" target="_blank" style="color:var(--cy);text-decoration:none;">Distributed deployment</a></p>
+      <div class="card" style="padding:1rem;border-top:2px solid var(--ey);">
+        <h3 style="font-size:0.8rem;color:var(--ey);margin-bottom:0.3rem;">Elasticsearch</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--tx);">~1s default refresh.</strong> Configurable (down to real-time, but expensive). Heavy writes trigger segment merges which compete with search for I/O.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-top:2px solid var(--pn);">
+        <h3 style="font-size:0.8rem;color:var(--pn);margin-bottom:0.3rem;">Pinecone</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--tx);">Eventually consistent.</strong> Upserts are async. Freshness depends on load and serverless capacity. No real-time guarantees.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-top:2px solid var(--qd);">
+        <h3 style="font-size:0.8rem;color:var(--qd);margin-bottom:0.3rem;">Qdrant</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--tx);">Immediate (WAL).</strong> Writes are durable via WAL and immediately queryable. But the HNSW index is rebuilt in background — hot writes can delay optimization.</p>
       </div>
     </div>
 
-    <div class="callout callout-m reveal" style="margin-top:0.75rem;">
-      <strong>Atlas Search's scaling advantage:</strong> Search Nodes scale independently from the database tier. Shard when you need to, with live resharding. No immutable shard counts, no full reindexes, no JVM heap tuning. Competitors either require upfront sizing decisions (Elasticsearch) or are vector-only (Pinecone/Qdrant).
+    <!-- Dimension 4: Hybrid Workload Pressure -->
+    <h3 class="reveal" style="font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cy);margin-bottom:0.6rem;">④ Hybrid Workload Pressure (Search + CRUD + Vector at Once)</h3>
+    <div class="g2 reveal reveal-d1" style="gap:0.6rem;margin-bottom:1.25rem;">
+      <div class="card" style="padding:1rem;border-left:3px solid var(--mg);">
+        <h3 style="font-size:0.8rem;color:var(--mg);margin-bottom:0.3rem;">Atlas Search</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;">Search Nodes scale <strong style="color:var(--tx);">independently</strong> from the DB tier. Heavy search load doesn't impact CRUD latency. Heavy writes don't block search. One aggregation pipeline handles all three workloads.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-left:3px solid var(--ey);">
+        <h3 style="font-size:0.8rem;color:var(--ey);margin-bottom:0.3rem;">Elasticsearch</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;">Search and indexing share the same JVM heap and I/O. <strong style="color:var(--rd);">Heavy writes trigger segment merges that compete with queries for resources.</strong> Requires careful node sizing to isolate workloads. No CRUD — it's search only.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-left:3px solid var(--pn);">
+        <h3 style="font-size:0.8rem;color:var(--pn);margin-bottom:0.3rem;">Pinecone</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;">Vector-only. <strong style="color:var(--rd);">CRUD, full-text, and business logic all require a separate primary database</strong> — scaling those is your problem. Pinecone scales the vector index, nothing else.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-left:3px solid var(--qd);">
+        <h3 style="font-size:0.8rem;color:var(--qd);margin-bottom:0.3rem;">Qdrant</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;">Vector-only. Heavy upserts trigger HNSW segment optimization in background — <strong style="color:var(--rd);">can increase query latency during bulk ingestion.</strong> All OLTP workloads are externalized to a separate DB.</p>
+      </div>
+    </div>
+
+    <!-- Dimension 5: Cost at Scale -->
+    <h3 class="reveal" style="font-size:0.82rem;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:var(--cy);margin-bottom:0.6rem;">⑤ Cost Trajectory at Scale</h3>
+    <div class="g4 reveal reveal-d1" style="gap:0.6rem;margin-bottom:0.75rem;">
+      <div class="card" style="padding:1rem;border-top:2px solid var(--mg);text-align:center;">
+        <h3 style="font-size:0.8rem;color:var(--mg);margin-bottom:0.3rem;">Atlas Search</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--tx);">One bill.</strong> Search + CRUD + vectors included. Search Nodes add cost but eliminate the entire sidecar stack (Kafka, Logstash, second cluster).</p>
+      </div>
+      <div class="card" style="padding:1rem;border-top:2px solid var(--ey);text-align:center;">
+        <h3 style="font-size:0.8rem;color:var(--ey);margin-bottom:0.3rem;">Elasticsearch</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--rd);">Two bills.</strong> ES cluster + primary DB + CDC pipeline. Elastic Cloud pricing grows with node count and data tiers. JVM overhead means ~50% of RAM is unusable.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-top:2px solid var(--pn);text-align:center;">
+        <h3 style="font-size:0.8rem;color:var(--pn);margin-bottom:0.3rem;">Pinecone</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--rd);">Two bills + linear.</strong> Vector cost scales linearly with count. No volume discounts. Plus your primary DB cost. Serverless pricing is per-query.</p>
+      </div>
+      <div class="card" style="padding:1rem;border-top:2px solid var(--qd);text-align:center;">
+        <h3 style="font-size:0.8rem;color:var(--qd);margin-bottom:0.3rem;">Qdrant</h3>
+        <p style="font-size:0.75rem;color:var(--tx2);line-height:1.45;"><strong style="color:var(--pn);">Two bills + ops.</strong> Self-hosted: infra + team to manage. Qdrant Cloud: cluster cost + primary DB. Open-source license = no license cost.</p>
+      </div>
+    </div>
+
+    <div class="card reveal" style="margin-top:0.5rem;border:1px solid var(--border2);padding:1.25rem;background:linear-gradient(135deg,rgba(0,237,100,0.04),rgba(0,237,100,0.01));">
+      <h3 style="font-size:0.85rem;color:var(--tx);margin-bottom:0.5rem;">The Honest Take on Performance vs. Platform</h3>
+      <p style="font-size:0.78rem;color:var(--tx2);line-height:1.55;margin-bottom:0.5rem;">On <strong style="color:var(--tx);">raw, isolated search benchmarks</strong>, bespoke engines will often edge out Atlas Search. Elasticsearch has 20+ years of Lucene tuning. Pinecone and Qdrant are purpose-built for vector latency with nothing else in the way. If the <em>only</em> metric is p99 search latency on a synthetic benchmark, a dedicated engine has the advantage.</p>
+      <p style="font-size:0.78rem;color:var(--mg);line-height:1.55;margin-bottom:0.5rem;"><strong>But production systems don't run benchmarks — they run applications.</strong></p>
+      <p style="font-size:0.78rem;color:var(--tx2);line-height:1.55;">The real question is: what's the total cost and complexity of the <em>system</em>, not the <em>engine</em>? With competitors, you're scaling a primary database + a search cluster + a CDC sync pipeline + ops for both. Atlas Search eliminates the sidecar entirely. One cluster, one API, one bill. Search Nodes scale independently from CRUD. No data drift, no sync lag, no two-system failure modes. <strong style="color:var(--tx);">The platform is the play.</strong></p>
     </div>
   </div>
 </div>
@@ -984,27 +1137,30 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 3L2 9l10 6 10-6-10-6z" stroke="#22D3EE" stroke-width="2" fill="none"/></svg>
       Section 04 — Competitive Positioning
     </div>
-    <h2 class="reveal reveal-d1" style="margin-bottom:1.25rem;">When to Compete, When to Concede</h2>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.75rem;">When to Compete, When to Concede</h2>
+    <div class="card reveal reveal-d1" style="padding:1rem 1.25rem;margin-bottom:1rem;border-left:3px solid var(--cy);background:rgba(34,211,238,0.04);">
+      <p style="font-size:0.82rem;color:var(--tx2);line-height:1.55;margin:0;"><strong style="color:var(--tx);">Framing matters.</strong> Don't compete on raw engine benchmarks — you'll lose to purpose-built tools on their home turf. Compete on <strong style="color:var(--mg);">total system architecture</strong>: how many components does the customer have to build, deploy, sync, monitor, and pay for? Atlas Search wins the <em>platform</em> argument, not the <em>engine</em> argument.</p>
+    </div>
     <div class="g2 reveal reveal-d2" style="gap:0.85rem;margin-bottom:0.85rem;">
       <div class="pos-card pos-m">
         <h3 style="color:var(--mg);font-size:0.95rem;margin-bottom:0.6rem;">Atlas Search Wins When…</h3>
         <ul>
-          <li>App needs <strong>OLTP + search</strong> on the same data — eliminate the sidecar</li>
-          <li><strong>ACID transactions</strong> required alongside search results</li>
-          <li>Developers want <strong>one API (MQL)</strong> for CRUD, search, and vectors</li>
-          <li>Data model has <strong>deeply nested documents and arrays</strong></li>
-          <li><strong>RAG/AI applications</strong> that read, write, and search in one pipeline</li>
-          <li>Enterprise requirements: <strong>FLE, PITR, live resharding, RBAC</strong></li>
+          <li>The customer is evaluating <strong>total system architecture</strong>, not isolated engine benchmarks</li>
+          <li>App needs <strong>OLTP + search + vectors</strong> on the same data — eliminate the sidecar, CDC pipeline, and second cluster</li>
+          <li><strong>ACID transactions</strong> required alongside search results (no other search engine offers this)</li>
+          <li>Developers want <strong>one API (MQL)</strong> — no context-switching between query languages</li>
+          <li><strong>RAG/AI applications</strong> that read, write, and search in one aggregation pipeline</li>
+          <li>Enterprise requirements: <strong>FLE, PITR, live resharding, 99.995% SLA</strong></li>
         </ul>
       </div>
       <div class="pos-card pos-e">
         <h3 style="color:var(--ey);font-size:0.95rem;margin-bottom:0.6rem;">Elastic Wins When…</h3>
         <ul>
-          <li>Primary need is <strong>log analytics, metrics, or observability</strong></li>
-          <li>Customer needs a full <strong>SIEM / endpoint security</strong> platform</li>
-          <li>Workload is <strong>write-once, read-many</strong> with no ACID requirement</li>
-          <li>Advanced <strong>statistical aggregations</strong> are core requirements</li>
-          <li>Customer already has an OLTP DB and only needs a search sidecar</li>
+          <li>Primary need is <strong>log analytics, observability, or SIEM</strong> — Elastic's entire ecosystem is built for this</li>
+          <li>Workload is <strong>write-once, read-many</strong> with no ACID or transactional requirement</li>
+          <li>Customer needs <strong>statistical aggregations</strong> (percentiles, histograms, IP-range) that go beyond search</li>
+          <li>Customer already has an OLTP DB and has <strong>accepted the sidecar cost</strong></li>
+          <li>Raw full-text search throughput on <strong>append-only data</strong> is the #1 KPI</li>
         </ul>
       </div>
     </div>
@@ -1012,19 +1168,19 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
       <div class="pos-card pos-p">
         <h3 style="color:var(--pn);font-size:0.95rem;margin-bottom:0.6rem;">Pinecone Wins When…</h3>
         <ul>
-          <li><strong>Raw vector latency</strong> is the #1 non-negotiable requirement</li>
-          <li>Greenfield AI project with <strong>vectors as the core primitive</strong></li>
-          <li>Team wants <strong>fully serverless</strong> with zero infrastructure management</li>
-          <li>Application only needs vector search — no full-text, no aggregation</li>
+          <li><strong>Sub-millisecond vector latency</strong> on isolated ANN queries is the single most important metric</li>
+          <li>Greenfield AI prototype where <strong>time-to-first-result matters more than production architecture</strong></li>
+          <li>Team wants <strong>fully serverless</strong> vectors and is willing to maintain a separate primary DB</li>
+          <li>Application only needs vector similarity — no full-text, no aggregation, no ACID</li>
         </ul>
       </div>
       <div class="pos-card pos-q">
         <h3 style="color:var(--qd);font-size:0.95rem;margin-bottom:0.6rem;">Qdrant Wins When…</h3>
         <ul>
-          <li><strong>Self-hosting</strong> or on-premise deployment is required</li>
-          <li><strong>Heavy metadata filtering</strong> in multi-tenant SaaS applications</li>
-          <li>Need for <strong>Product Quantization</strong> at massive vector scale</li>
-          <li>Team requires <strong>open-source (Apache 2.0)</strong> licensing</li>
+          <li><strong>Self-hosting / air-gapped</strong> deployment is required and team can own the ops burden</li>
+          <li><strong>Filterable HNSW</strong> is critical — highly restrictive multi-tenant filters where pre-filtering loses recall</li>
+          <li>Need for <strong>fine-grained quantization</strong> (SQ, BQ, PQ) at massive vector scale on a budget</li>
+          <li>Team requires <strong>open-source (Apache 2.0)</strong> and is willing to pair it with a separate OLTP database</li>
         </ul>
       </div>
     </div>
@@ -1051,7 +1207,7 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
         <div class="battle-item"><strong>"Who runs it?"</strong> Self-hosting means you own uptime, patching, backups, scaling. Qdrant Cloud SLA is 99.5% vs Atlas 99.995%.</div>
         <div class="battle-item"><strong>"Filterable HNSW is impressive — but niche."</strong> Pre-filtering works well for >95% of use cases. The edge matters for multi-tenant SaaS with very restrictive filters.</div>
         <h3 style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.12em;color:var(--mg);margin-bottom:0.75rem;margin-top:1rem;">The One-Liner</h3>
-        <div class="battle-item" style="border-left:2px solid var(--mg);"><strong>"Need OLTP + search + vectors in one platform? MongoDB. Need a standalone log analytics platform? Elastic. Need raw vector latency above all else? Evaluate Pinecone/Qdrant — but budget for the sidecar."</strong></div>
+        <div class="battle-item" style="border-left:2px solid var(--mg);"><strong>"If the customer's only KPI is raw search latency on an isolated benchmark, a bespoke engine will win. But the moment they need CRUD + search + vectors + transactions in one system — without a CDC pipeline, without two bills, without data drift — that's MongoDB. Don't sell the engine. Sell the platform."</strong></div>
       </div>
     </div>
   </div>
