@@ -86,6 +86,14 @@ td code { font-family:'JetBrains Mono',monospace; font-size:0.73rem; background:
 .pos-m li::before { color:var(--mg); }
 pre.code-block { font-family:'JetBrains Mono',monospace; font-size:0.7rem; background:var(--bg2); padding:0.85rem 1rem; border-radius:8px; color:var(--tx2); line-height:1.6; border:1px solid var(--border); overflow-x:auto; white-space:pre; }
 pre.code-block .kw { color:var(--pr); } pre.code-block .fn { color:var(--cy); } pre.code-block .st { color:var(--or); } pre.code-block .cm { color:var(--tx3); }
+.arch-wrap { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1rem 0.75rem; position: relative; }
+.arch-comp { cursor: pointer; transition: opacity 0.2s, filter 0.2s; }
+.arch-comp:hover { filter: brightness(1.3) drop-shadow(0 0 8px currentColor); }
+.arch-tip-box { position: fixed; z-index: 2000; max-width: 320px; background: #16202e; border: 1px solid var(--border2); border-radius: 10px; padding: 0.7rem 0.9rem; font-size: 0.78rem; color: var(--tx2); line-height: 1.5; pointer-events: none; opacity: 0; transition: opacity 0.15s; box-shadow: 0 8px 32px rgba(0,0,0,0.5); }
+.arch-tip-box.show { opacity: 1; }
+.arch-tip-box strong { color: var(--tx); display: block; margin-bottom: 0.2rem; font-size: 0.8rem; }
+.scale-tier { display: flex; align-items: baseline; gap: 0.5rem; padding: 0.6rem 0.8rem; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); font-size: 0.78rem; color: var(--tx2); line-height: 1.45; margin-bottom: 0.5rem; }
+.scale-tier .tier-label { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; font-weight: 600; white-space: nowrap; min-width: 52px; }
 </style>
 </head>
 <body>
@@ -101,6 +109,7 @@ pre.code-block .kw { color:var(--pr); } pre.code-block .fn { color:var(--cy); } 
       <a href="#s-arch">Architecture</a>
       <a href="#s-query">Query</a>
       <a href="#s-txn">Transactions</a>
+      <a href="#s-scale">Scale</a>
       <a href="#s-migrate">Migration</a>
       <a href="#s-matrix">Matrix</a>
       <a href="#s-pos">Positioning</a>
@@ -173,38 +182,192 @@ pre.code-block .kw { color:var(--pr); } pre.code-block .fn { color:var(--cy); } 
 <div class="slide" id="s-arch" data-title="Architecture">
   <div class="slide-inner">
     <div class="label l-v reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#22D3EE" stroke-width="2" fill="none"/></svg> Section 02 — Architecture Comparison</div>
-    <h2 class="reveal reveal-d1" style="margin-bottom:1.5rem;">Oracle RAC vs. MongoDB Replica Sets</h2>
-    <div class="reveal reveal-d2" style="display:flex;justify-content:center;margin-bottom:1.5rem;">
-      <svg width="680" height="170" viewBox="0 0 680 170" fill="none" style="max-width:100%;">
-        <text x="160" y="14" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#f04e30">Oracle RAC</text>
-        <rect x="40" y="22" width="240" height="60" rx="8" fill="#111923" stroke="#f04e30" stroke-width="1.2"/>
-        <text x="160" y="48" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#e4e9f2">Shared Storage (SAN/ASM)</text>
-        <text x="160" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">All nodes read/write same disk</text>
-        <rect x="50" y="90" width="70" height="36" rx="6" fill="#111923" stroke="#f04e30" stroke-width="0.8"/><text x="85" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f04e30">Node 1</text>
-        <rect x="130" y="90" width="70" height="36" rx="6" fill="#111923" stroke="#f04e30" stroke-width="0.8"/><text x="165" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f04e30">Node 2</text>
-        <rect x="210" y="90" width="70" height="36" rx="6" fill="#111923" stroke="#f04e30" stroke-width="0.8"/><text x="245" y="112" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#f04e30">Node N</text>
-        <line x1="85" y1="82" x2="85" y2="90" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
-        <line x1="165" y1="82" x2="165" y2="90" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
-        <line x1="245" y1="82" x2="245" y2="90" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
-        <text x="160" y="145" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Shared-disk · Cache fusion · Global locks</text>
-        <text x="160" y="160" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#4f5e72">Scale-up · Exadata lock-in · High cost</text>
-        <line x1="340" y1="22" x2="340" y2="145" stroke="#1a2538" stroke-width="1" stroke-dasharray="4 3"/>
-        <text x="520" y="14" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#00ED64">MongoDB Replica Set</text>
-        <rect x="440" y="22" width="80" height="50" rx="8" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
-        <text x="480" y="44" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8.5" fill="#00ed64">Primary</text>
-        <text x="480" y="58" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Reads + Writes</text>
-        <rect x="540" y="38" width="80" height="40" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/><text x="580" y="56" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#8694a8">Secondary</text><text x="580" y="68" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Replication</text>
-        <rect x="540" y="88" width="80" height="40" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/><text x="580" y="106" text-anchor="middle" font-family="DM Sans" font-size="8" fill="#8694a8">Secondary</text><text x="580" y="118" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Replication</text>
-        <path d="M520 47 L540 53" stroke="#00ed64" stroke-width="0.8" opacity="0.5" stroke-dasharray="3 2"/>
-        <path d="M520 55 L540 103" stroke="#00ed64" stroke-width="0.8" opacity="0.5" stroke-dasharray="3 2"/>
-        <text x="520" y="145" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Shared-nothing · Local storage · Auto failover</text>
-        <text x="520" y="160" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#4f5e72">Scale-out via sharding · Multi-cloud · Pay-as-you-go</text>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1rem;">Oracle RAC vs. MongoDB Replica Sets</h2>
+    <p class="reveal reveal-d2" style="color:var(--tx3);font-size:0.75rem;margin-bottom:1rem;text-align:center;">Hover over any component to learn more</p>
+    <div class="arch-wrap reveal reveal-d2" style="margin-bottom:1.25rem;">
+      <svg width="800" height="280" viewBox="0 0 800 280" fill="none" style="max-width:100%;display:block;margin:0 auto;">
+        <!-- Oracle RAC side -->
+        <text x="190" y="18" text-anchor="middle" font-family="Playfair Display" font-weight="700" font-size="13" fill="#f04e30">Oracle RAC Architecture</text>
+        <!-- Application layer -->
+        <g class="arch-comp" data-tip="Oracle Application Layer|Connects via Oracle Net (TNS). Requires Oracle Client or OCI drivers. Connection strings use SCANs (Single Client Access Name) for RAC failover. Each connection is bound to one instance.">
+          <rect x="110" y="30" width="160" height="35" rx="7" fill="#111923" stroke="#f04e30" stroke-width="1"/>
+          <text x="190" y="50" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#f04e30">Application (TNS/SCAN)</text>
+        </g>
+        <line x1="190" y1="65" x2="190" y2="78" stroke="#f04e30" stroke-width="0.8" opacity="0.5"/>
+        <!-- Cache Fusion Interconnect -->
+        <g class="arch-comp" data-tip="Cache Fusion (GCS/GES)|Global Cache Service + Global Enqueue Service. Nodes exchange data blocks over private high-speed interconnect. Latency-sensitive — requires InfiniBand or 10GbE. The #1 bottleneck in RAC performance.">
+          <rect x="70" y="78" width="240" height="30" rx="6" fill="rgba(240,78,48,0.08)" stroke="#f04e30" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="190" y="97" text-anchor="middle" font-family="JetBrains Mono" font-weight="500" font-size="8" fill="#f04e30">Cache Fusion (GCS / GES)</text>
+        </g>
+        <!-- RAC Nodes -->
+        <g class="arch-comp" data-tip="RAC Instance Node 1|Each node runs a full Oracle RDBMS instance with its own SGA (buffer cache, shared pool, redo log buffer). Handles its own redo log writing. Instance recovery happens across nodes — one node's crash requires another to perform crash recovery.">
+          <rect x="50" y="118" width="86" height="48" rx="7" fill="#111923" stroke="#f04e30" stroke-width="1"/>
+          <text x="93" y="137" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8.5" fill="#f04e30">Instance 1</text>
+          <text x="93" y="150" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">SGA · Redo · PGA</text>
+        </g>
+        <g class="arch-comp" data-tip="RAC Instance Node 2|Second active node sharing the same physical storage. Global locks (GES) coordinate buffer cache between instances. Heavy cross-instance reads trigger gc buffer busy waits — the classic RAC bottleneck.">
+          <rect x="147" y="118" width="86" height="48" rx="7" fill="#111923" stroke="#f04e30" stroke-width="1"/>
+          <text x="190" y="137" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8.5" fill="#f04e30">Instance 2</text>
+          <text x="190" y="150" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">SGA · Redo · PGA</text>
+        </g>
+        <g class="arch-comp" data-tip="RAC Instance Node N|Additional nodes for scale-up. RAC scales reads well but writes contend on global locks. Adding nodes beyond 4-8 often yields diminishing returns due to interconnect overhead and gc contention.">
+          <rect x="244" y="118" width="86" height="48" rx="7" fill="#111923" stroke="#f04e30" stroke-width="1"/>
+          <text x="287" y="137" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="8.5" fill="#f04e30">Instance N</text>
+          <text x="287" y="150" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">SGA · Redo · PGA</text>
+        </g>
+        <line x1="93" y1="108" x2="93" y2="118" stroke="#f04e30" stroke-width="0.8" opacity="0.4"/>
+        <line x1="190" y1="108" x2="190" y2="118" stroke="#f04e30" stroke-width="0.8" opacity="0.4"/>
+        <line x1="287" y1="108" x2="287" y2="118" stroke="#f04e30" stroke-width="0.8" opacity="0.4"/>
+        <!-- Shared Storage -->
+        <g class="arch-comp" data-tip="ASM / Shared SAN Storage|All instances read/write to the same physical storage via Automatic Storage Management (ASM). Scale-up only — you can't distribute data across machines. Often requires Exadata for optimal performance, which is Oracle-proprietary hardware.">
+          <rect x="70" y="185" width="240" height="40" rx="8" fill="rgba(240,78,48,0.06)" stroke="#f04e30" stroke-width="1.2"/>
+          <text x="190" y="203" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="10" fill="#f04e30">Shared Storage (ASM / SAN)</text>
+          <text x="190" y="216" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#5a6578">All nodes → same disk</text>
+        </g>
+        <line x1="93" y1="166" x2="93" y2="185" stroke="#f04e30" stroke-width="0.8" opacity="0.4"/>
+        <line x1="190" y1="166" x2="190" y2="185" stroke="#f04e30" stroke-width="0.8" opacity="0.4"/>
+        <line x1="287" y1="166" x2="287" y2="185" stroke="#f04e30" stroke-width="0.8" opacity="0.4"/>
+        <text x="190" y="245" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">⚠ Scale-up only · Exadata lock-in · Per-core licensing</text>
+        <text x="190" y="260" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#4f5e72">GoldenGate required for cross-region DR (extra license)</text>
+
+        <!-- Divider -->
+        <line x1="400" y1="25" x2="400" y2="260" stroke="#1a2538" stroke-width="1" stroke-dasharray="5 4"/>
+        <text x="400" y="272" text-anchor="middle" font-family="Playfair Display" font-size="8" fill="#4f5e72" font-style="italic">vs</text>
+
+        <!-- MongoDB side -->
+        <text x="610" y="18" text-anchor="middle" font-family="Playfair Display" font-weight="700" font-size="13" fill="#00ED64">MongoDB Atlas Architecture</text>
+        <!-- Application -->
+        <g class="arch-comp" data-tip="MongoDB Application Layer|Standard MongoDB drivers (100+ language bindings). Connection strings use SRV DNS. Drivers handle automatic failover, retry logic, and read preference routing — no special client needed.">
+          <rect x="530" y="30" width="160" height="35" rx="7" fill="#111923" stroke="#00ed64" stroke-width="1"/>
+          <text x="610" y="50" text-anchor="middle" font-family="DM Sans" font-weight="600" font-size="9" fill="#00ed64">Application (SRV / Driver)</text>
+        </g>
+        <line x1="610" y1="65" x2="610" y2="78" stroke="#00ed64" stroke-width="0.8" opacity="0.5"/>
+        <!-- mongos Router (for sharded) -->
+        <g class="arch-comp" data-tip="mongos Router (Sharded)|Query router for sharded clusters. Stateless — add more for throughput. Routes queries to the correct shard(s) based on the shard key. Transparent to the application.">
+          <rect x="540" y="78" width="140" height="28" rx="6" fill="rgba(0,237,100,0.06)" stroke="#00ed64" stroke-width="1" stroke-dasharray="4 3"/>
+          <text x="610" y="96" text-anchor="middle" font-family="JetBrains Mono" font-weight="500" font-size="8" fill="#00ed64">mongos Router (sharded)</text>
+        </g>
+        <!-- Primary -->
+        <g class="arch-comp" data-tip="Primary (WiredTiger)|Handles all writes. WiredTiger storage engine: document-level concurrency, B-tree indexes, snappy/zstd compression, MVCC for snapshot isolation. Oplog replication to secondaries. Automatic failover via election.">
+          <rect x="510" y="118" width="90" height="52" rx="7" fill="#111923" stroke="#00ed64" stroke-width="1.5"/>
+          <text x="555" y="138" text-anchor="middle" font-family="DM Sans" font-weight="700" font-size="9" fill="#00ed64">Primary</text>
+          <text x="555" y="151" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">WiredTiger</text>
+          <text x="555" y="162" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">Reads + Writes</text>
+        </g>
+        <!-- Secondary 1 -->
+        <g class="arch-comp" data-tip="Secondary Replica|Receives writes via oplog replication (async). Can serve reads with readPreference: secondary. Each secondary has its own local storage — shared-nothing. Can be promoted to Primary automatically during failover.">
+          <rect x="620" y="118" width="80" height="44" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="660" y="138" text-anchor="middle" font-family="DM Sans" font-size="8.5" fill="#8694a8">Secondary</text>
+          <text x="660" y="151" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">WiredTiger</text>
+        </g>
+        <!-- Secondary 2 -->
+        <g class="arch-comp" data-tip="Secondary Replica|Third member ensures odd-number quorum for elections. Can be analytics node (readPreference), hidden, or delayed for disaster recovery. Each node owns its own data — no shared disk.">
+          <rect x="620" y="170" width="80" height="44" rx="6" fill="#111923" stroke="#243348" stroke-width="1"/>
+          <text x="660" y="190" text-anchor="middle" font-family="DM Sans" font-size="8.5" fill="#8694a8">Secondary</text>
+          <text x="660" y="203" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#5a6578">WiredTiger</text>
+        </g>
+        <!-- Oplog arrows -->
+        <path d="M600 144 L620 136" stroke="#00ed64" stroke-width="0.8" opacity="0.5" stroke-dasharray="3 2"/>
+        <path d="M600 155 L620 186" stroke="#00ed64" stroke-width="0.8" opacity="0.5" stroke-dasharray="3 2"/>
+        <!-- mongot (Atlas Search) -->
+        <g class="arch-comp" data-tip="mongot (Atlas Search + Vector)|Co-located Lucene-based search process. Powers Atlas Search (BM25 full-text) and Atlas Vector Search (HNSW). Synced via Change Streams — no external pipeline needed. Oracle requires separate Elasticsearch or Oracle Text.">
+          <rect x="725" y="130" width="65" height="42" rx="6" fill="#111923" stroke="#22d3ee" stroke-width="1"/>
+          <text x="757" y="147" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#22d3ee">mongot</text>
+          <text x="757" y="158" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">Search</text>
+          <text x="757" y="167" text-anchor="middle" font-family="JetBrains Mono" font-size="6" fill="#5a6578">+ Vector</text>
+        </g>
+        <path d="M700 150 L725 150" stroke="#22d3ee" stroke-width="0.7" opacity="0.5" stroke-dasharray="3 2"/>
+        <!-- Local storage labels -->
+        <text x="555" y="185" text-anchor="middle" font-family="JetBrains Mono" font-size="6.5" fill="#4f5e72">Local NVMe</text>
+        <text x="610" y="235" text-anchor="middle" font-family="DM Sans" font-size="7.5" fill="#5a6578">Shared-nothing · Auto-failover &lt;10s · Online resharding</text>
+        <text x="610" y="250" text-anchor="middle" font-family="DM Sans" font-size="7" fill="#00ed64" font-weight="600">AWS · Azure · GCP — 100+ regions · Pay-as-you-go</text>
       </svg>
     </div>
     <div class="g2 reveal reveal-d3">
-      <div class="callout callout-o"><strong>Oracle:</strong> Shared-disk architecture. All nodes compete for the same storage via cache fusion. Scaling means bigger hardware (Exadata). GoldenGate for DR adds cost and complexity.</div>
-      <div class="callout callout-m"><strong>MongoDB:</strong> Shared-nothing architecture. Each node owns its data. Auto-failover in seconds. Horizontal scaling via <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" style="color:var(--cy);text-decoration:none;">sharding</a>. Cross-region replication built-in.</div>
+      <div class="callout callout-o"><strong>Oracle RAC:</strong> Shared-disk architecture. All nodes compete for the same storage via cache fusion. GC buffer busy waits are the #1 performance bottleneck. Scaling means bigger Exadata hardware. GoldenGate for DR adds cost and complexity.</div>
+      <div class="callout callout-m"><strong>MongoDB Atlas:</strong> Shared-nothing architecture. Each node owns its local storage. Auto-failover in &lt;10 seconds. Horizontal scaling via <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" style="color:var(--cy);text-decoration:none;">sharding</a>. Integrated search and vector search via mongot. Multi-cloud by default.</div>
     </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: RADAR CHART ════════════ -->
+<div class="slide scrollable" id="s-radar" data-title="High-Level Comparison">
+  <div class="slide-inner">
+    <div class="label l-v reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><polygon points="12,2 22,22 2,22" stroke="#22D3EE" stroke-width="2" fill="none"/></svg> High-Level Comparison</div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:1.25rem;">Oracle vs MongoDB Atlas — At a Glance</h2>
+    <div class="reveal reveal-d2" style="display:flex;justify-content:center;">
+      <svg width="720" height="480" viewBox="0 0 720 480" fill="none" style="max-width:100%;">
+        <defs>
+          <style>text{font-family:'DM Sans',sans-serif;}text.ax{font-size:11px;font-weight:700;fill:#e4e9f2;}text.ax-sub{font-size:8px;fill:#4f5e72;}text.ring-lbl{font-size:7.5px;fill:#3a4a5c;}</style>
+        </defs>
+        <!-- center 360,230  radius 180 for score 10 -->
+        <!-- Score rings -->
+        <polygon points="360,50 530,116 494,296 226,296 190,116" fill="none" stroke="#1a2538" stroke-width="0.6"/>
+        <polygon points="360,86 512,141 481,282 239,282 208,141" fill="none" stroke="#1a2538" stroke-width="0.5"/>
+        <polygon points="360,122 494,166 468,268 252,268 226,166" fill="none" stroke="#1a2538" stroke-width="0.4"/>
+        <polygon points="360,158 476,191 455,254 265,254 244,191" fill="none" stroke="#1a2538" stroke-width="0.3"/>
+        <polygon points="360,194 458,216 442,240 278,240 262,216" fill="none" stroke="#1a2538" stroke-width="0.2"/>
+        <!-- Ring labels -->
+        <text x="362" y="55" class="ring-lbl">10</text>
+        <text x="362" y="91" class="ring-lbl">8</text>
+        <text x="362" y="127" class="ring-lbl">6</text>
+        <text x="362" y="163" class="ring-lbl">4</text>
+        <text x="362" y="199" class="ring-lbl">2</text>
+        <!-- Axes -->
+        <line x1="360" y1="230" x2="360" y2="50" stroke="#1a2538" stroke-width="0.5"/>
+        <line x1="360" y1="230" x2="530" y2="116" stroke="#1a2538" stroke-width="0.5"/>
+        <line x1="360" y1="230" x2="494" y2="296" stroke="#1a2538" stroke-width="0.5"/>
+        <line x1="360" y1="230" x2="226" y2="296" stroke="#1a2538" stroke-width="0.5"/>
+        <line x1="360" y1="230" x2="190" y2="116" stroke="#1a2538" stroke-width="0.5"/>
+        <!-- Axis labels -->
+        <text x="360" y="36" text-anchor="middle" class="ax">Schema Flexibility</text>
+        <text x="360" y="46" text-anchor="middle" class="ax-sub">Agile iteration vs rigid DDL</text>
+        <text x="544" y="112" text-anchor="start" class="ax">Scaling</text>
+        <text x="544" y="124" text-anchor="start" class="ax-sub">Scale-out vs scale-up</text>
+        <text x="506" y="310" text-anchor="start" class="ax">Platform Breadth</text>
+        <text x="506" y="322" text-anchor="start" class="ax-sub">Search, vectors, streams</text>
+        <text x="214" y="310" text-anchor="end" class="ax">Operations</text>
+        <text x="214" y="322" text-anchor="end" class="ax-sub">DBA effort, automation</text>
+        <text x="178" y="112" text-anchor="end" class="ax">Cost Model</text>
+        <text x="178" y="124" text-anchor="end" class="ax-sub">Licensing vs consumption</text>
+
+        <!-- MongoDB polygon (scores: Flex=9, Scale=10, Platform=10, Ops=9, Cost=10) -->
+        <polygon points="360,68 524,120 494,296 230,296 196,120" fill="rgba(0,237,100,0.10)" stroke="#00ed64" stroke-width="2.5"/>
+        <circle cx="360" cy="68" r="4" fill="#00ed64"/>
+        <circle cx="524" cy="120" r="4" fill="#00ed64"/>
+        <circle cx="494" cy="296" r="4" fill="#00ed64"/>
+        <circle cx="230" cy="296" r="4" fill="#00ed64"/>
+        <circle cx="196" cy="120" r="4" fill="#00ed64"/>
+
+        <!-- Oracle polygon (scores: Flex=3, Scale=5, Platform=4, Ops=3, Cost=2) -->
+        <polygon points="360,176 440,203 454,256 266,256 280,203" fill="rgba(240,78,48,0.08)" stroke="#f04e30" stroke-width="2"/>
+        <circle cx="360" cy="176" r="4" fill="#f04e30"/>
+        <circle cx="440" cy="203" r="4" fill="#f04e30"/>
+        <circle cx="454" cy="256" r="4" fill="#f04e30"/>
+        <circle cx="266" cy="256" r="4" fill="#f04e30"/>
+        <circle cx="280" cy="203" r="4" fill="#f04e30"/>
+
+        <!-- Legend -->
+        <rect x="260" y="360" width="10" height="10" rx="2" fill="#00ed64"/>
+        <text x="276" y="369" font-size="11" fill="#e4e9f2" font-weight="600">MongoDB Atlas</text>
+        <rect x="380" y="360" width="10" height="10" rx="2" fill="#f04e30"/>
+        <text x="396" y="369" font-size="11" fill="#e4e9f2" font-weight="600">Oracle Database</text>
+      </svg>
+    </div>
+    <!-- Score table -->
+    <div class="reveal reveal-d3" style="display:flex;justify-content:center;margin-top:0.5rem;">
+      <table style="max-width:600px;font-size:0.78rem;">
+        <thead><tr><th>Dimension</th><th style="color:var(--mg);text-align:center;">MongoDB Atlas</th><th style="color:var(--oc);text-align:center;">Oracle Database</th></tr></thead>
+        <tbody>
+          <tr><td>Schema Flexibility</td><td style="text-align:center;color:var(--mg);font-weight:700;">9</td><td style="text-align:center;color:var(--oc);font-weight:700;">3</td></tr>
+          <tr><td>Scaling</td><td style="text-align:center;color:var(--mg);font-weight:700;">10</td><td style="text-align:center;color:var(--oc);font-weight:700;">5</td></tr>
+          <tr><td>Platform Breadth</td><td style="text-align:center;color:var(--mg);font-weight:700;">10</td><td style="text-align:center;color:var(--oc);font-weight:700;">4</td></tr>
+          <tr><td>Operations</td><td style="text-align:center;color:var(--mg);font-weight:700;">9</td><td style="text-align:center;color:var(--oc);font-weight:700;">3</td></tr>
+          <tr><td>Cost Model</td><td style="text-align:center;color:var(--mg);font-weight:700;">10</td><td style="text-align:center;color:var(--oc);font-weight:700;">2</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="reveal reveal-d4" style="text-align:center;font-size:0.68rem;color:var(--tx3);margin-top:0.5rem;">Scores are directional estimates for positioning conversations, not formal benchmarks. Oracle scores higher on mature OLAP/DW — not reflected here.</p>
   </div>
 </div>
 
@@ -399,6 +562,39 @@ db.events.<span class="fn">createIndex</span>({ <span class="st">"metadata.$**"<
       <div class="adv-card"><h4>DBMS_JOB → Scheduled Triggers / K8s</h4><p>Oracle job schedulers decouple to <strong>Atlas Scheduled Triggers</strong> (CRON-based serverless) or <strong>Kubernetes CronJobs</strong>. No database dependency for scheduling.</p></div>
       <div class="adv-card"><h4>Foreign Keys → Embedding + Validation</h4><p>Referential integrity via <strong>embedded documents</strong> (inherent). When references are used, enforce integrity at the app layer within multi-document transactions. <a href="https://www.mongodb.com/docs/manual/core/schema-validation/" target="_blank" style="color:var(--cy);text-decoration:none;">Schema Validation →</a></p></div>
       <div class="adv-card"><h4>VPD/RLS → Views + $cond</h4><p>Row-level security via <strong>dynamic views</strong> using <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$cond</code> and <code style="font-family:'JetBrains Mono',monospace;font-size:0.73rem;background:rgba(255,255,255,0.06);padding:0.12rem 0.35rem;border-radius:4px;color:var(--cy);">$$USER_ROLES</code>. Data masking with field-level conditional logic inside view pipelines.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════ SLIDE: SCALING DEEP DIVE ════════════ -->
+<div class="slide scrollable" id="s-scale" data-title="Scaling">
+  <div class="slide-inner">
+    <div class="label l-v reveal"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><polyline points="3,17 8,11 13,14 21,6" stroke="#22D3EE" stroke-width="2" fill="none" stroke-linecap="round"/></svg> Scaling Deep Dive</div>
+    <h2 class="reveal reveal-d1" style="margin-bottom:0.5rem;">Scaling — Scale-Up vs Scale-Out</h2>
+    <p class="reveal reveal-d2" style="color:var(--tx2);font-size:0.85rem;margin-bottom:1.25rem;">Oracle scales vertically (bigger hardware). MongoDB scales horizontally (more nodes). The difference compounds at every tier.</p>
+
+    <!-- Oracle scaling -->
+    <div class="card reveal reveal-d3" style="border-left:3px solid var(--oc);margin-bottom:0.75rem;padding:1.25rem;">
+      <h3 style="font-size:0.9rem;color:var(--oc);margin-bottom:0.6rem;">Oracle Database</h3>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--oc);">≤ 100 GB</span> Single instance. Straightforward. Performance depends on instance class (CPU/RAM). Licensing cost already significant.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--oc);">100 GB–1 TB</span> RAC required for HA. Cache fusion overhead begins. Shared storage (ASM/SAN) must be sized for peak. <strong style="color:var(--rd);">Per-core licensing multiplies with each RAC node.</strong></div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--oc);">1–10 TB</span> <strong style="color:var(--rd);">Pain point:</strong> Partitioning required (extra-cost option). RAC interconnect latency becomes critical. Exadata often "recommended" (proprietary hardware). GoldenGate for cross-region DR adds another license and operational burden.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--oc);">10 TB+</span> <strong style="color:var(--rd);">Hard ceiling approaching.</strong> Scale-up architecture hits physical limits. Sharding requires Oracle Sharding (12.2+) — complex, rarely deployed, limited driver support. Most orgs resort to application-level partitioning or data archival.</div>
+      <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/racad/" target="_blank" style="color:var(--cy);text-decoration:none;">RAC Admin Guide</a> · <a href="https://docs.oracle.com/en/database/oracle/oracle-database/23/shard/" target="_blank" style="color:var(--cy);text-decoration:none;">Oracle Sharding</a></p>
+    </div>
+
+    <!-- MongoDB scaling -->
+    <div class="card reveal reveal-d4" style="border-left:3px solid var(--mg);margin-bottom:0.75rem;padding:1.25rem;">
+      <h3 style="font-size:0.9rem;color:var(--mg);margin-bottom:0.6rem;display:flex;align-items:center;gap:0.5rem;"><svg width="14" height="14" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg> MongoDB Atlas</h3>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">≤ 100 GB</span> Single replica set. M10–M40 tiers. Auto-scaling adjusts tier based on utilization. Read secondaries for analytics workloads.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">100 GB–1 TB</span> Scale up to M50–M80. Or start sharding (hash/range/zone). Sharding is additive — no data migration needed. Search Nodes scale independently.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">1–10 TB</span> Sharded cluster. Add shards as needed — no hard limit. <strong style="color:var(--tx);">Live resharding</strong> lets you change shard keys without downtime. Zone-sharding for geo-distribution.</div>
+      <div class="scale-tier"><span class="tier-label" style="color:var(--mg);">10 TB+</span> Petabyte-scale deployments in production. Auto-balancer redistributes chunks. Binary quantization for vector indexes (32× compression). Atlas auto-scaling tiers. <strong style="color:var(--mg);">One bill. No per-core licensing.</strong></div>
+      <p style="font-size:0.72rem;color:var(--tx3);margin-top:0.4rem;">→ <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" style="color:var(--cy);text-decoration:none;">Sharding Docs</a> · <a href="https://www.mongodb.com/docs/atlas/cluster-config/multi-cloud-distribution/" target="_blank" style="color:var(--cy);text-decoration:none;">Multi-Cloud Distribution</a></p>
+    </div>
+
+    <div class="callout callout-m reveal" style="margin-top:0.5rem;">
+      <strong>The cost asymmetry:</strong> At 1 TB, an Oracle RAC deployment typically requires RAC licensing (per-core), Partitioning option, GoldenGate for DR, and possibly Exadata. MongoDB Atlas at the same scale is a sharded cluster with consumption pricing — no hidden options, no per-core multipliers, no proprietary hardware. The cost gap widens at every tier.
     </div>
   </div>
 </div>
@@ -613,6 +809,24 @@ const revealEls = document.querySelectorAll('.reveal');
 const revealObs = new IntersectionObserver((entries) => { entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('vis'); }); }, { threshold: 0.1 });
 revealEls.forEach(el => revealObs.observe(el));
 document.addEventListener('keydown', (e) => { if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); const next = Math.min(currentSlide + 1, totalSlides - 1); slides[next].scrollIntoView({ behavior: 'smooth' }); } else if (e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); const prev = Math.max(currentSlide - 1, 0); slides[prev].scrollIntoView({ behavior: 'smooth' }); } });
+
+/* Architecture diagram tooltips */
+(function(){
+  const tip=document.createElement('div');tip.className='arch-tip-box';document.body.appendChild(tip);
+  document.querySelectorAll('.arch-comp').forEach(g=>{
+    const raw=g.getAttribute('data-tip');if(!raw)return;
+    const idx=raw.indexOf('|');const title=idx>0?raw.slice(0,idx):raw;const desc=idx>0?raw.slice(idx+1):'';
+    g.addEventListener('mouseenter',e=>{
+      tip.innerHTML='<strong>'+title+'</strong>'+desc;tip.classList.add('show');
+    });
+    g.addEventListener('mousemove',e=>{
+      const x=e.clientX,y=e.clientY;
+      tip.style.left=Math.min(x+14,window.innerWidth-tip.offsetWidth-16)+'px';
+      tip.style.top=(y>window.innerHeight/2?y-tip.offsetHeight-10:y+18)+'px';
+    });
+    g.addEventListener('mouseleave',()=>{tip.classList.remove('show');});
+  });
+})();
 </script>
 <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
 </body>

@@ -9,45 +9,56 @@
     <title>MongoDB Atlas vs Cosmos DB vs DocumentDB</title>
     <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
     <script src="https://cdn.jsdelivr.net/npm/chart.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-primary: #001E2B;
-            --bg-secondary: #002838;
-            --bg-card: #003345;
-            --bg-card-hover: #004058;
+            --bg-primary: #0f1117;
+            --bg-secondary: #161922;
+            --bg-card: #1c1f2b;
+            --bg-card-hover: #242837;
             --accent: #00ED64;
             --accent-dim: #00684a;
-            --accent-glow: rgba(0, 237, 100, 0.12);
-            --text-primary: #fafafa;
-            --text-secondary: #b8d8e8;
-            --text-muted: #7fa8bc;
-            --border: #1a3a4a;
-            --border-accent: rgba(0, 237, 100, 0.3);
-            --danger: #ff6b6b;
+            --accent-glow: rgba(0, 237, 100, 0.10);
+            --text-primary: #e8e8e8;
+            --text-secondary: #a0a8b8;
+            --text-muted: #6b7280;
+            --border: rgba(255,255,255,0.07);
+            --border2: rgba(255,255,255,0.12);
+            --border-accent: rgba(0, 237, 100, 0.25);
+            --danger: #f87171;
             --warning: #fbbf24;
             --info: #38bdf8;
             --cosmos-color: #0078d4;
-            --cosmos-vcore: #5b5fc7;
+            --cosmos-vcore: #7c7fff;
             --docdb-color: #ff9900;
             --atlas-color: #00ED64;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background: var(--bg-primary);
             color: var(--text-primary);
             line-height: 1.7;
         }
+
+        /* Reveal animations */
+        .reveal { opacity: 0; transform: translateY(20px); transition: opacity 0.6s ease, transform 0.6s ease; }
+        .reveal.visible { opacity: 1; transform: translateY(0); }
+        .reveal-d1 { transition-delay: 0.08s; }
+        .reveal-d2 { transition-delay: 0.16s; }
+        .reveal-d3 { transition-delay: 0.24s; }
+        .reveal-d4 { transition-delay: 0.32s; }
+
         .header {
-            background: linear-gradient(135deg, var(--bg-primary) 0%, #002a3a 100%);
+            background: rgba(15,17,23,0.85);
             border-bottom: 1px solid var(--border);
-            padding: 1.5rem 2rem;
+            padding: 0;
             position: sticky;
             top: 0;
             z-index: 100;
-            backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
         }
         .header-inner {
             max-width: 1400px;
@@ -55,45 +66,69 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            padding: 0.85rem 2rem;
         }
         .header-logo {
-            width: 36px; height: 36px;
+            width: 32px; height: 32px;
         }
         .header h1 {
-            font-size: 1.25rem;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1.05rem;
             font-weight: 700;
             color: var(--text-primary);
+            flex-shrink: 0;
         }
         .header h1 span { color: var(--accent); }
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 0.15rem;
+            margin-left: auto;
+            overflow-x: auto;
+        }
+        .header-nav a {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            text-decoration: none;
+            padding: 0.4rem 0.65rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .header-nav a:hover { color: var(--text-primary); background: rgba(255,255,255,0.05); }
+        .header-nav a.active { color: var(--accent); background: rgba(0,237,100,0.08); }
 
         .hero {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 4rem 2rem 2rem;
+            padding: 4.5rem 2rem 2.5rem;
             text-align: center;
         }
         .hero h2 {
-            font-size: 2.8rem;
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(2rem, 4.5vw, 3.2rem);
             font-weight: 800;
             letter-spacing: -0.03em;
             margin-bottom: 1rem;
-            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 100%);
+            background: linear-gradient(135deg, var(--text-primary) 30%, var(--accent) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
         .hero p {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             color: var(--text-secondary);
-            max-width: 800px;
+            max-width: 780px;
             margin: 0 auto 3rem;
+            line-height: 1.7;
         }
 
         /* Architecture Cards */
         .arch-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 1.25rem;
+            gap: 1rem;
             max-width: 1400px;
             margin: 0 auto 3rem;
             padding: 0 2rem;
@@ -101,22 +136,22 @@
         .arch-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.75rem;
+            border-radius: 14px;
+            padding: 1.5rem;
             position: relative;
             overflow: hidden;
             transition: all 0.3s ease;
         }
         .arch-card:hover {
-            border-color: var(--border-accent);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            border-color: var(--border2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
         }
         .arch-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 4px;
+            height: 3px;
         }
         .arch-card.atlas::before { background: var(--atlas-color); }
         .arch-card.cosmos-vcore::before { background: var(--cosmos-vcore); }
@@ -124,38 +159,39 @@
         .arch-card.docdb::before { background: var(--docdb-color); }
         .arch-card .badge {
             display: inline-block;
-            padding: 0.2rem 0.6rem;
+            padding: 0.2rem 0.55rem;
             border-radius: 99px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
-            margin-bottom: 0.75rem;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.65rem;
         }
-        .arch-card.atlas .badge { background: rgba(0,237,100,0.15); color: var(--accent); }
-        .arch-card.cosmos-vcore .badge { background: rgba(91,95,199,0.2); color: #a5a8ff; }
-        .arch-card.cosmos-ru .badge { background: rgba(0,120,212,0.2); color: #60b5ff; }
-        .arch-card.docdb .badge { background: rgba(255,153,0,0.2); color: #ffbe55; }
+        .arch-card.atlas .badge { background: rgba(0,237,100,0.12); color: var(--accent); }
+        .arch-card.cosmos-vcore .badge { background: rgba(124,127,255,0.15); color: #a5a8ff; }
+        .arch-card.cosmos-ru .badge { background: rgba(0,120,212,0.15); color: #60b5ff; }
+        .arch-card.docdb .badge { background: rgba(255,153,0,0.15); color: #ffbe55; }
         .arch-card h3 {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
         .arch-card .engine {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
             color: var(--text-muted);
-            margin-bottom: 1rem;
-            padding-bottom: 0.75rem;
+            margin-bottom: 0.85rem;
+            padding-bottom: 0.65rem;
             border-bottom: 1px solid var(--border);
         }
         .arch-card ul {
             list-style: none;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
         }
         .arch-card ul li {
-            padding: 0.25rem 0;
-            padding-left: 1.2rem;
+            padding: 0.2rem 0;
+            padding-left: 1.1rem;
             position: relative;
         }
         .arch-card ul li::before {
@@ -163,6 +199,7 @@
             position: absolute;
             left: 0;
             color: var(--text-muted);
+            font-size: 0.75rem;
         }
 
         .container {
@@ -174,23 +211,23 @@
         /* Tabs */
         .tab-nav {
             display: flex;
-            gap: 0.25rem;
-            border-bottom: 2px solid var(--border);
+            gap: 0.15rem;
+            border-bottom: 1px solid var(--border2);
             margin-bottom: 2rem;
             overflow-x: auto;
             padding-bottom: 0;
         }
         .tab-btn {
-            padding: 0.85rem 1.5rem;
+            padding: 0.75rem 1.15rem;
             background: none;
             border: none;
             color: var(--text-muted);
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
             font-weight: 500;
             cursor: pointer;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
             white-space: nowrap;
             transition: all 0.2s;
         }
@@ -200,20 +237,21 @@
             border-bottom-color: var(--accent);
             font-weight: 600;
         }
-        .tab-panel { display: none; }
+        .tab-panel { display: none; animation: fadeIn 0.4s ease; }
         .tab-panel.active { display: block; }
 
         /* Section styling */
         .section-title {
-            font-size: 1.6rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             color: var(--text-primary);
         }
         .section-subtitle {
             color: var(--text-secondary);
             margin-bottom: 2rem;
-            font-size: 0.95rem;
+            font-size: 0.88rem;
         }
 
         /* Comparison table */
@@ -221,41 +259,51 @@
             width: 100%;
             border-collapse: collapse;
             margin: 1.5rem 0;
-            font-size: 0.88rem;
+            font-size: 0.82rem;
         }
         .cmp-table thead th {
             background: var(--bg-secondary);
-            padding: 1rem;
+            padding: 0.85rem 0.9rem;
             text-align: left;
             font-weight: 600;
+            font-size: 0.78rem;
             color: var(--text-primary);
-            border-bottom: 2px solid var(--border);
+            border-bottom: 1px solid var(--border2);
             position: sticky;
             top: 0;
         }
         .cmp-table thead th:first-child {
             border-radius: 8px 0 0 0;
-            width: 22%;
+            width: 20%;
         }
         .cmp-table thead th:last-child {
             border-radius: 0 8px 0 0;
         }
-        .cmp-table thead th.atlas-col { border-top: 3px solid var(--atlas-color); }
-        .cmp-table thead th.cosmos-vcore-col { border-top: 3px solid var(--cosmos-vcore); }
-        .cmp-table thead th.cosmos-ru-col { border-top: 3px solid var(--cosmos-color); }
-        .cmp-table thead th.docdb-col { border-top: 3px solid var(--docdb-color); }
+        .cmp-table thead th.atlas-col { border-top: 2px solid var(--atlas-color); }
+        .cmp-table thead th.cosmos-vcore-col { border-top: 2px solid var(--cosmos-vcore); }
+        .cmp-table thead th.cosmos-ru-col { border-top: 2px solid var(--cosmos-color); }
+        .cmp-table thead th.docdb-col { border-top: 2px solid var(--docdb-color); }
         .cmp-table td {
-            padding: 0.85rem 1rem;
+            padding: 0.75rem 0.9rem;
             border-bottom: 1px solid var(--border);
             color: var(--text-secondary);
             vertical-align: top;
+            line-height: 1.55;
         }
         .cmp-table tbody tr:hover td {
-            background: var(--bg-card);
+            background: rgba(255,255,255,0.02);
         }
         .cmp-table td:first-child {
             font-weight: 600;
             color: var(--text-primary);
+            font-size: 0.8rem;
+        }
+        .cmp-table code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: rgba(255,255,255,0.06);
+            padding: 0.15rem 0.35rem;
+            border-radius: 4px;
         }
         .cmp-table .check { color: var(--accent); font-weight: 700; }
         .cmp-table .partial { color: var(--warning); font-weight: 600; }
@@ -264,84 +312,94 @@
         /* Limitation cards */
         .limit-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            gap: 1.25rem;
-            margin: 1.5rem 0;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 1rem;
+            margin: 1.25rem 0;
         }
         .limit-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            border-left: 4px solid var(--danger);
+            border-radius: 10px;
+            padding: 1.25rem;
+            border-left: 3px solid var(--danger);
+            transition: border-color 0.2s;
         }
+        .limit-card:hover { border-color: var(--border2); }
         .limit-card.warn { border-left-color: var(--warning); }
         .limit-card.info { border-left-color: var(--info); }
         .limit-card h4 {
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         .limit-card p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
             line-height: 1.6;
+        }
+        .limit-card code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.72rem;
+            background: rgba(255,255,255,0.06);
+            padding: 0.15rem 0.3rem;
+            border-radius: 3px;
         }
         .limit-card .tag {
             display: inline-block;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             font-weight: 600;
-            margin-top: 0.75rem;
+            margin-top: 0.6rem;
         }
-        .tag-cosmos { background: rgba(0,120,212,0.15); color: #60b5ff; }
-        .tag-docdb { background: rgba(255,153,0,0.15); color: #ffbe55; }
-        .tag-both { background: rgba(255,107,107,0.15); color: #ff8a8a; }
+        .tag-cosmos { background: rgba(0,120,212,0.12); color: #60b5ff; }
+        .tag-docdb { background: rgba(255,153,0,0.12); color: #ffbe55; }
+        .tag-both { background: rgba(248,113,113,0.12); color: #fca5a5; }
 
         /* Charts */
         .chart-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+            gap: 1.5rem;
             margin: 2rem 0;
         }
         .chart-box {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem;
+            border-radius: 14px;
+            padding: 1.75rem;
         }
         .chart-box h3 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
             text-align: center;
         }
 
         /* Callout boxes */
         .callout {
-            background: var(--accent-glow);
+            background: rgba(0, 237, 100, 0.04);
             border: 1px solid var(--border-accent);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 10px;
+            padding: 1.25rem;
             margin: 1.5rem 0;
         }
         .callout.danger {
-            background: rgba(255,107,107,0.08);
-            border-color: rgba(255,107,107,0.3);
+            background: rgba(248,113,113,0.05);
+            border-color: rgba(248,113,113,0.25);
         }
         .callout h4 {
             font-weight: 700;
-            margin-bottom: 0.5rem;
-            font-size: 0.95rem;
+            margin-bottom: 0.4rem;
+            font-size: 0.88rem;
         }
         .callout p, .callout li {
-            font-size: 0.88rem;
+            font-size: 0.82rem;
             color: var(--text-secondary);
+            line-height: 1.6;
         }
         .callout ul { padding-left: 1.25rem; margin-top: 0.5rem; }
 
@@ -349,51 +407,52 @@
         .pill-grid {
             display: flex;
             flex-wrap: wrap;
-            gap: 0.5rem;
-            margin: 1rem 0;
+            gap: 0.4rem;
+            margin: 0.75rem 0;
         }
         .pill {
             display: inline-flex;
             align-items: center;
-            gap: 0.35rem;
-            padding: 0.35rem 0.75rem;
+            gap: 0.3rem;
+            padding: 0.3rem 0.65rem;
             border-radius: 99px;
-            font-size: 0.78rem;
-            font-weight: 500;
+            font-size: 0.72rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
             border: 1px solid var(--border);
             background: var(--bg-secondary);
             color: var(--text-secondary);
         }
-        .pill.yes { border-color: rgba(0,237,100,0.3); color: var(--accent); }
-        .pill.no { border-color: rgba(255,107,107,0.3); color: var(--danger); opacity: 0.8; }
-        .pill.partial { border-color: rgba(251,191,36,0.3); color: var(--warning); }
+        .pill.yes { border-color: rgba(0,237,100,0.25); color: var(--accent); }
+        .pill.no { border-color: rgba(248,113,113,0.25); color: var(--danger); opacity: 0.85; }
+        .pill.partial { border-color: rgba(251,191,36,0.25); color: var(--warning); }
 
         /* References */
         .ref-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-            margin: 1.5rem 0 3rem;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 0.85rem;
+            margin: 1.25rem 0 3rem;
         }
         .ref-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
             border-radius: 10px;
-            padding: 1.25rem;
+            padding: 1.15rem;
             transition: border-color 0.2s;
         }
-        .ref-card:hover { border-color: var(--border-accent); }
+        .ref-card:hover { border-color: var(--border2); }
         .ref-card h4 {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.6rem;
         }
         .ref-card a {
             display: block;
             color: var(--accent);
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-decoration: none;
-            padding: 0.2rem 0;
+            padding: 0.15rem 0;
             transition: opacity 0.2s;
         }
         .ref-card a:hover { opacity: 0.8; text-decoration: underline; }
@@ -401,29 +460,32 @@
         /* Takeaway */
         .takeaway-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.25rem;
-            margin: 2rem 0;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
         }
         .takeaway-card {
             background: var(--bg-card);
             border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 1.75rem;
+            border-radius: 12px;
+            padding: 1.5rem;
             text-align: center;
+            transition: border-color 0.2s;
         }
+        .takeaway-card:hover { border-color: var(--border2); }
         .takeaway-card .icon {
-            font-size: 2rem;
-            margin-bottom: 0.75rem;
+            font-size: 1.8rem;
+            margin-bottom: 0.6rem;
         }
         .takeaway-card h4 {
-            font-size: 1rem;
+            font-size: 0.92rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.4rem;
         }
         .takeaway-card p {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
+            line-height: 1.55;
         }
 
         .footer {
@@ -432,7 +494,7 @@
             text-align: center;
             padding: 2rem;
             color: var(--text-muted);
-            font-size: 0.85rem;
+            font-size: 0.78rem;
             margin-top: 3rem;
         }
 
@@ -444,24 +506,34 @@
             .arch-grid { grid-template-columns: 1fr; }
             .hero h2 { font-size: 2rem; }
             .limit-grid { grid-template-columns: 1fr; }
-            .tab-btn { padding: 0.7rem 1rem; font-size: 0.8rem; }
+            .tab-btn { padding: 0.6rem 0.85rem; font-size: 0.75rem; }
+            .header-nav { display: none; }
         }
 
         /* === Hero Stats === */
-        .hero-stats { display: flex; justify-content: center; gap: 3rem; margin-top: 2.5rem; flex-wrap: wrap; }
-        .hero-stat { text-align: center; }
-        .hero-stat .number { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
-        .hero-stat .label { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.35rem; }
+        .hero-stats { display: flex; justify-content: center; gap: 2.5rem; margin-top: 2.5rem; flex-wrap: wrap; }
+        .hero-stat {
+            text-align: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.75rem;
+            min-width: 140px;
+            transition: border-color 0.2s;
+        }
+        .hero-stat:hover { border-color: var(--border2); }
+        .hero-stat .number { font-family: 'JetBrains Mono', monospace; font-size: 2.2rem; font-weight: 800; letter-spacing: -0.03em; line-height: 1; }
+        .hero-stat .label { font-size: 0.72rem; color: var(--text-muted); margin-top: 0.4rem; line-height: 1.35; }
         .hero-stat.atlas .number { color: var(--accent); }
         .hero-stat.cosmos .number { color: var(--cosmos-color); }
         .hero-stat.docdb .number { color: var(--docdb-color); }
 
         /* === Architecture Diagrams === */
         .arch-diagrams { margin: 2.5rem 0 1rem; }
-        .arch-diagrams > h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 1.25rem; }
-        .shard-toggle { display: inline-flex; gap: 0.25rem; margin-bottom: 1.75rem; background: var(--bg-secondary); padding: 0.3rem; border-radius: 10px; }
-        .shard-btn { padding: 0.55rem 1.25rem; border: none; border-radius: 8px; background: transparent; color: var(--text-muted); font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: all 0.3s; }
-        .shard-btn.active { background: var(--bg-card); color: var(--accent); box-shadow: 0 2px 10px rgba(0,0,0,0.25); }
+        .arch-diagrams > h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; }
+        .shard-toggle { display: inline-flex; gap: 0.2rem; margin-bottom: 1.5rem; background: var(--bg-secondary); padding: 0.25rem; border-radius: 8px; border: 1px solid var(--border); }
+        .shard-btn { padding: 0.45rem 1rem; border: none; border-radius: 6px; background: transparent; color: var(--text-muted); font-family: inherit; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.3s; }
+        .shard-btn.active { background: var(--bg-card); color: var(--accent); box-shadow: 0 2px 8px rgba(0,0,0,0.3); }
         .diagram-view { display: none; animation: fadeIn 0.4s ease; }
         .diagram-view.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
@@ -472,9 +544,9 @@
         .d-label.cosmos-v { color: var(--cosmos-vcore); border-bottom: 2px solid var(--cosmos-vcore); }
         .d-label.cosmos-r { color: var(--cosmos-color); border-bottom: 2px solid var(--cosmos-color); }
         .d-label.docdb { color: var(--docdb-color); border-bottom: 2px solid var(--docdb-color); }
-        .d-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 0.45rem 0.6rem; font-size: 0.72rem; text-align: center; width: 100%; color: var(--text-secondary); transition: all 0.3s; }
-        .d-box:hover { border-color: var(--border-accent); transform: scale(1.02); }
-        .d-box strong { color: var(--text-primary); font-weight: 600; }
+        .d-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 7px; padding: 0.4rem 0.55rem; font-size: 0.68rem; text-align: center; width: 100%; color: var(--text-secondary); transition: all 0.3s; }
+        .d-box:hover { border-color: var(--border2); transform: scale(1.02); }
+        .d-box strong { color: var(--text-primary); font-weight: 600; font-size: 0.7rem; }
         .d-line { width: 1px; height: 16px; background: var(--border); margin: 0 auto; }
         .d-line-fork { display: flex; justify-content: center; align-items: flex-end; height: 24px; position: relative; width: 100%; }
         .d-line-fork::before { content: ''; position: absolute; top: 0; left: 50%; width: 1px; height: 12px; background: var(--border); }
@@ -500,38 +572,39 @@
         .d-partition .cap { color: var(--warning); font-weight: 600; font-size: 0.58rem; }
 
         /* === Scenario Picker === */
-        .scenario-section { margin: 2.5rem 0 2rem; }
-        .scenario-section > h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .scenario-section > p { color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 1.25rem; }
-        .scenario-pills { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem; }
-        .scenario-pill { padding: 0.5rem 1rem; border: 1px solid var(--border); border-radius: 99px; background: var(--bg-card); color: var(--text-secondary); font-family: inherit; font-size: 0.82rem; cursor: pointer; transition: all 0.25s; }
-        .scenario-pill:hover { border-color: var(--border-accent); color: var(--text-primary); }
-        .scenario-pill.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); font-weight: 600; }
-        .scenario-results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
-        .scenario-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; opacity: 0; transform: translateY(10px); animation: fadeSlideIn 0.4s ease forwards; }
+        .scenario-section { margin: 2rem 0 1.5rem; }
+        .scenario-section > h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .scenario-section > p { color: var(--text-secondary); font-size: 0.82rem; margin-bottom: 1rem; }
+        .scenario-pills { display: flex; flex-wrap: wrap; gap: 0.4rem; margin-bottom: 1.25rem; }
+        .scenario-pill { padding: 0.45rem 0.9rem; border: 1px solid var(--border); border-radius: 99px; background: rgba(255,255,255,0.03); color: var(--text-secondary); font-family: inherit; font-size: 0.78rem; cursor: pointer; transition: all 0.25s; }
+        .scenario-pill:hover { border-color: var(--border2); color: var(--text-primary); }
+        .scenario-pill.active { border-color: var(--accent); background: rgba(0,237,100,0.06); color: var(--accent); font-weight: 600; }
+        .scenario-results { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; }
+        .scenario-result { background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.1rem; opacity: 0; transform: translateY(10px); animation: fadeSlideIn 0.4s ease forwards; }
         @keyframes fadeSlideIn { to { opacity: 1; transform: translateY(0); } }
         .scenario-result:nth-child(2) { animation-delay: 0.07s; }
         .scenario-result:nth-child(3) { animation-delay: 0.14s; }
         .scenario-result:nth-child(4) { animation-delay: 0.21s; }
-        .scenario-result h5 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .scenario-result p { font-size: 0.8rem; color: var(--text-secondary); line-height: 1.5; }
-        .scenario-result .verdict { display: inline-block; margin-top: 0.5rem; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
-        .verdict-works { background: rgba(0,237,100,0.15); color: var(--accent); }
-        .verdict-fails { background: rgba(255,107,107,0.15); color: var(--danger); }
-        .verdict-partial { background: rgba(251,191,36,0.15); color: var(--warning); }
+        .scenario-result h5 { font-size: 0.78rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .scenario-result p { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; }
+        .scenario-result code { font-family: 'JetBrains Mono', monospace; font-size: 0.65rem; background: rgba(255,255,255,0.06); padding: 0.1rem 0.3rem; border-radius: 3px; }
+        .scenario-result .verdict { display: inline-block; margin-top: 0.4rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 700; }
+        .verdict-works { background: rgba(0,237,100,0.1); color: var(--accent); }
+        .verdict-fails { background: rgba(248,113,113,0.1); color: var(--danger); }
+        .verdict-partial { background: rgba(251,191,36,0.1); color: var(--warning); }
 
         /* === Code Comparison === */
-        .code-compare { margin: 2rem 0; }
-        .code-compare > h3 { font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; }
-        .code-tabs { display: flex; gap: 0.25rem; margin-bottom: 0; }
-        .code-tab { padding: 0.5rem 1rem; border: 1px solid var(--border); border-bottom: none; border-radius: 8px 8px 0 0; background: var(--bg-secondary); color: var(--text-muted); font-family: inherit; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
-        .code-tab.active { background: var(--bg-card); color: var(--accent); border-color: var(--border-accent); font-weight: 600; }
-        .code-panel { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0 12px 12px 12px; overflow: hidden; }
+        .code-compare { margin: 1.5rem 0; }
+        .code-compare > h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.85rem; }
+        .code-tabs { display: flex; gap: 0.2rem; margin-bottom: 0; }
+        .code-tab { padding: 0.45rem 0.85rem; border: 1px solid var(--border); border-bottom: none; border-radius: 7px 7px 0 0; background: var(--bg-secondary); color: var(--text-muted); font-family: inherit; font-size: 0.75rem; cursor: pointer; transition: all 0.2s; }
+        .code-tab.active { background: var(--bg-card); color: var(--accent); border-color: var(--border2); font-weight: 600; }
+        .code-panel { display: none; background: var(--bg-card); border: 1px solid var(--border); border-radius: 0 10px 10px 10px; overflow: hidden; }
         .code-panel.active { display: block; animation: fadeIn 0.3s ease; }
         .code-output-grid { display: grid; grid-template-columns: repeat(4, 1fr); }
-        .code-output { padding: 1rem; border-right: 1px solid var(--border); font-family: 'Monaco', 'Menlo', 'Courier New', monospace; font-size: 0.72rem; line-height: 1.6; overflow-x: auto; white-space: pre; }
+        .code-output { padding: 0.85rem; border-right: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; line-height: 1.6; overflow-x: auto; white-space: pre; }
         .code-output:last-child { border-right: none; }
-        .code-output .platform-tag { display: block; font-family: 'Inter', sans-serif; font-weight: 700; font-size: 0.7rem; margin-bottom: 0.5rem; padding-bottom: 0.4rem; border-bottom: 1px solid var(--border); white-space: normal; }
+        .code-output .platform-tag { display: block; font-family: 'DM Sans', sans-serif; font-weight: 700; font-size: 0.68rem; margin-bottom: 0.4rem; padding-bottom: 0.35rem; border-bottom: 1px solid var(--border); white-space: normal; }
         .code-output .platform-tag.atlas { color: var(--atlas-color); }
         .code-output .platform-tag.cosmos-v { color: var(--cosmos-vcore); }
         .code-output .platform-tag.cosmos-r { color: var(--cosmos-color); }
@@ -559,47 +632,54 @@
         /* === Platform Filter Toggle === */
         .filter-bar {
             max-width: 1400px;
-            margin: 0 auto 1.5rem;
-            padding: 0 2rem;
+            margin: 0 auto 2rem;
+            padding: 0.85rem 2rem;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
             flex-wrap: wrap;
+            position: sticky;
+            top: 52px;
+            z-index: 90;
+            background: rgba(15,17,23,0.88);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
         }
         .filter-bar .filter-label {
-            font-size: 0.8rem;
+            font-size: 0.72rem;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.08em;
         }
         .filter-toggle {
             display: inline-flex;
             align-items: center;
-            gap: 0.5rem;
-            padding: 0.4rem 0.9rem;
+            gap: 0.45rem;
+            padding: 0.4rem 0.85rem;
             border-radius: 99px;
             border: 1px solid var(--border);
-            background: var(--bg-card);
+            background: rgba(255,255,255,0.03);
             cursor: pointer;
             transition: all 0.25s;
             user-select: none;
         }
-        .filter-toggle:hover { border-color: var(--border-accent); }
-        .filter-toggle.active { border-color: currentColor; }
+        .filter-toggle:hover { border-color: var(--border2); }
+        .filter-toggle.active { border-color: currentColor; background: rgba(255,255,255,0.05); }
         .filter-toggle .ft-dot {
-            width: 10px; height: 10px;
+            width: 8px; height: 8px;
             border-radius: 50%;
             transition: all 0.25s;
         }
         .filter-toggle .ft-label {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 500;
             transition: all 0.25s;
         }
-        .filter-toggle.active .ft-dot { box-shadow: 0 0 6px currentColor; }
-        .filter-toggle:not(.active) .ft-dot { opacity: 0.3; }
-        .filter-toggle:not(.active) .ft-label { color: var(--text-muted); opacity: 0.5; }
+        .filter-toggle.active .ft-dot { box-shadow: 0 0 8px currentColor; }
+        .filter-toggle:not(.active) .ft-dot { opacity: 0.25; }
+        .filter-toggle:not(.active) .ft-label { color: var(--text-muted); opacity: 0.45; }
         .filter-toggle[data-platform="cosmos-vcore"] { color: var(--cosmos-vcore); }
         .filter-toggle[data-platform="cosmos-ru"] { color: var(--cosmos-color); }
         .filter-toggle[data-platform="docdb"] { color: var(--docdb-color); }
@@ -652,95 +732,99 @@
         /* === Expandable Explainer === */
         .explainer { margin: 1.5rem 0; }
         .explainer-toggle {
-            display: flex; align-items: center; gap: 0.6rem;
+            display: flex; align-items: center; gap: 0.5rem;
             background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 10px; padding: 0.85rem 1.25rem;
+            border-radius: 10px; padding: 0.8rem 1.15rem;
             cursor: pointer; width: 100%; font-family: inherit;
-            color: var(--accent); font-size: 0.9rem; font-weight: 600;
+            color: var(--accent); font-size: 0.85rem; font-weight: 600;
             transition: all 0.25s;
         }
-        .explainer-toggle:hover { border-color: var(--border-accent); background: var(--bg-card-hover); }
-        .explainer-toggle .arrow { transition: transform 0.3s; font-size: 0.75rem; }
+        .explainer-toggle:hover { border-color: var(--border2); background: var(--bg-card-hover); }
+        .explainer-toggle .arrow { transition: transform 0.3s; font-size: 0.7rem; }
         .explainer-toggle.open .arrow { transform: rotate(90deg); }
         .explainer-body {
             max-height: 0; overflow: hidden; transition: max-height 0.4s ease;
             background: var(--bg-card); border: 1px solid var(--border);
             border-top: none; border-radius: 0 0 10px 10px;
-            padding: 0 1.25rem;
+            padding: 0 1.15rem;
         }
-        .explainer-body.open { max-height: 600px; padding: 1.25rem; }
-        .explainer-body p { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.65; }
+        .explainer-body.open { max-height: 600px; padding: 1.15rem; }
+        .explainer-body p { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.65rem; line-height: 1.65; }
         .explainer-body strong { color: var(--text-primary); }
+        .explainer-body code { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; background: rgba(255,255,255,0.06); padding: 0.15rem 0.35rem; border-radius: 3px; }
         .explainer-body .analogy {
-            background: var(--accent-glow); border: 1px solid var(--border-accent);
-            border-radius: 8px; padding: 0.85rem 1rem; margin-top: 0.5rem;
-            font-size: 0.85rem; color: var(--text-secondary);
+            background: rgba(0,237,100,0.04); border: 1px solid var(--border-accent);
+            border-radius: 8px; padding: 0.8rem 1rem; margin-top: 0.5rem;
+            font-size: 0.8rem; color: var(--text-secondary);
         }
         .explainer-body .analogy strong { color: var(--accent); }
 
         /* === Workload Picker === */
-        .workload-section { margin: 3rem 0; }
+        .workload-section { margin: 2.5rem 0; }
         .workload-section > h2 { text-align: center; }
         .workload-section > p { text-align: center; }
-        .workload-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin: 1.5rem 0; }
+        .workload-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.5rem; margin: 1.25rem 0; }
         .wl-pill {
-            padding: 0.55rem 1.15rem; border: 1px solid var(--border);
-            border-radius: 99px; background: var(--bg-card); color: var(--text-secondary);
-            font-family: inherit; font-size: 0.85rem; cursor: pointer; transition: all 0.25s;
+            padding: 0.45rem 1rem; border: 1px solid var(--border);
+            border-radius: 99px; background: rgba(255,255,255,0.03); color: var(--text-secondary);
+            font-family: inherit; font-size: 0.8rem; cursor: pointer; transition: all 0.25s;
         }
-        .wl-pill:hover { border-color: var(--border-accent); color: var(--text-primary); }
-        .wl-pill.active { border-color: var(--accent); background: var(--accent-glow); color: var(--accent); font-weight: 600; }
+        .wl-pill:hover { border-color: var(--border2); color: var(--text-primary); }
+        .wl-pill.active { border-color: var(--accent); background: rgba(0,237,100,0.06); color: var(--accent); font-weight: 600; }
         .wl-result {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-            padding: 2rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+            padding: 1.5rem; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;
             animation: fadeIn 0.4s ease;
         }
         .wl-card {
-            text-align: center; padding: 1.25rem; border-radius: 12px;
-            border: 2px solid var(--border); transition: all 0.3s;
+            text-align: center; padding: 1.1rem; border-radius: 10px;
+            border: 1px solid var(--border); transition: all 0.3s;
         }
-        .wl-card.best { border-color: var(--accent); background: rgba(0,237,100,0.06); }
-        .wl-card.good { border-color: var(--warning); }
-        .wl-card.poor { border-color: var(--danger); opacity: 0.7; }
-        .wl-card .wl-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
-        .wl-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
-        .wl-card .wl-verdict { font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; display: inline-block; margin-bottom: 0.5rem; }
-        .wl-card .wl-verdict.best { background: rgba(0,237,100,0.15); color: var(--accent); }
-        .wl-card .wl-verdict.good { background: rgba(251,191,36,0.15); color: var(--warning); }
-        .wl-card .wl-verdict.poor { background: rgba(255,107,107,0.15); color: var(--danger); }
-        .wl-card p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
+        .wl-card.best { border-color: var(--accent); background: rgba(0,237,100,0.04); }
+        .wl-card.good { border-color: rgba(251,191,36,0.3); }
+        .wl-card.poor { border-color: rgba(248,113,113,0.2); opacity: 0.7; }
+        .wl-card .wl-icon { font-size: 1.3rem; margin-bottom: 0.4rem; }
+        .wl-card h4 { font-size: 0.8rem; font-weight: 700; margin-bottom: 0.3rem; }
+        .wl-card .wl-verdict { font-size: 0.68rem; font-weight: 700; padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block; margin-bottom: 0.4rem; }
+        .wl-card .wl-verdict.best { background: rgba(0,237,100,0.1); color: var(--accent); }
+        .wl-card .wl-verdict.good { background: rgba(251,191,36,0.1); color: var(--warning); }
+        .wl-card .wl-verdict.poor { background: rgba(248,113,113,0.1); color: var(--danger); }
+        .wl-card p { font-size: 0.75rem; color: var(--text-secondary); line-height: 1.5; }
 
         /* === Decision Card === */
         .decision-card {
-            max-width: 900px; margin: 3rem auto;
+            max-width: 920px; margin: 2.5rem auto;
             background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-secondary) 100%);
-            border: 1px solid var(--border); border-radius: 20px;
-            padding: 2.5rem; text-align: center;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border: 1px solid var(--border2); border-radius: 16px;
+            padding: 2.25rem; text-align: center;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.3);
         }
-        .decision-card h2 { font-size: 1.4rem; font-weight: 800; margin-bottom: 0.5rem; }
-        .decision-card .subtitle { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem; }
-        .decision-verdicts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; text-align: left; }
-        .decision-item { padding: 1rem; border-radius: 10px; border: 1px solid var(--border); }
-        .decision-item h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.4rem; }
-        .decision-item p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
-        .decision-item.atlas { border-top: 3px solid var(--atlas-color); }
-        .decision-item.cosmos-v { border-top: 3px solid var(--cosmos-vcore); }
-        .decision-item.cosmos-r { border-top: 3px solid var(--cosmos-color); }
-        .decision-item.docdb { border-top: 3px solid var(--docdb-color); }
-        .decision-bottom { margin-top: 1.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border); font-size: 0.9rem; color: var(--text-secondary); }
+        .decision-card h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.4rem; }
+        .decision-card .subtitle { color: var(--text-muted); font-size: 0.78rem; margin-bottom: 1.75rem; }
+        .decision-verdicts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.85rem; text-align: left; }
+        .decision-item { padding: 0.9rem; border-radius: 10px; border: 1px solid var(--border); transition: border-color 0.2s; }
+        .decision-item:hover { border-color: var(--border2); }
+        .decision-item h4 { font-size: 0.78rem; font-weight: 700; margin-bottom: 0.35rem; }
+        .decision-item p { font-size: 0.72rem; color: var(--text-secondary); line-height: 1.5; }
+        .decision-item.atlas { border-top: 2px solid var(--atlas-color); }
+        .decision-item.cosmos-v { border-top: 2px solid var(--cosmos-vcore); }
+        .decision-item.cosmos-r { border-top: 2px solid var(--cosmos-color); }
+        .decision-item.docdb { border-top: 2px solid var(--docdb-color); }
+        .decision-bottom { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); font-size: 0.85rem; color: var(--text-secondary); }
         .decision-bottom strong { color: var(--accent); }
 
         /* === Migration Risk === */
-        .migration-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin: 1.5rem 0; }
+        .migration-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1.25rem 0; }
         .migration-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem;
+            transition: border-color 0.2s;
         }
-        .migration-card h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 0.5rem; }
-        .migration-card .risk-bar { height: 6px; border-radius: 3px; margin: 0.75rem 0; background: var(--bg-secondary); overflow: hidden; }
-        .migration-card .risk-fill { height: 100%; border-radius: 3px; transition: width 1s ease; }
-        .migration-card .risk-label { font-size: 0.72rem; font-weight: 600; }
-        .migration-card p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+        .migration-card:hover { border-color: var(--border2); }
+        .migration-card h4 { font-size: 0.85rem; font-weight: 700; margin-bottom: 0.4rem; }
+        .migration-card .risk-bar { height: 4px; border-radius: 2px; margin: 0.65rem 0; background: var(--bg-secondary); overflow: hidden; }
+        .migration-card .risk-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+        .migration-card .risk-label { font-size: 0.68rem; font-weight: 600; }
+        .migration-card p { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.5; }
 
         @media (max-width: 1024px) {
             .wl-result, .decision-verdicts { grid-template-columns: repeat(2, 1fr); }
@@ -757,12 +841,21 @@
     <div class="header-inner">
         <img src="assets/mongodb-leaf.png" alt="MongoDB" class="header-logo">
         <h1> <span>—</span> The Imitation Game <span>—</span> </h1>
+        <nav class="header-nav">
+            <a href="#" data-tab-link="architecture" class="active">Architecture</a>
+            <a href="#" data-tab-link="scalability">Scale</a>
+            <a href="#" data-tab-link="platform">Platform</a>
+            <a href="#" data-tab-link="api">API</a>
+            <a href="#" data-tab-link="limitations">Fine Print</a>
+            <a href="#" data-tab-link="observability">Observability</a>
+            <a href="#" data-tab-link="enterprise">Enterprise</a>
+        </nav>
     </div>
 </div>
 
 <div class="hero">
-    <h2>Native Engine vs Wire-Protocol Emulation</h2>
-    <p>A deep technical analysis of MongoDB Atlas, Azure Cosmos DB (vCore &amp; RU), and Amazon DocumentDB — from architecture internals to real-world operational gotchas.</p>
+    <h2 class="reveal">Native Engine vs Wire-Protocol Emulation</h2>
+    <p class="reveal reveal-d1">A deep technical analysis of MongoDB Atlas, Azure Cosmos DB (vCore &amp; RU), and Amazon DocumentDB — from architecture internals to real-world operational gotchas.</p>
     <div class="hero-stats">
         <div class="hero-stat atlas">
             <div class="number" data-target="100" data-suffix="%">0%</div>
@@ -802,7 +895,7 @@
 </div>
 
 <!-- Architecture Overview Cards -->
-<div class="arch-grid">
+<div class="arch-grid reveal">
     <div class="arch-card atlas">
         <span class="badge">Native MongoDB</span>
         <h3>MongoDB Atlas</h3>
@@ -867,8 +960,8 @@
 
     <!-- ═══════════ ARCHITECTURE & STORAGE ═══════════ -->
     <div class="tab-panel active" id="panel-architecture">
-        <h2 class="section-title">Architecture &amp; Storage Engine</h2>
-        <p class="section-subtitle">The engine underneath determines everything — concurrency, compression, feature parity, and upgrade path.</p>
+        <h2 class="section-title reveal">Architecture &amp; Storage Engine</h2>
+        <p class="section-subtitle reveal reveal-d1">The engine underneath determines everything — concurrency, compression, feature parity, and upgrade path.</p>
 
         <table class="cmp-table">
             <thead>
@@ -1149,8 +1242,8 @@
 
     <!-- ═══════════ SCALABILITY ═══════════ -->
     <div class="tab-panel" id="panel-scalability">
-        <h2 class="section-title">Scalability — Horizontal &amp; Vertical</h2>
-        <p class="section-subtitle">How each platform grows with your workload, and where the ceilings are.</p>
+        <h2 class="section-title reveal">Scalability — Horizontal &amp; Vertical</h2>
+        <p class="section-subtitle reveal reveal-d1">How each platform grows with your workload, and where the ceilings are.</p>
 
         <table class="cmp-table">
             <thead>
@@ -1216,8 +1309,8 @@
 
     <!-- ═══════════ PLATFORM FEATURES ═══════════ -->
     <div class="tab-panel" id="panel-platform">
-        <h2 class="section-title">Platform Features</h2>
-        <p class="section-subtitle">Beyond basic CRUD — the integrated capabilities that determine whether you need additional infrastructure.</p>
+        <h2 class="section-title reveal">Platform Features</h2>
+        <p class="section-subtitle reveal reveal-d1">Beyond basic CRUD — the integrated capabilities that determine whether you need additional infrastructure.</p>
 
         <table class="cmp-table">
             <thead>
@@ -1311,8 +1404,8 @@
 
     <!-- ═══════════ API & COMPATIBILITY ═══════════ -->
     <div class="tab-panel" id="panel-api">
-        <h2 class="section-title">API Compatibility &amp; Wire Protocol</h2>
-        <p class="section-subtitle">Claiming "MongoDB compatible" and being MongoDB are fundamentally different things.</p>
+        <h2 class="section-title reveal">API Compatibility &amp; Wire Protocol</h2>
+        <p class="section-subtitle reveal reveal-d1">Claiming "MongoDB compatible" and being MongoDB are fundamentally different things.</p>
 
         <table class="cmp-table">
             <thead>
@@ -1621,8 +1714,8 @@ session.startTransaction();
 
     <!-- ═══════════ THE FINE PRINT ═══════════ -->
     <div class="tab-panel" id="panel-limitations">
-        <h2 class="section-title">The Fine Print — Real Limitations</h2>
-        <p class="section-subtitle">The things you discover in production, not in proof-of-concept. Each of these has caused real migration decisions.</p>
+        <h2 class="section-title reveal">The Fine Print — Real Limitations</h2>
+        <p class="section-subtitle reveal reveal-d1">The things you discover in production, not in proof-of-concept. Each of these has caused real migration decisions.</p>
 
         <div class="limits-cosmos">
         <h3 style="margin: 1.5rem 0 1rem; color: var(--cosmos-color);">Azure Cosmos DB</h3>
@@ -1733,8 +1826,8 @@ session.startTransaction();
 
     <!-- ═══════════ OBSERVABILITY ═══════════ -->
     <div class="tab-panel" id="panel-observability">
-        <h2 class="section-title">Observability &amp; Monitoring</h2>
-        <p class="section-subtitle">What you can see determines what you can fix.</p>
+        <h2 class="section-title reveal">Observability &amp; Monitoring</h2>
+        <p class="section-subtitle reveal reveal-d1">What you can see determines what you can fix.</p>
 
         <table class="cmp-table">
             <thead>
@@ -1795,8 +1888,8 @@ session.startTransaction();
 
     <!-- ═══════════ ENTERPRISE READINESS ═══════════ -->
     <div class="tab-panel" id="panel-enterprise">
-        <h2 class="section-title">Enterprise Readiness</h2>
-        <p class="section-subtitle">SLAs, compliance, high availability, and operational maturity.</p>
+        <h2 class="section-title reveal">Enterprise Readiness</h2>
+        <p class="section-subtitle reveal reveal-d1">SLAs, compliance, high availability, and operational maturity.</p>
 
         <table class="cmp-table">
             <thead>
@@ -1885,8 +1978,8 @@ session.startTransaction();
 
     <!-- Charts Section -->
     <div style="margin: 3rem 0;">
-        <h2 class="section-title" style="text-align:center;">Capability Comparison</h2>
-        <p class="section-subtitle" style="text-align:center;">Relative capability across key dimensions (higher = stronger)</p>
+        <h2 class="section-title reveal" style="text-align:center;">Capability Comparison</h2>
+        <p class="section-subtitle reveal reveal-d1" style="text-align:center;">Relative capability across key dimensions (higher = stronger)</p>
 
         <div class="chart-row">
             <div class="chart-box">
@@ -1902,8 +1995,8 @@ session.startTransaction();
 
     <!-- Key Takeaways -->
     <div style="margin: 3rem 0;">
-        <h2 class="section-title" style="text-align:center;">Key Takeaways</h2>
-        <div class="takeaway-grid">
+        <h2 class="section-title reveal" style="text-align:center;">Key Takeaways</h2>
+        <div class="takeaway-grid reveal reveal-d1">
             <div class="takeaway-card">
                 <div class="icon" style="color: var(--atlas-color);">&#9881;</div>
                 <h4>Atlas = The Real Engine</h4>
@@ -1931,8 +2024,8 @@ session.startTransaction();
 <!-- ═══════════ WORKLOAD FIT PICKER ═══════════ -->
 <div class="container">
     <div class="workload-section">
-        <h2 class="section-title">Which Platform Fits Your Workload?</h2>
-        <p class="section-subtitle">Select your workload type to see a fit assessment across all platforms.</p>
+        <h2 class="section-title reveal">Which Platform Fits Your Workload?</h2>
+        <p class="section-subtitle reveal reveal-d1">Select your workload type to see a fit assessment across all platforms.</p>
         <div class="workload-pills" id="workloadPills">
             <button class="wl-pill active" data-wl="ecommerce">E-Commerce</button>
             <button class="wl-pill" data-wl="iot">IoT / Time Series</button>
@@ -1948,8 +2041,8 @@ session.startTransaction();
 
 <!-- ═══════════ MIGRATION RISK ═══════════ -->
 <div class="container" style="margin-top: 3rem;">
-    <h2 class="section-title" style="text-align:center;">Migration Risk: What If You Need to Leave?</h2>
-    <p class="section-subtitle" style="text-align:center;">Starting on a compatibility layer and migrating to real MongoDB later isn't free. Here's what it takes.</p>
+    <h2 class="section-title reveal" style="text-align:center;">Migration Risk: What If You Need to Leave?</h2>
+    <p class="section-subtitle reveal reveal-d1" style="text-align:center;">Starting on a compatibility layer and migrating to real MongoDB later isn't free. Here's what it takes.</p>
     <div class="migration-grid">
         <div class="migration-card">
             <h4 style="color: var(--cosmos-vcore);">Cosmos DB vCore &rarr; Atlas</h4>
@@ -2010,7 +2103,7 @@ session.startTransaction();
 <!-- ═══════════ REFERENCES (moved to end) ═══════════ -->
 <div class="container">
     <div style="margin: 3rem 0 2rem;">
-        <h2 class="section-title">References &amp; Further Reading</h2>
+        <h2 class="section-title reveal">References &amp; Further Reading</h2>
         <div class="ref-grid">
             <div class="ref-card">
                 <h4 style="color: var(--atlas-color);">MongoDB Atlas</h4>
@@ -2467,6 +2560,38 @@ updateChartsVisibility = function() {
     const activeWl = document.querySelector('.wl-pill.active');
     if (activeWl) renderWorkload(activeWl.dataset.wl);
 };
+
+// === IntersectionObserver for reveal animations ===
+const revealObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); revealObs.unobserve(e.target); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.reveal').forEach(el => revealObs.observe(el));
+
+// === Header nav links → tab switching ===
+document.querySelectorAll('[data-tab-link]').forEach(link => {
+    link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const tabName = link.dataset.tabLink;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        const targetBtn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+        if (targetBtn) targetBtn.classList.add('active');
+        const targetPanel = document.getElementById('panel-' + tabName);
+        if (targetPanel) targetPanel.classList.add('active');
+        document.querySelectorAll('[data-tab-link]').forEach(a => a.classList.remove('active'));
+        link.classList.add('active');
+        window.scrollTo({ top: document.querySelector('.tab-nav').offsetTop - 120, behavior: 'smooth' });
+    });
+});
+
+// Sync header nav when tab buttons are clicked
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('[data-tab-link]').forEach(a => a.classList.remove('active'));
+        const matching = document.querySelector(`[data-tab-link="${btn.dataset.tab}"]`);
+        if (matching) matching.classList.add('active');
+    });
+});
 
 </script>
     <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
