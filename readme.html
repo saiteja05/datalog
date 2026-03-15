@@ -290,18 +290,28 @@
         (function() {
             const params = new URLSearchParams(window.location.search);
             const file = params.get('file');
+            const extUrl = params.get('url');
+            const displayName = params.get('name');
 
-            if (!file || !/^README[-\w]*\.md$/i.test(file)) {
+            var fetchTarget, label;
+
+            if (extUrl && /^https:\/\/raw\.githubusercontent\.com\/.+\.md$/i.test(extUrl)) {
+                fetchTarget = extUrl;
+                label = displayName || extUrl.split('/').pop();
+            } else if (file && /^README[-\w]*\.md$/i.test(file)) {
+                fetchTarget = file;
+                label = file;
+            } else {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
-                document.getElementById('error-file').textContent = file || '(no file specified)';
+                document.getElementById('error-file').textContent = file || extUrl || '(no file specified)';
                 return;
             }
 
-            document.getElementById('bar-filename').textContent = file;
-            document.title = file.replace('.md', '') + ' — MongoDB Unpacked';
+            document.getElementById('bar-filename').textContent = label;
+            document.title = label.replace('.md', '') + ' — MongoDB Unpacked';
 
-            fetch(file)
+            fetch(fetchTarget)
                 .then(function(res) {
                     if (!res.ok) throw new Error(res.status);
                     return res.text();
@@ -315,7 +325,7 @@
                 .catch(function() {
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('error').style.display = 'block';
-                    document.getElementById('error-file').textContent = file;
+                    document.getElementById('error-file').textContent = label;
                 });
         })();
     </script>
