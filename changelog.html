@@ -74,7 +74,7 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-fi
 <div class="hero">
   <h1>Changelog</h1>
   <p>What's new, what changed, and what got rebuilt. Subscribe to get email updates when we ship new content.</p>
-  <button class="hero-cta" onclick="window.open('https://saiteja05.github.io/datalog/home.html#subscribe','_blank')">
+  <button class="hero-cta" id="heroSubscribeBtn">
     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
     Subscribe for updates
   </button>
@@ -335,6 +335,17 @@ nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-fi
 </div><!-- /wrap -->
 
 <script src="subscribe.js"></script>
+<script>
+document.getElementById('heroSubscribeBtn').addEventListener('click', function (e) {
+  e.stopPropagation();
+  var fab = document.getElementById('subscribeFab');
+  var modal = document.getElementById('sfabModal');
+  if (fab && modal) {
+    fab.classList.remove('hidden');
+    modal.classList.add('open');
+  }
+});
+</script>
 <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
     async src="//gc.zgo.at/count.js"></script>
 </body>
