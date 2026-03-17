@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB | Payments Playbook</title>
+    <link rel="icon" href="assets/mongodb-leaf.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mongo-green: #00ED64;
+            --mongo-dark-green: #00a854;
+            --mongo-forest: #001E2B;
+            --mongo-slate: #1C2D38;
+            --accent-blue: #00b4d8;
+            --accent-orange: #ff9100;
+            --accent-yellow: #ffd166;
+            --accent-red: #ef476f;
+            --accent-purple: #9d4edd;
+            --accent-teal: #4ECDC4;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: linear-gradient(135deg, var(--mongo-forest) 0%, #002a3a 50%, var(--mongo-forest) 100%);
+            min-height: 100vh;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        /* ============ HEADER ============ */
+        .header {
+            background: rgba(0, 30, 43, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 237, 100, 0.2);
+            padding: 14px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-text {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .logo-text span { color: var(--mongo-green); }
+
+        .nav-pills {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .nav-pill {
+            padding: 6px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.7);
+            text-decoration: none;
+            white-space: nowrap;
+        }
+
+        .nav-pill:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+        .nav-pill.active { background: rgba(0, 237, 100, 0.15); border-color: var(--mongo-green); color: var(--mongo-green); }
+
+        /* ============ MAIN LAYOUT ============ */
+        .main-layout {
+            padding: 20px 28px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section {
+            margin-bottom: 50px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+        }
+
+        .section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title .icon { font-size: 1.4rem; }
+
+        .section-subtitle {
+            font-size: 0.95rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 24px;
+            max-width: 700px;
+        }
+
+        /* ============ HERO ============ */
+        .hero {
+            text-align: center;
+            padding: 60px 20px 40px;
+            position: relative;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--mongo-green);
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 16px;
+        }
+
+        .hero h1 span { color: var(--mongo-green); }
+
+        .hero-stat {
+            font-size: 1.15rem;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 36px;
+        }
+
+        .hero-stat strong {
+            color: var(--accent-teal);
+            font-size: 1.3rem;
+        }
+
+        .hero-cards {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .hero-card {
+            background: rgba(0, 30, 43, 0.7);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 14px;
+            padding: 24px 28px;
+            min-width: 240px;
+            max-width: 300px;
+            flex: 1;
+            text-align: left;
+            transition: all 0.3s;
+        }
+
+        .hero-card:hover {
+            border-color: var(--mongo-green);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0, 237, 100, 0.1);
+        }
+
+        .hero-card-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .hero-card h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .hero-card p {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.6);
+            line-height: 1.5;
+        }
+
+        /* ============ TIMELINE ============ */
+        .timeline-container {
+            position: relative;
+            padding: 30px 0;
+        }
+
+        .timeline-track {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            padding: 0 40px;
+        }
+
+        .timeline-track::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 60px;
+            right: 60px;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-50%);
+        }
+
+        .timeline-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .timeline-node:hover { transform: scale(1.05); }
+
+        .timeline-dot {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--mongo-slate);
+            border: 3px solid rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.3s;
+        }
+
+        .timeline-node.active .timeline-dot {
+            border-color: var(--mongo-green);
+            background: rgba(0, 237, 100, 0.15);
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.3);
+        }
+
+        .timeline-year {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            transition: color 0.3s;
+        }
+
+        .timeline-node.active .timeline-year { color: var(--mongo-green); }
+
+        .timeline-label {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.4);
+            text-align: center;
+            max-width: 120px;
+            transition: color 0.3s;
+        }
+
+        .timeline-node.active .timeline-label { color: rgba(255,255,255,0.8); }
+
+        .timeline-detail {
+            margin-top: 24px;
+            background: rgba(0, 30, 43, 0.7);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 14px;
+            padding: 24px;
+            display: none;
+            animation: fadeSlideIn 0.4s ease;
+        }
+
+        .timeline-detail.active { display: block; }
+
+        .timeline-detail h4 {
+            font-size: 1.1rem;
+            color: var(--mongo-green);
+            margin-bottom: 10px;
+        }
+
+        .timeline-detail p {
+            font-size: 0.9rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============ VALUE PROPS ============ */
+        .vp-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .vp-card {
+            background: rgba(0, 30, 43, 0.7);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            padding: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .vp-card:hover {
+            border-color: rgba(0, 237, 100, 0.4);
+            transform: translateY(-3px);
+        }
+
+        .vp-card.expanded {
+            border-color: var(--mongo-green);
+            background: rgba(0, 237, 100, 0.05);
+        }
+
+        .vp-card-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 10px;
+        }
+
+        .vp-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            background: rgba(0, 237, 100, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            flex-shrink: 0;
+        }
+
+        .vp-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .vp-summary {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.5;
+        }
+
+        .vp-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease, margin-top 0.3s ease;
+        }
+
+        .vp-card.expanded .vp-detail {
+            max-height: 200px;
+            margin-top: 14px;
+        }
+
+        .vp-detail-inner {
+            padding-top: 14px;
+            border-top: 1px solid rgba(0, 237, 100, 0.2);
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.6;
+        }
+
+        .vp-expand-hint {
+            position: absolute;
+            top: 12px;
+            right: 14px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.3);
+            transition: color 0.3s;
+        }
+
+        .vp-card:hover .vp-expand-hint { color: var(--mongo-green); }
+
+        /* ============ PAYMENT FLOW ============ */
+        .flow-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .flow-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .flow-btn.primary { background: var(--mongo-green); color: var(--mongo-forest); }
+        .flow-btn.primary:hover { background: var(--mongo-dark-green); transform: translateY(-2px); }
+        .flow-btn.secondary { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); }
+        .flow-btn.secondary:hover { background: rgba(255,255,255,0.15); }
+        .flow-btn.secondary.active { background: rgba(0, 237, 100, 0.15); border-color: var(--mongo-green); color: var(--mongo-green); }
+        .flow-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .flow-timer {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--mongo-green);
+            min-width: 80px;
+        }
+
+        .flow-timer.running { animation: pulse 1s infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        .flow-canvas {
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            border-radius: 16px;
+            padding: 40px 30px;
+            position: relative;
+            min-height: 200px;
+            overflow: hidden;
+        }
+
+        .flow-stages {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 2;
+        }
+
+        .flow-stage {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            z-index: 2;
+            transition: all 0.3s;
+        }
+
+        .flow-stage-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            background: var(--mongo-slate);
+            border: 2px solid rgba(255,255,255,0.15);
+            transition: all 0.4s;
+        }
+
+        .flow-stage.active .flow-stage-icon {
+            border-color: var(--mongo-green);
+            background: rgba(0, 237, 100, 0.15);
+            box-shadow: 0 0 25px rgba(0, 237, 100, 0.3);
+            transform: scale(1.1);
+        }
+
+        .flow-stage.completed .flow-stage-icon {
+            border-color: var(--accent-teal);
+            background: rgba(78, 205, 196, 0.15);
+        }
+
+        .flow-stage-label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .flow-stage.active .flow-stage-label { color: var(--mongo-green); }
+        .flow-stage.completed .flow-stage-label { color: var(--accent-teal); }
+
+        .flow-stage-sub {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.35);
+        }
+
+        .flow-arrow {
+            flex: 1;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+            margin: 0 -5px;
+            align-self: center;
+            margin-bottom: 30px;
+        }
+
+        .flow-arrow-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 0;
+            background: var(--mongo-green);
+            border-radius: 2px;
+            transition: width 0.6s ease;
+        }
+
+        .flow-arrow.active .flow-arrow-fill { width: 100%; }
+
+        .flow-particle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--mongo-green);
+            box-shadow: 0 0 12px var(--mongo-green), 0 0 24px var(--mongo-green);
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .flow-checks {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .flow-check {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.5);
+            transition: all 0.3s;
+        }
+
+        .flow-check.passed {
+            background: rgba(0, 237, 100, 0.1);
+            color: var(--mongo-green);
+            border: 1px solid rgba(0, 237, 100, 0.3);
+        }
+
+        .flow-check-icon { font-size: 0.9rem; }
+
+        /* ============ ARCHITECTURE ============ */
+        .arch-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .arch-tab {
+            padding: 10px 20px;
+            background: rgba(0, 30, 43, 0.7);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .arch-tab:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+        .arch-tab.active { border-color: var(--mongo-green); background: rgba(0, 237, 100, 0.1); color: var(--mongo-green); }
+
+        .arch-panel {
+            display: none;
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            border-radius: 16px;
+            padding: 30px;
+            animation: fadeSlideIn 0.4s ease;
+        }
+
+        .arch-panel.active { display: block; }
+
+        .arch-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            flex-wrap: wrap;
+        }
+
+        .arch-node {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            min-width: 140px;
+            text-align: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .arch-node:hover {
+            border-color: var(--mongo-green);
+            transform: translateY(-3px);
+        }
+
+        .arch-node-icon { font-size: 2rem; }
+
+        .arch-node-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .arch-node-desc {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .arch-node.mongo {
+            border-color: rgba(0, 237, 100, 0.4);
+            background: rgba(0, 237, 100, 0.05);
+        }
+
+        .arch-connector {
+            font-size: 1.5rem;
+            color: rgba(255,255,255,0.3);
+            padding: 0 8px;
+        }
+
+        /* ============ ENRICHMENT ============ */
+        .enrichment-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .enrichment-grid { grid-template-columns: 1fr; }
+        }
+
+        .enrichment-column {
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .enrichment-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+        }
+
+        .enrichment-header.user-centric { background: rgba(0, 237, 100, 0.08); }
+        .enrichment-header.aml { background: rgba(239, 71, 111, 0.08); }
+
+        .enrichment-header-icon { font-size: 1.3rem; }
+
+        .pipeline-stages {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+
+        .pipeline-stage {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 10px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .pipeline-stage:hover {
+            background: rgba(0, 237, 100, 0.08);
+            transform: translateX(4px);
+        }
+
+        .pipeline-stage.active {
+            background: rgba(0, 237, 100, 0.1);
+            border-left: 3px solid var(--mongo-green);
+        }
+
+        .pipeline-stage-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .pipeline-stage-content { flex: 1; }
+
+        .pipeline-stage-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .pipeline-stage-desc {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .pipeline-connector {
+            display: flex;
+            justify-content: center;
+            padding: 4px 0;
+            color: rgba(255,255,255,0.2);
+            font-size: 1.1rem;
+        }
+
+        .pipeline-outcomes {
+            display: flex;
+            gap: 8px;
+            padding: 0 20px 20px;
+            flex-wrap: wrap;
+        }
+
+        .pipeline-outcome {
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .pipeline-outcome.approve { background: rgba(0, 237, 100, 0.15); color: var(--mongo-green); border: 1px solid rgba(0, 237, 100, 0.3); }
+        .pipeline-outcome.reject { background: rgba(239, 71, 111, 0.15); color: var(--accent-red); border: 1px solid rgba(239, 71, 111, 0.3); }
+        .pipeline-outcome.review { background: rgba(255, 209, 102, 0.15); color: var(--accent-yellow); border: 1px solid rgba(255, 209, 102, 0.3); }
+
+        /* ============ AI SCORING ============ */
+        .ai-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .ai-layout { grid-template-columns: 1fr; }
+        }
+
+        .ai-panel {
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        .ai-panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-panel-body { padding: 20px; }
+
+        .payment-json {
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.78rem;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.7);
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .json-key { color: var(--accent-teal); }
+        .json-string { color: var(--accent-yellow); }
+        .json-number { color: var(--accent-orange); }
+
+        .score-result {
+            text-align: center;
+            padding: 20px;
+            display: none;
+            animation: fadeSlideIn 0.4s ease;
+        }
+
+        .score-result.visible { display: block; }
+
+        .score-value {
+            font-size: 3rem;
+            font-weight: 700;
+            font-family: 'Source Code Pro', monospace;
+            margin-bottom: 8px;
+        }
+
+        .score-value.approve { color: var(--mongo-green); }
+        .score-value.reject { color: var(--accent-red); }
+        .score-value.review { color: var(--accent-yellow); }
+
+        .score-label {
+            font-size: 1.1rem;
+            font-weight: 600;
+            padding: 6px 20px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        .score-label.approve { background: rgba(0, 237, 100, 0.15); color: var(--mongo-green); }
+        .score-label.reject { background: rgba(239, 71, 111, 0.15); color: var(--accent-red); }
+        .score-label.review { background: rgba(255, 209, 102, 0.15); color: var(--accent-yellow); }
+
+        .score-progress {
+            width: 100%;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin: 16px 0;
+            overflow: hidden;
+        }
+
+        .score-progress-bar {
+            height: 100%;
+            width: 0;
+            border-radius: 3px;
+            transition: width 1.5s ease;
+        }
+
+        .vector-results {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .vector-match {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+            opacity: 0;
+            transform: translateX(-10px);
+        }
+
+        .vector-match.visible {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .vector-match-score {
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+            font-weight: 600;
+            min-width: 50px;
+        }
+
+        .vector-match-bar {
+            flex: 1;
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .vector-match-fill {
+            height: 100%;
+            border-radius: 3px;
+            width: 0;
+            transition: width 1s ease;
+        }
+
+        .vector-match-label {
+            font-size: 0.78rem;
+            color: rgba(255,255,255,0.5);
+            min-width: 150px;
+        }
+
+        /* ============ MULTI-RAIL ============ */
+        .rail-diagram {
+            display: flex;
+            align-items: stretch;
+            gap: 0;
+            background: rgba(0, 30, 43, 0.5);
+            border: 1px solid rgba(0, 237, 100, 0.15);
+            border-radius: 16px;
+            padding: 30px;
+            overflow: hidden;
+        }
+
+        .rail-sources {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-width: 180px;
+        }
+
+        .rail-card {
+            padding: 16px;
+            background: rgba(0,0,0,0.2);
+            border: 2px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .rail-card:hover {
+            border-color: rgba(255,255,255,0.3);
+            transform: translateX(4px);
+        }
+
+        .rail-card.active {
+            border-color: var(--mongo-green);
+            background: rgba(0, 237, 100, 0.08);
+            box-shadow: 0 0 15px rgba(0, 237, 100, 0.15);
+        }
+
+        .rail-card-icon { font-size: 1.5rem; margin-bottom: 6px; }
+
+        .rail-card-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .rail-card-format {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            font-family: 'Source Code Pro', monospace;
+        }
+
+        .rail-connector {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .rail-connector-line {
+            width: 60px;
+            height: 3px;
+            background: rgba(255,255,255,0.1);
+            position: relative;
+        }
+
+        .rail-connector-line .fill {
+            position: absolute;
+            top: 0; left: 0;
+            height: 100%;
+            width: 0;
+            background: var(--mongo-green);
+            transition: width 0.5s ease;
+        }
+
+        .rail-card.active ~ .rail-connector .rail-connector-line .fill,
+        .rail-connector.active .rail-connector-line .fill { width: 100%; }
+
+        .rail-canonical {
+            flex: 1;
+            min-width: 250px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .canonical-model {
+            background: rgba(0, 237, 100, 0.05);
+            border: 2px solid rgba(0, 237, 100, 0.3);
+            border-radius: 14px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .canonical-model.active {
+            border-color: var(--mongo-green);
+            box-shadow: 0 0 20px rgba(0, 237, 100, 0.15);
+        }
+
+        .canonical-icon { font-size: 2.5rem; margin-bottom: 10px; }
+
+        .canonical-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .canonical-sub {
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .canonical-layers {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .canonical-layer {
+            padding: 6px 12px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .ai-engine {
+            background: rgba(157, 78, 221, 0.08);
+            border: 2px solid rgba(157, 78, 221, 0.3);
+            border-radius: 14px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .ai-engine-icon { font-size: 2rem; margin-bottom: 8px; }
+
+        .ai-engine-title {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+
+        .ai-engine-components {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .ai-engine-chip {
+            padding: 5px 12px;
+            background: rgba(157, 78, 221, 0.15);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .rail-benefits {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .rail-benefit {
+            flex: 1;
+            min-width: 180px;
+            padding: 14px 18px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            border-left: 3px solid var(--mongo-green);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .rail-benefit-icon { font-size: 1.2rem; }
+
+        .rail-benefit-text {
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .rail-benefit-text span {
+            display: block;
+            font-size: 0.72rem;
+            color: rgba(255,255,255,0.4);
+            font-weight: 400;
+        }
+
+        /* ============ STATS BAR CHART ============ */
+        .stats-chart {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .stat-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            min-width: 220px;
+            color: rgba(255,255,255,0.7);
+            text-align: right;
+        }
+
+        .stat-bar-container {
+            flex: 1;
+            height: 32px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .stat-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--mongo-green), var(--mongo-dark-green));
+            border-radius: 8px;
+            width: 0;
+            transition: width 1.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 12px;
+        }
+
+        .stat-bar-value {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--mongo-forest);
+        }
+
+        /* ============ FOOTER ============ */
+        .footer-cta {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(0, 237, 100, 0.03);
+            border-top: 1px solid rgba(0, 237, 100, 0.1);
+            margin-top: 40px;
+        }
+
+        .footer-cta h2 {
+            font-size: 1.8rem;
+            margin-bottom: 16px;
+        }
+
+        .footer-cta h2 span { color: var(--mongo-green); }
+
+        .footer-cta p {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 30px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: var(--mongo-green);
+            color: var(--mongo-forest);
+            border: none;
+            border-radius: 10px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .cta-btn:hover {
+            background: var(--mongo-dark-green);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 237, 100, 0.3);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding: 20px;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.3);
+        }
+
+        /* ============ AUTO DEMO ============ */
+        .demo-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 12px 22px;
+            background: linear-gradient(135deg, var(--accent-purple), #7b2cbf);
+            border: none;
+            border-radius: 50px;
+            color: #fff;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 100;
+            transition: all 0.2s;
+            box-shadow: 0 4px 20px rgba(157, 78, 221, 0.3);
+        }
+
+        .demo-fab:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(157, 78, 221, 0.5);
+        }
+
+        .demo-fab.running { background: linear-gradient(135deg, var(--accent-red), #d62839); }
+
+        .demo-narration {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 30, 43, 0.95);
+            border: 2px solid var(--mongo-green);
+            border-radius: 12px;
+            padding: 16px 28px;
+            max-width: 520px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            animation: fadeSlideIn 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .demo-narration.visible { display: block; }
+
+        .demo-narration-text { font-size: 1rem; line-height: 1.5; }
+
+        .demo-narration-step {
+            font-size: 0.75rem;
+            color: var(--mongo-green);
+            margin-top: 8px;
+        }
+
+        /* ============ RESPONSIVE ============ */
+        @media (max-width: 768px) {
+            .header { flex-direction: column; gap: 10px; }
+            .nav-pills { justify-content: center; }
+            .hero h1 { font-size: 2rem; }
+            .hero-cards { flex-direction: column; align-items: center; }
+            .timeline-track { flex-direction: column; gap: 24px; padding: 0; }
+            .timeline-track::before { display: none; }
+            .flow-stages { flex-direction: column; gap: 10px; }
+            .flow-arrow { display: none; }
+            .rail-diagram { flex-direction: column; align-items: center; }
+            .rail-connector { transform: rotate(90deg); padding: 10px 0; }
+            .stat-label { min-width: 120px; font-size: 0.75rem; }
+            .ai-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============ HEADER ============ -->
+    <header class="header">
+        <div class="logo">
+            <div class="logo-icon"><img src="assets/mongodb-leaf.png" alt="MongoDB" style="width:38px;height:38px;border-radius:8px;"></div>
+            <div class="logo-text">MongoDB <span>Payments Playbook</span></div>
+        </div>
+        <nav class="nav-pills" id="nav-pills">
+            <a class="nav-pill active" href="#hero" data-section="hero">Overview</a>
+            <a class="nav-pill" href="#timeline" data-section="timeline">Evolution</a>
+            <a class="nav-pill" href="#value-props" data-section="value-props">Value Props</a>
+            <a class="nav-pill" href="#payment-flow" data-section="payment-flow">Payment Flow</a>
+            <a class="nav-pill" href="#architecture" data-section="architecture">Architecture</a>
+            <a class="nav-pill" href="#enrichment" data-section="enrichment">Enrichment</a>
+            <a class="nav-pill" href="#ai-scoring" data-section="ai-scoring">AI Scoring</a>
+            <a class="nav-pill" href="#multi-rail" data-section="multi-rail">Multi-Rail</a>
+            <a class="nav-pill" href="#stats" data-section="stats">Innovation</a>
+        </nav>
+    </header>
+
+    <main class="main-layout">
+
+        <!-- ============ HERO ============ -->
+        <div class="section hero visible" id="hero">
+            <div class="hero-badge">Industry Solutions 2026</div>
+            <h1>MongoDB for<br><span>Payments</span></h1>
+            <p class="hero-stat">Processing <strong>$194 Trillion</strong> in cross-border payments annually,<br>the industry demands real-time, flexible, and secure data infrastructure.</p>
+            <div class="hero-cards">
+                <div class="hero-card">
+                    <div class="hero-card-icon">&#9889;</div>
+                    <h3>Time-to-Market</h3>
+                    <p>Native JSON document model matches ISO 20022, Open Banking APIs, and modern programming paradigms for rapid development.</p>
+                </div>
+                <div class="hero-card">
+                    <div class="hero-card-icon">&#128994;</div>
+                    <h3>24x7 Availability</h3>
+                    <p>Interruption-free operations with distributed replica sets, automatic failover, and zero-downtime patching.</p>
+                </div>
+                <div class="hero-card">
+                    <div class="hero-card-icon">&#128737;</div>
+                    <h3>TCO &amp; Resilience</h3>
+                    <p>Run anywhere: cloud, on-prem, or hybrid. Eliminates need for dedicated operations teams with MongoDB Atlas.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ TIMELINE ============ -->
+        <div class="section" id="timeline">
+            <div class="section-title"><span class="icon">&#128336;</span> Evolution of Payments</div>
+            <div class="section-subtitle">From fixed-field messages to intelligent, real-time data monetization.</div>
+            <div class="timeline-container">
+                <div class="timeline-track">
+                    <div class="timeline-node active" data-era="1980" onclick="selectEra('1980')">
+                        <div class="timeline-dot">&#128190;</div>
+                        <div class="timeline-year">1980</div>
+                        <div class="timeline-label">Fixed Field Message</div>
+                    </div>
+                    <div class="timeline-node" data-era="1990" onclick="selectEra('1990')">
+                        <div class="timeline-dot">&#128451;</div>
+                        <div class="timeline-year">1990</div>
+                        <div class="timeline-label">Relational Message</div>
+                    </div>
+                    <div class="timeline-node" data-era="2018" onclick="selectEra('2018')">
+                        <div class="timeline-dot">&#128196;</div>
+                        <div class="timeline-year">2018</div>
+                        <div class="timeline-label">ISO 20022 JSON</div>
+                    </div>
+                    <div class="timeline-node" data-era="2022" onclick="selectEra('2022')">
+                        <div class="timeline-dot">&#129302;</div>
+                        <div class="timeline-year">2022+</div>
+                        <div class="timeline-label">Data Monetization</div>
+                    </div>
+                </div>
+
+                <div class="timeline-detail active" id="detail-1980">
+                    <h4>1980s: Fixed Field Messages</h4>
+                    <p>Static payment formats with 20-year change cycles and zero innovation. Each character position was rigidly defined, making adaptation nearly impossible. Banks operated in isolation with proprietary formats that stifled cross-border interoperability.</p>
+                </div>
+                <div class="timeline-detail" id="detail-1990">
+                    <h4>1990s: Relational Messages</h4>
+                    <p>Change became possible, but each bank maintained its own schema and concept. The reasons for original designs were lost in time and complexity, creating technical debt that strangulated modernization efforts across the industry.</p>
+                </div>
+                <div class="timeline-detail" id="detail-2018">
+                    <h4>2018: ISO 20022 &amp; JSON</h4>
+                    <p>Readable, flexible, and dynamically adjustable for ever-changing requirements. New capabilities can be added without impact to others. JSON (the native format of MongoDB) became the standard for payments data, enabling Open Banking APIs and modern architectures.</p>
+                </div>
+                <div class="timeline-detail" id="detail-2022">
+                    <h4>2022+: Data Monetization &amp; AI</h4>
+                    <p>Value-add services enabling real-time analytics and immediate engagement with consumers. AI-powered enrichment, fraud prevention, and personalized financial services transform raw payment data into strategic business intelligence and new revenue streams.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ VALUE PROPOSITIONS ============ -->
+        <div class="section" id="value-props">
+            <div class="section-title"><span class="icon">&#128142;</span> MongoDB Payments Value Propositions</div>
+            <div class="section-subtitle">Eight pillars that make MongoDB the ideal data platform for modern payments.</div>
+            <div class="vp-grid" id="vp-grid">
+                <!-- Cards rendered by JS -->
+            </div>
+        </div>
+
+        <!-- ============ PAYMENT FLOW ============ -->
+        <div class="section" id="payment-flow">
+            <div class="section-title"><span class="icon">&#9889;</span> Instant Payment Flow Simulation</div>
+            <div class="section-subtitle">Simulate a real-time payment from payer to payee in under 10 seconds, powered by MongoDB.</div>
+
+            <div class="flow-controls">
+                <button class="flow-btn primary" id="send-payment-btn" onclick="startPaymentFlow()">&#128176; Send Payment</button>
+                <button class="flow-btn secondary" id="flow-outgoing-btn" onclick="setFlowDirection('outgoing')" class="active">Outgoing</button>
+                <button class="flow-btn secondary" id="flow-incoming-btn" onclick="setFlowDirection('incoming')">Incoming</button>
+                <button class="flow-btn secondary" onclick="resetPaymentFlow()">&#128260; Reset</button>
+                <div class="flow-timer" id="flow-timer">0.00s</div>
+            </div>
+
+            <div class="flow-canvas" id="flow-canvas">
+                <div class="flow-stages" id="flow-stages">
+                    <!-- Rendered by JS based on direction -->
+                </div>
+                <div class="flow-checks" id="flow-checks">
+                    <div class="flow-check" data-check="data"><span class="flow-check-icon">&#128274;</span> No Data Loss</div>
+                    <div class="flow-check" data-check="fraud"><span class="flow-check-icon">&#128270;</span> Fraud Detection</div>
+                    <div class="flow-check" data-check="name"><span class="flow-check-icon">&#9989;</span> Name/Account Check</div>
+                    <div class="flow-check" data-check="status"><span class="flow-check-icon">&#128203;</span> Status Handling</div>
+                    <div class="flow-check" data-check="ha"><span class="flow-check-icon">&#128994;</span> High Availability</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ ARCHITECTURE ============ -->
+        <div class="section" id="architecture">
+            <div class="section-title"><span class="icon">&#127959;</span> Payment Data Architecture</div>
+            <div class="section-subtitle">Three patterns for building real-time payment processing on MongoDB.</div>
+
+            <div class="arch-tabs">
+                <div class="arch-tab active" data-tab="datastore" onclick="selectArchTab('datastore')">&#128451; Data Store</div>
+                <div class="arch-tab" data-tab="lambda" onclick="selectArchTab('lambda')">&#9889; Event Stream + Lambda</div>
+                <div class="arch-tab" data-tab="trigger" onclick="selectArchTab('trigger')">&#128276; Event Stream + Trigger</div>
+            </div>
+
+            <div class="arch-panel active" id="arch-datastore">
+                <div class="arch-flow">
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#128177;</div>
+                        <div class="arch-node-label">Payment Rails</div>
+                        <div class="arch-node-desc">SWIFT, ACH, Cards, RT</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node mongo">
+                        <div class="arch-node-icon">&#127811;</div>
+                        <div class="arch-node-label">MongoDB Payment Data Store</div>
+                        <div class="arch-node-desc">Global, Real-Time, ACID</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#128200;</div>
+                        <div class="arch-node-label">Analytics &amp; Insights</div>
+                        <div class="arch-node-desc">Real-time dashboards</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arch-panel" id="arch-lambda">
+                <div class="arch-flow">
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#128225;</div>
+                        <div class="arch-node-label">Payment Signal</div>
+                        <div class="arch-node-desc">Event or trigger</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#9889;</div>
+                        <div class="arch-node-label">Microservice / Lambda</div>
+                        <div class="arch-node-desc">Processing logic</div>
+                    </div>
+                    <div class="arch-connector">&#8596;</div>
+                    <div class="arch-node mongo">
+                        <div class="arch-node-icon">&#127811;</div>
+                        <div class="arch-node-label">MongoDB Data Store</div>
+                        <div class="arch-node-desc">Payment + Reference Data</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#129302;</div>
+                        <div class="arch-node-label">ML Platform</div>
+                        <div class="arch-node-desc">Scoring &amp; Models</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#127919;</div>
+                        <div class="arch-node-label">Resulting Action</div>
+                        <div class="arch-node-desc">Approve / Flag / Route</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="arch-panel" id="arch-trigger">
+                <div class="arch-flow">
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#128225;</div>
+                        <div class="arch-node-label">Payment Signal</div>
+                        <div class="arch-node-desc">Event or trigger</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node mongo">
+                        <div class="arch-node-icon">&#127811;</div>
+                        <div class="arch-node-label">MongoDB Data Store</div>
+                        <div class="arch-node-desc">Change Streams trigger</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#128276;</div>
+                        <div class="arch-node-label">Trigger Function</div>
+                        <div class="arch-node-desc">Automated processing</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#129302;</div>
+                        <div class="arch-node-label">ML Platform</div>
+                        <div class="arch-node-desc">Scoring &amp; Models</div>
+                    </div>
+                    <div class="arch-connector">&#10132;</div>
+                    <div class="arch-node">
+                        <div class="arch-node-icon">&#127919;</div>
+                        <div class="arch-node-label">Resulting Action</div>
+                        <div class="arch-node-desc">Approve / Flag / Route</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ ENRICHMENT ============ -->
+        <div class="section" id="enrichment">
+            <div class="section-title"><span class="icon">&#128300;</span> Real-Time Enrichment Pipeline</div>
+            <div class="section-subtitle">Extracting value from payment data in real-time for both consumers and compliance.</div>
+
+            <div class="enrichment-grid">
+                <div class="enrichment-column">
+                    <div class="enrichment-header user-centric">
+                        <span class="enrichment-header-icon">&#128100;</span>
+                        <span>User-Centric Enrichment</span>
+                    </div>
+                    <div class="pipeline-stages" id="pipeline-user">
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128230;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Payment Order Ingestion</div>
+                                <div class="pipeline-stage-desc">Accept ISO 20022 / JSON payment messages</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128269;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Transaction Detail Extraction</div>
+                                <div class="pipeline-stage-desc">Merchant info, geolocation, amount metadata</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#127991;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Categorization</div>
+                                <div class="pipeline-stage-desc">Atlas Search for smart category assignment</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128301;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Vector Search</div>
+                                <div class="pipeline-stage-desc">Semantic similarity for enrichment via embeddings</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                    </div>
+                    <div class="pipeline-outcomes">
+                        <div class="pipeline-outcome approve">&#128100; Customer Profile</div>
+                        <div class="pipeline-outcome approve">&#128176; Credit Assessment</div>
+                        <div class="pipeline-outcome approve">&#127873; Next Best Offer</div>
+                    </div>
+                </div>
+
+                <div class="enrichment-column">
+                    <div class="enrichment-header aml">
+                        <span class="enrichment-header-icon">&#128721;</span>
+                        <span>AML / Compliance Enrichment</span>
+                    </div>
+                    <div class="pipeline-stages" id="pipeline-aml">
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128373;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Automated Due Diligence</div>
+                                <div class="pipeline-stage-desc">Cross-reference sanctions &amp; watchlists</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128270;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Screening &amp; Pattern Analysis</div>
+                                <div class="pipeline-stage-desc">Behavioral patterns with Atlas Search</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128220;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">AML Policy &amp; Rules Engine</div>
+                                <div class="pipeline-stage-desc">Regulatory rules applied in real-time</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                        <div class="pipeline-stage" onclick="togglePipelineStage(this)">
+                            <div class="pipeline-stage-icon">&#128203;</div>
+                            <div class="pipeline-stage-content">
+                                <div class="pipeline-stage-title">Case Manager &amp; Reporting</div>
+                                <div class="pipeline-stage-desc">Escalation, audit trail, report generation</div>
+                            </div>
+                        </div>
+                        <div class="pipeline-connector">&#8595;</div>
+                    </div>
+                    <div class="pipeline-outcomes">
+                        <div class="pipeline-outcome approve">&#9989; Approve</div>
+                        <div class="pipeline-outcome review">&#128065; Under Review</div>
+                        <div class="pipeline-outcome reject">&#10060; Reject</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ AI SCORING ============ -->
+        <div class="section" id="ai-scoring">
+            <div class="section-title"><span class="icon">&#129302;</span> AI Smart Routing &amp; Scoring</div>
+            <div class="section-subtitle">Machine learning scoring with Vector Search for intelligent payment routing decisions.</div>
+
+            <div class="ai-layout">
+                <div class="ai-panel">
+                    <div class="ai-panel-header">&#128196; Payment Order</div>
+                    <div class="ai-panel-body">
+                        <div class="payment-json" id="payment-json">
+{
+  <span class="json-key">"PaymentId"</span>: <span class="json-string">"PAY-2026-0317-7842"</span>,
+  <span class="json-key">"Name"</span>: <span class="json-string">"C&auml;cilia M&ouml;sel"</span>,
+  <span class="json-key">"Address"</span>: <span class="json-string">"Limatstra&szlig;e 1, 8185, Z&uuml;rich"</span>,
+  <span class="json-key">"Amount"</span>: <span class="json-number">12450.00</span>,
+  <span class="json-key">"Currency"</span>: <span class="json-string">"CHF"</span>,
+  <span class="json-key">"Type"</span>: <span class="json-string">"pacs.008"</span>,
+  <span class="json-key">"CreditorBIC"</span>: <span class="json-string">"UBSWCHZH80A"</span>,
+  <span class="json-key">"Purpose"</span>: <span class="json-string">"Invoice Payment"</span>
+}
+                        </div>
+                        <button class="flow-btn primary" id="score-btn" onclick="runScoring()" style="width:100%;justify-content:center;">&#129302; Score Payment</button>
+                        <div class="score-result" id="score-result">
+                            <div class="score-progress"><div class="score-progress-bar" id="score-bar"></div></div>
+                            <div class="score-value" id="score-value"></div>
+                            <div class="score-label" id="score-label"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ai-panel">
+                    <div class="ai-panel-header">&#128301; Vector Search - Similar Transactions</div>
+                    <div class="ai-panel-body">
+                        <div class="vector-results" id="vector-results">
+                            <div class="vector-match" data-delay="200">
+                                <div class="vector-match-score" style="color: var(--mongo-green);">0.97</div>
+                                <div class="vector-match-bar"><div class="vector-match-fill" style="background: var(--mongo-green);"></div></div>
+                                <div class="vector-match-label">CHF 11,200 - Invoice, Zurich</div>
+                            </div>
+                            <div class="vector-match" data-delay="400">
+                                <div class="vector-match-score" style="color: var(--mongo-green);">0.94</div>
+                                <div class="vector-match-bar"><div class="vector-match-fill" style="background: var(--mongo-green);"></div></div>
+                                <div class="vector-match-label">CHF 15,800 - Invoice, Basel</div>
+                            </div>
+                            <div class="vector-match" data-delay="600">
+                                <div class="vector-match-score" style="color: var(--accent-teal);">0.89</div>
+                                <div class="vector-match-bar"><div class="vector-match-fill" style="background: var(--accent-teal);"></div></div>
+                                <div class="vector-match-label">EUR 9,500 - Invoice, Frankfurt</div>
+                            </div>
+                            <div class="vector-match" data-delay="800">
+                                <div class="vector-match-score" style="color: var(--accent-teal);">0.82</div>
+                                <div class="vector-match-bar"><div class="vector-match-fill" style="background: var(--accent-teal);"></div></div>
+                                <div class="vector-match-label">CHF 22,000 - Payroll, Zurich</div>
+                            </div>
+                            <div class="vector-match" data-delay="1000">
+                                <div class="vector-match-score" style="color: var(--accent-yellow);">0.61</div>
+                                <div class="vector-match-bar"><div class="vector-match-fill" style="background: var(--accent-yellow);"></div></div>
+                                <div class="vector-match-label">USD 45,000 - Wire, New York</div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 16px; padding: 14px; background: rgba(157,78,221,0.08); border: 1px solid rgba(157,78,221,0.2); border-radius: 10px;">
+                            <div style="font-size: 0.85rem; font-weight: 600; color: var(--accent-purple); margin-bottom: 6px;">&#127793; MongoDB Atlas Vector Search</div>
+                            <div style="font-size: 0.78rem; color: rgba(255,255,255,0.5); line-height: 1.5;">kNN algorithm finds similar recorded transactions. Semantic similarity enables smarter fraud detection, risk scoring, and routing decisions without manual rule configuration.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ MULTI-RAIL ============ -->
+        <div class="section" id="multi-rail">
+            <div class="section-title"><span class="icon">&#128256;</span> Multi-Rail Format Conversion</div>
+            <div class="section-subtitle">From fragmented rail-specific data to a unified canonical model with AI-assisted automation.</div>
+
+            <div class="rail-diagram">
+                <div class="rail-sources" id="rail-sources">
+                    <div class="rail-card active" data-rail="swift" onclick="selectRail('swift')">
+                        <div class="rail-card-icon">&#127760;</div>
+                        <div class="rail-card-name">SWIFT</div>
+                        <div class="rail-card-format">ISO 20022 XML</div>
+                    </div>
+                    <div class="rail-card" data-rail="ach" onclick="selectRail('ach')">
+                        <div class="rail-card-icon">&#127974;</div>
+                        <div class="rail-card-name">ACH</div>
+                        <div class="rail-card-format">Fixed-width File</div>
+                    </div>
+                    <div class="rail-card" data-rail="card" onclick="selectRail('card')">
+                        <div class="rail-card-icon">&#128179;</div>
+                        <div class="rail-card-name">Card</div>
+                        <div class="rail-card-format">ISO 8583</div>
+                    </div>
+                    <div class="rail-card" data-rail="crypto" onclick="selectRail('crypto')">
+                        <div class="rail-card-icon">&#129689;</div>
+                        <div class="rail-card-name">Crypto</div>
+                        <div class="rail-card-format">JSON</div>
+                    </div>
+                </div>
+
+                <div class="rail-connector active" id="rail-connector">
+                    <div class="rail-connector-line"><div class="fill" style="width:100%"></div></div>
+                </div>
+
+                <div class="rail-canonical">
+                    <div class="canonical-model active" id="canonical-model">
+                        <div class="canonical-icon">&#127811;</div>
+                        <div class="canonical-title">Canonical Payment Data Model</div>
+                        <div class="canonical-sub">Standardized, Real-Time, Rich Data on MongoDB</div>
+                        <div class="canonical-layers">
+                            <div class="canonical-layer">&#128196; Business Data</div>
+                            <div class="canonical-layer">&#9881; Operational + AI Data</div>
+                            <div class="canonical-layer">&#128268; Config &amp; Integration</div>
+                        </div>
+                    </div>
+                    <div class="ai-engine">
+                        <div class="ai-engine-icon">&#129302;</div>
+                        <div class="ai-engine-title">AI-Assisted Automation Engine</div>
+                        <div class="ai-engine-components">
+                            <div class="ai-engine-chip">&#129504; AI/ML</div>
+                            <div class="ai-engine-chip">&#128220; Rules Engine</div>
+                            <div class="ai-engine-chip">&#128203; Audit Trail</div>
+                            <div class="ai-engine-chip">&#9989; STP</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="rail-benefits">
+                <div class="rail-benefit">
+                    <div class="rail-benefit-icon">&#128640;</div>
+                    <div class="rail-benefit-text">Accelerate TTM<span>New revenue from faster rail onboarding</span></div>
+                </div>
+                <div class="rail-benefit">
+                    <div class="rail-benefit-icon">&#128181;</div>
+                    <div class="rail-benefit-text">Lower TCO<span>Eliminate siloed logic &amp; duplicated code</span></div>
+                </div>
+                <div class="rail-benefit">
+                    <div class="rail-benefit-icon">&#128737;</div>
+                    <div class="rail-benefit-text">Ensure Compliance<span>Governed STP with audit trails</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============ INNOVATION PRIORITIES ============ -->
+        <div class="section" id="stats">
+            <div class="section-title"><span class="icon">&#128200;</span> Innovation Priorities</div>
+            <div class="section-subtitle">Investment priorities identified by banks for the next 3 years (source: industry survey).</div>
+
+            <div class="stats-chart" id="stats-chart">
+                <div class="stat-row">
+                    <div class="stat-label">Mobile / Tablet Channel</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="75"><span class="stat-bar-value">75%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Domestic Real-Time Payments</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="70"><span class="stat-bar-value">70%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Cross-border Real-Time Payments</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="70"><span class="stat-bar-value">70%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Next-Gen Web Channel</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="60"><span class="stat-bar-value">60%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Multi-Bank Cash Management</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="55"><span class="stat-bar-value">55%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Third-Party Supply Chain Finance</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="55"><span class="stat-bar-value">55%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Multi-Bank Trade Finance</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="50"><span class="stat-bar-value">50%</span></div></div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">Next-Gen SCF (Dynamic Discounting)</div>
+                    <div class="stat-bar-container"><div class="stat-bar" data-width="45"><span class="stat-bar-value">45%</span></div></div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ============ FOOTER ============ -->
+    <div class="footer-cta">
+        <h2>Discover MongoDB Use Cases in <span>Payments</span></h2>
+        <p>From instant payments to AI-powered fraud detection, MongoDB is the data platform powering the future of financial services.</p>
+        <a href="https://www.mongodb.com/solutions/industries/financial-services" target="_blank" rel="noopener noreferrer" class="cta-btn">&#127811; Explore MongoDB for FSI &#10132;</a>
+    </div>
+    <div class="footer-bottom">MongoDB Payments Playbook &middot; Industry Solutions 2026</div>
+
+    <!-- ============ AUTO DEMO FAB ============ -->
+    <button class="demo-fab" id="demo-fab" onclick="toggleAutoDemo()">
+        <span id="demo-fab-icon">&#9654;&#65039;</span>
+        <span id="demo-fab-text">Auto Demo</span>
+    </button>
+
+    <!-- ============ DEMO NARRATION ============ -->
+    <div class="demo-narration" id="demo-narration">
+        <div class="demo-narration-text" id="narration-text"></div>
+        <div class="demo-narration-step" id="narration-step"></div>
+    </div>
+
+    <script>
+    // ============ VALUE PROPOSITION DATA ============
+    const VP_DATA = [
+        {
+            icon: '&#9889;',
+            title: 'ACID Transactions',
+            summary: 'Multi-document ACID transactions for payment consistency.',
+            detail: 'MongoDB supports multi-document ACID transactions across replica sets and sharded clusters, ensuring payment debits and credits are always consistent even across distributed systems. This is critical for maintaining financial integrity in real-time payment processing.'
+        },
+        {
+            icon: '&#128196;',
+            title: 'Native Data Currency',
+            summary: 'JSON document model matches ISO 20022 natively.',
+            detail: 'Payment formats like ISO 20022, Open Banking APIs, and BIAN are all JSON/hierarchical. MongoDB\'s document model stores these natively without expensive ORM mapping or schema decomposition, eliminating the impedance mismatch that plagues relational databases.'
+        },
+        {
+            icon: '&#128338;',
+            title: 'Real-Time Processing',
+            summary: 'Sub-millisecond latency for instant payment decisions.',
+            detail: 'With in-memory storage engine options, Change Streams for event-driven processing, and aggregation pipelines for complex real-time analytics, MongoDB processes payment events with the speed required for instant payment SLAs (under 10 seconds end-to-end).'
+        },
+        {
+            icon: '&#128994;',
+            title: 'Pay Anytime (24x7x365)',
+            summary: 'Zero-downtime operations with automatic failover.',
+            detail: 'Distributed replica sets with automatic failover ensure continuous payment processing. Rolling upgrades, online schema changes, and live resharding mean zero planned downtime. Multi-region deployments survive entire data center failures transparently.'
+        },
+        {
+            icon: '&#128274;',
+            title: 'Security & PCI-DSS',
+            summary: 'Enterprise-grade encryption and compliance.',
+            detail: 'Client-Side Field Level Encryption (CSFLE), Queryable Encryption, encryption at rest and in transit, audit logging, and role-based access control. MongoDB Atlas is PCI-DSS compliant, SOC2 certified, and meets the stringent security requirements of global payment processors.'
+        },
+        {
+            icon: '&#128256;',
+            title: 'Multiple Payment Options',
+            summary: 'Flexible schema for evolving payment types.',
+            detail: 'From credit cards to instant payments, P2P transfers to crypto settlements, MongoDB\'s flexible schema adapts to new payment methods without costly migrations. New payment types can be onboarded by extending the document structure, not rewriting the database schema.'
+        },
+        {
+            icon: '&#128187;',
+            title: 'Developer Productivity',
+            summary: 'Faster time-to-market with familiar tools.',
+            detail: 'Developers work with the same JSON data format from the API layer through to the database. No ORM overhead, native driver support for 12+ languages, and the MongoDB Query API reduces development time by up to 60% compared to traditional relational approaches.'
+        },
+        {
+            icon: '&#129302;',
+            title: 'AI-Enabled Applications',
+            summary: 'Built-in Vector Search and AI integration.',
+            detail: 'MongoDB Atlas Vector Search enables semantic similarity for fraud detection, smart routing, and customer insights. Native integration with LLM frameworks and the aggregation pipeline for feature engineering means AI-powered payment applications can be built on a single platform.'
+        }
+    ];
+
+    // ============ RENDER VALUE PROPS ============
+    function renderValueProps() {
+        const grid = document.getElementById('vp-grid');
+        grid.innerHTML = VP_DATA.map((vp, i) => `
+            <div class="vp-card" onclick="toggleVP(this)">
+                <div class="vp-expand-hint">Click to expand</div>
+                <div class="vp-card-header">
+                    <div class="vp-icon">${vp.icon}</div>
+                    <h3>${vp.title}</h3>
+                </div>
+                <div class="vp-summary">${vp.summary}</div>
+                <div class="vp-detail">
+                    <div class="vp-detail-inner">${vp.detail}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function toggleVP(card) {
+        card.classList.toggle('expanded');
+    }
+
+    // ============ TIMELINE ============
+    function selectEra(era) {
+        document.querySelectorAll('.timeline-node').forEach(n => n.classList.toggle('active', n.dataset.era === era));
+        document.querySelectorAll('.timeline-detail').forEach(d => d.classList.remove('active'));
+        const detail = document.getElementById('detail-' + era);
+        if (detail) detail.classList.add('active');
+    }
+
+    // ============ PAYMENT FLOW ============
+    let flowDirection = 'outgoing';
+    let flowRunning = false;
+    let flowTimerInterval = null;
+
+    const FLOW_STAGES_DATA = {
+        outgoing: [
+            { icon: '&#128100;', label: 'Payer', sub: 'Initiates payment' },
+            { icon: '&#127974;', label: "Payer's Bank", sub: 'Creates pacs.008' },
+            { icon: '&#127760;', label: 'Clearing (SIC-IP)', sub: 'Routes & settles' },
+            { icon: '&#127974;', label: "Payee's Bank", sub: 'Receives pacs.002' },
+            { icon: '&#128100;', label: 'Payee', sub: 'Funds credited' }
+        ],
+        incoming: [
+            { icon: '&#127760;', label: 'Clearing (SIC-IP)', sub: 'Payment arrives' },
+            { icon: '&#127974;', label: "Payee's Bank", sub: 'MongoDB Data Store' },
+            { icon: '&#128270;', label: 'Risk & Compliance', sub: 'Fraud + AML checks' },
+            { icon: '&#128176;', label: 'Account Posting', sub: 'Real-time credit' },
+            { icon: '&#128100;', label: 'Payee', sub: 'Notified instantly' }
+        ]
+    };
+
+    function renderFlowStages() {
+        const container = document.getElementById('flow-stages');
+        const stages = FLOW_STAGES_DATA[flowDirection];
+        let html = '';
+        stages.forEach((s, i) => {
+            html += `<div class="flow-stage" id="flow-stage-${i}">
+                <div class="flow-stage-icon">${s.icon}</div>
+                <div class="flow-stage-label">${s.label}</div>
+                <div class="flow-stage-sub">${s.sub}</div>
+            </div>`;
+            if (i < stages.length - 1) {
+                html += `<div class="flow-arrow" id="flow-arrow-${i}"><div class="flow-arrow-fill"></div></div>`;
+            }
+        });
+        container.innerHTML = html;
+    }
+
+    function setFlowDirection(dir) {
+        flowDirection = dir;
+        document.getElementById('flow-outgoing-btn').classList.toggle('active', dir === 'outgoing');
+        document.getElementById('flow-incoming-btn').classList.toggle('active', dir === 'incoming');
+        resetPaymentFlow();
+        renderFlowStages();
+    }
+
+    function resetPaymentFlow() {
+        flowRunning = false;
+        clearInterval(flowTimerInterval);
+        document.getElementById('flow-timer').textContent = '0.00s';
+        document.getElementById('flow-timer').classList.remove('running');
+        document.getElementById('send-payment-btn').disabled = false;
+        document.querySelectorAll('.flow-stage').forEach(s => { s.classList.remove('active', 'completed'); });
+        document.querySelectorAll('.flow-arrow').forEach(a => { a.classList.remove('active'); });
+        document.querySelectorAll('.flow-check').forEach(c => { c.classList.remove('passed'); });
+        document.querySelectorAll('.flow-particle').forEach(p => p.remove());
+    }
+
+    async function startPaymentFlow() {
+        if (flowRunning) return;
+        resetPaymentFlow();
+        flowRunning = true;
+        document.getElementById('send-payment-btn').disabled = true;
+
+        const timer = document.getElementById('flow-timer');
+        timer.classList.add('running');
+        let elapsed = 0;
+        flowTimerInterval = setInterval(() => {
+            elapsed += 50;
+            timer.textContent = (elapsed / 1000).toFixed(2) + 's';
+        }, 50);
+
+        const stages = FLOW_STAGES_DATA[flowDirection];
+        const checks = ['data', 'fraud', 'name', 'status', 'ha'];
+        let checkIdx = 0;
+
+        for (let i = 0; i < stages.length; i++) {
+            const stage = document.getElementById('flow-stage-' + i);
+            stage.classList.add('active');
+
+            if (i > 0 && checkIdx < checks.length) {
+                const check = document.querySelector(`.flow-check[data-check="${checks[checkIdx]}"]`);
+                if (check) check.classList.add('passed');
+                checkIdx++;
+            }
+
+            if (i > 0) {
+                const arrow = document.getElementById('flow-arrow-' + (i - 1));
+                if (arrow) arrow.classList.add('active');
+            }
+
+            await sleep(flowDirection === 'outgoing' ? 700 : 900);
+
+            stage.classList.remove('active');
+            stage.classList.add('completed');
+        }
+
+        while (checkIdx < checks.length) {
+            const check = document.querySelector(`.flow-check[data-check="${checks[checkIdx]}"]`);
+            if (check) check.classList.add('passed');
+            checkIdx++;
+        }
+
+        clearInterval(flowTimerInterval);
+        timer.classList.remove('running');
+        flowRunning = false;
+        document.getElementById('send-payment-btn').disabled = false;
+    }
+
+    // ============ ARCHITECTURE ============
+    function selectArchTab(tab) {
+        document.querySelectorAll('.arch-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+        document.querySelectorAll('.arch-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('arch-' + tab).classList.add('active');
+    }
+
+    // ============ ENRICHMENT ============
+    function togglePipelineStage(el) {
+        el.classList.toggle('active');
+    }
+
+    // ============ AI SCORING ============
+    let scoringRunning = false;
+
+    async function runScoring() {
+        if (scoringRunning) return;
+        scoringRunning = true;
+        document.getElementById('score-btn').disabled = true;
+
+        const result = document.getElementById('score-result');
+        const bar = document.getElementById('score-bar');
+        const value = document.getElementById('score-value');
+        const label = document.getElementById('score-label');
+
+        result.classList.add('visible');
+        result.style.display = 'block';
+
+        const score = (Math.random() * 0.4 + 0.55).toFixed(3);
+        const scoreNum = parseFloat(score);
+
+        let category, color;
+        if (scoreNum > 0.7) { category = 'approve'; color = 'var(--mongo-green)'; }
+        else if (scoreNum < 0.6) { category = 'reject'; color = 'var(--accent-red)'; }
+        else { category = 'review'; color = 'var(--accent-yellow)'; }
+
+        bar.style.background = color;
+        bar.style.width = '0%';
+
+        await sleep(100);
+        bar.style.width = (scoreNum * 100) + '%';
+
+        await sleep(1500);
+
+        value.textContent = score;
+        value.className = 'score-value ' + category;
+
+        const labels = { approve: 'APPROVED', reject: 'REJECTED', review: 'UNDER REVIEW' };
+        label.textContent = labels[category];
+        label.className = 'score-label ' + category;
+
+        // Animate vector matches
+        const matches = document.querySelectorAll('.vector-match');
+        const widths = [97, 94, 89, 82, 61];
+        matches.forEach((m, i) => {
+            setTimeout(() => {
+                m.classList.add('visible');
+                const fill = m.querySelector('.vector-match-fill');
+                fill.style.width = widths[i] + '%';
+            }, parseInt(m.dataset.delay));
+        });
+
+        await sleep(1500);
+        scoringRunning = false;
+        document.getElementById('score-btn').disabled = false;
+    }
+
+    // ============ MULTI-RAIL ============
+    function selectRail(rail) {
+        document.querySelectorAll('.rail-card').forEach(c => c.classList.toggle('active', c.dataset.rail === rail));
+        const model = document.getElementById('canonical-model');
+        model.classList.remove('active');
+        void model.offsetWidth;
+        model.classList.add('active');
+    }
+
+    // ============ SCROLL ANIMATIONS ============
+    function setupScrollAnimations() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+
+                    if (entry.target.id === 'stats') {
+                        animateStatBars();
+                    }
+                }
+            });
+        }, { threshold: 0.15 });
+
+        document.querySelectorAll('.section').forEach(s => observer.observe(s));
+    }
+
+    function animateStatBars() {
+        document.querySelectorAll('.stat-bar').forEach((bar, i) => {
+            setTimeout(() => {
+                bar.style.width = bar.dataset.width + '%';
+            }, i * 120);
+        });
+    }
+
+    // ============ NAV PILLS ACTIVE STATE ============
+    function setupNavScroll() {
+        const sections = document.querySelectorAll('.section');
+        const pills = document.querySelectorAll('.nav-pill');
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const id = entry.target.id;
+                    pills.forEach(p => p.classList.toggle('active', p.dataset.section === id));
+                }
+            });
+        }, { threshold: 0.3, rootMargin: '-80px 0px 0px 0px' });
+
+        sections.forEach(s => observer.observe(s));
+
+        pills.forEach(pill => {
+            pill.addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = document.getElementById(pill.dataset.section);
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+    }
+
+    // ============ AUTO DEMO ============
+    let demoRunning = false;
+
+    const DEMO_STEPS = [
+        { text: 'Welcome to the MongoDB Payments Playbook! Let\'s take a guided tour.', section: 'hero', action: null, duration: 3000 },
+        { text: 'Payments have evolved from rigid fixed-field formats to flexible JSON standards.', section: 'timeline', action: () => selectEra('2018'), duration: 3000 },
+        { text: 'MongoDB offers 8 core value propositions for payments.', section: 'value-props', action: () => { const card = document.querySelector('.vp-card'); if(card) card.classList.add('expanded'); }, duration: 3000 },
+        { text: 'Watch an instant payment flow from payer to payee in real-time!', section: 'payment-flow', action: () => startPaymentFlow(), duration: 6000 },
+        { text: 'Three architecture patterns power real-time payment processing.', section: 'architecture', action: () => selectArchTab('lambda'), duration: 3000 },
+        { text: 'Real-time enrichment drives both user delight and compliance.', section: 'enrichment', action: null, duration: 3000 },
+        { text: 'AI Smart Routing scores payments using Vector Search similarity.', section: 'ai-scoring', action: () => runScoring(), duration: 4000 },
+        { text: 'Multi-rail format conversion unifies SWIFT, ACH, Card, and Crypto data.', section: 'multi-rail', action: () => { selectRail('ach'); setTimeout(() => selectRail('crypto'), 1500); }, duration: 4000 },
+        { text: 'Banks are investing heavily in real-time and mobile payments.', section: 'stats', action: null, duration: 3000 },
+        { text: 'Demo complete! Explore each section interactively using the navigation above.', section: 'hero', action: null, duration: 3000 }
+    ];
+
+    async function toggleAutoDemo() {
+        if (demoRunning) { stopAutoDemo(); return; }
+        demoRunning = true;
+
+        const fab = document.getElementById('demo-fab');
+        fab.classList.add('running');
+        document.getElementById('demo-fab-icon').innerHTML = '&#9632;';
+        document.getElementById('demo-fab-text').textContent = 'Stop Demo';
+
+        const narration = document.getElementById('demo-narration');
+        narration.classList.add('visible');
+
+        for (let i = 0; i < DEMO_STEPS.length && demoRunning; i++) {
+            const step = DEMO_STEPS[i];
+            document.getElementById('narration-text').textContent = step.text;
+            document.getElementById('narration-step').textContent = `Step ${i + 1} of ${DEMO_STEPS.length}`;
+
+            const target = document.getElementById(step.section);
+            if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            if (step.action) {
+                await sleep(600);
+                step.action();
+            }
+
+            await sleep(step.duration);
+        }
+
+        stopAutoDemo();
+    }
+
+    function stopAutoDemo() {
+        demoRunning = false;
+        document.getElementById('demo-fab').classList.remove('running');
+        document.getElementById('demo-fab-icon').innerHTML = '&#9654;&#65039;';
+        document.getElementById('demo-fab-text').textContent = 'Auto Demo';
+        document.getElementById('demo-narration').classList.remove('visible');
+    }
+
+    // ============ KEYBOARD SHORTCUTS ============
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            switch (e.key.toLowerCase()) {
+                case 'p': startPaymentFlow(); break;
+                case 's': runScoring(); break;
+                case 't':
+                    const eras = ['1980', '1990', '2018', '2022'];
+                    const current = document.querySelector('.timeline-node.active');
+                    const idx = eras.indexOf(current?.dataset.era || '1980');
+                    selectEra(eras[(idx + 1) % eras.length]);
+                    break;
+                case 'd': toggleAutoDemo(); break;
+                case 'r':
+                    const rails = ['swift', 'ach', 'card', 'crypto'];
+                    const activeRail = document.querySelector('.rail-card.active');
+                    const rIdx = rails.indexOf(activeRail?.dataset.rail || 'swift');
+                    selectRail(rails[(rIdx + 1) % rails.length]);
+                    break;
+            }
+        });
+    }
+
+    // ============ UTILITIES ============
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // ============ INIT ============
+    function init() {
+        renderValueProps();
+        renderFlowStages();
+        setupScrollAnimations();
+        setupNavScroll();
+        setupKeyboardShortcuts();
+    }
+
+    document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+</body>
+</html>
