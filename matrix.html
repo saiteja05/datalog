@@ -23,7 +23,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js" integrity="sha384-jFhLSLFn4m565eRAS0CDMWubMqOtfZWWbE8kqgGdU+VHbJ3B2G/4X8u+0BM8MtdU" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@11.4.1/dist/mermaid.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js" integrity="sha384-yc/c2Lk1s2V2ir1rxvjo8YyVD9PlOlYTqpNr3Wm1WIuAA30GlDYNx6U5104OiavY" crossorigin="anonymous"></script>
     
     <style>
@@ -3272,7 +3272,10 @@ flowchart TB
             } else if (mode === 'expert') {
                 setTimeout(() => {
                     if (window.mermaid) {
-                        mermaid.init(undefined, '.mermaid');
+                        const el = document.querySelector('.mermaid');
+                        if (el && !el.querySelector('svg')) {
+                            mermaid.run({ nodes: [el] });
+                        }
                         setupPanZoom();
                     }
                 }, 100);
@@ -5802,7 +5805,7 @@ flowchart TB
         var panZoomInstance;
 
         // 1. Initialize Mermaid with strict security
-        mermaid.initialize({ startOnLoad: true, securityLevel: 'strict' });
+        mermaid.initialize({ startOnLoad: true, securityLevel: 'loose' });
 
         /**
          * Show information drawer for a flowchart node

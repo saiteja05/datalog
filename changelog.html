@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://buttondown.com; frame-ancestors 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog — MongoDB Unpacked</title>
+<link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e17;--bg2:#10141e;--bg-card:#151a27;
+  --border:#1e2a3d;--border2:#2a3a54;
+  --tx:#dfe5f0;--tx2:#7e8da4;--tx3:#4d5d74;
+  --mg:#00ed64;--rd:#f87171;--cy:#22d3ee;--pr:#a78bfa;--or:#fb923c;--yl:#fbbf24;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-in{max-width:800px;margin:0 auto;padding:0 1.5rem;height:44px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-weight:700;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);display:flex;align-items:center;gap:.5rem}
+.nav-brand svg{flex-shrink:0}
+.nav-links{display:flex;gap:.3rem}
+.nav-links a{color:var(--tx2);text-decoration:none;font-size:.68rem;font-weight:500;padding:.25rem .5rem;border-radius:5px;transition:all .15s}
+.nav-links a:hover{color:var(--tx);background:var(--bg-card)}
+
+.wrap{max-width:800px;margin:0 auto;padding:0 1.5rem}
+.hero{padding:2.5rem 0 1.5rem;border-bottom:1px solid var(--border)}
+.hero h1{font-size:1.5rem;font-weight:800;margin-bottom:.25rem}
+.hero p{color:var(--tx2);font-size:.85rem;line-height:1.5;max-width:560px}
+.hero-cta{display:inline-flex;align-items:center;gap:.4rem;margin-top:.75rem;padding:.45rem .9rem;border-radius:99px;background:var(--mg);color:#0a0e17;font-weight:600;font-size:.78rem;text-decoration:none;transition:all .2s;border:none;cursor:pointer}
+.hero-cta:hover{box-shadow:0 4px 16px rgba(0,237,100,0.25);transform:translateY(-1px)}
+
+.timeline{padding:2rem 0 3rem}
+.year-label{font-size:.68rem;font-weight:700;color:var(--tx3);text-transform:uppercase;letter-spacing:.1em;padding:.75rem 0 .5rem;border-bottom:1px solid var(--border);margin-bottom:.6rem}
+.entry{display:flex;gap:.85rem;padding:.75rem 0;border-bottom:1px solid rgba(255,255,255,0.03)}
+.entry:last-child{border-bottom:none}
+.entry-date{min-width:70px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--tx3);padding-top:.15rem}
+.entry-body{flex:1}
+.entry-badge{display:inline-block;font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:.1rem .4rem;border-radius:99px;margin-bottom:.3rem}
+.badge-new{background:rgba(0,237,100,0.1);color:var(--mg)}
+.badge-update{background:rgba(34,211,238,0.1);color:var(--cy)}
+.badge-major{background:rgba(167,139,250,0.1);color:var(--pr)}
+.badge-launch{background:rgba(251,191,36,0.1);color:var(--yl)}
+.entry-title{font-size:.88rem;font-weight:700;color:var(--tx);margin-bottom:.15rem}
+.entry-desc{font-size:.76rem;color:var(--tx2);line-height:1.45;margin-bottom:.3rem}
+.entry-links{display:flex;gap:.5rem;flex-wrap:wrap}
+.entry-links a{font-size:.68rem;color:var(--cy);text-decoration:none;display:inline-flex;align-items:center;gap:.2rem}
+.entry-links a:hover{text-decoration:underline}
+
+/* Hint for maintainers */
+/* To add a new changelog entry: copy an .entry block, update date/badge/title/desc/links. Put newest entries at the top. */
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="nav-brand">
+      <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg>
+      Changelog
+    </div>
+    <div class="nav-links">
+      <a href="https://saiteja05.github.io/datalog/home.html">Home</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<div class="hero">
+  <h1>Changelog</h1>
+  <p>What's new, what changed, and what got rebuilt. Subscribe to get email updates when we ship new content.</p>
+  <button class="hero-cta" onclick="window.open('https://saiteja05.github.io/datalog/home.html#subscribe','_blank')">
+    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+    Subscribe for updates
+  </button>
+</div>
+
+<div class="timeline">
+
+<div class="year-label">March 2026</div>
+
+<div class="entry">
+  <div class="entry-date">Mar 17</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-new">New</span>
+    <div class="entry-title">Email Collection & Changelog</div>
+    <div class="entry-desc">Added subscribe-for-updates modal on the home page and this changelog page to track all content additions and updates.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/changelog.html">changelog.html →</a>
+      <a href="https://saiteja05.github.io/datalog/home.html">home.html →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Mar 15</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-new">New Page</span>
+    <div class="entry-title">Migration Toolkit</div>
+    <div class="entry-desc">Comprehensive comparison of 5 MongoDB migration tools — mongodump, mongosync, Atlas Live Migration, mongomirror, and AWS DMS. Covers internal mechanisms (oplog vs change streams), platform support, version compatibility, host resource requirements, resilience/recovery, pros/cons, caveats, decision flowchart, and references.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/migrations.html">migrations.html →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Mar 9</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-update">Update</span>
+    <div class="entry-title">Competitive Intelligence — Deep Technical Refresh</div>
+    <div class="entry-desc">Major content update across all competitive pages. Added internal engine architecture diagrams for Elasticsearch, Pinecone, Qdrant, CockroachDB, ScyllaDB, PostgreSQL, and DynamoDB. New high-level radar charts, search-specific scaling analysis, and expanded documentation references.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/speciality.html">Specialty Stores →</a>
+      <a href="https://saiteja05.github.io/datalog/transactional_db.html">Transactional DB →</a>
+      <a href="https://saiteja05.github.io/datalog/oracle_mongo.html">Oracle vs MongoDB →</a>
+      <a href="https://saiteja05.github.io/datalog/cosmosdb_documentdb.html">Cosmos DB &amp; DocumentDB →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Mar 8</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-new">New Page</span>
+    <div class="entry-title">Security — Defense in Depth</div>
+    <div class="entry-desc">Five-layer security model covering network isolation, authentication, authorization, encryption, and auditing. Interactive architecture, code examples, compliance certifications (SOC 2, HIPAA, PCI DSS, FedRAMP), and shared responsibility model.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/security.html">Security →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Mar 7</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-new">New Page</span>
+    <div class="entry-title">Agentic Memory on MongoDB</div>
+    <div class="entry-desc">Interactive guide to agent memory types (Short Term, Long Term, Procedural, Taxonomic) mapped to MongoDB Atlas features. Agent lifecycle visualization, framework integration code for LangChain, CrewAI, LlamaIndex, and more. Includes MCP Server and Voyage AI embeddings.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/agenticmemory.html">Agentic Memory →</a>
+    </div>
+  </div>
+</div>
+
+<div class="year-label" style="margin-top:.5rem">Pre-March 2026 — Existing Pages</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Overview</span>
+    <div class="entry-title">MongoDB Atlas — Developer Data Platform</div>
+    <div class="entry-desc">Fully managed, multi-cloud developer data platform. Automates operations and simplifies building modern applications at any scale. Executive and developer views.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/ddp.html">Executive View →</a>
+      <a href="https://saiteja05.github.io/datalog/atlas.html">Developer View →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Overview</span>
+    <div class="entry-title">How to Choose a Database?</div>
+    <div class="entry-desc">Interactive decision framework to help teams evaluate and choose the right database technology — walks through workload characteristics, scalability needs, and consistency requirements.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/matrix.html">Decision Matrix →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Overview</span>
+    <div class="entry-title">Enterprise Advanced Architecture</div>
+    <div class="entry-desc">Deep dive into Ops Manager, backup &amp; recovery, encryption, monitoring, HA architecture, and deployment models (Kubernetes vs bare metal).</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/ea-architecture.html">Architecture →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Availability</span>
+    <div class="entry-title">Running MongoDB at Scale</div>
+    <div class="entry-desc">How MongoDB handles massive workloads with horizontal scaling, sharding, and high availability. Covers shard key selection, balancer, chunk migration, and topology design.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/mongoatscalev2.html">MongoDB at Scale →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Availability</span>
+    <div class="entry-title">High Availability Demo</div>
+    <div class="entry-desc">Interactive demonstration of MongoDB's replica set failover, elections, and multi-region high availability.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/ha-demo.html">HA Demo →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Availability</span>
+    <div class="entry-title">Multi-Tenancy Strategies</div>
+    <div class="entry-desc">Architectural patterns for building multi-tenant SaaS applications — database-per-tenant, collection-per-tenant, shared collections with tenant isolation.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/multitenancy.html">Multi-Tenancy →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Capabilities</span>
+    <div class="entry-title">CRUD Operations</div>
+    <div class="entry-desc">Master MongoDB's API for creating, reading, updating, and deleting documents — insertOne, find, updateMany, bulkWrite, and more.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/crud.html">CRUD →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Capabilities</span>
+    <div class="entry-title">Aggregation Pipeline</div>
+    <div class="entry-desc">Visualize and understand MongoDB's aggregation framework — $match, $group, $lookup, $unwind, $facet, and data transformation stages.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/aggregations.html">Aggregations →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Capabilities</span>
+    <div class="entry-title">State of AI with MongoDB</div>
+    <div class="entry-desc">How Atlas Search and vector search power intelligent AI agents, RAG pipelines, semantic search, and generative AI applications.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/aimongo.html">AI + MongoDB →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Capabilities</span>
+    <div class="entry-title">Time Series Collections</div>
+    <div class="entry-desc">MongoDB's optimized time series collections for IoT, metrics, and event data workloads — bucketing, TTL expiration, and granularity settings.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/timeseries.html">Time Series →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Competitive</span>
+    <div class="entry-title">Elasticsearch vs MongoDB</div>
+    <div class="entry-desc">Competitive intelligence briefing — Elastic ecosystem, search feature parity, vector search head-to-head, and where MongoDB has the right to win.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/elastic_mongo.html">Elastic vs Mongo →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Competitive</span>
+    <div class="entry-title">Cosmos DB &amp; DocumentDB</div>
+    <div class="entry-desc">MongoDB Atlas vs Azure Cosmos DB (vCore &amp; RU) and Amazon DocumentDB — architecture, compatibility gaps, wire protocol limitations, and real-world limitations.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/cosmosdb_documentdb.html">Cosmos DB →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Competitive</span>
+    <div class="entry-title">Specialty Data Stores</div>
+    <div class="entry-desc">MongoDB Atlas Search vs Elasticsearch, Pinecone, and Qdrant — internal architecture comparisons, vector search, scaling, and positioning.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/speciality.html">Specialty Stores →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Competitive</span>
+    <div class="entry-title">Oracle to MongoDB</div>
+    <div class="entry-desc">Developer deep dive into migrating from Oracle — architecture comparison, data modeling, transactions, scaling, and automation strategies.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/oracle_mongo.html">Oracle vs Mongo →</a>
+    </div>
+  </div>
+</div>
+
+<div class="entry">
+  <div class="entry-date">Launch</div>
+  <div class="entry-body">
+    <span class="entry-badge badge-launch">Competitive</span>
+    <div class="entry-title">Transactional Database Comparison</div>
+    <div class="entry-desc">Multi-document ACID transactions compared with CockroachDB, ScyllaDB, PostgreSQL, and DynamoDB — architecture diagrams, radar charts, and scaling tiers.</div>
+    <div class="entry-links">
+      <a href="https://saiteja05.github.io/datalog/transactional_db.html">Transactional DB →</a>
+    </div>
+  </div>
+</div>
+
+</div><!-- /timeline -->
+</div><!-- /wrap -->
+
+<script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
+    async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

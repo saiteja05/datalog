@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://emailoctopus.com; frame-ancestors 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -818,6 +818,124 @@
             color: var(--accent);
             font-weight: 600;
         }
+
+        /* Subscribe FAB + Modal */
+        .subscribe-fab {
+            position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 900;
+            display: flex; align-items: center; gap: .5rem;
+            padding: .65rem 1.1rem; border-radius: 99px;
+            background: var(--accent); color: #001E2B; border: none;
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: .82rem;
+            cursor: pointer; box-shadow: 0 4px 24px rgba(0,237,100,0.25);
+            transition: all .2s;
+        }
+        .subscribe-fab:hover { transform: translateY(-2px); box-shadow: 0 6px 32px rgba(0,237,100,0.35); }
+        .subscribe-fab.hidden { display: none; }
+        .subscribe-modal {
+            position: fixed; bottom: 5rem; right: 1.5rem; z-index: 901;
+            width: 340px; max-width: calc(100vw - 2rem);
+            background: var(--bg-card); border: 1px solid var(--border-subtle);
+            border-radius: 16px; padding: 1.5rem;
+            box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+            opacity: 0; pointer-events: none; transform: translateY(12px) scale(0.96);
+            transition: all .25s cubic-bezier(0.16,1,0.3,1);
+        }
+        .subscribe-modal.open { opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); }
+        .subscribe-close {
+            position: absolute; top: .75rem; right: .75rem;
+            background: none; border: none; color: var(--text-muted); font-size: 1.4rem;
+            cursor: pointer; line-height: 1; padding: .25rem;
+        }
+        .subscribe-close:hover { color: var(--text-primary); }
+        .subscribe-title { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: .3rem; }
+        .subscribe-desc { font-size: .78rem; color: var(--text-muted); line-height: 1.45; margin-bottom: .85rem; }
+        .subscribe-form { display: flex; flex-direction: column; gap: .5rem; }
+        .subscribe-form input[type="email"],
+        .subscribe-form input[type="text"] {
+            width: 100%; padding: .55rem .75rem; border-radius: 8px;
+            border: 1px solid var(--border-subtle); background: var(--bg-secondary);
+            color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: .82rem;
+            outline: none; transition: border-color .2s;
+        }
+        .subscribe-form input:focus { border-color: var(--accent); }
+        .subscribe-interests { margin: .25rem 0; }
+        .subscribe-interests-label { font-size: .68rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; display: block; margin-bottom: .35rem; }
+        .sub-check { display: inline-flex; align-items: center; gap: .3rem; font-size: .74rem; color: var(--text-secondary); margin-right: .6rem; cursor: pointer; margin-bottom: .2rem; }
+        .sub-check input[type="checkbox"] { accent-color: var(--accent); width: 14px; height: 14px; cursor: pointer; }
+        .subscribe-btn {
+            width: 100%; padding: .6rem; border: none; border-radius: 8px;
+            background: var(--accent); color: #001E2B;
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: .85rem;
+            cursor: pointer; transition: all .2s; margin-top: .15rem;
+        }
+        .subscribe-btn:hover { background: var(--accent-dim); }
+        .subscribe-btn:disabled { opacity: .5; cursor: not-allowed; }
+        .subscribe-success { text-align: center; padding: 1rem 0; }
+        @media (max-width: 500px) { .subscribe-modal { bottom: 4.5rem; right: .75rem; left: .75rem; width: auto; } .subscribe-fab { bottom: 1rem; right: 1rem; } }
+
+        /* ── Popup Overlay ── */
+        .subscribe-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0,10,20,0.75); backdrop-filter: blur(6px);
+            opacity: 0; pointer-events: none;
+            transition: opacity .35s cubic-bezier(0.16,1,0.3,1);
+        }
+        .subscribe-overlay.open { opacity: 1; pointer-events: auto; }
+        .subscribe-overlay-card {
+            position: relative; width: 420px; max-width: calc(100vw - 2rem);
+            background: var(--bg-card); border: 1px solid var(--border-accent);
+            border-radius: 20px; padding: 2rem 1.75rem;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,237,100,0.08);
+            transform: translateY(20px) scale(0.95);
+            transition: transform .35s cubic-bezier(0.16,1,0.3,1);
+        }
+        .subscribe-overlay.open .subscribe-overlay-card { transform: translateY(0) scale(1); }
+        .overlay-badge {
+            display: inline-block; padding: .25rem .7rem; border-radius: 99px;
+            background: rgba(0,237,100,0.12); color: var(--accent);
+            font-size: .65rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; margin-bottom: .75rem;
+        }
+        .overlay-title { font-size: 1.25rem; font-weight: 700; color: var(--text-primary); margin-bottom: .4rem; line-height: 1.3; }
+        .overlay-desc { font-size: .82rem; color: var(--text-muted); line-height: 1.55; margin-bottom: 1rem; }
+        .overlay-close {
+            position: absolute; top: .85rem; right: .85rem;
+            background: rgba(255,255,255,0.06); border: none; border-radius: 50%;
+            width: 28px; height: 28px; display: flex; align-items: center; justify-content: center;
+            color: var(--text-muted); font-size: 1.1rem; cursor: pointer; transition: all .15s;
+        }
+        .overlay-close:hover { background: rgba(255,255,255,0.12); color: var(--text-primary); }
+        .overlay-form { display: flex; gap: .5rem; }
+        .overlay-form input[type="email"] {
+            flex: 1; padding: .6rem .85rem; border-radius: 10px;
+            border: 1px solid var(--border-subtle); background: var(--bg-secondary);
+            color: var(--text-primary); font-family: 'Outfit', sans-serif; font-size: .85rem;
+            outline: none; transition: border-color .2s;
+        }
+        .overlay-form input[type="email"]:focus { border-color: var(--accent); }
+        .overlay-form button {
+            padding: .6rem 1.2rem; border: none; border-radius: 10px;
+            background: var(--accent); color: #001E2B;
+            font-family: 'Outfit', sans-serif; font-weight: 600; font-size: .85rem;
+            cursor: pointer; transition: all .2s; white-space: nowrap;
+        }
+        .overlay-form button:hover { background: var(--accent-dim); }
+        .overlay-form button:disabled { opacity: .5; cursor: not-allowed; }
+        .overlay-skip {
+            display: block; margin-top: .6rem; text-align: center;
+            font-size: .72rem; color: var(--text-muted); opacity: .6;
+            background: none; border: none; cursor: pointer;
+            font-family: 'Outfit', sans-serif; text-decoration: none;
+        }
+        .overlay-skip:hover { opacity: 1; }
+        .overlay-success { text-align: center; padding: .5rem 0; display: none; }
+        .overlay-powered {
+            display: block; text-align: center; margin-top: .75rem;
+            font-size: .6rem; color: var(--text-muted); opacity: .4;
+            text-decoration: none;
+        }
+        @media (max-width: 600px) { .subscribe-overlay-card { padding: 1.5rem 1.25rem; } .overlay-form { flex-direction: column; } }
     </style>
 </head>
 <body>
@@ -873,10 +991,13 @@
                 <svg fill="currentColor" viewBox="0 0 24 24"><path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z"/></svg>
                 Curated by Sai Teja Boddapati
             </a>
-            <a href="https://mongodbunboxed.goatcounter.com" target="_blank" rel="noopener noreferrer" class="author-link" style="margin-left: 0.5rem;">
-                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
-                Analytics
-            </a>
+            <span style="display:inline-flex;flex-direction:column;align-items:center;margin-left:.5rem;">
+                <a href="https://mongodbunboxed.goatcounter.com" target="_blank" rel="noopener noreferrer" class="author-link" style="margin-left:0;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+                    Analytics
+                </a>
+                <span style="font-size:.55rem;opacity:.35;color:var(--text-muted);margin-top:.1rem;">@GoatCounter</span>
+            </span>
         </header>
 
         <!--
@@ -1303,8 +1424,57 @@
         </div>
 
         <footer>
-            <p class="footer-text">© 2025 MongoDB, Inc. — Internal Use Only</p>
+            <p class="footer-text">
+                © 2025 MongoDB, Inc. — Internal Use Only
+                <span style="margin:0 .75rem;opacity:.3;">|</span>
+                <a href="https://saiteja05.github.io/datalog/changelog.html" style="color:var(--text-muted);text-decoration:none;font-size:.85rem;" target="_blank" rel="noopener noreferrer">Changelog</a>
+            </p>
         </footer>
+    </div>
+
+    <!-- Subscribe Popup Overlay (scroll/time triggered) -->
+    <div class="subscribe-overlay" id="subscribeOverlay">
+        <div class="subscribe-overlay-card">
+            <button class="overlay-close" id="overlayClose">&times;</button>
+            <span class="overlay-badge">Free updates</span>
+            <h3 class="overlay-title">Get notified when we publish new content</h3>
+            <p class="overlay-desc">Competitive intel, architecture guides, migration tooling, and more — delivered only when there's something worth reading.</p>
+            <form class="overlay-form" id="overlayForm">
+                <input type="email" id="overlayEmail" placeholder="you@company.com" required autocomplete="email">
+                <button type="submit" id="overlayBtn">Subscribe</button>
+            </form>
+            <button class="overlay-skip" id="overlaySkip">No thanks, I'll just browse</button>
+            <div class="overlay-success" id="overlaySuccess">
+                <svg width="28" height="28" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p style="margin-top:.4rem;font-weight:600;font-size:.9rem;color:var(--text-primary);">You're in!</p>
+                <p style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">Check your inbox for the welcome email.</p>
+            </div>
+            <a href="https://emailoctopus.com" target="_blank" rel="noopener noreferrer" class="overlay-powered">Powered by EmailOctopus</a>
+        </div>
+    </div>
+
+    <!-- Subscribe FAB + Side Modal -->
+    <button class="subscribe-fab" id="subscribeFab" title="Subscribe for updates">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+        <span>Subscribe</span>
+    </button>
+    <div class="subscribe-modal" id="subscribeModal">
+        <div class="subscribe-modal-inner">
+            <button class="subscribe-close" id="subscribeClose">&times;</button>
+            <h3 class="subscribe-title">Stay in the loop</h3>
+            <p class="subscribe-desc">Get notified when we add new pages or major updates. No spam — just content drops.</p>
+            <form id="subscribeForm" class="subscribe-form">
+                <input type="email" id="subEmail" placeholder="you@company.com" required autocomplete="email">
+                <input type="text" id="subName" placeholder="Name (optional)" autocomplete="name">
+                <button type="submit" class="subscribe-btn" id="subBtn">Subscribe</button>
+                <a href="https://emailoctopus.com" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;margin-top:.5rem;font-size:.65rem;color:var(--text-muted);opacity:.5;text-decoration:none;">Powered by EmailOctopus</a>
+            </form>
+            <div class="subscribe-success" id="subscribeSuccess" style="display:none;">
+                <svg width="32" height="32" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p style="margin-top:.5rem;font-weight:600;color:var(--text-primary);">You're subscribed!</p>
+                <p style="font-size:.78rem;color:var(--text-muted);margin-top:.25rem;">Check your inbox — we just sent a welcome email with the full site catalog.<br>After that, we'll only email when there's something new.</p>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -1439,6 +1609,167 @@
 
         window.addEventListener('scroll', updateActiveSection);
         window.addEventListener('load', updateActiveSection);
+    </script>
+    <script>
+    // Block personal email domains — corporate/work emails only
+    var PERSONAL_DOMAINS = /^(gmail|googlemail|yahoo|hotmail|outlook|live|msn|aol|icloud|me|mac|mail|proton|protonmail|zoho|yandex|gmx|fastmail|tutanota|hey|pm|cock|airmail|inbox|rocketmail|rediffmail|mailinator|guerrillamail|tempmail|throwaway|10minutemail|sharklasers|guerrillamailblock|grr|dispostable)\./i;
+    function isPersonalEmail(email) {
+        var domain = email.split('@')[1];
+        if (!domain) return true;
+        return PERSONAL_DOMAINS.test(domain);
+    }
+    </script>
+    <script>
+    // Subscribe Modal
+    (function(){
+        const fab = document.getElementById('subscribeFab');
+        const modal = document.getElementById('subscribeModal');
+        const closeBtn = document.getElementById('subscribeClose');
+        const form = document.getElementById('subscribeForm');
+        const successEl = document.getElementById('subscribeSuccess');
+        const subBtn = document.getElementById('subBtn');
+
+        if (localStorage.getItem('subscribed') === '1') fab.classList.add('hidden');
+
+        fab.addEventListener('click', () => modal.classList.toggle('open'));
+        closeBtn.addEventListener('click', () => modal.classList.remove('open'));
+        document.addEventListener('click', (e) => {
+            if (!modal.contains(e.target) && !fab.contains(e.target)) modal.classList.remove('open');
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('subEmail').value.trim();
+            const name = document.getElementById('subName').value.trim();
+            if (!email) return;
+
+            if (isPersonalEmail(email)) {
+                var inp = document.getElementById('subEmail');
+                inp.setCustomValidity('Please use your work email (e.g. you@company.com)');
+                inp.reportValidity();
+                inp.addEventListener('input', function once() { inp.setCustomValidity(''); inp.removeEventListener('input', once); });
+                return;
+            }
+
+            subBtn.disabled = true;
+            subBtn.textContent = 'Subscribing...';
+
+            // EmailOctopus embedded form (no API key — safe for public static sites)
+            // Replace YOUR_LIST_ID and YOUR_FORM_ID from:
+            //   EmailOctopus → Lists → your list → Forms → Embedded form
+            const listId = 'YOUR_LIST_ID';
+            const formId = 'YOUR_FORM_ID';
+
+            const fd = new FormData();
+            fd.append('field_0', email);
+            if (name) fd.append('field_1', name);
+
+            fetch('https://emailoctopus.com/lists/' + listId + '/members/embedded/' + formId + '/add', {
+                method: 'POST',
+                body: fd
+            }).then(r => {
+                if (r.ok || r.redirected) {
+                    form.style.display = 'none';
+                    successEl.style.display = 'block';
+                    localStorage.setItem('subscribed', '1');
+                    setTimeout(() => { modal.classList.remove('open'); fab.classList.add('hidden'); }, 3000);
+                } else {
+                    subBtn.disabled = false;
+                    subBtn.textContent = 'Try again';
+                }
+            }).catch(() => {
+                subBtn.disabled = false;
+                subBtn.textContent = 'Try again';
+            });
+        });
+    })();
+    </script>
+    <script>
+    // Subscribe Popup Overlay — triggers on 40% scroll OR 10s, once per session
+    (function(){
+        const overlay = document.getElementById('subscribeOverlay');
+        const closeBtn = document.getElementById('overlayClose');
+        const skipBtn = document.getElementById('overlaySkip');
+        const form = document.getElementById('overlayForm');
+        const btn = document.getElementById('overlayBtn');
+        const successEl = document.getElementById('overlaySuccess');
+
+        const isSubscribed = localStorage.getItem('subscribed') === '1';
+        const wasDismissed = sessionStorage.getItem('popup_dismissed') === '1';
+        const isMobile = window.innerWidth < 640;
+
+        if (isSubscribed || wasDismissed || isMobile) return;
+
+        let shown = false;
+        function showPopup() {
+            if (shown) return;
+            shown = true;
+            overlay.classList.add('open');
+        }
+
+        function dismiss() {
+            overlay.classList.remove('open');
+            sessionStorage.setItem('popup_dismissed', '1');
+        }
+
+        const timer = setTimeout(showPopup, 10000);
+
+        window.addEventListener('scroll', function onScroll() {
+            const scrollPct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
+            if (scrollPct >= 0.35) {
+                clearTimeout(timer);
+                showPopup();
+                window.removeEventListener('scroll', onScroll);
+            }
+        });
+
+        closeBtn.addEventListener('click', dismiss);
+        skipBtn.addEventListener('click', dismiss);
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) dismiss(); });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const email = document.getElementById('overlayEmail').value.trim();
+            if (!email) return;
+
+            if (isPersonalEmail(email)) {
+                var inp = document.getElementById('overlayEmail');
+                inp.setCustomValidity('Please use your work email (e.g. you@company.com)');
+                inp.reportValidity();
+                inp.addEventListener('input', function once() { inp.setCustomValidity(''); inp.removeEventListener('input', once); });
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Subscribing...';
+
+            const listId = 'YOUR_LIST_ID';
+            const formId = 'YOUR_FORM_ID';
+            const fd = new FormData();
+            fd.append('field_0', email);
+
+            fetch('https://emailoctopus.com/lists/' + listId + '/members/embedded/' + formId + '/add', {
+                method: 'POST',
+                body: fd
+            }).then(r => {
+                if (r.ok || r.redirected) {
+                    form.style.display = 'none';
+                    document.querySelector('.overlay-skip').style.display = 'none';
+                    successEl.style.display = 'block';
+                    localStorage.setItem('subscribed', '1');
+                    sessionStorage.setItem('popup_dismissed', '1');
+                    document.getElementById('subscribeFab').classList.add('hidden');
+                    setTimeout(dismiss, 3000);
+                } else {
+                    btn.disabled = false;
+                    btn.textContent = 'Try again';
+                }
+            }).catch(() => {
+                btn.disabled = false;
+                btn.textContent = 'Try again';
+            });
+        });
+    })();
     </script>
     <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
     <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
