@@ -1,0 +1,126 @@
+name: Draft subscriber update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '*.html'
+      - '!welcome-email.html'
+      - '!readme.html'
+
+jobs:
+  draft-campaign:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Detect changed content files
+        id: changes
+        run: |
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- '*.html' \
+            ':!welcome-email.html' ':!readme.html' ':!my-weather-app/*' \
+            | grep -v '^$' || true)
+
+          if [ -z "$CHANGED" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "No content HTML files changed."
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "Changed files:"
+            echo "$CHANGED"
+
+            # Build a human-readable summary
+            SUMMARY=""
+            while IFS= read -r file; do
+              NAME=$(echo "$file" | sed 's/\.html$//' | sed 's/_/ /g' | sed 's/-/ /g')
+              SUMMARY="${SUMMARY}• ${NAME}\n"
+            done <<< "$CHANGED"
+
+            # Escape for JSON
+            SUMMARY_ESCAPED=$(echo -e "$SUMMARY" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))")
+            echo "summary=${SUMMARY_ESCAPED}" >> "$GITHUB_OUTPUT"
+            echo "count=$(echo "$CHANGED" | wc -l | tr -d ' ')" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create draft campaign in EmailOctopus
+        if: steps.changes.outputs.skip == 'false'
+        env:
+          EO_API_KEY: ${{ secrets.EMAILOCTOPUS_API_KEY }}
+          EO_LIST_ID: ${{ secrets.EMAILOCTOPUS_LIST_ID }}
+        run: |
+          COUNT="${{ steps.changes.outputs.count }}"
+          SUMMARY=${{ steps.changes.outputs.summary }}
+          DATE=$(date +"%b %d, %Y")
+
+          # Build email HTML body
+          BODY=$(cat <<'HTMLEOF'
+          <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;max-width:600px;margin:0 auto;color:#1a1a2e;">
+            <div style="background:linear-gradient(135deg,#0b1120,#112240);padding:32px 24px;text-align:center;border-radius:12px 12px 0 0;">
+              <div style="display:inline-block;width:40px;height:40px;background:#00ed64;border-radius:8px;line-height:40px;font-size:20px;font-weight:700;color:#0b1120;">M</div>
+              <h1 style="margin:12px 0 0;font-size:22px;color:#fff;">MongoDB Unpacked — New Content</h1>
+              <p style="margin:6px 0 0;font-size:13px;color:#94a3b8;">DATEPLACEHOLDER</p>
+            </div>
+            <div style="background:#fff;padding:24px;border:1px solid #e2e8f0;border-top:none;">
+              <p style="font-size:15px;line-height:1.6;color:#334155;">We just published updates to <strong>COUNTPLACEHOLDER page(s)</strong>:</p>
+              <div style="background:#f8fafc;border-radius:8px;padding:16px;margin:16px 0;font-size:14px;line-height:1.8;color:#334155;">
+                SUMMARYPLACEHOLDER
+              </div>
+              <p style="font-size:14px;color:#64748b;line-height:1.5;">Check out what's new:</p>
+              <div style="text-align:center;margin:20px 0;">
+                <a href="https://saiteja05.github.io/datalog/home.html" style="display:inline-block;padding:12px 28px;background:#00ed64;color:#0b1120;font-size:14px;font-weight:700;text-decoration:none;border-radius:8px;">Browse All Pages →</a>
+              </div>
+              <div style="text-align:center;margin:12px 0 0;">
+                <a href="https://saiteja05.github.io/datalog/changelog.html" style="font-size:13px;color:#00a651;text-decoration:none;">View Full Changelog →</a>
+              </div>
+            </div>
+            <div style="background:#f8fafc;padding:16px 24px;text-align:center;border:1px solid #e2e8f0;border-top:none;border-radius:0 0 12px 12px;">
+              <p style="margin:0;font-size:12px;color:#94a3b8;">You're receiving this because you subscribed to MongoDB Unpacked.</p>
+              <p style="margin:4px 0 0;font-size:11px;color:#94a3b8;">{{SenderInfoLine}}</p>
+            </div>
+          </div>
+          HTMLEOF
+          )
+
+          # Replace placeholders
+          BODY=$(echo "$BODY" | sed "s/DATEPLACEHOLDER/$DATE/g")
+          BODY=$(echo "$BODY" | sed "s/COUNTPLACEHOLDER/$COUNT/g")
+
+          # Replace summary (need to handle newlines)
+          SUMMARY_HTML=$(echo -e $SUMMARY | sed 's/$/\n/g')
+          BODY=$(echo "$BODY" | sed "s|SUMMARYPLACEHOLDER|$SUMMARY_HTML|g")
+
+          # Escape body for JSON
+          BODY_JSON=$(python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))" <<< "$BODY")
+
+          # Create draft campaign via EmailOctopus API
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://emailoctopus.com/api/1.6/campaigns" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"api_key\": \"${EO_API_KEY}\",
+              \"name\": \"Content Update — ${DATE}\",
+              \"subject\": \"New content on MongoDB Unpacked — ${DATE}\",
+              \"from\": {
+                \"name\": \"MongoDB Unpacked\",
+                \"email_address\": \"reply@emailoctopus.com\"
+              },
+              \"content\": {
+                \"html\": ${BODY_JSON}
+              },
+              \"status\": \"DRAFT\"
+            }")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY_RESP=$(echo "$RESPONSE" | sed '$d')
+
+          if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ]; then
+            CAMPAIGN_ID=$(echo "$BODY_RESP" | python3 -c "import sys,json; print(json.load(sys.stdin)['id'])" 2>/dev/null || echo "unknown")
+            echo "✅ Draft campaign created: $CAMPAIGN_ID"
+            echo "Go to EmailOctopus → Campaigns to review and send."
+          else
+            echo "❌ Failed to create campaign (HTTP $HTTP_CODE)"
+            echo "$BODY_RESP"
+            exit 1
+          fi
