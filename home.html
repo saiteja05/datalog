@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://emailoctopus.com; frame-ancestors 'none';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at https://eocampaign1.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://emailoctopus.com https://eocampaign1.com; frame-ancestors 'none';">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1610,6 +1610,11 @@
         window.addEventListener('scroll', updateActiveSection);
         window.addEventListener('load', updateActiveSection);
     </script>
+    <!-- Hidden EmailOctopus embed — our custom forms bridge to this -->
+    <div id="eoHidden" style="position:absolute;left:-9999px;height:0;overflow:hidden;pointer-events:none;" aria-hidden="true">
+        <script async src="https://eocampaign1.com/form/a1be7298-21da-11f1-91f4-271ecaf1fe8d.js" data-form="a1be7298-21da-11f1-91f4-271ecaf1fe8d"></script>
+    </div>
+
     <script>
     // Block personal email domains — corporate/work emails only
     var PERSONAL_DOMAINS = /^(gmail|googlemail|yahoo|hotmail|outlook|live|msn|aol|icloud|me|mac|mail|proton|protonmail|zoho|yandex|gmx|fastmail|tutanota|hey|pm|cock|airmail|inbox|rocketmail|rediffmail|mailinator|guerrillamail|tempmail|throwaway|10minutemail|sharklasers|guerrillamailblock|grr|dispostable)\./i;
@@ -1618,9 +1623,47 @@
         if (!domain) return true;
         return PERSONAL_DOMAINS.test(domain);
     }
+
+    // Bridge: submit email through the hidden EmailOctopus form
+    function eoSubmit(email, onSuccess, onError) {
+        var tries = 0;
+        function attempt() {
+            var eoForm = document.querySelector('#eoHidden form.emailoctopus-form');
+            var eoInput = eoForm && eoForm.querySelector('input[type="email"]');
+            if (!eoForm || !eoInput) {
+                if (++tries < 20) return setTimeout(attempt, 300);
+                return onError();
+            }
+            // Fill the hidden form's email field
+            var nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            nativeSetter.call(eoInput, email);
+            eoInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+            // Watch for success/error message in the hidden form
+            var observer = new MutationObserver(function(mutations) {
+                var success = eoForm.closest('[data-form]').querySelector('.emailoctopus-success-message');
+                var error = eoForm.closest('[data-form]').querySelector('.emailoctopus-error-message');
+                if (success && success.textContent.trim()) {
+                    observer.disconnect();
+                    onSuccess();
+                } else if (error && error.textContent.trim()) {
+                    observer.disconnect();
+                    onError();
+                }
+            });
+            observer.observe(eoForm.closest('[data-form]'), { childList: true, subtree: true, characterData: true });
+
+            // Submit
+            eoForm.querySelector('[type="submit"]').click();
+
+            // Timeout fallback
+            setTimeout(function() { observer.disconnect(); onError(); }, 8000);
+        }
+        attempt();
+    }
     </script>
     <script>
-    // Subscribe Modal
+    // Subscribe Modal (FAB)
     (function(){
         const fab = document.getElementById('subscribeFab');
         const modal = document.getElementById('subscribeModal');
@@ -1640,7 +1683,6 @@
         form.addEventListener('submit', (e) => {
             e.preventDefault();
             const email = document.getElementById('subEmail').value.trim();
-            const name = document.getElementById('subName').value.trim();
             if (!email) return;
 
             if (isPersonalEmail(email)) {
@@ -1654,30 +1696,12 @@
             subBtn.disabled = true;
             subBtn.textContent = 'Subscribing...';
 
-            // EmailOctopus embedded form (no API key — safe for public static sites)
-            // Replace YOUR_LIST_ID and YOUR_FORM_ID from:
-            //   EmailOctopus → Lists → your list → Forms → Embedded form
-            const listId = 'YOUR_LIST_ID';
-            const formId = 'YOUR_FORM_ID';
-
-            const fd = new FormData();
-            fd.append('field_0', email);
-            if (name) fd.append('field_1', name);
-
-            fetch('https://emailoctopus.com/lists/' + listId + '/members/embedded/' + formId + '/add', {
-                method: 'POST',
-                body: fd
-            }).then(r => {
-                if (r.ok || r.redirected) {
-                    form.style.display = 'none';
-                    successEl.style.display = 'block';
-                    localStorage.setItem('subscribed', '1');
-                    setTimeout(() => { modal.classList.remove('open'); fab.classList.add('hidden'); }, 3000);
-                } else {
-                    subBtn.disabled = false;
-                    subBtn.textContent = 'Try again';
-                }
-            }).catch(() => {
+            eoSubmit(email, function() {
+                form.style.display = 'none';
+                successEl.style.display = 'block';
+                localStorage.setItem('subscribed', '1');
+                setTimeout(() => { modal.classList.remove('open'); fab.classList.add('hidden'); }, 3000);
+            }, function() {
                 subBtn.disabled = false;
                 subBtn.textContent = 'Try again';
             });
@@ -1685,7 +1709,7 @@
     })();
     </script>
     <script>
-    // Subscribe Popup Overlay — triggers on 40% scroll OR 10s, once per session
+    // Subscribe Popup Overlay — triggers on 35% scroll OR 10s, once per session
     (function(){
         const overlay = document.getElementById('subscribeOverlay');
         const closeBtn = document.getElementById('overlayClose');
@@ -1743,28 +1767,15 @@
             btn.disabled = true;
             btn.textContent = 'Subscribing...';
 
-            const listId = 'YOUR_LIST_ID';
-            const formId = 'YOUR_FORM_ID';
-            const fd = new FormData();
-            fd.append('field_0', email);
-
-            fetch('https://emailoctopus.com/lists/' + listId + '/members/embedded/' + formId + '/add', {
-                method: 'POST',
-                body: fd
-            }).then(r => {
-                if (r.ok || r.redirected) {
-                    form.style.display = 'none';
-                    document.querySelector('.overlay-skip').style.display = 'none';
-                    successEl.style.display = 'block';
-                    localStorage.setItem('subscribed', '1');
-                    sessionStorage.setItem('popup_dismissed', '1');
-                    document.getElementById('subscribeFab').classList.add('hidden');
-                    setTimeout(dismiss, 3000);
-                } else {
-                    btn.disabled = false;
-                    btn.textContent = 'Try again';
-                }
-            }).catch(() => {
+            eoSubmit(email, function() {
+                form.style.display = 'none';
+                document.querySelector('.overlay-skip').style.display = 'none';
+                successEl.style.display = 'block';
+                localStorage.setItem('subscribed', '1');
+                sessionStorage.setItem('popup_dismissed', '1');
+                document.getElementById('subscribeFab').classList.add('hidden');
+                setTimeout(dismiss, 3000);
+            }, function() {
                 btn.disabled = false;
                 btn.textContent = 'Try again';
             });
