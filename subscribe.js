@@ -37,8 +37,8 @@
     '</button>' +
     '<div class="sfab-modal" id="sfabModal">' +
       '<button class="sfab-close" id="sfabClose">&times;</button>' +
-      '<p class="sfab-title">Join the MongoDB Community</p>' +
-      '<p class="sfab-desc">Don\'t miss out on technical deep-dives, demos and further content.</p>' +
+      '<p class="sfab-title">Get notified when we publish new content</p>' +
+      '<p class="sfab-desc">Competitive intel, architecture guides, migration tooling, and more — delivered only when there\'s something worth reading.</p>' +
       '<form class="sfab-form" id="sfabForm">' +
         '<input type="email" id="sfabEmail" placeholder="you@company.com" required autocomplete="email">' +
         '<button type="submit" id="sfabBtn">Notify me</button>' +
