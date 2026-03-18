@@ -1,0 +1,2787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com; frame-ancestors 'none';">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Postgres and MongoDB at Humongous Scale</title>
+<link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e17;--bg2:#10141e;--bg-card:#151a27;--bg-card-h:#1b2133;
+  --border:#1e2a3d;--border2:#2a3a54;
+  --tx:#dfe5f0;--tx2:#7e8da4;--tx3:#4d5d74;
+  --mg:#00ed64;--rd:#f87171;--cy:#22d3ee;
+  --cl-pg:#336791;--cl-mongo:#00ed64;
+  --c-perf:#60a5fa;--c-avail:#34d399;--c-both:#fbbf24;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+
+nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-in{max-width:1720px;margin:0 auto;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-weight:700;font-size:1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);display:flex;align-items:center;gap:.6rem}
+.nav-brand svg{flex-shrink:0}
+.nav-links{display:flex;gap:.2rem;flex-wrap:wrap}
+.nav-links a{color:var(--tx2);text-decoration:none;font-size:.95rem;font-weight:500;padding:.35rem .7rem;border-radius:6px;transition:all .15s;white-space:nowrap}
+.nav-links a:hover{color:var(--tx);background:var(--bg-card)}
+
+.wrap{max-width:1720px;margin:0 auto;padding:0 2rem}
+h1{font-size:2.4rem;font-weight:800;line-height:1.15;margin-bottom:.4rem}
+h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
+
+.hero{padding:3.5rem 0 2rem;text-align:center;border-bottom:1px solid var(--border)}
+.hero p{color:var(--tx2);font-size:1.2rem;max-width:820px;margin:.8rem auto 0;line-height:1.5}
+
+/* ── Section Layout ───────────────────────────────────── */
+#openai-pg{padding:3rem 0 3.5rem}
+.opg-hdr{text-align:center;margin-bottom:2rem}
+.opg-hdr h2{font-size:1.8rem;margin-bottom:.4rem}
+.opg-hdr h2 span{color:var(--cl-pg)}
+.opg-hdr p{color:var(--tx2);font-size:1.1rem;max-width:780px;margin:0 auto;line-height:1.5}
+
+.opg-counter{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font-size:1.1rem;font-weight:600;padding:.4rem 1rem;
+  border-radius:24px;margin-top:.8rem;
+  background:var(--bg-card);border:1px solid var(--border)
+}
+.opg-counter-num{font-family:'JetBrains Mono',monospace;font-size:1.3rem;color:var(--rd);transition:color .3s}
+.opg-counter-num.ok{color:var(--mg)}
+
+.opg-ctrl{display:flex;justify-content:center;gap:1rem;margin-bottom:2rem;flex-wrap:wrap}
+.opg-btn{
+  font-family:inherit;font-size:1.05rem;font-weight:600;
+  padding:.6rem 1.4rem;border-radius:8px;border:1px solid var(--border);
+  cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:.5rem;background:transparent
+}
+.opg-btn-off{color:var(--rd);border-color:rgba(248,113,113,.3)}
+.opg-btn-off:hover{background:rgba(248,113,113,.1)}
+.opg-btn-on{color:var(--mg);border-color:rgba(0,237,100,.3)}
+.opg-btn-on:hover{background:rgba(0,237,100,.1)}
+
+.opg-panels{display:grid;grid-template-columns:380px 1fr 380px;gap:1.5rem;margin-bottom:1.5rem;align-items:start}
+
+/* ── Toggle Panel ─────────────────────────────────────── */
+.opg-toggles{display:flex;flex-direction:column;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.opg-tgroup{font-size:.95rem;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);padding:.8rem 1.2rem .4rem}
+.opg-layer{
+  display:flex;align-items:center;gap:1rem;
+  padding:.75rem 1.2rem;cursor:pointer;
+  border-bottom:1px solid rgba(30,42,61,.5);transition:background .2s
+}
+.opg-layer:hover{background:rgba(255,255,255,.02)}
+.opg-layer:last-child{border-bottom:none}
+.opg-layer.on{background:rgba(0,237,100,.03)}
+.opg-sw{position:relative;width:56px;height:30px;flex-shrink:0}
+.opg-sw-sl{width:56px;height:30px;background:#252d3d;border-radius:30px;transition:.3s;position:relative;display:block}
+.opg-sw-sl::before{content:'';position:absolute;height:22px;width:22px;left:4px;top:4px;background:#4b5563;border-radius:50%;transition:.3s}
+.opg-layer.on .opg-sw-sl{background:var(--mg)}
+.opg-layer.on .opg-sw-sl::before{transform:translateX(26px);background:#fff}
+.opg-linfo{flex:1;min-width:0}
+.opg-lname{font-size:1.05rem;font-weight:600;color:var(--tx);line-height:1.2;display:flex;align-items:center;gap:.4rem}
+.opg-ldesc{font-size:.88rem;color:var(--tx3);line-height:1.3;margin-top:.15rem}
+.opg-ldot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+
+/* ── Solar System Diagram ─────────────────────────────── */
+.solar-wrap{background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:1.5rem 1.5rem 1rem;overflow:visible}
+.sol-legend{display:flex;justify-content:center;gap:1.4rem;margin-bottom:.6rem}
+.sol-legend span{font-size:.92rem;font-weight:600;display:flex;align-items:center;gap:.35rem;color:var(--tx2)}
+.sol-ldot{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.sol-info{text-align:center;min-height:2rem;padding:.25rem .8rem;font-size:1rem;color:var(--tx3);transition:color .3s;line-height:1.3}
+.sol-info.tip-on{color:var(--mg)}
+.sol-info.tip-off{color:var(--rd)}
+
+.solar{position:relative;width:100%;max-width:900px;aspect-ratio:1;margin:0 auto}
+/* Database cylinder shape */
+.solar-core{
+  position:absolute;width:140px;height:170px;top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:10;transition:all .6s
+}
+.db-cylinder{
+  position:absolute;top:0;left:0;width:100%;height:100%;z-index:0
+}
+.solar-core.stressed .db-body{fill:rgba(153,27,27,.85);stroke:#ef4444}
+.solar-core.stressed .db-top{fill:rgba(220,38,38,.7);stroke:#ef4444}
+.solar-core.stressed .db-mid{stroke:#ef4444}
+.solar-core.stressed .db-bot{fill:rgba(127,29,29,.85);stroke:#ef4444}
+.solar-core.stressed{animation:sol-alarm 1.5s ease-in-out infinite}
+.solar-core.healthy .db-body{fill:rgba(29,78,115,.85);stroke:#5a9bc5}
+.solar-core.healthy .db-top{fill:rgba(51,103,145,.7);stroke:#5a9bc5}
+.solar-core.healthy .db-mid{stroke:#5a9bc5}
+.solar-core.healthy .db-bot{fill:rgba(29,60,90,.85);stroke:#5a9bc5}
+.solar-core.healthy{box-shadow:none}
+.solar-core:not(.stressed):not(.healthy) .db-body{fill:rgba(50,60,80,.85);stroke:#5a9bc5}
+.solar-core:not(.stressed):not(.healthy) .db-top{fill:rgba(60,75,100,.7);stroke:#5a9bc5}
+.solar-core:not(.stressed):not(.healthy) .db-mid{stroke:#5a9bc5}
+.solar-core:not(.stressed):not(.healthy) .db-bot{fill:rgba(40,50,70,.85);stroke:#5a9bc5}
+/* Single DB view */
+.core-single{z-index:1;position:relative;display:flex;flex-direction:column;align-items:center}
+.core-single .solar-core-label{font-size:.95rem;font-weight:700;color:#fff;line-height:1}
+.core-single .solar-core-sub{font-size:.58rem;color:rgba(255,255,255,0.65);margin-top:.2rem;text-align:center;line-height:1.3}
+
+/* Dual DB view (HA enabled) */
+.core-dual{
+  z-index:1;position:relative;display:none;
+  flex-direction:row;align-items:center;gap:6px
+}
+.core-dual-db{display:flex;flex-direction:column;align-items:center}
+.core-dual-db svg{width:60px;height:72px}
+.core-dual-lbl{font-size:.5rem;font-weight:700;color:#fff;margin-top:2px;text-align:center;line-height:1.1}
+.core-dual-sub{font-size:.42rem;color:rgba(255,255,255,.5);text-align:center}
+.core-dual .core-sync{font-size:.55rem;color:rgba(52,211,153,.7);margin:0 2px}
+.core-replicas{
+  font-size:.52rem;color:rgba(52,211,153,.85);
+  font-weight:600;letter-spacing:.03em;text-align:center;
+  margin-top:4px;z-index:1;position:relative
+}
+
+/* Toggle between single/dual */
+.solar-core.ha-on .db-cylinder{display:none}
+.solar-core.ha-on .core-single{display:none}
+.solar-core.ha-on .core-dual{display:flex}
+.solar-core.ha-on .core-replicas{display:block}
+.solar-core:not(.ha-on) .core-replicas{display:none}
+
+.sol-ring{
+  position:absolute;border-radius:50%;top:50%;left:50%;
+  transform:translate(-50%,-50%);border:2.5px solid;
+  transition:all .5s ease;pointer-events:none
+}
+.sol-ring.on[data-type="perf"]{border-color:rgba(96,165,250,.5);box-shadow:0 0 14px rgba(96,165,250,.1)}
+.sol-ring.on[data-type="avail"]{border-color:rgba(52,211,153,.5);box-shadow:0 0 14px rgba(52,211,153,.1)}
+.sol-ring.on[data-type="both"]{border-color:rgba(251,191,36,.5);box-shadow:0 0 14px rgba(251,191,36,.1)}
+.sol-ring.off{border-color:rgba(248,113,113,.25);border-style:dashed;box-shadow:none}
+
+.sol-label{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:.92rem;font-weight:600;padding:.25rem .7rem;
+  border-radius:12px;background:var(--bg);border:2px solid;
+  white-space:nowrap;z-index:8;cursor:pointer;transition:all .3s
+}
+.sol-label:hover{transform:translate(-50%,-50%) scale(1.12);z-index:20}
+.sol-label.on[data-type="perf"]{color:var(--c-perf);border-color:rgba(96,165,250,.5);background:rgba(96,165,250,.08)}
+.sol-label.on[data-type="avail"]{color:var(--c-avail);border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.08)}
+.sol-label.on[data-type="both"]{color:var(--c-both);border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.08)}
+.sol-label.off{color:var(--rd);border-color:rgba(248,113,113,.25);border-style:dashed;opacity:.65}
+
+/* CosmosDB satellite */
+.cosmos-sat{
+  position:absolute;top:5%;right:6%;
+  background:var(--bg-card);border:2px solid rgba(244,114,182,.4);border-radius:10px;
+  padding:.5rem .8rem;text-align:center;
+  opacity:0;transform:scale(.85);transition:all .4s;z-index:12
+}
+.cosmos-sat.visible{opacity:1;transform:scale(1)}
+.cosmos-label{font-size:.95rem;font-weight:700;color:#f472b6}
+.cosmos-sub{font-size:.72rem;color:var(--tx3)}
+.cosmos-line{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:4;opacity:0;transition:opacity .4s}
+.cosmos-line.visible{opacity:1}
+
+/* PgBouncer pods (Docker containers) */
+.pgb-pod{
+  position:absolute;transform:translate(-50%,-50%);
+  font-size:.58rem;font-weight:700;color:var(--c-perf);
+  background:rgba(96,165,250,.06);border:1.5px solid rgba(96,165,250,.25);
+  border-radius:5px;padding:.2rem .35rem;z-index:9;
+  opacity:0;transition:all .4s;display:flex;align-items:center;gap:.2rem;
+  white-space:nowrap
+}
+.pgb-pod.visible{opacity:1}
+.pgb-pod .pgb-icon{font-size:.7rem;line-height:1}
+.pgb-pod .pgb-label{line-height:1}
+
+
+/* Data flow particles */
+.sol-track{position:absolute;top:50%;left:50%;width:0;height:0;pointer-events:none;z-index:2}
+.sol-dot{
+  position:absolute;width:5px;height:5px;border-radius:50%;
+  animation:sol-flow 4s linear infinite;transition:background .5s
+}
+.solar.stressed .sol-dot{background:var(--rd)}
+.solar.mixed .sol-dot{background:var(--c-both)}
+.solar.healthy .sol-dot{background:var(--c-perf)}
+
+/* Status narrative */
+.sol-status{
+  text-align:center;margin-top:.75rem;font-size:1rem;font-weight:600;
+  padding:.5rem 1rem;border-radius:8px;transition:all .4s;line-height:1.3
+}
+.sol-status.stressed{color:var(--rd);background:rgba(248,113,113,.06)}
+.sol-status.mixed{color:var(--c-both);background:rgba(251,191,36,.06)}
+.sol-status.healthy{color:var(--c-perf);background:rgba(96,165,250,.06)}
+
+@keyframes sol-flow{
+  0%{transform:translateY(-430px);opacity:0}
+  6%{opacity:.5}
+  82%{opacity:.4}
+  100%{transform:translateY(-52px);opacity:0}
+}
+@keyframes sol-alarm{0%,100%{filter:drop-shadow(0 0 15px rgba(248,113,113,.35))}50%{filter:drop-shadow(0 0 30px rgba(248,113,113,.6))}}
+@keyframes opg-pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── Native Toggle ────────────────────────────────────── */
+.native-toggle{
+  display:inline-flex;align-items:center;gap:.7rem;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:30px;
+  padding:.4rem .6rem .4rem 1.2rem;cursor:pointer;transition:all .3s;
+  user-select:none
+}
+.native-toggle:hover{border-color:var(--border2)}
+.native-toggle.on{border-color:rgba(248,113,113,.4);background:rgba(248,113,113,.05)}
+.native-label{font-size:1rem;font-weight:600;color:var(--tx2);transition:color .3s}
+.native-toggle.on .native-label{color:var(--rd)}
+.native-sw{width:56px;height:30px;flex-shrink:0}
+.native-sw-sl{width:56px;height:30px;background:#252d3d;border-radius:30px;transition:.3s;position:relative;display:block}
+.native-sw-sl::before{content:'';position:absolute;height:22px;width:22px;left:4px;top:4px;background:#4b5563;border-radius:50%;transition:.3s}
+.native-toggle.on .native-sw-sl{background:var(--rd)}
+.native-toggle.on .native-sw-sl::before{transform:translateX(26px);background:#fff}
+
+/* ── View Toggle ─────────────────────────────────────── */
+.opg-view-layers{display:block}
+.opg-view-native{display:none}
+.native-mode .opg-view-layers{display:none}
+.native-mode .opg-view-native{display:block}
+.native-mode .opg-toggles{opacity:.35;pointer-events:none}
+.native-mode .opg-ctrl .opg-btn{opacity:.35;pointer-events:none}
+
+/* ── Bottleneck Diagram ───────────────────────────────── */
+.bn-wrap{text-align:center}
+.bn-title{
+  font-size:1.15rem;font-weight:700;color:var(--tx2);
+  font-style:italic;padding:.6rem 0
+}
+.bn-diagram{
+  position:relative;display:inline-block;
+  width:100%;max-width:800px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:12px
+}
+.bn-diagram svg{display:block;width:100%;height:auto}
+
+/* ── Bottom Grid: Left Log | Health | Right Log ───────── */
+.opg-bottom{display:grid;grid-template-columns:380px 1fr 380px;gap:1.5rem;align-items:start}
+
+/* Health Dashboard */
+.opg-health{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.opg-metric{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  padding:.9rem 1rem;transition:border-color .4s
+}
+.opg-metric-hdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem}
+.opg-metric-name{font-size:.92rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3)}
+.opg-metric-val{font-size:1.5rem;font-weight:700;font-family:'JetBrains Mono',monospace;transition:color .4s}
+.opg-metric-bar{height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.opg-metric-fill{height:100%;border-radius:3px;transition:width .7s ease,background .4s ease;width:0}
+.opg-metric-sub{font-size:.82rem;color:var(--tx3);margin-top:.35rem}
+
+/* ── Incident Log ─────────────────────────────────────── */
+.opg-log{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  padding:.8rem 1rem;max-height:none;overflow-y:visible
+}
+.opg-log::-webkit-scrollbar{width:5px}
+.opg-log::-webkit-scrollbar-track{background:transparent}
+.opg-log::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+.opg-log-title{font-size:.92rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:.5rem;display:flex;align-items:center;gap:.4rem}
+.opg-log-entry{
+  font-size:1rem;line-height:1.5;padding:.35rem 0;
+  border-bottom:1px solid rgba(255,255,255,.03);
+  display:flex;align-items:flex-start;gap:.45rem
+}
+.opg-log-entry:last-child{border-bottom:none}
+.opg-log-entry.danger{color:rgba(248,113,113,.9)}
+.opg-log-entry.success{color:rgba(0,237,100,.85)}
+.opg-log-entry .log-icon{flex-shrink:0;width:24px;text-align:center;font-size:1.1rem}
+
+/* ── Schema Change Viz Panel ─────────────────────────── */
+.schema-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.schema-panel.open{max-height:520px;padding-top:1rem;padding-bottom:1rem}
+.schema-viz{display:flex;gap:1.2rem;height:380px}
+.schema-col{flex:1;display:flex;flex-direction:column;min-width:0}
+.schema-col-title{
+  font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--tx3);margin-bottom:.5rem
+}
+/* Lock badge */
+.schema-lock{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.72rem;font-weight:700;padding:.3rem .7rem;border-radius:6px;
+  margin-bottom:.5rem;transition:all .4s;letter-spacing:.03em
+}
+.schema-lock.danger{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.25);animation:schema-pulse 1.2s ease-in-out infinite}
+.schema-lock.safe{background:rgba(0,237,100,.08);color:#00ed64;border:1.5px solid rgba(0,237,100,.3);animation:none}
+/* DDL command */
+.schema-ddl{
+  font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--tx3);
+  background:rgba(0,0,0,.3);border-radius:6px;padding:.4rem .6rem;margin-bottom:.5rem;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.schema-ddl b{color:var(--c-both)}
+/* Table grid */
+.schema-grid{
+  display:grid;grid-template-columns:repeat(8,1fr);gap:2px;flex:1;
+  border-radius:6px;overflow:hidden;align-content:start
+}
+.schema-cell{
+  height:18px;background:rgba(51,103,145,.18);border-radius:2px;
+  transition:background .15s ease
+}
+.schema-cell.rewriting{background:rgba(251,191,36,.55);box-shadow:inset 0 0 6px rgba(251,191,36,.3)}
+.schema-cell.done{background:rgba(0,237,100,.3)}
+.schema-cell.rollback{background:rgba(248,113,113,.35);transition:background .3s}
+.schema-cell.original{background:rgba(51,103,145,.18);transition:background .6s}
+/* Progress */
+.schema-progress{
+  display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem;font-size:.72rem;color:var(--tx2)
+}
+.schema-progress-bar{flex:1;height:4px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.schema-progress-fill{height:100%;border-radius:2px;transition:width .3s;width:0}
+.schema-progress-fill.danger{background:var(--c-both)}
+.schema-progress-fill.safe{background:var(--mg)}
+.schema-timer{font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--tx3);margin-top:.3rem}
+/* Query queue */
+.schema-queue{
+  flex:1;display:flex;flex-direction:column;gap:3px;
+  overflow:hidden;position:relative;padding-bottom:2rem
+}
+.schema-query{
+  display:flex;align-items:center;gap:.4rem;
+  font-family:'JetBrains Mono',monospace;font-size:.62rem;
+  padding:.3rem .5rem;border-radius:4px;
+  background:rgba(96,165,250,.08);border:1px solid rgba(96,165,250,.25);
+  color:var(--c-perf);opacity:0;transform:translateY(-12px);
+  animation:schema-drop .3s ease forwards;flex-shrink:0
+}
+.schema-query .sq-type{font-weight:700;min-width:48px}
+.schema-query .sq-wait{margin-left:auto;color:var(--tx3);font-size:.58rem}
+.schema-query.timeout{
+  border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.08);color:var(--rd)
+}
+.schema-query.flowing{
+  border-color:rgba(0,237,100,.3);background:rgba(0,237,100,.06);color:var(--mg);
+  animation:schema-flow .8s ease forwards
+}
+.schema-blocked-count{
+  position:absolute;bottom:0;left:0;right:0;
+  font-size:.72rem;font-weight:700;padding:.3rem .5rem;
+  border-radius:4px;text-align:center;transition:all .3s
+}
+.schema-blocked-count.danger{background:rgba(248,113,113,.1);color:var(--rd)}
+.schema-blocked-count.safe{background:rgba(0,237,100,.06);color:var(--mg)}
+/* Bottom bar */
+.schema-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.schema-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.schema-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+/* Animations */
+@keyframes schema-drop{to{opacity:1;transform:translateY(0)}}
+@keyframes schema-flow{0%{opacity:0;transform:translateY(-12px)}40%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(12px)}}
+@keyframes schema-pulse{0%,100%{opacity:1}50%{opacity:.55}}
+
+/* ── Workload Isolation Viz Panel ────────────────────── */
+.wl-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.wl-panel.open{max-height:460px;padding-top:1rem;padding-bottom:1rem}
+.wl-diagram{position:relative;height:340px;display:flex;align-items:stretch;gap:0}
+/* App column */
+.wl-apps{display:flex;flex-direction:column;gap:8px;width:130px;flex-shrink:0;justify-content:center}
+.wl-app{
+  font-size:.68rem;font-weight:700;padding:.45rem .55rem;border-radius:6px;
+  text-align:center;line-height:1.2;position:relative;z-index:2;transition:all .4s
+}
+.wl-app[data-pri="hi"]{background:rgba(96,165,250,.12);border:1.5px solid rgba(96,165,250,.35);color:var(--c-perf)}
+.wl-app[data-pri="mid"]{background:rgba(251,191,36,.1);border:1.5px solid rgba(251,191,36,.3);color:var(--c-both)}
+.wl-app[data-pri="lo"]{background:rgba(139,92,246,.1);border:1.5px solid rgba(139,92,246,.3);color:#a78bfa}
+.wl-app-sub{font-size:.55rem;font-weight:500;opacity:.6;margin-top:2px}
+/* SVG canvas for lines + particles */
+.wl-svg{flex:1;min-width:0}
+.wl-svg svg{width:100%;height:100%}
+.wl-line{stroke-width:2;fill:none;opacity:.5;transition:all .5s}
+.wl-line.hot{stroke:var(--rd);opacity:.7}
+.wl-line.ok{stroke:var(--mg);opacity:.5}
+.wl-particle{r:3;opacity:0}
+/* Replica column */
+.wl-replicas{display:flex;flex-direction:column;gap:8px;width:150px;flex-shrink:0;justify-content:center}
+.wl-replica{
+  font-size:.65rem;font-weight:700;padding:.5rem .5rem;border-radius:8px;
+  text-align:center;line-height:1.2;transition:all .5s;position:relative
+}
+.wl-replica .wl-rep-name{font-size:.7rem}
+.wl-replica .wl-rep-load{
+  font-family:'JetBrains Mono',monospace;font-size:.6rem;margin-top:3px;
+  transition:color .4s
+}
+.wl-replica.shared{background:rgba(248,113,113,.08);border:1.5px solid rgba(248,113,113,.3)}
+.wl-replica.shared .wl-rep-name{color:var(--rd)}
+.wl-replica.shared .wl-rep-load{color:var(--rd)}
+.wl-replica.hot{animation:schema-pulse 1s ease-in-out infinite}
+.wl-replica.dedicated{background:rgba(0,237,100,.06);border:1.5px solid rgba(0,237,100,.25)}
+.wl-replica.dedicated .wl-rep-name{color:var(--mg)}
+.wl-replica.dedicated .wl-rep-load{color:var(--mg)}
+.wl-replica.dedicated[data-for="hi"]{border-color:rgba(96,165,250,.35);background:rgba(96,165,250,.06)}
+.wl-replica.dedicated[data-for="hi"] .wl-rep-name{color:var(--c-perf)}
+.wl-replica.dedicated[data-for="hi"] .wl-rep-load{color:var(--c-perf)}
+.wl-replica.dedicated[data-for="mid"]{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.05)}
+.wl-replica.dedicated[data-for="mid"] .wl-rep-name{color:var(--c-both)}
+.wl-replica.dedicated[data-for="mid"] .wl-rep-load{color:var(--c-both)}
+.wl-replica.dedicated[data-for="lo"]{border-color:rgba(139,92,246,.3);background:rgba(139,92,246,.06)}
+.wl-replica.dedicated[data-for="lo"] .wl-rep-name{color:#a78bfa}
+.wl-replica.dedicated[data-for="lo"] .wl-rep-load{color:#a78bfa}
+/* Bottom bar */
+.wl-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.wl-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.wl-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+@keyframes wl-move{0%{opacity:0;offset-distance:0%}10%{opacity:.8}90%{opacity:.8}100%{opacity:0;offset-distance:100%}}
+
+/* ── Write Offload Viz Panel ─────────────────────────── */
+.wo-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.wo-panel.open{max-height:460px;padding-top:1rem;padding-bottom:1rem}
+.wo-diagram{position:relative;display:flex;align-items:stretch;gap:0;height:320px}
+/* Write sources */
+.wo-sources{display:flex;flex-direction:column;gap:8px;width:120px;flex-shrink:0;justify-content:center}
+.wo-src{
+  font-size:.65rem;font-weight:700;padding:.4rem .5rem;border-radius:6px;
+  text-align:center;line-height:1.2;
+  background:rgba(251,191,36,.08);border:1.5px solid rgba(251,191,36,.3);color:var(--c-both)
+}
+.wo-src-sub{font-size:.52rem;font-weight:500;opacity:.55;margin-top:2px}
+/* SVG canvas */
+.wo-svg{flex:1;min-width:0}
+.wo-svg svg{width:100%;height:100%}
+/* Targets */
+.wo-targets{display:flex;flex-direction:column;gap:12px;width:150px;flex-shrink:0;justify-content:center}
+.wo-db{
+  padding:.55rem .5rem;border-radius:8px;text-align:center;
+  line-height:1.2;transition:all .5s;position:relative
+}
+.wo-db-name{font-size:.72rem;font-weight:700}
+.wo-db-stat{font-family:'JetBrains Mono',monospace;font-size:.58rem;margin-top:3px;transition:color .4s}
+.wo-db.pg{background:rgba(51,103,145,.1);border:1.5px solid rgba(51,103,145,.35)}
+.wo-db.pg .wo-db-name{color:var(--cl-pg)}
+.wo-db.pg.stressed{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.06);animation:schema-pulse 1s ease-in-out infinite}
+.wo-db.pg.stressed .wo-db-name{color:var(--rd)}
+.wo-db.pg.stressed .wo-db-stat{color:var(--rd)}
+.wo-db.pg.ok .wo-db-name{color:var(--c-perf)}
+.wo-db.pg.ok .wo-db-stat{color:var(--c-perf)}
+.wo-db.cosmos{background:rgba(244,114,182,.07);border:1.5px solid rgba(244,114,182,.3);opacity:0;transform:scale(.92);transition:all .4s}
+.wo-db.cosmos.visible{opacity:1;transform:scale(1)}
+.wo-db.cosmos .wo-db-name{color:#f472b6}
+.wo-db.cosmos .wo-db-stat{color:#f472b6}
+/* Pressure meters */
+.wo-meter{display:flex;align-items:center;gap:.4rem;margin-top:4px}
+.wo-meter-label{font-size:.52rem;color:var(--tx3);width:36px;text-align:right}
+.wo-meter-track{flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.wo-meter-fill{height:100%;border-radius:2px;transition:width .6s,background .4s}
+/* Bottom bar */
+.wo-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.wo-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.wo-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+
+/* ── PgBouncer Connection Pool Viz ────────────────────── */
+.cp-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.cp-panel.open{max-height:600px;padding-top:1rem;padding-bottom:1rem}
+.cp-diagram{position:relative;min-height:300px}
+.cp-diagram svg{width:100%;height:100%;display:block}
+/* Slot grid */
+.cp-slots{display:flex;flex-wrap:wrap;gap:2px;margin-top:.5rem}
+.cp-slot{
+  width:8px;height:8px;border-radius:2px;transition:background .2s
+}
+.cp-slot.free{background:rgba(96,165,250,.15)}
+.cp-slot.used{background:rgba(251,191,36,.5)}
+.cp-slot.exhausted{background:rgba(248,113,113,.6);animation:schema-pulse .6s ease-in-out infinite}
+.cp-slot.pooled{background:rgba(0,237,100,.4)}
+/* Bar */
+.cp-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.cp-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.cp-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+
+/* ── Cache + Lock Viz Panel ──────────────────────────── */
+.cl-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.cl-panel.open{max-height:540px;padding-top:1rem;padding-bottom:1rem}
+.cl-diagram{position:relative;min-height:320px}
+.cl-diagram svg{width:100%;height:100%;display:block}
+.cl-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.cl-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.cl-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+
+/* ── Rate Limiting Viz Panel ─────────────────────────── */
+.rl-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.rl-panel.open{max-height:560px;padding-top:1rem;padding-bottom:1rem}
+.rl-diagram{position:relative;min-height:340px}
+.rl-diagram svg{width:100%;height:100%;display:block}
+.rl-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.rl-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.rl-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+
+/* ── HA & Failover Viz Panel ─────────────────────────── */
+.ha-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.ha-panel.open{max-height:500px;padding-top:1rem;padding-bottom:1rem}
+.ha-diagram{position:relative;min-height:310px}
+.ha-diagram svg{width:100%;height:100%;display:block}
+/* Node boxes */
+.ha-node{
+  font-size:.62rem;font-weight:700;padding:.4rem .5rem;border-radius:6px;
+  text-align:center;line-height:1.2;transition:all .5s
+}
+.ha-node-sub{font-size:.5rem;font-weight:500;opacity:.55;margin-top:2px}
+.ha-node.primary{background:rgba(51,103,145,.15);border:1.5px solid rgba(90,155,197,.4);color:#5a9bc5}
+.ha-node.primary.dead{background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:var(--rd);animation:schema-pulse .8s ease-in-out infinite}
+.ha-node.standby{background:rgba(52,211,153,.08);border:1.5px solid rgba(52,211,153,.25);color:var(--c-avail)}
+.ha-node.region{background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.15);color:var(--c-perf)}
+.ha-node.region .ha-node-sub{color:var(--c-perf);opacity:.5}
+.ha-node.offline{opacity:.3;border-style:dashed}
+/* Failover flash */
+.ha-promote{
+  position:absolute;font-size:.62rem;font-weight:700;color:var(--mg);
+  background:rgba(0,237,100,.1);border:1px solid rgba(0,237,100,.25);
+  padding:.2rem .5rem;border-radius:4px;opacity:0;transition:opacity .4s;white-space:nowrap
+}
+.ha-promote.visible{opacity:1;animation:schema-pulse 1s ease-in-out 3}
+/* Bottom bar */
+.ha-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.ha-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.ha-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+/* Replication arrow animation */
+@keyframes ha-replicate{0%{stroke-dashoffset:12}100%{stroke-dashoffset:0}}
+.ha-repl-line{stroke-dasharray:6,6;animation:ha-replicate .8s linear infinite}
+
+/* ── Notes Section (hidden by default, ?notes=true) ── */
+.notes-section{display:none;padding:3rem 0 4rem;border-top:1px solid var(--border)}
+.notes-section.visible{display:block}
+.notes-section h2{font-size:1.6rem;margin-bottom:1.5rem}
+.notes-section h3{font-size:1.2rem;font-weight:700;color:var(--c-both);margin:2rem 0 .6rem}
+.notes-section h4{font-size:1rem;font-weight:700;color:var(--tx);margin:1.2rem 0 .4rem}
+.notes-section p{color:var(--tx2);font-size:.95rem;line-height:1.7;margin-bottom:.6rem;max-width:860px}
+.notes-section strong{color:var(--tx)}
+.notes-section code{
+  font-family:'JetBrains Mono',monospace;font-size:.85rem;
+  background:rgba(255,255,255,.05);padding:.15rem .4rem;border-radius:4px;color:var(--cy)
+}
+.notes-section .code-block{
+  font-family:'JetBrains Mono',monospace;font-size:.82rem;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+  padding:1rem 1.2rem;margin:.6rem 0 1rem;line-height:1.6;color:var(--tx2);
+  overflow-x:auto;max-width:860px;white-space:pre
+}
+.notes-section .code-block b{color:var(--c-both);font-weight:600}
+.notes-section .compare-table{
+  width:100%;max-width:860px;border-collapse:collapse;margin:.8rem 0 1.2rem;font-size:.88rem
+}
+.notes-section .compare-table th{
+  text-align:left;padding:.5rem .7rem;font-weight:700;color:var(--tx3);
+  border-bottom:2px solid var(--border);font-size:.78rem;text-transform:uppercase;letter-spacing:.06em
+}
+.notes-section .compare-table td{
+  padding:.45rem .7rem;border-bottom:1px solid rgba(30,42,61,.5);color:var(--tx2)
+}
+.notes-section .compare-table tr:hover td{background:rgba(255,255,255,.02)}
+.notes-section .callout{
+  background:var(--bg-card);border-left:3px solid var(--c-both);border-radius:0 8px 8px 0;
+  padding:.8rem 1rem;margin:.8rem 0 1rem;max-width:860px;font-size:.9rem;color:var(--tx2);line-height:1.6
+}
+.notes-section .callout strong{color:var(--c-both)}
+
+/* ── Responsive ──────────────────────────────────────── */
+@media(max-width:1400px){
+  .opg-panels{grid-template-columns:1fr 1fr;gap:1rem}
+  .opg-panels>.solar-wrap{grid-column:1/-1;order:-1}
+  .opg-bottom{grid-template-columns:1fr 1fr;gap:1rem}
+  .opg-bottom>.opg-health{grid-column:1/-1;order:-1;grid-template-columns:repeat(4,1fr)}
+  .solar{width:100%;max-width:760px;height:auto;aspect-ratio:1}
+}
+@media(max-width:900px){
+  .opg-panels{grid-template-columns:1fr}
+  .opg-bottom{grid-template-columns:1fr}
+  .opg-bottom>.opg-health{grid-template-columns:1fr 1fr}
+}
+@media(max-width:600px){
+  .wrap{padding:0 1rem}
+  .solar{max-width:480px}
+}
+@media(max-width:420px){
+  .opg-bottom>.opg-health{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="nav-brand">
+      <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg>
+      Postgres & MongoDB at Humongous Scale
+    </div>
+    <div class="nav-links">
+      <a href="#openai-pg">OpenAI + PostgreSQL</a>
+      <a href="#notesSection" id="navNotes" style="display:none">Notes</a>
+    </div>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<div class="hero" id="top">
+  <h1>Postgres and MongoDB at Humongous Scale</h1>
+  <p>Real differentiators — beyond the surface-level comparisons.</p>
+</div>
+
+<section id="openai-pg">
+  <div class="opg-hdr">
+    <h2>How OpenAI Scaled <span>PostgreSQL</span></h2>
+    <p>PostgreSQL was never built to serve 800M ChatGPT users on a single primary. OpenAI had to engineer 8 defense layers around it — without them, it collapses. Toggle each to see what breaks.</p>
+    <div class="opg-counter">
+      <span class="opg-counter-num" id="opgCount">0</span><span>/8 layers active</span>
+    </div>
+  </div>
+
+  <div class="opg-ctrl">
+    <div class="native-toggle on" id="nativeToggle" onclick="opgToggleNative()">
+      <span class="native-label">Native PostgreSQL</span>
+      <div class="native-sw"><span class="native-sw-sl"></span></div>
+    </div>
+    <button class="opg-btn opg-btn-off" onclick="opgReset()">⚡ Strip All Defenses</button>
+    <button class="opg-btn opg-btn-on" onclick="opgEnableAll()">🛡 Deploy All Layers</button>
+  </div>
+
+  <div class="opg-panels">
+
+    <!-- Left: Outer Defenses -->
+    <div class="opg-toggles">
+      <div class="opg-tgroup">Outer Defenses</div>
+
+      <div class="opg-layer" data-layer="rateLimit" onclick="opgToggle('rateLimit')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-perf)"></span>Rate Limiting</div>
+          <div class="opg-ldesc">App → pooler → proxy → query digest</div>
+        </div>
+      </div>
+
+      <!-- Rate Limiting Viz Panel (expandable) -->
+      <div class="rl-panel" id="rlPanel">
+        <div class="rl-diagram" id="rlDiagram"></div>
+        <div class="rl-bar danger" id="rlBar">⚠ No rate limits — retry storms amplify load exponentially</div>
+      </div>
+
+      <div class="opg-layer" data-layer="caching" onclick="opgToggle('caching')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-perf)"></span>Caching + Lock</div>
+          <div class="opg-ldesc">Single-reader lock prevents herd</div>
+        </div>
+      </div>
+
+      <!-- Cache + Lock Viz Panel (expandable) -->
+      <div class="cl-panel" id="clPanel">
+        <div class="cl-diagram" id="clDiagram"></div>
+        <div class="cl-bar danger" id="clBar">⚠ Thundering herd — cache miss triggers identical queries from every service instance</div>
+      </div>
+
+      <div class="opg-layer" data-layer="connPool" onclick="opgToggle('connPool')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-perf)"></span>PgBouncer Pods</div>
+          <div class="opg-ldesc">1 container per replica in K8s</div>
+        </div>
+      </div>
+
+      <!-- PgBouncer Connection Pool Viz Panel (expandable) -->
+      <div class="cp-panel" id="cpPanel">
+        <div class="cp-diagram" id="cpDiagram"></div>
+        <div class="cp-bar danger" id="cpBar">⚠ 5,000 direct connections — each a forked OS process consuming memory, FDs, and CPU</div>
+      </div>
+    </div>
+
+    <!-- Center: View toggle between Native bottleneck and Solar layers -->
+
+    <!-- VIEW 1: Native PostgreSQL bottleneck -->
+    <div class="opg-view-native">
+      <div class="bn-wrap">
+        <div class="bn-diagram">
+          <svg viewBox="0 0 800 620" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <!-- Subtle hazard stripe pattern for overload box -->
+              <pattern id="hazard" patternUnits="userSpaceOnUse" width="16" height="16" patternTransform="rotate(45)">
+                <rect width="4" height="16" fill="rgba(250,204,21,.045)"/>
+              </pattern>
+              <!-- Dot texture for trigger boxes -->
+              <pattern id="dots" patternUnits="userSpaceOnUse" width="8" height="8">
+                <circle cx="4" cy="4" r=".8" fill="rgba(255,255,255,.07)"/>
+              </pattern>
+              <!-- Animated flow dot -->
+              <circle id="flowDot" r="4" fill="#fbbf24" opacity=".8"/>
+              <!-- Arrow marker -->
+              <marker id="arrowW" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M0,1 L4,4 L0,7" fill="none" stroke="rgba(255,255,255,.7)" stroke-width="1.5"/>
+              </marker>
+              <marker id="arrowD" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+                <path d="M0,1 L4,4 L0,7" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.5"/>
+              </marker>
+            </defs>
+
+            <!-- ═══ TRIGGER BOXES ═══ -->
+            <g class="bn-trigger-g" cursor="pointer">
+              <rect x="40" y="40" width="160" height="70" rx="35" fill="url(#dots)" stroke="rgba(180,180,200,.3)" stroke-width="2"/>
+              <rect x="40" y="40" width="160" height="70" rx="35" fill="rgba(20,22,30,.88)"/>
+              <rect x="40" y="40" width="160" height="70" rx="35" fill="url(#dots)"/>
+              <text x="120" y="70" text-anchor="middle" fill="rgba(230,225,240,.88)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">CACHE LAYER</text>
+              <text x="120" y="87" text-anchor="middle" fill="rgba(230,225,240,.88)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">FAILURE</text>
+              <title>No caching layer — every request hits the database directly</title>
+            </g>
+            <g class="bn-trigger-g" cursor="pointer">
+              <rect x="230" y="40" width="160" height="70" rx="35" fill="rgba(20,22,30,.88)" stroke="rgba(180,180,200,.3)" stroke-width="2"/>
+              <rect x="230" y="40" width="160" height="70" rx="35" fill="url(#dots)"/>
+              <text x="310" y="70" text-anchor="middle" fill="rgba(230,225,240,.88)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">EXPENSIVE</text>
+              <text x="310" y="87" text-anchor="middle" fill="rgba(230,225,240,.88)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">QUERIES</text>
+              <title>12-table ORM joins with no review gate or idle timeouts</title>
+            </g>
+            <!-- Dots -->
+            <rect x="420" y="40" width="70" height="70" rx="35" fill="none" stroke="rgba(180,180,200,.2)" stroke-width="2" stroke-dasharray="5,4"/>
+            <text x="455" y="82" text-anchor="middle" fill="rgba(120,130,150,.6)" font-size="22" letter-spacing="4">···</text>
+
+            <g class="bn-trigger-g" cursor="pointer">
+              <rect x="520" y="40" width="160" height="70" rx="35" fill="rgba(20,22,30,.88)" stroke="rgba(180,180,200,.3)" stroke-width="2"/>
+              <rect x="520" y="40" width="160" height="70" rx="35" fill="url(#dots)"/>
+              <text x="600" y="70" text-anchor="middle" fill="rgba(230,225,240,.88)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">WRITE</text>
+              <text x="600" y="87" text-anchor="middle" fill="rgba(230,225,240,.88)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">SPIKE</text>
+              <title>All writes to a single primary — MVCC bloat and checkpoint storms</title>
+            </g>
+
+            <!-- ═══ MERGE LINES (triggers → overload) ═══ -->
+            <path d="M120,110 L120,145 Q120,155 130,155 L330,155 Q340,155 340,165 L340,185" stroke="rgba(255,255,255,.7)" stroke-width="2" fill="none" marker-end="url(#arrowW)"/>
+            <path d="M310,110 L310,145 Q310,155 320,155 L330,155 Q340,155 340,165 L340,185" stroke="rgba(255,255,255,.7)" stroke-width="2" fill="none"/>
+            <path d="M600,110 L600,145 Q600,155 590,155 L350,155 Q340,155 340,165 L340,185" stroke="rgba(255,255,255,.7)" stroke-width="2" fill="none"/>
+
+            <!-- ═══ OVERLOAD BOX (yellow/black hazard pulse + red glow) ═══ -->
+            <g cursor="pointer">
+              <!-- Red outer glow (outermost, soft) -->
+              <rect x="210" y="175" width="260" height="115" rx="58" fill="none" stroke="rgba(248,80,80,.04)" stroke-width="14">
+                <animate attributeName="stroke-opacity" values=".02;.12;.02" dur="2.2s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Red mid glow -->
+              <rect x="218" y="183" width="244" height="99" rx="50" fill="none" stroke="rgba(248,100,80,.06)" stroke-width="8">
+                <animate attributeName="stroke-opacity" values=".04;.2;.04" dur="1.8s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Yellow outer glow -->
+              <rect x="224" y="189" width="232" height="87" rx="44" fill="none" stroke="rgba(250,204,21,.1)" stroke-width="6">
+                <animate attributeName="stroke-opacity" values=".06;.3;.06" dur="1.8s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Base box -->
+              <rect x="230" y="195" width="220" height="75" rx="38" fill="rgba(30,25,10,.85)" stroke="rgba(250,204,21,.5)" stroke-width="2.5"/>
+              <!-- Hazard stripes -->
+              <rect x="230" y="195" width="220" height="75" rx="38" fill="url(#hazard)"/>
+              <!-- Flash fill that pulses -->
+              <rect x="230" y="195" width="220" height="75" rx="38" fill="rgba(250,204,21,.08)">
+                <animate attributeName="fill" values="rgba(250,204,21,.05);rgba(250,204,21,.22);rgba(250,204,21,.05)" dur="1.8s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Red flash overlay -->
+              <rect x="230" y="195" width="220" height="75" rx="38" fill="rgba(248,80,60,.03)">
+                <animate attributeName="fill" values="rgba(248,80,60,.02);rgba(248,80,60,.12);rgba(248,80,60,.02)" dur="2.2s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Border pulse -->
+              <rect x="230" y="195" width="220" height="75" rx="38" fill="none" stroke="rgba(250,204,21,.5)" stroke-width="2.5">
+                <animate attributeName="stroke" values="rgba(250,204,21,.4);rgba(250,204,21,.9);rgba(250,204,21,.4)" dur="1.8s" repeatCount="indefinite"/>
+              </rect>
+              <!-- Left siren (red) — sharp on/off like police strobe -->
+              <g>
+                <!-- Glow burst -->
+                <circle cx="240" cy="232" r="18" fill="#f83030" opacity="0">
+                  <animate attributeName="opacity" values="0;.25;0;0;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Main light -->
+                <circle cx="240" cy="232" r="6" fill="#f83030">
+                  <animate attributeName="opacity" values="1;1;0;0;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Hot core -->
+                <circle cx="240" cy="232" r="3" fill="#fff">
+                  <animate attributeName="opacity" values=".9;.9;0;0;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Second flash (double-tap) -->
+                <circle cx="240" cy="232" r="6" fill="#f83030">
+                  <animate attributeName="opacity" values="0;0;1;1;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="240" cy="232" r="3" fill="#fff">
+                  <animate attributeName="opacity" values="0;0;.9;.9;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="240" cy="232" r="18" fill="#f83030" opacity="0">
+                  <animate attributeName="opacity" values="0;0;.2;0;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+              </g>
+              <!-- Right siren (blue) — offset from left -->
+              <g>
+                <circle cx="440" cy="232" r="18" fill="#3b82f6" opacity="0">
+                  <animate attributeName="opacity" values="0;0;0;.25;0;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="440" cy="232" r="6" fill="#3b82f6">
+                  <animate attributeName="opacity" values="0;0;0;1;1;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="440" cy="232" r="3" fill="#fff">
+                  <animate attributeName="opacity" values="0;0;0;.9;.9;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <!-- Second flash -->
+                <circle cx="440" cy="232" r="6" fill="#3b82f6">
+                  <animate attributeName="opacity" values="0;0;0;0;1;1" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="440" cy="232" r="3" fill="#fff">
+                  <animate attributeName="opacity" values="0;0;0;0;.9;.9" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+                <circle cx="440" cy="232" r="18" fill="#3b82f6" opacity="0">
+                  <animate attributeName="opacity" values="0;0;0;0;.2;0" dur=".8s" repeatCount="indefinite"/>
+                </circle>
+              </g>
+              <!-- Text -->
+              <text x="340" y="228" text-anchor="middle" fill="rgba(250,204,21,.95)" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" letter-spacing=".5">POSTGRESQL</text>
+              <text x="340" y="248" text-anchor="middle" fill="rgba(250,204,21,.95)" font-family="JetBrains Mono,monospace" font-size="13" font-weight="700" letter-spacing=".5">OVERLOAD</text>
+              <title>CPU at 98%, 5,000/5,000 connections exhausted</title>
+            </g>
+
+            <!-- Arrow: overload → slow -->
+            <line x1="340" y1="270" x2="340" y2="320" stroke="rgba(255,255,255,.7)" stroke-width="2" marker-end="url(#arrowW)"/>
+
+            <!-- ═══ SLOW BOX ═══ -->
+            <g cursor="pointer">
+              <rect x="210" y="330" width="260" height="80" rx="40" fill="rgba(120,70,50,.55)" stroke="rgba(160,100,70,.5)" stroke-width="2"/>
+              <text x="340" y="363" text-anchor="middle" fill="rgba(255,235,220,.92)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">REQUESTS BECOME SLOW</text>
+              <text x="340" y="383" text-anchor="middle" fill="rgba(255,235,220,.92)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">OR TIME OUT</text>
+              <title>p99 latency hits 5.2 seconds — users see timeouts</title>
+            </g>
+
+            <!-- Arrow: slow → retries -->
+            <line x1="340" y1="410" x2="340" y2="460" stroke="rgba(255,255,255,.7)" stroke-width="2" marker-end="url(#arrowW)"/>
+
+            <!-- ═══ RETRIES BOX ═══ -->
+            <g cursor="pointer">
+              <rect x="220" y="470" width="240" height="80" rx="40" fill="rgba(120,70,50,.55)" stroke="rgba(160,100,70,.5)" stroke-width="2"/>
+              <text x="340" y="503" text-anchor="middle" fill="rgba(255,235,220,.92)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">MORE REQUESTS</text>
+              <text x="340" y="523" text-anchor="middle" fill="rgba(255,235,220,.92)" font-family="JetBrains Mono,monospace" font-size="12" font-weight="700" letter-spacing=".5">DUE TO RETRIES</text>
+              <title>Clients retry failed requests, amplifying load 2–10x</title>
+            </g>
+
+            <!-- ═══ FEEDBACK LOOP (dashed curve) ═══ -->
+            <path id="loopPath" d="M460,510 Q560,510 560,430 L560,280 Q560,230 510,232"
+                  stroke="rgba(255,255,255,.35)" stroke-width="1.5" stroke-dasharray="8,5" fill="none" marker-end="url(#arrowD)"/>
+
+            <!-- Warning icon + text -->
+            <text x="620" y="360" text-anchor="middle" font-size="28">⚠️</text>
+            <text x="620" y="385" text-anchor="middle" fill="rgba(255,255,255,.45)" font-family="DM Sans,sans-serif" font-size="11.5" font-weight="500">More requests</text>
+            <text x="620" y="400" text-anchor="middle" fill="rgba(255,255,255,.45)" font-family="DM Sans,sans-serif" font-size="11.5" font-weight="500">further increase</text>
+            <text x="620" y="415" text-anchor="middle" fill="rgba(255,255,255,.45)" font-family="DM Sans,sans-serif" font-size="11.5" font-weight="500">the load</text>
+
+            <!-- ═══ DATA FLOW ANIMATIONS ═══ -->
+            <!-- Flow from trigger merge down to overload -->
+            <circle r="3.5" fill="#fbbf24" opacity=".7">
+              <animateMotion dur="2.5s" repeatCount="indefinite" path="M120,110 L120,145 Q120,155 130,155 L330,155 Q340,155 340,165 L340,195"/>
+            </circle>
+            <circle r="3.5" fill="#fbbf24" opacity=".7">
+              <animateMotion dur="2.2s" repeatCount="indefinite" begin=".6s" path="M310,110 L310,145 Q310,155 320,155 L330,155 Q340,155 340,165 L340,195"/>
+            </circle>
+            <circle r="3.5" fill="#fbbf24" opacity=".7">
+              <animateMotion dur="2.8s" repeatCount="indefinite" begin="1.2s" path="M600,110 L600,145 Q600,155 590,155 L350,155 Q340,155 340,165 L340,195"/>
+            </circle>
+            <!-- Flow overload → slow -->
+            <circle r="3" fill="#f87171" opacity=".7">
+              <animateMotion dur="1.2s" repeatCount="indefinite" begin=".3s" path="M340,270 L340,330"/>
+            </circle>
+            <!-- Flow slow → retries -->
+            <circle r="3" fill="#f87171" opacity=".7">
+              <animateMotion dur="1.2s" repeatCount="indefinite" begin=".8s" path="M340,410 L340,470"/>
+            </circle>
+            <!-- Flow along feedback loop -->
+            <circle r="3" fill="rgba(255,255,255,.4)">
+              <animateMotion dur="3.5s" repeatCount="indefinite" begin="1.5s" path="M460,510 Q560,510 560,430 L560,280 Q560,230 510,232"/>
+            </circle>
+          </svg>
+        </div>
+        <div class="bn-title">The vicious cycle under load</div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: Solar System with defense layers -->
+    <div class="opg-view-layers">
+      <div class="solar-wrap">
+        <div class="sol-legend">
+          <span><span class="sol-ldot" style="background:var(--c-perf)"></span>Performance</span>
+          <span><span class="sol-ldot" style="background:var(--c-avail)"></span>Availability</span>
+          <span><span class="sol-ldot" style="background:var(--c-both)"></span>Both</span>
+        </div>
+        <div class="sol-info" id="solInfo">Hover a ring to see its role</div>
+        <div class="solar stressed" id="solarDiagram">
+          <div class="solar-core stressed" id="solarCore">
+            <!-- Background cylinder (always visible) -->
+            <svg class="db-cylinder" viewBox="0 0 140 170" xmlns="http://www.w3.org/2000/svg">
+              <ellipse class="db-bot" cx="70" cy="145" rx="62" ry="18"/>
+              <rect class="db-body" x="8" y="25" width="124" height="120"/>
+              <line class="db-mid" x1="8" y1="25" x2="8" y2="145" stroke-width="2"/>
+              <line class="db-mid" x1="132" y1="25" x2="132" y2="145" stroke-width="2"/>
+              <ellipse class="db-mid" cx="70" cy="65" rx="62" ry="14" fill="none" stroke-width="1.5" opacity=".3"/>
+              <ellipse class="db-mid" cx="70" cy="105" rx="62" ry="14" fill="none" stroke-width="1.5" opacity=".3"/>
+              <ellipse class="db-top" cx="70" cy="25" rx="62" ry="18"/>
+            </svg>
+
+            <!-- Single view (no HA) -->
+            <div class="core-single">
+              <div class="solar-core-label">PostgreSQL</div>
+              <div class="solar-core-sub">Primary only</div>
+            </div>
+
+            <!-- Dual view (HA enabled) -->
+            <div class="core-dual">
+              <div class="core-dual-db">
+                <svg viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="30" cy="60" rx="26" ry="8" fill="rgba(29,78,115,.8)" stroke="#5a9bc5" stroke-width="1.5"/>
+                  <rect x="4" y="12" width="52" height="48" fill="rgba(29,78,115,.8)"/>
+                  <line x1="4" y1="12" x2="4" y2="60" stroke="#5a9bc5" stroke-width="1.5"/>
+                  <line x1="56" y1="12" x2="56" y2="60" stroke="#5a9bc5" stroke-width="1.5"/>
+                  <ellipse cx="30" cy="30" rx="26" ry="6" fill="none" stroke="#5a9bc5" stroke-width="1" opacity=".3"/>
+                  <ellipse cx="30" cy="46" rx="26" ry="6" fill="none" stroke="#5a9bc5" stroke-width="1" opacity=".3"/>
+                  <ellipse cx="30" cy="12" rx="26" ry="8" fill="rgba(51,103,145,.7)" stroke="#5a9bc5" stroke-width="1.5"/>
+                </svg>
+                <div class="core-dual-lbl">Primary</div>
+              </div>
+              <span class="core-sync">⇄</span>
+              <div class="core-dual-db">
+                <svg viewBox="0 0 60 72" xmlns="http://www.w3.org/2000/svg">
+                  <ellipse cx="30" cy="60" rx="26" ry="8" fill="rgba(20,60,45,.8)" stroke="#34d399" stroke-width="1.5"/>
+                  <rect x="4" y="12" width="52" height="48" fill="rgba(20,60,45,.8)"/>
+                  <line x1="4" y1="12" x2="4" y2="60" stroke="#34d399" stroke-width="1.5"/>
+                  <line x1="56" y1="12" x2="56" y2="60" stroke="#34d399" stroke-width="1.5"/>
+                  <ellipse cx="30" cy="30" rx="26" ry="6" fill="none" stroke="#34d399" stroke-width="1" opacity=".3"/>
+                  <ellipse cx="30" cy="46" rx="26" ry="6" fill="none" stroke="#34d399" stroke-width="1" opacity=".3"/>
+                  <ellipse cx="30" cy="12" rx="26" ry="8" fill="rgba(30,80,60,.7)" stroke="#34d399" stroke-width="1.5"/>
+                </svg>
+                <div class="core-dual-lbl">Standby</div>
+              </div>
+            </div>
+
+            <div class="core-replicas">50 Read Replicas · 3 Regions</div>
+          </div>
+          <div class="cosmos-sat" id="cosmosSat">
+            <div class="cosmos-label">CosmosDB</div>
+            <div class="cosmos-sub">Write-heavy tables</div>
+          </div>
+          <svg class="cosmos-line" id="cosmosLine" viewBox="0 0 900 900" fill="none">
+            <line x1="450" y1="450" x2="780" y2="90" stroke="#f472b6" stroke-width="1.5" stroke-dasharray="6,4"/>
+            <text x="645" y="230" fill="#f472b6" font-size="13" font-family="DM Sans,sans-serif" font-weight="600" transform="rotate(-50 645 230)">writes ↗</text>
+          </svg>
+        </div>
+        <div class="sol-status stressed" id="solStatus">PostgreSQL directly exposed — 800M users hitting an unprotected primary</div>
+      </div>
+    </div>
+
+    <!-- Right: Core Operations -->
+    <div class="opg-toggles">
+      <div class="opg-tgroup">Core Operations</div>
+
+      <div class="opg-layer" data-layer="queryOpt" onclick="opgToggle('queryOpt')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-perf)"></span>Query Optimization</div>
+          <div class="opg-ldesc">ORM review, idle timeouts, join limits</div>
+        </div>
+      </div>
+
+      <div class="opg-layer" data-layer="workloadIso" onclick="opgToggle('workloadIso')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-both)"></span>Workload Isolation</div>
+          <div class="opg-ldesc">Hi-pri / lo-pri separate instances</div>
+        </div>
+      </div>
+
+      <!-- Workload Isolation Viz Panel (expandable) -->
+      <div class="wl-panel" id="wlPanel">
+        <div class="wl-diagram">
+          <div class="wl-apps">
+            <div class="wl-app" data-pri="hi">ChatGPT<br>Real-time<div class="wl-app-sub">P0 · latency-critical</div></div>
+            <div class="wl-app" data-pri="mid">API<br>Platform<div class="wl-app-sub">P1 · throughput</div></div>
+            <div class="wl-app" data-pri="lo">Batch<br>Analytics<div class="wl-app-sub">P2 · background</div></div>
+          </div>
+          <div class="wl-svg" id="wlSvg"></div>
+          <div class="wl-replicas" id="wlReplicas"></div>
+        </div>
+        <div class="wl-bar danger" id="wlBar">⚠ All workloads sharing same replicas — one bad batch query takes down ChatGPT</div>
+      </div>
+
+      <div class="opg-layer" data-layer="writeOffload" onclick="opgToggle('writeOffload')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-both)"></span>Write Offloading</div>
+          <div class="opg-ldesc">Lazy writes → CosmosDB, new PG tables blocked</div>
+        </div>
+      </div>
+
+      <!-- Write Offload Viz Panel (expandable) -->
+      <div class="wo-panel" id="woPanel">
+        <div class="wo-diagram">
+          <div class="wo-sources">
+            <div class="wo-src">INSERT<div class="wo-src-sub">new rows · bulk</div></div>
+            <div class="wo-src">UPDATE<div class="wo-src-sub">state changes</div></div>
+            <div class="wo-src">CREATE TABLE<div class="wo-src-sub">new models</div></div>
+          </div>
+          <div class="wo-svg" id="woSvg"></div>
+          <div class="wo-targets" id="woTargets"></div>
+        </div>
+        <div class="wo-bar danger" id="woBar">⚠ All writes hitting PG primary — MVCC bloat, WAL pressure, checkpoint storms</div>
+      </div>
+
+      <div class="opg-layer" data-layer="schemaMgmt" onclick="opgToggle('schemaMgmt')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-both)"></span>Schema Change Management</div>
+          <div class="opg-ldesc">DDL timeout 5s, rate-limited backfills</div>
+        </div>
+      </div>
+
+      <!-- Schema Change Viz Panel (expandable) -->
+      <div class="schema-panel" id="schemaPanel">
+        <div class="schema-viz">
+          <div class="schema-col">
+            <div class="schema-col-title">Table Rewrite</div>
+            <div class="schema-lock danger" id="schemaLock">🔒 ACCESS EXCLUSIVE LOCK</div>
+            <div class="schema-ddl" id="schemaDDL"><b>ALTER TABLE</b> users <b>ADD COLUMN</b> metadata jsonb — Rewriting 47M rows</div>
+            <div class="schema-progress">
+              <div class="schema-progress-bar"><div class="schema-progress-fill danger" id="schemaProgressFill"></div></div>
+              <span id="schemaProgressPct">0%</span>
+            </div>
+            <div class="schema-grid" id="schemaGrid"></div>
+            <div class="schema-timer" id="schemaTimer">Lock held: 00:00</div>
+          </div>
+          <div class="schema-col">
+            <div class="schema-col-title">Query Traffic</div>
+            <div class="schema-queue" id="schemaQueue">
+              <div class="schema-blocked-count danger" id="schemaBlockedCount">0 queries blocked</div>
+            </div>
+          </div>
+        </div>
+        <div class="schema-bar danger" id="schemaBar">⚠ All reads AND writes blocked — entire application halted</div>
+      </div>
+
+      <div class="opg-layer" data-layer="haFailover" onclick="opgToggle('haFailover')">
+        <div class="opg-sw"><span class="opg-sw-sl"></span></div>
+        <div class="opg-linfo">
+          <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-avail)"></span>HA & Failover</div>
+          <div class="opg-ldesc">Hot standby, streaming replication</div>
+        </div>
+      </div>
+
+      <!-- HA & Failover Viz Panel (expandable) -->
+      <div class="ha-panel" id="haPanel">
+        <div class="ha-diagram" id="haDiagram"></div>
+        <div class="ha-bar danger" id="haBar">⚠ Single primary — any failure means total outage, no automatic recovery</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom: Left Log | Health Metrics | Right Log -->
+  <div class="opg-bottom">
+    <div class="opg-log">
+      <div class="opg-log-title"><span>📋</span> Outer Defense Log</div>
+      <div id="opgLogLeft"></div>
+    </div>
+
+    <div class="opg-health">
+      <div class="opg-metric" id="metricConn">
+        <div class="opg-metric-hdr">
+          <span class="opg-metric-name">Connections</span>
+          <span class="opg-metric-val" id="valConn">Maxed</span>
+        </div>
+        <div class="opg-metric-bar"><div class="opg-metric-fill" id="fillConn"></div></div>
+        <div class="opg-metric-sub">active connections</div>
+      </div>
+      <div class="opg-metric" id="metricCpu">
+        <div class="opg-metric-hdr">
+          <span class="opg-metric-name">CPU</span>
+          <span class="opg-metric-val" id="valCpu">Saturated</span>
+        </div>
+        <div class="opg-metric-bar"><div class="opg-metric-fill" id="fillCpu"></div></div>
+        <div class="opg-metric-sub">processor load</div>
+      </div>
+      <div class="opg-metric" id="metricLat">
+        <div class="opg-metric-hdr">
+          <span class="opg-metric-name">Latency</span>
+          <span class="opg-metric-val" id="valLat">Severe</span>
+        </div>
+        <div class="opg-metric-bar"><div class="opg-metric-fill" id="fillLat"></div></div>
+        <div class="opg-metric-sub">response time</div>
+      </div>
+      <div class="opg-metric" id="metricAvail">
+        <div class="opg-metric-hdr">
+          <span class="opg-metric-name">Availability</span>
+          <span class="opg-metric-val" id="valAvail">Failing</span>
+        </div>
+        <div class="opg-metric-bar"><div class="opg-metric-fill" id="fillAvail"></div></div>
+        <div class="opg-metric-sub">uptime</div>
+      </div>
+    </div>
+
+    <div class="opg-log">
+      <div class="opg-log-title"><span>📋</span> Core Operations Log</div>
+      <div id="opgLogRight"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Notes Section (visible only with ?notes=true) ── -->
+<section class="notes-section" id="notesSection">
+  <h2>Deep-Dive Notes</h2>
+
+  <h3>WAL Replication — Why It Chokes the Primary</h3>
+
+  <h4>Physical vs. Logical: Why WAL Is Bigger Than Oplog</h4>
+  <p>WAL records <strong>how the disk changed</strong>. Oplog records <strong>what the user did</strong>. That difference is massive at scale.</p>
+
+  <h4>PostgreSQL WAL — Physical Replication</h4>
+  <p>WAL operates at the <strong>storage page level</strong>. PostgreSQL stores data in 8KB pages. When you do:</p>
+  <div class="code-block"><b>UPDATE</b> users <b>SET</b> name = 'Alice' <b>WHERE</b> id = 42;</div>
+  <p>WAL doesn't log "set name to Alice for id 42". It logs:</p>
+  <p>• The <strong>full 8KB data page</strong> image (or a diff of it) for the heap tuple<br>
+     • Page changes for <strong>every index</strong> on that table (B-tree leaf page modifications) — 5 indexes means 5 more page-level changes<br>
+     • TOAST table changes if the row has large values<br>
+     • Visibility map updates (for MVCC)<br>
+     • Free space map updates</p>
+  <p>A single logical row change can produce <strong>tens of kilobytes</strong> of WAL because it's recording the physical byte changes across multiple pages.</p>
+
+  <div class="callout"><strong>Why full page images?</strong> After a crash, PostgreSQL needs to recover to a consistent state at the page level. It can't just "replay the UPDATE" because it doesn't know if the page was half-written to disk (torn page). So on the first modification of each page after a checkpoint, WAL writes the <strong>entire 8KB page</strong> (Full Page Write / FPW). Safe, but extremely verbose.</div>
+
+  <h4>MongoDB Oplog — Logical Replication</h4>
+  <p>The oplog records the <strong>logical operation</strong>:</p>
+  <div class="code-block">{
+  "op": "u",
+  "ns": "mydb.users",
+  "o2": { "_id": ObjectId("...") },
+  "o":  { "$set": { "name": "Alice" } }
+}</div>
+  <p>That's it. ~150 bytes. It doesn't care about which pages were touched on disk, index updates (the secondary applies the operation and its own storage engine handles indexes locally), internal storage engine page splits, or how WiredTiger organized data physically.</p>
+
+  <h4>Size Comparison</h4>
+  <table class="compare-table">
+    <thead><tr><th>Factor</th><th>PostgreSQL WAL</th><th>MongoDB Oplog</th></tr></thead>
+    <tbody>
+      <tr><td>Single row UPDATE</td><td>8KB+ (full page image + indexes)</td><td>~100–200 bytes</td></tr>
+      <tr><td>What's logged</td><td>Physical page diffs</td><td>Logical operation</td></tr>
+      <tr><td>Index changes</td><td>Included in WAL</td><td>Not in oplog (secondary rebuilds locally)</td></tr>
+      <tr><td>Full page writes</td><td>Yes, after each checkpoint</td><td>No concept of this</td></tr>
+      <tr><td>Bulk INSERT 1000 rows</td><td>Every page touched × page size</td><td>1000 small insert ops</td></tr>
+    </tbody>
+  </table>
+  <p>At OpenAI's scale with heavy writes, WAL volume can easily be <strong>10–50× larger</strong> than an equivalent oplog for the same logical changes.</p>
+
+  <h4>Fan-Out: Why 50 Replicas Kills the Primary</h4>
+  <p><strong>PostgreSQL:</strong> Primary serializes and ships the bloated WAL stream 50 times. If WAL generation is 200MB/s, that's <strong>~10GB/s outbound</strong> from the primary. Each <code>wal_sender</code> process copies and pushes full page images.</p>
+  <p><strong>MongoDB:</strong> Primary's oplog is ~10–20MB/s for the same workload. Secondaries <strong>pull from each other</strong> (chained replication) — the primary might only directly feed 2–3 secondaries, and they feed the rest. Primary outbound: ~30–60MB/s total.</p>
+
+  <h4>CPU Cost of WAL Senders</h4>
+  <p>Each <code>wal_sender</code> process on the primary:</p>
+  <p>• Copies WAL data from shared buffers or disk<br>
+     • Handles the replication protocol (keepalives, feedback, flow control)<br>
+     • For synchronous replication (to the standby), blocks the committing transaction until the standby acknowledges</p>
+  <p>At 50 replicas, that's <strong>50 OS processes</strong> competing for CPU time on the same machine that's already handling all write workload.</p>
+
+  <h4>Why Not Logical Replication for Standbys?</h4>
+  <p>PostgreSQL does have logical replication (since PG 10), but it <strong>can't replicate DDL</strong> (CREATE TABLE, ALTER TABLE), can't replicate sequences or large objects, has higher apply latency (re-executes through the full query engine), and <strong>doesn't support failover</strong> — you can't promote a logical replica to primary seamlessly.</p>
+  <p>Physical WAL replication guarantees a <strong>byte-identical copy</strong> of the primary, which is what you need for reliable failover. That exactness comes at the cost of verbosity.</p>
+
+  <div class="callout"><strong>The fundamental tension:</strong> The very mechanism that makes failover reliable (physical WAL) is the one that chokes the primary when you have 50 replicas hanging off it. This is why OpenAI flagged WAL as a scaling concern.</div>
+
+  <h4>Each Replica = A wal_sender Process on the Primary</h4>
+  <p>Each replica streaming from the primary consumes a <code>wal_sender</code> process — a full forked PostgreSQL backend. These are controlled by <code>max_wal_senders</code> (separate from <code>max_connections</code>), so they don't block user connection slots. But each one still consumes:</p>
+  <p>• Its own <strong>memory allocation</strong> (work_mem, process-level buffers)<br>
+     • <strong>CPU time</strong> for reading WAL segments and streaming them over the network<br>
+     • A <strong>file descriptor</strong> for the replication TCP socket<br>
+     • <strong>Shared buffer access</strong> for reading WAL pages from <code>pg_wal</code></p>
+  <p>With 50 replicas directly connected, that's <strong>50 wal_sender processes</strong> competing with your actual query workload for CPU, memory, and I/O on the same primary machine.</p>
+
+  <h4>max_wal_senders — The Connection Ceiling</h4>
+  <p>The <code>max_wal_senders</code> GUC controls how many concurrent WAL sender processes can run. It defaults to <strong>10</strong> (since PG 10). With 50 replicas, OpenAI would need it set to at least 50 — likely something like <code>max_wal_senders = 60</code> to leave headroom for <code>pg_basebackup</code>, backup tools (Barman), and monitoring tools that read WAL.</p>
+  <p>Each slot <strong>pre-allocates shared memory at startup</strong>, so even unused slots have a (small) cost. At their scale the memory overhead is negligible — the real cost is the 50 active processes consuming CPU and network.</p>
+  <p>It's also possible not all 50 replicas connect directly to the primary. Some may already cascade through the hot standby manually, even if the full automated orchestration layer is listed as future work. Nothing in PostgreSQL prevents pointing a replica's <code>primary_conninfo</code> at another standby today — the gap is the automation to manage topology changes, re-pointing, and monitoring at scale.</p>
+
+  <h4>Cascading Replication — The Solution PostgreSQL Has (but OpenAI Hasn't Deployed Yet)</h4>
+  <p>PostgreSQL has supported <strong>cascading replication since PG 9.2</strong>. Instead of every replica connecting directly to the primary, you can chain them:</p>
+  <div class="code-block">                        ┌─ Replica 3
+         ┌─ Standby A ─┼─ Replica 4
+         │              └─ Replica 5
+Primary ─┤
+         │              ┌─ Replica 6
+         └─ Standby B ─┼─ Replica 7
+                        └─ Replica 8</div>
+  <p>The primary only feeds 2–3 intermediate standbys, and those standbys feed the rest. This dramatically reduces the primary's fan-out:</p>
+  <table class="compare-table">
+    <thead><tr><th>Topology</th><th>Primary wal_senders</th><th>Primary outbound (at 200MB/s WAL)</th></tr></thead>
+    <tbody>
+      <tr><td>Direct (current)</td><td>50</td><td>~10 GB/s</td></tr>
+      <tr><td>Cascading via 3 standbys</td><td>3</td><td>~600 MB/s</td></tr>
+      <tr><td>Cascading via 5 standbys</td><td>5</td><td>~1 GB/s</td></tr>
+    </tbody>
+  </table>
+
+  <h4>Why Hasn't OpenAI Deployed Cascading Replication?</h4>
+  <p>Cascading replication adds complexity:</p>
+  <p>• <strong>Replication lag compounds</strong> — each hop adds latency. A replica 2 hops away sees changes later than a direct replica.<br>
+     • <strong>Failover of intermediate standbys</strong> — if Standby A dies, all its downstream replicas lose their WAL source. You need automation to re-point them.<br>
+     • <strong>Monitoring complexity</strong> — you now have a tree topology to track instead of a simple star.<br>
+     • <strong>No built-in orchestration</strong> — PostgreSQL provides the mechanism (<code>primary_conninfo</code> pointing to another standby), but not the management layer to handle topology changes automatically.</p>
+  <p>OpenAI has flagged this as <strong>future development</strong>. The tooling to manage cascading topology at their scale (automatic re-pointing, lag monitoring per hop, intermediate standby failover) doesn't exist off-the-shelf and needs to be built.</p>
+
+  <div class="callout"><strong>Contrast with MongoDB:</strong> MongoDB's replica sets do chained replication <strong>by default</strong> — secondaries automatically choose the nearest sync source (often another secondary) via the <code>chainingAllowed</code> setting (true by default). The topology is self-managing: if a secondary's sync source goes down, it automatically picks a new one. No manual re-pointing, no custom orchestration needed.</div>
+
+  <h3>DDL & Schema Changes — Does PostgreSQL Support Live DDL?</h3>
+
+  <h4>What PostgreSQL Does Well (metadata-only, near-instant)</h4>
+  <p>• <code>ADD COLUMN</code> with no default or with a constant default — since <strong>PG 11</strong>, this is metadata-only, no rewrite. The <code>ACCESS EXCLUSIVE</code> lock is held for milliseconds.<br>
+     • <code>DROP COLUMN</code> — metadata-only (marks it as invisible, doesn't physically remove data).<br>
+     • <code>RENAME COLUMN</code> / <code>RENAME TABLE</code> — instant.</p>
+
+  <h4>What Still Requires a Full Table Rewrite</h4>
+  <p>• <code>ALTER COLUMN TYPE</code> (e.g., changing <code>varchar(50)</code> to <code>text</code>, or <code>int</code> to <code>bigint</code>) — rewrites every single row.<br>
+     • <code>ALTER COLUMN SET NOT NULL</code> — requires a full table scan to validate (PG 12+ can skip this if a matching <code>CHECK</code> constraint exists).<br>
+     • Adding a column with a <strong>volatile</strong> default (e.g., <code>DEFAULT now()</code>) — rewrite.<br>
+     • <code>CLUSTER</code> / <code>VACUUM FULL</code> — full rewrite.</p>
+
+  <h4>The Real Killer: Lock Queuing</h4>
+  <p>Even for "fast" DDL, PostgreSQL acquires an <code>ACCESS EXCLUSIVE</code> lock. If there's a long-running transaction (say a 30-minute analytics query), the DDL <strong>waits</strong> for it. And while it waits, <strong>every new query queues behind the DDL</strong>. This cascading queue is what causes outages at OpenAI's scale — not necessarily the rewrite itself, but the lock contention.</p>
+  <p>That's why OpenAI added a <strong>5-second <code>lock_timeout</code></strong> — if the lock can't be acquired in 5s, the DDL fails rather than causing a traffic jam.</p>
+
+  <div class="callout"><strong>Contrast with MongoDB:</strong> MongoDB's schema is flexible by design (schemaless documents), so there's no concept of <code>ALTER TABLE</code>. Adding a new field is just writing a document with the new field. Schema validation changes are metadata operations. This is one of the genuine differentiators at scale.</div>
+
+  <h4>Tools the Community Built to Work Around It</h4>
+  <p><strong>pg_repack</strong>, <strong>pgroll</strong>, <strong>pg_osc</strong> — these all do "shadow table" approaches (create a new table, copy data with triggers, swap) to avoid holding the lock during the rewrite. The fact that these tools need to exist tells the story.</p>
+
+  <h3>Connections — Why PostgreSQL Chokes at Scale</h3>
+
+  <h4>The Process-Per-Connection Architecture</h4>
+  <p>PostgreSQL uses a <strong>process-per-connection</strong> model inherited from its 1990s Postgres95 roots. Every client connection forks a dedicated OS process — the <code>postgres</code> backend. Each backend gets:</p>
+  <p>• Its own <strong>process memory</strong> — <code>work_mem</code> (default 4MB, but can be much more per sort/hash), maintenance memory, temp buffers<br>
+     • A <strong>private copy of the catalog cache</strong> — parsed table schemas, type info, function bodies<br>
+     • A <strong>PGPROC slot</strong> in shared memory — tracked in the ProcArray for MVCC visibility checks<br>
+     • An <strong>OS-level process</strong> — context switching, TLB flushes, scheduling overhead</p>
+  <p>At 100 connections, this is fine. At 5,000 connections (OpenAI's scale), you have <strong>5,000 OS processes</strong>, each consuming 5–50MB of private memory, and the OS scheduler falls apart trying to context-switch between them.</p>
+
+  <h4>Why High Connection Counts Kill Performance</h4>
+  <p><strong>1. Lock contention on ProcArray:</strong> Every transaction start/end must scan the ProcArray (list of all active backends) for MVCC snapshot generation. At 5,000 connections, this scan becomes a serialization bottleneck — each <code>GetSnapshotData()</code> call iterates all 5,000 slots while holding a shared lock.</p>
+  <p><strong>2. Context switching overhead:</strong> The Linux kernel wasn't designed to efficiently schedule 5,000+ CPU-bound processes. At this scale, the scheduler itself burns significant CPU just deciding who runs next. Cache lines (L1/L2/L3) get thrashed on every context switch.</p>
+  <p><strong>3. Memory bloat:</strong> 5,000 backends × 10MB each = <strong>50GB</strong> just for backend private memory, before you even count shared_buffers. With <code>work_mem = 64MB</code> (common for analytics), a single complex query per connection could need <strong>320GB</strong>.</p>
+  <p><strong>4. Shared buffer contention:</strong> All backends access the same shared buffer pool. Each buffer page has a lightweight lock. At 5,000 backends, hot pages (like a frequently-read index root) become severe lock contention points.</p>
+
+  <p><strong>5. File descriptor explosion:</strong> Each backend opens its own file handles — PostgreSQL doesn't share FDs across processes. A query touching a table with 5 indexes across 3 partitions needs <strong>18+ file descriptors</strong> in that single backend. PostgreSQL caches these per-backend (controlled by <code>max_files_per_process</code>, default 1000) to avoid constant <code>open()</code>/<code>close()</code> syscalls.</p>
+  <p>At 5,000 backends caching ~200 FDs each, that's <strong>~1,000,000 open file descriptors</strong> system-wide. This requires:</p>
+  <p>• <code>ulimit -n</code> raised to 10,000+ per process (Linux default is 1024)<br>
+     • Kernel <code>fs.file-max</code> raised to millions<br>
+     • <code>fs.nr_open</code> raised from its default</p>
+  <p>Every open FD consumes a kernel <code>struct file</code> (~256 bytes) plus inode/dentry cache entries. At a million FDs, the kernel's VFS layer itself becomes a contention point — file descriptor table lookups, inode cache pressure, and dentry slab allocation all degrade.</p>
+
+  <div class="callout"><strong>Contrast with MongoDB:</strong> Since all connections share a single <code>mongod</code> process, file descriptors are shared too. WiredTiger opens each data file <strong>once</strong> and all threads access it via <code>pread()</code>/<code>pwrite()</code> (thread-safe with explicit offsets). A MongoDB instance with 5,000 connections and the same schema holds <strong>a few hundred</strong> FDs total — not a million.</div>
+
+  <h4>Why PgBouncer Exists</h4>
+  <p>PgBouncer is a lightweight connection <strong>multiplexer</strong> that sits between your application and PostgreSQL. 5,000 app connections hit PgBouncer, which maintains only ~100–200 actual backend connections to PostgreSQL.</p>
+  <div class="code-block">5,000 app connections
+        │
+   <b>[PgBouncer]</b> ─── transaction-level pooling
+        │
+   ~150 PostgreSQL backends</div>
+  <p>It works because most connections are <strong>idle most of the time</strong> — waiting for the app to build the next query. PgBouncer only assigns a real backend for the duration of a transaction, then returns it to the pool.</p>
+  <p>OpenAI runs <strong>1 PgBouncer container per replica in Kubernetes</strong> — each pod gets its own pooler as a sidecar, eliminating the pooler itself as a single point of failure.</p>
+
+  <div class="callout"><strong>The irony:</strong> PgBouncer can't handle prepared statements in transaction mode (the most efficient pooling mode), because prepared statements are tied to a specific backend's session. This forces apps to either avoid prepared statements or use session-level pooling (which defeats the purpose). PgBouncer 1.21+ added <code>prepared_statement_cache</code> to work around this, but it's still a leaky abstraction.</div>
+
+  <h4>Contrast with MongoDB</h4>
+  <p>MongoDB uses a <strong>thread-per-connection</strong> model with a shared-process architecture. All connections live inside the <code>mongod</code> process as lightweight threads sharing the same address space.</p>
+  <table class="compare-table">
+    <thead><tr><th>Factor</th><th>PostgreSQL</th><th>MongoDB</th></tr></thead>
+    <tbody>
+      <tr><td>Model</td><td>Process-per-connection (forked OS process)</td><td>Thread-per-connection (within single process)</td></tr>
+      <tr><td>Memory per connection</td><td>5–50MB (private process memory)</td><td>~1MB (thread stack)</td></tr>
+      <tr><td>5,000 connections memory</td><td>25–250 GB</td><td>~5 GB</td></tr>
+      <tr><td>Context switching</td><td>OS process switches (expensive — TLB flush)</td><td>Thread switches (cheap — shared address space)</td></tr>
+      <tr><td>Connection pooler needed?</td><td>Yes, always at scale (PgBouncer, pgcat)</td><td>No — built-in thread pool handles it</td></tr>
+      <tr><td>Max practical connections</td><td>~300–500 without pooler, ~5,000 with</td><td>~50,000+ (limited by <code>maxIncomingConnections</code>)</td></tr>
+      <tr><td>MVCC snapshot cost</td><td>O(n) scan of all backends</td><td>Timestamp-based (O(1) per transaction)</td></tr>
+    </tbody>
+  </table>
+  <p>MongoDB 4.4+ also added a <strong>service executor thread pool</strong> — instead of 1:1 thread-per-connection, incoming connections are serviced by a fixed pool of worker threads, further reducing overhead at high connection counts.</p>
+
+  <div class="callout"><strong>The bottom line:</strong> PostgreSQL needs an external component (PgBouncer) to handle what MongoDB does natively. At OpenAI's scale, they run PgBouncer as a sidecar in every pod — that's hundreds of extra containers just to work around a 30-year-old architectural decision. The connection overhead alone consumed engineering months that could have been spent on product.</div>
+
+  <h3>Rate Limiting — Four Layers of Defense</h3>
+  <p>OpenAI implements rate limiting at <strong>four distinct layers</strong>, each catching what the others miss. This is defense in depth — the same principle as the entire solar system architecture.</p>
+
+  <h4>Layer 1: App-Level Rate Limiting</h4>
+  <p>The application itself enforces per-service quotas. Each internal service (ChatGPT, API platform, batch jobs) gets a budget — e.g., "this service can send max 5K QPS to the database." If a service goes rogue (bugs, infinite retry loops, misconfigured batch jobs), it gets rejected with <strong>HTTP 429</strong> before the request ever leaves the app layer. This is the first and cheapest line of defense.</p>
+
+  <h4>Layer 2: Pooler-Level Limiting (PgBouncer)</h4>
+  <p>PgBouncer enforces <code>max_client_conn</code> and <code>max_db_connections</code>. Even if a service bypasses app-level limits, PgBouncer will queue or reject connections that exceed the pool size. This catches <strong>connection storms</strong> — if a deployment spins up 500 new pods simultaneously, each trying to open connections, PgBouncer absorbs the burst instead of letting all 500 fork PostgreSQL backends.</p>
+
+  <h4>Layer 3: Proxy-Level Limiting</h4>
+  <p>A reverse proxy sitting in front of the database cluster enforces <strong>global QPS caps</strong>. This is the aggregate view — regardless of which service is sending traffic, the proxy ensures total throughput to PostgreSQL doesn't exceed what the cluster can handle. It's the "no matter what, the DB will never see more than X QPS" guarantee.</p>
+
+  <h4>Layer 4: Per-Query-Digest Caps</h4>
+  <p>The most granular layer. Queries are hashed by their pattern (the "digest" — <code>SELECT * FROM users WHERE id = ?</code> regardless of the actual <code>id</code> value), and each pattern gets its own rate limit. This catches the scenario where a single expensive query pattern (like a 12-table ORM join) starts dominating — even if total QPS is under the global cap, that one pattern can be throttled independently without affecting other queries.</p>
+
+  <h4>Why Four Layers Instead of One?</h4>
+  <p>Each layer catches what the others miss:</p>
+  <p>• <strong>App limits</strong> miss rogue services that don't implement the SDK properly<br>
+     • <strong>Pooler limits</strong> miss non-connection-based overload (e.g., one connection sending 10K queries/sec)<br>
+     • <strong>Proxy limits</strong> are too blunt to differentiate between cheap and expensive queries<br>
+     • <strong>Query digest limits</strong> alone can't stop a connection storm</p>
+
+  <div class="callout"><strong>The retry storm problem:</strong> Without rate limits, a timeout cascade is inevitable. Service A times out → retries → doubles load → Service B starts timing out → retries → quadruples load. This exponential amplification is why a single runaway service at 50K QPS can take down a cluster that normally handles 200K QPS comfortably. The four layers ensure the blast radius is contained at the outermost possible point.</div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var LAYERS={
+    rateLimit:{on:false,deltas:{connections:-1800,cpu:-8},
+      offMsg:{i:'\u{1F30A}',t:'Retry storm amplifying load \u2014 runaway service at 50K QPS'},
+      onMsg:{i:'\u2705',t:'Multi-layer rate limits \u2014 app, pooler, proxy, per-query-digest caps'}},
+    caching:{on:false,deltas:{cpu:-15,latency:-2800},
+      offMsg:{i:'\u{1F525}',t:'Thundering herd on cache miss \u2014 every replica hit on identical queries'},
+      onMsg:{i:'\u2705',t:'Cache + single-reader lock deployed \u2014 herd eliminated'}},
+    queryOpt:{on:false,deltas:{cpu:-14,latency:-1800},
+      offMsg:{i:'\u{1F480}',t:'12-table ORM join saturating CPU \u2014 SEV-1 triggered'},
+      onMsg:{i:'\u2705',t:'Query review gate \u2014 expensive joins blocked, idle timeouts enforced'}},
+    workloadIso:{on:false,deltas:{cpu:-12,availability:1.5},
+      offMsg:{i:'\u26A0\uFE0F',t:'Batch jobs starving real-time ChatGPT traffic on shared replicas'},
+      onMsg:{i:'\u2705',t:'Workloads split \u2014 high-priority on dedicated instances'}},
+    connPool:{on:false,deltas:{connections:-2400,latency:-1600},
+      offMsg:{i:'\u26A1',t:'Connection storm \u2014 5,000/5,000 slots exhausted, requests queuing'},
+      onMsg:{i:'\u2705',t:'PgBouncer pods in K8s \u2014 1 container per replica, 50ms \u2192 5ms'}},
+    writeOffload:{on:false,deltas:{cpu:-10,availability:1.5},
+      offMsg:{i:'\u{1F4DD}',t:'All writes to PG primary \u2014 MVCC bloat, checkpoint storms, new tables piling up'},
+      onMsg:{i:'\u2705',t:'Lazy writes to CosmosDB \u2014 new table creation in PG blocked'}},
+    schemaMgmt:{on:false,deltas:{cpu:-7,availability:0.8},
+      offMsg:{i:'\u{1F512}',t:'ALTER TABLE holding AccessExclusive lock \u2014 all queries piling up'},
+      onMsg:{i:'\u2705',t:'DDL timeout 5s, lightweight-only changes, rate-limited backfills'}},
+    haFailover:{on:false,deltas:{availability:0.999,latency:-1750},
+      offMsg:{i:'\u{1F494}',t:'Primary failure = total outage \u2014 no automatic failover configured'},
+      onMsg:{i:'\u2705',t:'Hot standby promotes in seconds \u2014 streaming replication, 3 regions'}}
+  };
+
+  var BASE={connections:5000,cpu:98,latency:8000,availability:95.2};
+  var ORDER=['rateLimit','caching','connPool','queryOpt','workloadIso','writeOffload','schemaMgmt','haFailover'];
+  var displayed={connections:5000,cpu:98,latency:8000,availability:95.2};
+  var animId=null;
+  var MID={connections:'Conn',cpu:'Cpu',latency:'Lat',availability:'Avail'};
+
+  var RINGS=[
+    {key:'haFailover', r:95,   angle:60,  abbr:'HA & Failover', type:'avail',
+     tip:'Core resilience \u2014 hot standby + streaming replication across 3 regions. WAL shipping adds primary CPU & network cost'},
+    {key:'schemaMgmt', r:142,  angle:130, abbr:'Schema Change Mgmt', type:'both',
+     tip:'DDL protection \u2014 5s timeout, lightweight-only, rate-limited backfills'},
+    {key:'writeOffload',r:189, angle:0,   abbr:'Write \u2197',  type:'both',
+     tip:'Lazy writes to CosmosDB \u2014 new PG table creation blocked'},
+    {key:'workloadIso', r:236, angle:180, abbr:'Workload Iso',  type:'both',
+     tip:'Hi-pri ChatGPT traffic isolated from batch jobs on separate instances'},
+    {key:'queryOpt',    r:282, angle:135, abbr:'Query Opt',     type:'perf',
+     tip:'Killed 12-table ORM join \u2014 query review gate, idle timeouts'},
+    {key:'connPool',    r:329, angle:270, abbr:'PgBouncer',     type:'perf',
+     tip:'1 Docker container per replica in K8s \u2014 connection time 50ms \u2192 5ms'},
+    {key:'caching',     r:376, angle:225, abbr:'Cache + Lock',  type:'perf',
+     tip:'Single-reader cache lock \u2014 prevents thundering herd on miss'},
+    {key:'rateLimit',   r:422, angle:315, abbr:'Rate Limit',    type:'perf',
+     tip:'Multi-layer: app, pooler, proxy, per-query-digest caps'}
+  ];
+
+  var PGB_ANGLES=[0,60,120,180,240,300];
+
+  function solXY(r,deg){
+    var rad=deg*Math.PI/180;
+    return{x:450+r*Math.sin(rad),y:450-r*Math.cos(rad)};
+  }
+
+  function calc(){
+    var m={connections:BASE.connections,cpu:BASE.cpu,latency:BASE.latency,availability:BASE.availability};
+    ORDER.forEach(function(k){if(LAYERS[k].on){var d=LAYERS[k].deltas;for(var p in d)m[p]+=d[p];}});
+    return m;
+  }
+  function clr(metric,v){
+    if(metric==='connections')return v>4000?'#f87171':v>2500?'#fbbf24':'#00ed64';
+    if(metric==='cpu')return v>75?'#f87171':v>50?'#fbbf24':'#00ed64';
+    if(metric==='latency')return v>1000?'#f87171':v>100?'#fbbf24':'#00ed64';
+    return v>=99.9?'#00ed64':v>=99?'#fbbf24':'#f87171';
+  }
+  function fmt(metric,v){
+    if(metric==='connections')return v>4000?'Maxed':v>2500?'High':'Healthy';
+    if(metric==='cpu')return v>75?'Saturated':v>50?'Elevated':'Normal';
+    if(metric==='latency')return v>1000?'Severe':v>100?'Degraded':'Fast';
+    return v>=99.9?'Optimal':v>=99?'Acceptable':'Failing';
+  }
+  function barW(metric,v){
+    if(metric==='connections')return(v/5000)*100;
+    if(metric==='cpu')return v;
+    if(metric==='latency')return Math.min(v/8000,1)*100;
+    return Math.max((v-90)/10,0)*100;
+  }
+
+  function buildSolar(){
+    var sol=document.getElementById('solarDiagram');
+    if(!sol)return;
+
+    RINGS.forEach(function(ring){
+      var el=document.createElement('div');
+      el.className='sol-ring off';
+      el.dataset.layer=ring.key;
+      el.dataset.type=ring.type;
+      el.style.width=(ring.r*2)+'px';
+      el.style.height=(ring.r*2)+'px';
+      sol.appendChild(el);
+
+      var pos=solXY(ring.r,ring.angle);
+      var lbl=document.createElement('div');
+      lbl.className='sol-label off';
+      lbl.dataset.layer=ring.key;
+      lbl.dataset.type=ring.type;
+      lbl.textContent=ring.abbr;
+      lbl.style.left=pos.x+'px';
+      lbl.style.top=pos.y+'px';
+      lbl.onclick=function(){opgToggle(ring.key);};
+
+      var tipText=ring.tip;
+      lbl.onmouseenter=function(){
+        var info=document.getElementById('solInfo');
+        var on=LAYERS[ring.key].on;
+        var msg=on?LAYERS[ring.key].onMsg:LAYERS[ring.key].offMsg;
+        info.textContent=msg.i+' '+ring.abbr+': '+tipText;
+        info.className='sol-info '+(on?'tip-on':'tip-off');
+      };
+      lbl.onmouseleave=function(){
+        var info=document.getElementById('solInfo');
+        info.textContent='Hover a ring to see its role';
+        info.className='sol-info';
+      };
+      sol.appendChild(lbl);
+    });
+
+    PGB_ANGLES.forEach(function(a,i){
+      var pos=solXY(329,a);
+      var pod=document.createElement('div');
+      pod.className='pgb-pod';
+      pod.dataset.baseAngle=a;
+      pod.dataset.idx=i;
+      pod.innerHTML='<span class="pgb-icon">\u{1F433}</span><span class="pgb-label">PgB</span>';
+      pod.style.left=pos.x+'px';
+      pod.style.top=pos.y+'px';
+      sol.appendChild(pod);
+    });
+
+
+    for(var i=0;i<20;i++){
+      var track=document.createElement('div');
+      track.className='sol-track';
+      track.style.transform='rotate('+(i*18)+'deg)';
+      var dot=document.createElement('div');
+      dot.className='sol-dot';
+      dot.style.animationDelay=(i*0.2)+'s';
+      track.appendChild(dot);
+      sol.appendChild(track);
+    }
+  }
+
+  var pgbOrbitId=null;
+  var pgbOrbitAngle=0;
+  function startPgbOrbit(){
+    if(pgbOrbitId)return;
+    function tick(){
+      pgbOrbitAngle+=0.3;
+      document.querySelectorAll('.pgb-pod').forEach(function(p){
+        var base=parseFloat(p.dataset.baseAngle);
+        var a=base+pgbOrbitAngle;
+        var pos=solXY(329,a);
+        p.style.left=pos.x+'px';
+        p.style.top=pos.y+'px';
+      });
+      pgbOrbitId=requestAnimationFrame(tick);
+    }
+    pgbOrbitId=requestAnimationFrame(tick);
+  }
+  function stopPgbOrbit(){
+    if(pgbOrbitId){cancelAnimationFrame(pgbOrbitId);pgbOrbitId=null;}
+    document.querySelectorAll('.pgb-pod').forEach(function(p){
+      var base=parseFloat(p.dataset.baseAngle);
+      var pos=solXY(329,base);
+      p.style.left=pos.x+'px';
+      p.style.top=pos.y+'px';
+    });
+  }
+
+  function updateUI(){
+    var target=calc();
+    var active=ORDER.filter(function(k){return LAYERS[k].on;}).length;
+
+    var cEl=document.getElementById('opgCount');
+    if(cEl){cEl.textContent=active;cEl.className='opg-counter-num'+(active>=5?' ok':'');}
+
+    ORDER.forEach(function(k){
+      var on=LAYERS[k].on;
+      var tEl=document.querySelector('.opg-layer[data-layer="'+k+'"]');
+      if(tEl)tEl.classList.toggle('on',on);
+      var rEl=document.querySelector('.sol-ring[data-layer="'+k+'"]');
+      if(rEl){rEl.classList.toggle('on',on);rEl.classList.toggle('off',!on);}
+      var lEl=document.querySelector('.sol-label[data-layer="'+k+'"]');
+      if(lEl){lEl.classList.toggle('on',on);lEl.classList.toggle('off',!on);}
+    });
+
+    var sol=document.getElementById('solarDiagram');
+    var core=document.getElementById('solarCore');
+    if(sol){sol.classList.remove('stressed','mixed','healthy');
+      if(active>=6){sol.classList.add('healthy');}
+      else if(active>=3){sol.classList.add('mixed');}
+      else{sol.classList.add('stressed');}}
+    if(core){core.classList.remove('stressed','healthy');
+      if(active<=2)core.classList.add('stressed');
+      else if(active>=6)core.classList.add('healthy');}
+
+    var cosmosSat=document.getElementById('cosmosSat');
+    var cosmosLine=document.getElementById('cosmosLine');
+    if(cosmosSat)cosmosSat.classList.toggle('visible',LAYERS.writeOffload.on);
+    if(cosmosLine)cosmosLine.classList.toggle('visible',LAYERS.writeOffload.on);
+
+    document.querySelectorAll('.pgb-pod').forEach(function(p){
+      p.classList.toggle('visible',LAYERS.connPool.on);
+    });
+    if(LAYERS.connPool.on)startPgbOrbit();else stopPgbOrbit();
+
+    if(core){
+      core.classList.toggle('ha-on',LAYERS.haFailover.on);
+    }
+
+    var status=document.getElementById('solStatus');
+    if(status){
+      status.classList.remove('stressed','mixed','healthy');
+      if(active<8){
+        status.className='sol-status stressed';
+        status.textContent='PostgreSQL exposed \u2014 '+active+'/8 layers active, database remains the operational bottleneck';
+      }else{
+        status.className='sol-status healthy';
+        status.textContent='Fully shielded \u2014 database is no longer the operational bottleneck';
+      }
+    }
+
+    animateMetrics(target);
+    updateLog();
+  }
+
+  function animateMetrics(target){
+    if(animId)cancelAnimationFrame(animId);
+    var start={connections:displayed.connections,cpu:displayed.cpu,latency:displayed.latency,availability:displayed.availability};
+    var t0=performance.now(),dur=700;
+    function tick(now){
+      var p=Math.min((now-t0)/dur,1);
+      var ease=1-Math.pow(1-p,3);
+      ['connections','cpu','latency','availability'].forEach(function(m){
+        var v=start[m]+(target[m]-start[m])*ease;
+        displayed[m]=v;
+        var id=MID[m],c=clr(m,v);
+        var valEl=document.getElementById('val'+id);
+        var fillEl=document.getElementById('fill'+id);
+        var metricEl=document.getElementById('metric'+id);
+        if(valEl){valEl.textContent=fmt(m,v);valEl.style.color=c;}
+        if(fillEl){fillEl.style.width=barW(m,v)+'%';fillEl.style.background=c;}
+        if(metricEl)metricEl.style.borderColor=c+'30';
+      });
+      if(p<1)animId=requestAnimationFrame(tick);
+    }
+    animId=requestAnimationFrame(tick);
+  }
+
+  var LEFT_KEYS=['rateLimit','caching','connPool'];
+  var RIGHT_KEYS=['queryOpt','workloadIso','writeOffload','schemaMgmt','haFailover'];
+
+  function renderLog(keys){
+    return keys.map(function(k){
+      var l=LAYERS[k],msg=l.on?l.onMsg:l.offMsg,cls=l.on?'success':'danger';
+      return'<div class="opg-log-entry '+cls+'"><span class="log-icon">'+msg.i+'</span>'+msg.t+'</div>';
+    }).join('');
+  }
+
+  function updateLog(){
+    var left=document.getElementById('opgLogLeft');
+    var right=document.getElementById('opgLogRight');
+    if(left)left.innerHTML=renderLog(LEFT_KEYS);
+    if(right)right.innerHTML=renderLog(RIGHT_KEYS);
+  }
+
+  /* ── Workload Isolation Viz Controller ─────────────── */
+  var wlViz=(function(){
+    var intervals=[];
+    var APPS=[
+      {id:'hi',  label:'ChatGPT Real-time', color:'#60a5fa'},
+      {id:'mid', label:'API Platform',       color:'#fbbf24'},
+      {id:'lo',  label:'Batch Analytics',    color:'#a78bfa'}
+    ];
+    var sharedReplicas=[
+      {name:'Replica 1',load:0},{name:'Replica 2',load:0},{name:'Replica 3',load:0}
+    ];
+    var dedicatedReplicas=[
+      {name:'Hi-Pri Pool',  forPri:'hi',  count:'12 replicas',load:0},
+      {name:'Mid-Pri Pool', forPri:'mid', count:'8 replicas', load:0},
+      {name:'Lo-Pri Pool',  forPri:'lo',  count:'4 replicas', load:0}
+    ];
+
+    function el(id){return document.getElementById(id);}
+
+    function clearTimers(){intervals.forEach(clearInterval);intervals=[];}
+
+    function buildReplicas(mode){
+      var c=el('wlReplicas');if(!c)return;c.innerHTML='';
+      var list=mode==='shared'?sharedReplicas:dedicatedReplicas;
+      list.forEach(function(r,i){
+        var d=document.createElement('div');
+        d.className='wl-replica '+(mode==='shared'?'shared':'dedicated');
+        d.id='wlRep'+i;
+        if(mode==='dedicated')d.dataset.for=r.forPri;
+        d.innerHTML='<div class="wl-rep-name">'+r.name+'</div>'+
+          '<div class="wl-rep-load">'+(mode==='dedicated'?r.count:'—')+'</div>';
+        c.appendChild(d);
+      });
+    }
+
+    function buildSvg(mode){
+      var wrap=el('wlSvg');if(!wrap)return;
+      var W=300,H=340;
+      var appY=[70,170,270];
+      var repCount=3;
+      var repY=mode==='shared'?[100,170,240]:[70,170,270];
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      APPS.forEach(function(a){
+        svg+='<marker id="wl-arrow-'+a.id+'" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">';
+        svg+='<path d="M0,0 L6,3 L0,6" fill="'+a.color+'" opacity=".6"/></marker>';
+      });
+      svg+='</defs>';
+
+      if(mode==='shared'){
+        APPS.forEach(function(app,ai){
+          for(var ri=0;ri<repCount;ri++){
+            var pid='wlP-'+app.id+'-'+ri;
+            var d='M10,'+appY[ai]+' C150,'+appY[ai]+' 150,'+repY[ri]+' '+290+','+repY[ri];
+            svg+='<path id="'+pid+'" d="'+d+'" class="wl-line hot" stroke="'+app.color+'" marker-end="url(#wl-arrow-'+app.id+')"/>';
+            svg+='<circle r="3" fill="'+app.color+'"><animateMotion dur="'+(1.5+ai*0.3)+'s" repeatCount="indefinite">';
+            svg+='<mpath href="#'+pid+'"/></animateMotion>';
+            svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="'+(1.5+ai*0.3)+'s" repeatCount="indefinite"/>';
+            svg+='</circle>';
+          }
+        });
+      } else {
+        APPS.forEach(function(app,ai){
+          var pid='wlP-'+app.id;
+          var d='M10,'+appY[ai]+' C150,'+appY[ai]+' 150,'+repY[ai]+' '+290+','+repY[ai];
+          svg+='<path id="'+pid+'" d="'+d+'" class="wl-line ok" stroke="'+app.color+'" marker-end="url(#wl-arrow-'+app.id+')"/>';
+          svg+='<circle r="3" fill="'+app.color+'"><animateMotion dur="2s" repeatCount="indefinite">';
+          svg+='<mpath href="#'+pid+'"/></animateMotion>';
+          svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="2s" repeatCount="indefinite"/>';
+          svg+='</circle>';
+        });
+      }
+      svg+='</svg>';
+      wrap.innerHTML=svg;
+    }
+
+    function startShared(){
+      clearTimers();
+      buildReplicas('shared');
+      buildSvg('shared');
+      var bar=el('wlBar');
+      if(bar){bar.className='wl-bar danger';bar.textContent='\u26A0 All workloads sharing same replicas \u2014 one bad batch query takes down ChatGPT';}
+
+      var loads=[60,60,60];
+      intervals.push(setInterval(function(){
+        for(var i=0;i<3;i++){
+          loads[i]=Math.min(99,loads[i]+Math.floor(Math.random()*8)-2);
+          var rep=el('wlRep'+i);
+          if(rep){
+            rep.querySelector('.wl-rep-load').textContent='CPU '+loads[i]+'%';
+            rep.classList.toggle('hot',loads[i]>85);
+          }
+        }
+      },800));
+    }
+
+    function startDedicated(){
+      clearTimers();
+      buildReplicas('dedicated');
+      buildSvg('dedicated');
+      var bar=el('wlBar');
+      if(bar){bar.className='wl-bar safe';bar.textContent='\u2705 Workloads isolated \u2014 batch jobs cannot impact real-time ChatGPT traffic';}
+
+      intervals.push(setInterval(function(){
+        var baseCpu=[32,45,72];
+        for(var i=0;i<3;i++){
+          var cpu=baseCpu[i]+Math.floor(Math.random()*6)-3;
+          var rep=el('wlRep'+i);
+          if(rep){
+            var list=dedicatedReplicas[i];
+            rep.querySelector('.wl-rep-load').textContent=list.count+' \u00B7 CPU '+cpu+'%';
+          }
+        }
+      },1000));
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('wlPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startDedicated();else startShared();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
+  /* ── Rate Limiting Viz Controller ────────────────── */
+  var rlViz=(function(){
+    var intervals=[];
+    function el(id){return document.getElementById(id);}
+    function clearTimers(){intervals.forEach(clearInterval);intervals=[];}
+
+    function startNoLimit(){
+      clearTimers();
+      var dia=el('rlDiagram');if(!dia)return;
+      var W=360,H=370;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="rl-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#fbbf24" opacity=".6"/></marker>';
+      svg+='<marker id="rl-arr-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f87171" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" letter-spacing=".5">RETRY STORM \u2014 NO RATE LIMITS</text>';
+
+      var sources=[
+        {label:'Runaway Svc',sub:'50K QPS',y:50,color:'#f87171'},
+        {label:'Normal Svc',sub:'2K QPS',y:105,color:'#60a5fa'},
+        {label:'Batch Job',sub:'5K QPS',y:160,color:'#a78bfa'}
+      ];
+      sources.forEach(function(s){
+        svg+='<rect x="5" y="'+(s.y-16)+'" width="72" height="32" rx="5" fill="rgba(96,165,250,.06)" stroke="'+(s.color==='#f87171'?'rgba(248,113,113,.35)':'rgba(96,165,250,.2)')+'" stroke-width="'+(s.color==='#f87171'?'2':'1')+'"/>';
+        svg+='<text x="41" y="'+(s.y)+'" text-anchor="middle" fill="'+s.color+'" font-size="7" font-weight="700">'+s.label+'</text>';
+        svg+='<text x="41" y="'+(s.y+10)+'" text-anchor="middle" fill="'+s.color+'" font-size="5.5" opacity=".6">'+s.sub+'</text>';
+      });
+
+      svg+='<rect x="260" y="55" width="90" height="80" rx="6" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.3)" stroke-width="1.5"/>';
+      svg+='<text x="305" y="78" text-anchor="middle" fill="#f87171" font-size="8" font-weight="700">PostgreSQL</text>';
+      svg+='<text x="305" y="92" text-anchor="middle" fill="#f87171" font-size="6.5" opacity=".7">57K QPS</text>';
+      svg+='<text x="305" y="106" text-anchor="middle" fill="#f87171" font-size="6" opacity=".5">CPU: 98%</text>';
+      svg+='<text x="305" y="120" text-anchor="middle" fill="#f87171" font-size="5.5" opacity=".4">connections maxed</text>';
+
+      sources.forEach(function(s,i){
+        var count=s.color==='#f87171'?8:3;
+        for(var j=0;j<count;j++){
+          var pid='rlN'+i+'j'+j;
+          var ty=70+j*8;
+          var c=s.color==='#f87171'?'#f87171':'#fbbf24';
+          svg+='<path id="'+pid+'" d="M77,'+s.y+' C150,'+s.y+' 200,'+ty+' 260,'+ty+'" stroke="'+c+'" stroke-width="1" fill="none" opacity=".15"/>';
+          svg+='<circle r="2" fill="'+c+'"><animateMotion dur="'+(0.6+j*0.08)+'s" begin="'+(i*0.1+j*0.06)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+          svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="'+(0.6+j*0.08)+'s" begin="'+(i*0.1+j*0.06)+'s" repeatCount="indefinite"/></circle>';
+        }
+      });
+
+      svg+='<path d="M305,135 C305,165 280,175 250,180 C220,185 200,190 200,200 L200,215 C200,225 180,230 160,230 C130,230 110,235 95,240 L80,245" stroke="#f87171" stroke-width="1.5" fill="none" stroke-dasharray="4,3" opacity=".4" marker-end="url(#rl-arr-r)"/>';
+      svg+='<text x="220" y="200" fill="#f87171" font-size="6" font-weight="600" opacity=".7">\u21BA retry loop</text>';
+
+      svg+='<rect x="15" y="230" width="330" height="28" rx="4" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.25)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="244" text-anchor="middle" fill="#f87171" font-size="6.5" font-weight="600">Timeouts \u2192 clients retry \u2192 load doubles \u2192 more timeouts \u2192 cascading failure</text>';
+      svg+='<text x="180" y="254" text-anchor="middle" fill="var(--tx3)" font-size="5.5">One runaway service at 50K QPS can take down the entire cluster</text>';
+
+      svg+='<text x="180" y="280" text-anchor="middle" fill="var(--tx3)" font-size="6" font-weight="600" opacity=".6">QPS over time</text>';
+      svg+='<rect x="30" y="288" width="300" height="55" rx="4" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>';
+      svg+='<line x1="30" y1="338" x2="330" y2="338" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+      svg+='<line x1="30" y1="288" x2="30" y2="343" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+      svg+='<text x="28" y="295" text-anchor="end" fill="var(--tx3)" font-size="5" opacity=".4">50K</text>';
+      svg+='<text x="28" y="340" text-anchor="end" fill="var(--tx3)" font-size="5" opacity=".4">0</text>';
+      svg+='<path d="M35,335 C80,335 100,330 140,320 C170,312 190,305 220,290 C250,298 270,305 300,295 L325,292" stroke="#f87171" stroke-width="1.5" fill="none" opacity=".6"/>';
+      svg+='<text x="330" y="290" fill="#f87171" font-size="5" opacity=".5">\u2191</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('rlBar');
+      if(bar){bar.className='rl-bar danger';bar.textContent='\u26A0 No rate limits \u2014 retry storms amplify load exponentially, one bad service takes down the cluster';}
+    }
+
+    function startWithLimits(){
+      clearTimers();
+      var dia=el('rlDiagram');if(!dia)return;
+      var W=360,H=370;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="rl-arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#00ed64" opacity=".6"/></marker>';
+      svg+='<marker id="rl-arr-b" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#60a5fa" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" letter-spacing=".5">MULTI-LAYER RATE LIMITING</text>';
+
+      var sources=[
+        {label:'Runaway Svc',sub:'50K \u2192 429',y:50,color:'#f87171',blocked:true},
+        {label:'Normal Svc',sub:'2K QPS',y:110,color:'#60a5fa',blocked:false},
+        {label:'Batch Job',sub:'5K \u2192 1K',y:170,color:'#a78bfa',blocked:false}
+      ];
+      sources.forEach(function(s){
+        var border=s.blocked?'rgba(248,113,113,.3)':'rgba(96,165,250,.2)';
+        svg+='<rect x="5" y="'+(s.y-16)+'" width="72" height="32" rx="5" fill="rgba(96,165,250,.06)" stroke="'+border+'" stroke-width="1"/>';
+        svg+='<text x="41" y="'+s.y+'" text-anchor="middle" fill="'+s.color+'" font-size="7" font-weight="700">'+s.label+'</text>';
+        svg+='<text x="41" y="'+(s.y+10)+'" text-anchor="middle" fill="'+s.color+'" font-size="5.5" opacity=".6">'+s.sub+'</text>';
+      });
+
+      var layers=[
+        {label:'App Limit',x:100,w:52,h:140,y:35},
+        {label:'Pooler',x:162,w:42,h:140,y:35},
+        {label:'Proxy',x:214,w:42,h:140,y:35},
+        {label:'Query Digest',x:266,w:60,h:140,y:35}
+      ];
+      layers.forEach(function(l,i){
+        svg+='<rect x="'+l.x+'" y="'+l.y+'" width="'+l.w+'" height="'+l.h+'" rx="5" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.25)" stroke-width="1.5"/>';
+        svg+='<text x="'+(l.x+l.w/2)+'" y="'+(l.y+l.h+12)+'" text-anchor="middle" fill="#00ed64" font-size="5.5" font-weight="600">'+l.label+'</text>';
+        svg+='<text x="'+(l.x+l.w/2)+'" y="'+(l.y+12)+'" text-anchor="middle" fill="#00ed64" font-size="6" opacity=".5">\u{1F6E1}\uFE0F</text>';
+      });
+
+      svg+='<line x1="'+sources[0].y+'" y1="50" x2="100" y2="50" stroke="#f87171" stroke-width="1.5" opacity=".25" stroke-dasharray="3,3"/>';
+      svg+='<text x="92" y="46" text-anchor="end" fill="#f87171" font-size="6.5" font-weight="700">429</text>';
+      svg+='<line x1="90" y1="44" x2="100" y2="44" stroke="#f87171" stroke-width="2" opacity=".5"/>';
+      svg+='<line x1="90" y1="56" x2="100" y2="56" stroke="#f87171" stroke-width="2" opacity=".5"/>';
+
+      var passY=[110,170];
+      passY.forEach(function(y,i){
+        var pid='rlP'+i;
+        svg+='<path id="'+pid+'" d="M77,'+y+' L100,'+y+' L152,'+y+' L204,'+y+' L256,'+y+' L326,'+y+'" stroke="#60a5fa" stroke-width="1" fill="none" opacity=".2"/>';
+        svg+='<circle r="2.5" fill="#60a5fa"><animateMotion dur="'+(2.5+i*0.3)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.6;.6;0" dur="'+(2.5+i*0.3)+'s" repeatCount="indefinite"/></circle>';
+      });
+
+      svg+='<rect x="100" y="55" width="8" height="4" rx="1" fill="#f87171" opacity=".5"/>';
+      svg+='<rect x="100" y="63" width="8" height="4" rx="1" fill="#f87171" opacity=".4"/>';
+      svg+='<rect x="100" y="71" width="8" height="4" rx="1" fill="#f87171" opacity=".3"/>';
+      svg+='<text x="114" y="68" fill="#f87171" font-size="5" opacity=".5">dropped</text>';
+
+      svg+='<rect x="162" y="155" width="8" height="4" rx="1" fill="#a78bfa" opacity=".4"/>';
+      svg+='<rect x="162" y="163" width="8" height="4" rx="1" fill="#a78bfa" opacity=".3"/>';
+      svg+='<text x="176" y="163" fill="#a78bfa" font-size="5" opacity=".5">throttled</text>';
+
+      svg+='<rect x="330" y="75" width="26" height="100" rx="5" fill="rgba(51,103,145,.08)" stroke="rgba(90,155,197,.25)" stroke-width="1.5"/>';
+      svg+='<text x="343" y="115" text-anchor="middle" fill="#5a9bc5" font-size="5.5" font-weight="700" transform="rotate(-90,343,115)">PostgreSQL</text>';
+      svg+='<text x="343" y="168" text-anchor="middle" fill="#5a9bc5" font-size="5" opacity=".5">3K QPS</text>';
+
+      svg+='<rect x="10" y="205" width="340" height="55" rx="5" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.2)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="220" text-anchor="middle" fill="#00ed64" font-size="7" font-weight="700">4 layers of defense — each catches what the previous missed</text>';
+      svg+='<text x="180" y="234" text-anchor="middle" fill="var(--tx3)" font-size="6">App: per-service caps \u00B7 Pooler: connection limits \u00B7 Proxy: global QPS \u00B7 Query digest: per-pattern</text>';
+      svg+='<text x="180" y="248" text-anchor="middle" fill="var(--tx3)" font-size="5.5" opacity=".6">Runaway service gets HTTP 429 at the app layer \u2014 never reaches the database</text>';
+
+      svg+='<text x="180" y="275" text-anchor="middle" fill="var(--tx3)" font-size="6" font-weight="600" opacity=".6">QPS reaching DB</text>';
+      svg+='<rect x="30" y="283" width="300" height="55" rx="4" fill="rgba(0,0,0,.25)" stroke="rgba(255,255,255,.15)" stroke-width="1"/>';
+      svg+='<line x1="30" y1="333" x2="330" y2="333" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+      svg+='<line x1="30" y1="283" x2="30" y2="338" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+      svg+='<text x="28" y="290" text-anchor="end" fill="var(--tx3)" font-size="5" opacity=".4">5K</text>';
+      svg+='<text x="28" y="335" text-anchor="end" fill="var(--tx3)" font-size="5" opacity=".4">0</text>';
+      svg+='<path d="M35,315 C80,315 120,312 160,310 C200,308 240,310 280,308 L325,307" stroke="#00ed64" stroke-width="1.5" fill="none" opacity=".6"/>';
+      svg+='<line x1="35" y1="298" x2="325" y2="298" stroke="rgba(0,237,100,.15)" stroke-width="1" stroke-dasharray="3,3"/>';
+      svg+='<text x="332" y="300" fill="#00ed64" font-size="5" opacity=".4">cap</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('rlBar');
+      if(bar){bar.className='rl-bar safe';bar.textContent='\u2705 Multi-layer rate limits \u2014 runaway service blocked at app layer, DB sees only 3K QPS';}
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('rlPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startWithLimits();else startNoLimit();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
+  /* ── Cache + Lock Viz Controller ─────────────────── */
+  var clViz=(function(){
+    var intervals=[],timeouts=[];
+    function el(id){return document.getElementById(id);}
+    function clearTimers(){intervals.forEach(clearInterval);timeouts.forEach(clearTimeout);intervals=[];timeouts=[];}
+
+    var SERVICES=['Svc-A','Svc-B','Svc-C','Svc-D','Svc-E'];
+
+    function startHerd(){
+      clearTimers();
+      var dia=el('clDiagram');if(!dia)return;
+      var W=360,H=340;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="cl-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f87171" opacity=".6"/></marker>';
+      svg+='<marker id="cl-arr-y" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#fbbf24" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" letter-spacing=".5">THUNDERING HERD ON CACHE MISS</text>';
+
+      var svcY=[];
+      SERVICES.forEach(function(s,i){
+        var y=50+i*52;svcY.push(y);
+        svg+='<rect x="5" y="'+(y-14)+'" width="62" height="28" rx="5" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.3)" stroke-width="1"/>';
+        svg+='<text x="36" y="'+(y+2)+'" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="700">'+s+'</text>';
+      });
+
+      svg+='<rect x="120" y="80" width="70" height="50" rx="6" fill="rgba(248,113,113,.08)" stroke="rgba(248,113,113,.3)" stroke-width="1.5" stroke-dasharray="4,3"/>';
+      svg+='<text x="155" y="100" text-anchor="middle" fill="#f87171" font-size="8" font-weight="700">Cache</text>';
+      svg+='<text x="155" y="114" text-anchor="middle" fill="#f87171" font-size="7">MISS</text>';
+
+      svg+='<rect x="250" y="60" width="100" height="90" rx="6" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.25)" stroke-width="1.5"/>';
+      svg+='<text x="300" y="82" text-anchor="middle" fill="#f87171" font-size="8" font-weight="700">PostgreSQL</text>';
+      svg+='<text x="300" y="96" text-anchor="middle" fill="#f87171" font-size="6" opacity=".6">same query × 5</text>';
+      svg+='<text x="300" y="110" text-anchor="middle" fill="#f87171" font-size="6" opacity=".6">CPU spike · I/O flood</text>';
+      svg+='<text x="300" y="130" text-anchor="middle" fill="#f87171" font-size="6" opacity=".5">SELECT * FROM hot_data</text>';
+      svg+='<text x="300" y="142" text-anchor="middle" fill="#f87171" font-size="5.5" opacity=".4">× 5 concurrent identical</text>';
+
+      svcY.forEach(function(y,i){
+        var cid='clC'+i;
+        svg+='<path id="'+cid+'" d="M67,'+y+' C95,'+y+' 95,105 120,105" stroke="#fbbf24" stroke-width="1" fill="none" opacity=".25" marker-end="url(#cl-arr-y)"/>';
+        svg+='<circle r="2.5" fill="#fbbf24"><animateMotion dur="'+(0.8+i*0.1)+'s" repeatCount="indefinite"><mpath href="#'+cid+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="'+(0.8+i*0.1)+'s" repeatCount="indefinite"/></circle>';
+
+        var did='clD'+i;
+        svg+='<path id="'+did+'" d="M190,105 C210,'+(80+i*10)+' 230,'+(80+i*10)+' 250,'+(85+i*10)+'" stroke="#f87171" stroke-width="1.5" fill="none" opacity=".3" marker-end="url(#cl-arr)"/>';
+        svg+='<circle r="2.5" fill="#f87171"><animateMotion dur="'+(0.7+i*0.12)+'s" begin="'+(0.3+i*0.08)+'s" repeatCount="indefinite"><mpath href="#'+did+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="'+(0.7+i*0.12)+'s" begin="'+(0.3+i*0.08)+'s" repeatCount="indefinite"/></circle>';
+      });
+
+      svg+='<rect x="10" y="295" width="340" height="35" rx="5" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.22)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="310" text-anchor="middle" fill="#f87171" font-size="7" font-weight="600">All 5 services miss cache simultaneously \u2192 5 identical queries hit DB</text>';
+      svg+='<text x="180" y="322" text-anchor="middle" fill="var(--tx3)" font-size="5.5">Multiplied across 50 replicas = 250 duplicate queries for one cache key</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('clBar');
+      if(bar){bar.className='cl-bar danger';bar.textContent='\u26A0 Thundering herd \u2014 cache miss triggers identical queries from every service instance';}
+    }
+
+    function startLocked(){
+      clearTimers();
+      var dia=el('clDiagram');if(!dia)return;
+      var W=360,H=340;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="cl-arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#00ed64" opacity=".6"/></marker>';
+      svg+='<marker id="cl-arr-b2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#60a5fa" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" letter-spacing=".5">SINGLE-READER LOCK \u2014 HERD ELIMINATED</text>';
+
+      var svcY=[];
+      SERVICES.forEach(function(s,i){
+        var y=50+i*52;svcY.push(y);
+        svg+='<rect x="5" y="'+(y-14)+'" width="62" height="28" rx="5" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.3)" stroke-width="1"/>';
+        svg+='<text x="36" y="'+(y+2)+'" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="700">'+s+'</text>';
+      });
+
+      svg+='<rect x="105" y="40" width="90" height="130" rx="6" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.2)" stroke-width="1.5"/>';
+      svg+='<text x="150" y="58" text-anchor="middle" fill="#00ed64" font-size="8" font-weight="700">Cache</text>';
+      svg+='<text x="150" y="72" text-anchor="middle" fill="#00ed64" font-size="6" opacity=".6">\u{1F512} single-reader lock</text>';
+
+      svg+='<rect x="112" y="82" width="76" height="20" rx="3" fill="rgba(0,237,100,.1)" stroke="rgba(0,237,100,.25)" stroke-width="1.5"/>';
+      svg+='<text x="150" y="96" text-anchor="middle" fill="#00ed64" font-size="6.5" font-weight="600">Svc-A \u2192 fetching</text>';
+
+      svg+='<text x="150" y="118" text-anchor="middle" fill="var(--tx3)" font-size="6" opacity=".5">Svc-B,C,D,E waiting\u2026</text>';
+      svg+='<text x="150" y="132" text-anchor="middle" fill="var(--tx3)" font-size="5.5" opacity=".4">(will get cached result)</text>';
+
+      svg+='<rect x="250" y="70" width="100" height="70" rx="6" fill="rgba(51,103,145,.08)" stroke="rgba(90,155,197,.25)" stroke-width="1.5"/>';
+      svg+='<text x="300" y="92" text-anchor="middle" fill="#5a9bc5" font-size="8" font-weight="700">PostgreSQL</text>';
+      svg+='<text x="300" y="106" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".6">1 query only</text>';
+      svg+='<text x="300" y="120" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".5">CPU calm \u00B7 normal I/O</text>';
+
+      var leaderPid='clL0';
+      svg+='<path id="'+leaderPid+'" d="M67,50 C90,50 95,90 105,90" stroke="#00ed64" stroke-width="1.5" fill="none" opacity=".35" marker-end="url(#cl-arr-g)"/>';
+      svg+='<circle r="3" fill="#00ed64"><animateMotion dur="1.5s" repeatCount="indefinite"><mpath href="#'+leaderPid+'"/></animateMotion>';
+      svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="1.5s" repeatCount="indefinite"/></circle>';
+
+      var dbPid='clDB';
+      svg+='<path id="'+dbPid+'" d="M195,90 C220,90 230,100 250,100" stroke="#5a9bc5" stroke-width="1.5" fill="none" opacity=".3" marker-end="url(#cl-arr-b2)"/>';
+      svg+='<circle r="3" fill="#5a9bc5"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#'+dbPid+'"/></animateMotion>';
+      svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="2s" repeatCount="indefinite"/></circle>';
+
+      for(var i=1;i<5;i++){
+        var y=svcY[i];
+        var wid='clW'+i;
+        svg+='<path id="'+wid+'" d="M67,'+y+' C88,'+y+' 95,'+(y>140?140:y)+' 105,'+(y>140?140:y)+'" stroke="#60a5fa" stroke-width="1" fill="none" opacity=".15" stroke-dasharray="3,3"/>';
+        svg+='<circle r="2" fill="#60a5fa" opacity=".3"><animate attributeName="opacity" values=".2;.5;.2" dur="2s" repeatCount="indefinite" begin="'+(i*0.3)+'s"/>';
+        svg+='<animate attributeName="cx" values="85;90;85" dur="2s" repeatCount="indefinite" begin="'+(i*0.3)+'s"/>';
+        svg+='<animate attributeName="cy" values="'+y+';'+(y-3)+';'+y+'" dur="2s" repeatCount="indefinite" begin="'+(i*0.3)+'s"/>';
+        svg+='</circle>';
+      }
+
+      svg+='<rect x="108" y="150" width="76" height="16" rx="3" fill="rgba(0,237,100,.08)" stroke="rgba(0,237,100,.25)" stroke-width="1"/>';
+      svg+='<text x="150" y="162" text-anchor="middle" fill="#00ed64" font-size="5.5" opacity=".6">\u2705 cached \u2192 serve all</text>';
+
+      svg+='<rect x="10" y="295" width="340" height="35" rx="5" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.2)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="310" text-anchor="middle" fill="#00ed64" font-size="7" font-weight="600">Only 1 query hits DB \u2192 result cached \u2192 4 others served from cache</text>';
+      svg+='<text x="180" y="322" text-anchor="middle" fill="var(--tx3)" font-size="5.5">Across 50 replicas: 1 query instead of 250 \u2014 99.6% reduction</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('clBar');
+      if(bar){bar.className='cl-bar safe';bar.textContent='\u2705 Single-reader lock \u2014 only 1 request fetches from DB, rest wait for cache fill';}
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('clPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startLocked();else startHerd();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
+  /* ── PgBouncer Connection Pool Viz Controller ─────── */
+  var cpViz=(function(){
+    var intervals=[];
+    function el(id){return document.getElementById(id);}
+    function clearTimers(){intervals.forEach(clearInterval);intervals=[];}
+
+    var REPLICAS=[
+      {name:'Replica 1',region:'us-east'},
+      {name:'Replica 2',region:'us-east'},
+      {name:'Replica 3',region:'us-west'}
+    ];
+
+    function startDirect(){
+      clearTimers();
+      var dia=el('cpDiagram');if(!dia)return;
+      var W=360,H=380;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs><marker id="cp-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#fbbf24" opacity=".6"/></marker>';
+      svg+='<marker id="cp-arr-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f87171" opacity=".7"/></marker></defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" text-transform="uppercase" letter-spacing=".5">Without Connection Pooling</text>';
+
+      var apps=[{label:'ChatGPT',y:50},{label:'API',y:95},{label:'Workers',y:140}];
+      apps.forEach(function(a){
+        svg+='<rect x="10" y="'+(a.y-14)+'" width="72" height="28" rx="5" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.3)" stroke-width="1"/>';
+        svg+='<text x="46" y="'+(a.y+2)+'" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="700">'+a.label+'</text>';
+      });
+      svg+='<text x="46" y="170" text-anchor="middle" fill="#60a5fa" font-size="6" opacity=".5">~1,700 conns each</text>';
+
+      var reps=[{y:50},{y:95},{y:140}];
+      reps.forEach(function(r,ri){
+        svg+='<rect x="230" y="'+(r.y-18)+'" width="120" height="36" rx="5" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.25)" stroke-width="1.5"/>';
+        svg+='<text x="290" y="'+(r.y-2)+'" text-anchor="middle" fill="#f87171" font-size="7" font-weight="700">'+REPLICAS[ri].name+'</text>';
+        svg+='<text x="290" y="'+(r.y+10)+'" text-anchor="middle" fill="#f87171" font-size="5.5" opacity=".6">~1,700 backends forked</text>';
+      });
+
+      apps.forEach(function(a,ai){
+        reps.forEach(function(r,ri){
+          var pid='cpD'+ai+''+ri;
+          svg+='<path id="'+pid+'" d="M82,'+a.y+' C140,'+a.y+' 180,'+r.y+' 230,'+r.y+'" stroke="#fbbf24" stroke-width="1" fill="none" opacity=".2" marker-end="url(#cp-arr)"/>';
+          svg+='<circle r="2.5" fill="#fbbf24"><animateMotion dur="'+(1+ai*0.2+ri*0.15)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+          svg+='<animate attributeName="opacity" values="0;.6;.6;0" dur="'+(1+ai*0.2+ri*0.15)+'s" repeatCount="indefinite"/></circle>';
+        });
+      });
+
+      svg+='<text x="160" y="178" text-anchor="middle" fill="var(--tx3)" font-size="6" opacity=".5">9 streams \u00D7 ~550 conns each = 5,000 direct TCP</text>';
+
+      svg+='<rect x="10" y="195" width="340" height="80" rx="6" fill="rgba(248,113,113,.05)" stroke="rgba(248,113,113,.22)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="212" text-anchor="middle" fill="#f87171" font-size="7.5" font-weight="700">Per Replica: ~1,700 forked backends</text>';
+      svg+='<text x="180" y="226" text-anchor="middle" fill="var(--tx3)" font-size="6">Each backend = OS process \u00B7 5\u201350 MB private memory \u00B7 own FDs \u00B7 catalog cache</text>';
+      svg+='<text x="180" y="240" text-anchor="middle" fill="var(--tx3)" font-size="6">ProcArray scan O(1700) per snapshot \u00B7 context switch thrashing \u00B7 L3 cache blown</text>';
+
+      svg+='<text x="180" y="268" text-anchor="middle" fill="#f87171" font-size="7" font-weight="600" opacity=".7">Connection Slots (100% = exhausted)</text>';
+      svg+='</svg>';
+
+      var slotsHtml='<div class="cp-slots" id="cpSlots" style="margin:0 .5rem"></div>';
+      dia.innerHTML=svg+slotsHtml;
+
+      var slotsEl=el('cpSlots');
+      for(var s=0;s<120;s++){var sl=document.createElement('div');sl.className='cp-slot free';slotsEl.appendChild(sl);}
+
+      var bar=el('cpBar');
+      if(bar){bar.className='cp-bar danger';bar.textContent='\u26A0 5,000 direct connections \u2014 each a forked OS process consuming memory, FDs, and CPU';}
+
+      var usedCount=0;
+      intervals.push(setInterval(function(){
+        var slots=el('cpSlots');if(!slots)return;
+        var all=slots.children;
+        if(usedCount<120){
+          var batch=Math.min(4,120-usedCount);
+          for(var b=0;b<batch;b++){
+            all[usedCount].className='cp-slot'+(usedCount>100?' exhausted':' used');
+            usedCount++;
+          }
+        } else {
+          for(var r=0;r<120;r++)all[r].className='cp-slot exhausted';
+        }
+        var pct=Math.min(100,Math.round(usedCount/120*100));
+        if(bar)bar.textContent='\u26A0 '+pct+'% slots used \u2014 '+(pct>=100?'max_connections hit \u2014 new requests rejected':'approaching limit')
+          +' \u00B7 ~'+Math.round(pct*50)+'MB backend memory';
+      },180));
+    }
+
+    function startPooled(){
+      clearTimers();
+      var dia=el('cpDiagram');if(!dia)return;
+      var W=360,H=380;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="cp-arr-b" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#60a5fa" opacity=".6"/></marker>';
+      svg+='<marker id="cp-arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#00ed64" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" text-transform="uppercase" letter-spacing=".5">With PgBouncer Sidecar Per Pod</text>';
+
+      var apps=[{label:'ChatGPT',y:50},{label:'API',y:95},{label:'Workers',y:140}];
+      apps.forEach(function(a){
+        svg+='<rect x="5" y="'+(a.y-14)+'" width="62" height="28" rx="5" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.3)" stroke-width="1"/>';
+        svg+='<text x="36" y="'+(a.y+2)+'" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="700">'+a.label+'</text>';
+      });
+
+      var pods=[{y:50,name:'Replica 1'},{y:112,name:'Replica 2'},{y:174,name:'Replica 3'}];
+      pods.forEach(function(pod,pi){
+        svg+='<rect x="100" y="'+(pod.y-24)+'" width="255" height="48" rx="8" fill="rgba(255,255,255,.02)" stroke="rgba(96,165,250,.2)" stroke-width="1.5" stroke-dasharray="5,3"/>';
+        svg+='<text x="104" y="'+(pod.y-14)+'" fill="#60a5fa" font-size="5" opacity=".6">K8s Pod</text>';
+
+        svg+='<rect x="108" y="'+(pod.y-12)+'" width="80" height="30" rx="5" fill="rgba(0,237,100,.08)" stroke="rgba(0,237,100,.35)" stroke-width="1.5"/>';
+        svg+='<text x="148" y="'+(pod.y+1)+'" text-anchor="middle" fill="#00ed64" font-size="7" font-weight="700">PgBouncer</text>';
+        svg+='<text x="148" y="'+(pod.y+11)+'" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".5">txn pooling</text>';
+
+        svg+='<rect x="204" y="'+(pod.y-12)+'" width="30" height="30" rx="3" fill="none" stroke="rgba(0,237,100,.25)" stroke-width="1" stroke-dasharray="3,2"/>';
+        svg+='<text x="219" y="'+(pod.y+5)+'" text-anchor="middle" fill="#00ed64" font-size="6" opacity=".5">\u21C6</text>';
+
+        svg+='<rect x="248" y="'+(pod.y-12)+'" width="100" height="30" rx="5" fill="rgba(51,103,145,.12)" stroke="rgba(90,155,197,.4)" stroke-width="1.5"/>';
+        svg+='<text x="298" y="'+(pod.y+1)+'" text-anchor="middle" fill="#5a9bc5" font-size="7" font-weight="700">'+pod.name+'</text>';
+        svg+='<text x="298" y="'+(pod.y+11)+'" text-anchor="middle" fill="#5a9bc5" font-size="5" opacity=".5">~30 backends</text>';
+
+        apps.forEach(function(a,ai){
+          var pid='cpP'+pi+'a'+ai;
+          var ty=pod.y;
+          svg+='<path id="'+pid+'" d="M67,'+a.y+' C85,'+a.y+' 90,'+ty+' 108,'+ty+'" stroke="#60a5fa" stroke-width="1" fill="none" opacity=".15"/>';
+          svg+='<circle r="2" fill="#60a5fa"><animateMotion dur="'+(1.2+ai*0.3)+'s" begin="'+(pi*0.4)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+          svg+='<animate attributeName="opacity" values="0;.5;.5;0" dur="'+(1.2+ai*0.3)+'s" begin="'+(pi*0.4)+'s" repeatCount="indefinite"/></circle>';
+        });
+
+        var rpid='cpPR'+pi;
+        svg+='<path id="'+rpid+'" d="M188,'+pod.y+' L248,'+pod.y+'" stroke="#00ed64" stroke-width="1.5" fill="none" opacity=".3" marker-end="url(#cp-arr-g)"/>';
+        svg+='<circle r="2.5" fill="#00ed64"><animateMotion dur="'+(1.8+pi*0.2)+'s" repeatCount="indefinite"><mpath href="#'+rpid+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="'+(1.8+pi*0.2)+'s" repeatCount="indefinite"/></circle>';
+      });
+
+      svg+='<text x="36" y="170" text-anchor="middle" fill="#60a5fa" font-size="5.5" opacity=".4">5,000 conns</text>';
+
+      svg+='<rect x="10" y="210" width="340" height="66" rx="6" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.2)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="228" text-anchor="middle" fill="#00ed64" font-size="7.5" font-weight="700">5,000 app conns \u2192 ~30 backends per replica \u2192 ~90 total</text>';
+      svg+='<text x="180" y="242" text-anchor="middle" fill="var(--tx3)" font-size="6">PgBouncer holds idle conns \u00B7 assigns backend only during transaction \u00B7 returns to pool</text>';
+      svg+='<text x="180" y="256" text-anchor="middle" fill="var(--tx3)" font-size="6">Connect time: 50ms (TCP+auth) \u2192 5ms (pre-authed pool) \u00B7 97% fewer processes</text>';
+      svg+='<text x="180" y="270" text-anchor="middle" fill="var(--tx3)" font-size="5.5" opacity=".5">Each PgBouncer is a sidecar container in the same pod \u2014 no extra network hop</text>';
+
+      svg+='</svg>';
+
+      var slotsHtml='<div class="cp-slots" id="cpSlots" style="margin:0 .5rem"></div>';
+      dia.innerHTML=svg+slotsHtml;
+
+      var slotsEl=el('cpSlots');
+      for(var s=0;s<120;s++){var sl=document.createElement('div');sl.className='cp-slot '+(s<4?'pooled':'free');slotsEl.appendChild(sl);}
+
+      var bar=el('cpBar');
+      if(bar){bar.className='cp-bar safe';bar.textContent='\u2705 1 PgBouncer sidecar per pod \u2014 5,000 \u2192 ~90 backends \u00B7 97% fewer processes \u00B7 50ms \u2192 5ms connect';}
+
+      var tick=0;
+      intervals.push(setInterval(function(){
+        var slots=el('cpSlots');if(!slots)return;
+        var all=slots.children;
+        tick++;
+        for(var i=0;i<120;i++){
+          all[i].className='cp-slot '+(i<3+(tick%4)?'pooled':'free');
+        }
+      },700));
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('cpPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startPooled();else startDirect();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
+  /* ── HA & Failover Viz Controller ─────────────────── */
+  var haViz=(function(){
+    var intervals=[],timeouts=[];
+    function el(id){return document.getElementById(id);}
+    function clearTimers(){intervals.forEach(clearInterval);timeouts.forEach(clearTimeout);intervals=[];timeouts=[];}
+
+    function startNoHA(){
+      clearTimers();
+      var dia=el('haDiagram');if(!dia)return;
+      var W=340,H=300;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs><marker id="ha-arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#5a9bc5" opacity=".6"/></marker></defs>';
+
+      svg+='<rect x="20" y="20" width="80" height="44" rx="6" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.2)" stroke-width="1.5"/>';
+      svg+='<text x="60" y="38" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="700">Application</text>';
+      svg+='<text x="60" y="52" text-anchor="middle" fill="#60a5fa" font-size="6" opacity=".6">all traffic</text>';
+
+      svg+='<line x1="60" y1="64" x2="60" y2="110" stroke="#5a9bc5" stroke-width="1.5" marker-end="url(#ha-arr)"/>';
+      svg+='<circle r="3" fill="#5a9bc5"><animate attributeName="cy" values="68;106" dur="1.5s" repeatCount="indefinite"/>';
+      svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="1.5s" repeatCount="indefinite"/></circle>';
+      svg+='<animate attributeName="cx" values="60;60" dur="1.5s" repeatCount="indefinite"/>';
+
+      svg+='<rect id="haPrimBox" x="15" y="112" width="90" height="52" rx="6" fill="rgba(51,103,145,.15)" stroke="rgba(90,155,197,.4)" stroke-width="1.5"/>';
+      svg+='<text x="60" y="134" text-anchor="middle" fill="#5a9bc5" font-size="9" font-weight="700">Primary</text>';
+      svg+='<text x="60" y="148" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".6">single point of failure</text>';
+
+      svg+='<text x="170" y="100" fill="var(--tx3)" font-size="7" opacity=".5">No standby</text>';
+      svg+='<rect x="140" y="112" width="80" height="44" rx="6" fill="none" stroke="var(--tx3)" stroke-width="1.5" stroke-dasharray="4,3" opacity=".3"/>';
+      svg+='<text x="180" y="138" text-anchor="middle" fill="var(--tx3)" font-size="7" opacity=".35">Standby?</text>';
+
+      svg+='<text x="280" y="100" fill="var(--tx3)" font-size="7" opacity=".5">No replicas</text>';
+      svg+='<rect x="250" y="112" width="80" height="44" rx="6" fill="none" stroke="var(--tx3)" stroke-width="1.5" stroke-dasharray="4,3" opacity=".3"/>';
+      svg+='<text x="290" y="138" text-anchor="middle" fill="var(--tx3)" font-size="7" opacity=".35">Replicas?</text>';
+
+      svg+='<g id="haFailGroup" opacity="0">';
+      svg+='<line x1="10" y1="108" x2="110" y2="168" stroke="#f87171" stroke-width="3" opacity=".8"/>';
+      svg+='<line x1="110" y1="108" x2="10" y2="168" stroke="#f87171" stroke-width="3" opacity=".8"/>';
+      svg+='<rect x="15" y="112" width="90" height="52" rx="6" fill="rgba(248,113,113,.12)" stroke="#f87171" stroke-width="2"/>';
+      svg+='<text x="60" y="134" text-anchor="middle" fill="#f87171" font-size="9" font-weight="700">PRIMARY DOWN</text>';
+      svg+='<text x="60" y="148" text-anchor="middle" fill="#f87171" font-size="6">total outage</text>';
+      svg+='</g>';
+
+      svg+='<rect x="20" y="200" width="300" height="36" rx="6" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.25)" stroke-width="1.5"/>';
+      svg+='<text id="haDowntime" x="170" y="218" text-anchor="middle" fill="#f87171" font-size="8" font-weight="600">Downtime: 00:00</text>';
+      svg+='<text x="170" y="230" text-anchor="middle" fill="#f87171" font-size="6" opacity=".7">manual intervention required — no automatic recovery</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('haBar');
+      if(bar){bar.className='ha-bar danger';bar.textContent='\u26A0 Single primary \u2014 any failure means total outage, no automatic recovery';}
+
+      var failSec=0;
+      timeouts.push(setTimeout(function(){
+        var fg=dia.querySelector('#haFailGroup');
+        if(fg)fg.setAttribute('opacity','1');
+        intervals.push(setInterval(function(){
+          failSec++;
+          var dt=dia.querySelector('#haDowntime');
+          var m=Math.floor(failSec/60),s=failSec%60;
+          if(dt)dt.textContent='Downtime: '+(m<10?'0':'')+m+':'+(s<10?'0':'')+s+' \u2014 and counting';
+        },1000));
+      },2500));
+    }
+
+    function startWithHA(){
+      clearTimers();
+      var dia=el('haDiagram');if(!dia)return;
+      var W=340,H=310;
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="ha-arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#34d399" opacity=".6"/></marker>';
+      svg+='<marker id="ha-arr3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#60a5fa" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<rect x="125" y="8" width="90" height="38" rx="6" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.2)" stroke-width="1.5"/>';
+      svg+='<text x="170" y="24" text-anchor="middle" fill="#60a5fa" font-size="8" font-weight="700">Application</text>';
+      svg+='<text x="170" y="36" text-anchor="middle" fill="#60a5fa" font-size="6" opacity=".6">writes + reads</text>';
+
+      svg+='<line x1="152" y1="46" x2="75" y2="80" stroke="#5a9bc5" stroke-width="1.5" marker-end="url(#ha-arr2)"/>';
+      svg+='<line x1="188" y1="46" x2="265" y2="80" stroke="#60a5fa" stroke-width="1" stroke-dasharray="4,3" opacity=".4" marker-end="url(#ha-arr3)"/>';
+
+      svg+='<rect x="25" y="82" width="100" height="48" rx="6" fill="rgba(51,103,145,.15)" stroke="rgba(90,155,197,.5)" stroke-width="1.5"/>';
+      svg+='<text x="75" y="102" text-anchor="middle" fill="#5a9bc5" font-size="9" font-weight="700">Primary</text>';
+      svg+='<text x="75" y="116" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".6">writes + reads</text>';
+
+      svg+='<rect x="215" y="82" width="100" height="48" rx="6" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.3)" stroke-width="1.5"/>';
+      svg+='<text x="265" y="102" text-anchor="middle" fill="#34d399" font-size="9" font-weight="700">Hot Standby</text>';
+      svg+='<text x="265" y="116" text-anchor="middle" fill="#34d399" font-size="6" opacity=".6">promotes in seconds</text>';
+
+      svg+='<line x1="125" y1="106" x2="215" y2="106" class="ha-repl-line" stroke="#34d399" stroke-width="1.5" marker-end="url(#ha-arr2)"/>';
+      svg+='<text x="170" y="100" text-anchor="middle" fill="#34d399" font-size="5.5" opacity=".6">sync replication</text>';
+
+      svg+='<text x="170" y="155" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="600" opacity=".7">Read Replicas (streaming)</text>';
+
+      var regions=[
+        {label:'US-East',x:30, y:170,count:'18'},
+        {label:'US-West',x:130,y:170,count:'16'},
+        {label:'EU-West',x:230,y:170,count:'16'}
+      ];
+      regions.forEach(function(rg){
+        svg+='<rect x="'+rg.x+'" y="'+rg.y+'" width="80" height="42" rx="5" fill="rgba(96,165,250,.06)" stroke="rgba(96,165,250,.25)" stroke-width="1.5"/>';
+        svg+='<text x="'+(rg.x+40)+'" y="'+(rg.y+16)+'" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="700">'+rg.label+'</text>';
+        svg+='<text x="'+(rg.x+40)+'" y="'+(rg.y+30)+'" text-anchor="middle" fill="#60a5fa" font-size="6" opacity=".5">'+rg.count+' replicas</text>';
+
+        svg+='<line x1="'+(rg.x+40)+'" y1="'+rg.y+'" x2="'+(rg.x+40)+'" y2="158" class="ha-repl-line" stroke="rgba(96,165,250,.3)" stroke-width="1" marker-end="url(#ha-arr3)"/>';
+      });
+
+      svg+='<rect x="20" y="225" width="300" height="42" rx="6" fill="rgba(52,211,153,.05)" stroke="rgba(52,211,153,.25)" stroke-width="1.5"/>';
+      svg+='<text x="170" y="241" text-anchor="middle" fill="#34d399" font-size="8" font-weight="700">Failover: automatic in &lt;30 seconds</text>';
+      svg+='<text x="170" y="255" text-anchor="middle" fill="#34d399" font-size="6" opacity=".6">50 read replicas \u00B7 3 regions \u00B7 streaming replication \u00B7 zero data loss</text>';
+
+      svg+='<rect x="20" y="275" width="300" height="32" rx="5" fill="rgba(251,191,36,.06)" stroke="rgba(251,191,36,.28)" stroke-width="1.5"/>';
+      svg+='<text x="170" y="289" text-anchor="middle" fill="#fbbf24" font-size="6.5" font-weight="600">\u26A0 WAL shipping to 50 replicas = heavy network bandwidth + primary CPU overhead</text>';
+      svg+='<text x="170" y="300" text-anchor="middle" fill="#fbbf24" font-size="5.5" opacity=".55">each replica streams full WAL \u2014 primary bears the cost of serializing &amp; shipping every change</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('haBar');
+      if(bar){bar.className='ha-bar safe';bar.textContent='\u2705 Hot standby + 50 replicas across 3 regions \u2014 automatic failover in seconds';}
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('haPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startWithHA();else startNoHA();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
+  /* ── Write Offload Viz Controller ─────────────────── */
+  var woViz=(function(){
+    var intervals=[];
+    var WRITES=[
+      {label:'INSERT',   color:'#fbbf24'},
+      {label:'UPDATE',   color:'#fb923c'},
+      {label:'CREATE',   color:'#f472b6'}
+    ];
+
+    function el(id){return document.getElementById(id);}
+    function clearTimers(){intervals.forEach(clearInterval);intervals=[];}
+
+    function buildTargets(mode){
+      var c=el('woTargets');if(!c)return;c.innerHTML='';
+      if(mode==='all-pg'){
+        var d=document.createElement('div');d.className='wo-db pg stressed';d.id='woPg';
+        d.innerHTML='<div class="wo-db-name">PostgreSQL Primary</div>'+
+          '<div class="wo-db-stat" id="woPgStat">WAL: critical</div>'+
+          '<div class="wo-meter"><span class="wo-meter-label">MVCC</span><div class="wo-meter-track"><div class="wo-meter-fill" id="woMvcc" style="width:0;background:var(--rd)"></div></div></div>'+
+          '<div class="wo-meter"><span class="wo-meter-label">WAL</span><div class="wo-meter-track"><div class="wo-meter-fill" id="woWal" style="width:0;background:var(--rd)"></div></div></div>'+
+          '<div class="wo-meter"><span class="wo-meter-label">Chkpt</span><div class="wo-meter-track"><div class="wo-meter-fill" id="woChk" style="width:0;background:var(--rd)"></div></div></div>';
+        c.appendChild(d);
+      } else {
+        var pg=document.createElement('div');pg.className='wo-db pg ok';pg.id='woPg';
+        pg.innerHTML='<div class="wo-db-name">PostgreSQL Primary</div>'+
+          '<div class="wo-db-stat" id="woPgStat">reads + critical writes</div>'+
+          '<div class="wo-meter"><span class="wo-meter-label">MVCC</span><div class="wo-meter-track"><div class="wo-meter-fill" id="woMvcc" style="width:0;background:var(--c-perf)"></div></div></div>'+
+          '<div class="wo-meter"><span class="wo-meter-label">WAL</span><div class="wo-meter-track"><div class="wo-meter-fill" id="woWal" style="width:0;background:var(--c-perf)"></div></div></div>'+
+          '<div class="wo-meter"><span class="wo-meter-label">Chkpt</span><div class="wo-meter-track"><div class="wo-meter-fill" id="woChk" style="width:0;background:var(--c-perf)"></div></div></div>';
+        c.appendChild(pg);
+        var cos=document.createElement('div');cos.className='wo-db cosmos';cos.id='woCosmos';
+        cos.innerHTML='<div class="wo-db-name">CosmosDB</div>'+
+          '<div class="wo-db-stat">lazy writes + new tables</div>';
+        c.appendChild(cos);
+        setTimeout(function(){cos.classList.add('visible');},50);
+      }
+    }
+
+    function buildSvg(mode){
+      var wrap=el('woSvg');if(!wrap)return;
+      var W=280,H=320;
+      var srcY=[70,160,250];
+      var svg='<svg viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      WRITES.forEach(function(w){
+        svg+='<marker id="wo-arr-'+w.label+'" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">';
+        svg+='<path d="M0,0 L6,3 L0,6" fill="'+w.color+'" opacity=".6"/></marker>';
+      });
+      svg+='</defs>';
+
+      if(mode==='all-pg'){
+        var tgtY=160;
+        WRITES.forEach(function(w,i){
+          var pid='woP-'+w.label;
+          var d='M10,'+srcY[i]+' C140,'+srcY[i]+' 140,'+tgtY+' '+270+','+tgtY;
+          svg+='<path id="'+pid+'" d="'+d+'" stroke="'+w.color+'" stroke-width="2" fill="none" opacity=".5" marker-end="url(#wo-arr-'+w.label+')"/>';
+          svg+='<circle r="3" fill="'+w.color+'"><animateMotion dur="'+(1.2+i*0.2)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+          svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="'+(1.2+i*0.2)+'s" repeatCount="indefinite"/></circle>';
+          svg+='<circle r="3" fill="'+w.color+'"><animateMotion dur="'+(1.2+i*0.2)+'s" begin="'+(0.6+i*0.1)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+          svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="'+(1.2+i*0.2)+'s" begin="'+(0.6+i*0.1)+'s" repeatCount="indefinite"/></circle>';
+        });
+      } else {
+        var pgY=110,cosY=230;
+        var pid0='woP-INS';
+        svg+='<path id="'+pid0+'" d="M10,'+srcY[0]+' C120,'+srcY[0]+' 160,'+pgY+' 270,'+pgY+'" stroke="'+WRITES[0].color+'" stroke-width="2" fill="none" opacity=".4" marker-end="url(#wo-arr-INSERT)"/>';
+        svg+='<circle r="3" fill="'+WRITES[0].color+'"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#'+pid0+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="2s" repeatCount="indefinite"/></circle>';
+
+        var pid1='woP-UPD';
+        svg+='<path id="'+pid1+'" d="M10,'+srcY[1]+' C80,'+srcY[1]+' 80,'+pgY+' 270,'+pgY+'" stroke="'+WRITES[1].color+'" stroke-width="2" fill="none" opacity=".4" stroke-dasharray="4,3" marker-end="url(#wo-arr-UPDATE)"/>';
+        svg+='<circle r="3" fill="'+WRITES[1].color+'"><animateMotion dur="2.5s" repeatCount="indefinite"><mpath href="#'+pid1+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.6;.6;0" dur="2.5s" repeatCount="indefinite"/></circle>';
+
+        var pid1b='woP-UPD2';
+        svg+='<path id="'+pid1b+'" d="M10,'+srcY[1]+' C80,'+srcY[1]+' 160,'+cosY+' 270,'+cosY+'" stroke="'+WRITES[1].color+'" stroke-width="2" fill="none" opacity=".4" marker-end="url(#wo-arr-UPDATE)"/>';
+        svg+='<circle r="3" fill="'+WRITES[1].color+'"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#'+pid1b+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="2s" repeatCount="indefinite"/></circle>';
+
+        var pid2='woP-CRT';
+        svg+='<path id="'+pid2+'" d="M10,'+srcY[2]+' C140,'+srcY[2]+' 140,'+cosY+' 270,'+cosY+'" stroke="'+WRITES[2].color+'" stroke-width="2" fill="none" opacity=".5" marker-end="url(#wo-arr-CREATE)"/>';
+        svg+='<circle r="3" fill="'+WRITES[2].color+'"><animateMotion dur="1.8s" repeatCount="indefinite"><mpath href="#'+pid2+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="1.8s" repeatCount="indefinite"/></circle>';
+      }
+      svg+='</svg>';
+      wrap.innerHTML=svg;
+    }
+
+    function startAllPg(){
+      clearTimers();
+      buildTargets('all-pg');
+      buildSvg('all-pg');
+      var bar=el('woBar');
+      if(bar){bar.className='wo-bar danger';bar.textContent='\u26A0 All writes hitting PG primary \u2014 MVCC bloat, WAL pressure, checkpoint storms';}
+      var mvcc=70,wal=65,chk=60;
+      intervals.push(setInterval(function(){
+        mvcc=Math.min(98,mvcc+Math.floor(Math.random()*5)-1);
+        wal=Math.min(97,wal+Math.floor(Math.random()*5)-1);
+        chk=Math.min(95,chk+Math.floor(Math.random()*6)-2);
+        var m=el('woMvcc'),w=el('woWal'),c=el('woChk');
+        if(m)m.style.width=mvcc+'%';
+        if(w)w.style.width=wal+'%';
+        if(c)c.style.width=chk+'%';
+        var s=el('woPgStat');
+        if(s)s.textContent='WAL: '+wal+'% · MVCC: '+mvcc+'%';
+      },900));
+    }
+
+    function startSplit(){
+      clearTimers();
+      buildTargets('split');
+      buildSvg('split');
+      var bar=el('woBar');
+      if(bar){bar.className='wo-bar safe';bar.textContent='\u2705 Writes split \u2014 lazy writes + new tables to CosmosDB, PG primary protected';}
+      intervals.push(setInterval(function(){
+        var mvcc=22+Math.floor(Math.random()*6);
+        var wal=18+Math.floor(Math.random()*5);
+        var chk=15+Math.floor(Math.random()*5);
+        var m=el('woMvcc'),w=el('woWal'),c=el('woChk');
+        if(m){m.style.width=mvcc+'%';m.style.background='var(--c-perf)';}
+        if(w){w.style.width=wal+'%';w.style.background='var(--c-perf)';}
+        if(c){c.style.width=chk+'%';c.style.background='var(--c-perf)';}
+        var s=el('woPgStat');
+        if(s)s.textContent='WAL: '+wal+'% · MVCC: '+mvcc+'%';
+      },1000));
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('woPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startSplit();else startAllPg();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
+  /* ── Schema Change Viz Controller ──────────────────── */
+  var schemaViz=(function(){
+    var COLS=8,ROWS=6,TOTAL=COLS*ROWS;
+    var intervals=[],timeouts=[];
+    var running=false,cellIdx=0,blockedCount=0,lockSec=0;
+    var QUERIES=['SELECT * FROM users WHERE ...','INSERT INTO users VALUES (...)','UPDATE users SET status = ...','SELECT count(*) FROM users','DELETE FROM users WHERE id = ...','SELECT u.* FROM users u JOIN ...'];
+    var mode='disaster';
+
+    function el(id){return document.getElementById(id);}
+
+    function buildGrid(){
+      var g=el('schemaGrid');if(!g)return;g.innerHTML='';
+      for(var i=0;i<TOTAL;i++){
+        var c=document.createElement('div');c.className='schema-cell';g.appendChild(c);
+      }
+    }
+
+    function clearTimers(){
+      intervals.forEach(clearInterval);timeouts.forEach(clearTimeout);
+      intervals=[];timeouts=[];
+    }
+
+    function reset(){
+      clearTimers();running=false;cellIdx=0;blockedCount=0;lockSec=0;
+      buildGrid();
+      var q=el('schemaQueue');if(q){
+        var counter=el('schemaBlockedCount');
+        q.innerHTML='';if(counter)q.appendChild(counter);
+      }
+      var pf=el('schemaProgressFill');if(pf)pf.style.width='0';
+      var pp=el('schemaProgressPct');if(pp)pp.textContent='0%';
+      var t=el('schemaTimer');if(t)t.textContent='Lock held: 00:00';
+    }
+
+    function fmtTime(s){
+      var m=Math.floor(s/60),ss=s%60;
+      return (m<10?'0':'')+m+':'+(ss<10?'0':'')+ss;
+    }
+
+    function startDisaster(){
+      reset();mode='disaster';running=true;
+      var lock=el('schemaLock');
+      if(lock){lock.className='schema-lock danger';lock.textContent='\u{1F512} ACCESS EXCLUSIVE LOCK';}
+      var ddl=el('schemaDDL');
+      if(ddl)ddl.innerHTML='<b>ALTER TABLE</b> users <b>ADD COLUMN</b> metadata jsonb \u2014 Rewriting 47M rows';
+      var bar=el('schemaBar');
+      if(bar){bar.className='schema-bar danger';bar.textContent='\u26A0 All reads AND writes blocked \u2014 entire application halted';}
+      var bc=el('schemaBlockedCount');
+      if(bc){bc.className='schema-blocked-count danger';bc.textContent='0 queries blocked';}
+
+      var cells=el('schemaGrid');if(!cells)return;
+      var allCells=cells.children;
+
+      intervals.push(setInterval(function(){
+        if(cellIdx<TOTAL){
+          allCells[cellIdx].classList.add('rewriting');
+          if(cellIdx>0)allCells[cellIdx-1].classList.remove('rewriting'),allCells[cellIdx-1].classList.add('done');
+          cellIdx++;
+          var pct=Math.round((cellIdx/TOTAL)*100);
+          var pf=el('schemaProgressFill');if(pf)pf.style.width=pct+'%';
+          var pp=el('schemaProgressPct');if(pp)pp.textContent=pct+'%';
+        } else {
+          if(allCells[TOTAL-1])allCells[TOTAL-1].classList.remove('rewriting'),allCells[TOTAL-1].classList.add('done');
+          cellIdx=0;
+          for(var i=0;i<TOTAL;i++){allCells[i].className='schema-cell';}
+        }
+      },350));
+
+      intervals.push(setInterval(function(){
+        lockSec++;
+        var t=el('schemaTimer');if(t)t.textContent='Lock held: '+fmtTime(lockSec);
+      },1000));
+
+      intervals.push(setInterval(function(){
+        if(!running)return;
+        blockedCount++;
+        var q=el('schemaQueue'),bc2=el('schemaBlockedCount');
+        if(!q)return;
+        var qEl=document.createElement('div');
+        qEl.className='schema-query'+(blockedCount>8?' timeout':'');
+        var txt=QUERIES[blockedCount%QUERIES.length];
+        qEl.innerHTML='<span class="sq-type">'+(blockedCount%3===0?'INSERT':blockedCount%3===1?'SELECT':'UPDATE')+'</span><span class="sq-text">'+txt.substring(0,28)+'\u2026</span><span class="sq-wait">waiting\u2026</span>';
+        if(bc2)q.insertBefore(qEl,bc2);
+        if(bc2)bc2.textContent=blockedCount+' queries blocked';
+        if(blockedCount>8&&blockedCount%3===0){
+          var qEls=q.querySelectorAll('.schema-query:not(.timeout)');
+          if(qEls.length>0)qEls[0].classList.add('timeout');
+        }
+        var maxVisible=12;
+        var all=q.querySelectorAll('.schema-query');
+        if(all.length>maxVisible){
+          for(var i=0;i<all.length-maxVisible;i++)all[i].remove();
+        }
+      },800));
+    }
+
+    function startSafe(){
+      reset();mode='safe';running=true;
+      var lock=el('schemaLock');
+      if(lock){lock.className='schema-lock safe';lock.textContent='\u{1F6E1}\uFE0F DDL TIMEOUT 5s \u2014 Protected';}
+      var ddl=el('schemaDDL');
+      if(ddl)ddl.innerHTML='<b>ALTER TABLE</b> users <b>ADD COLUMN</b> metadata jsonb <b>DEFAULT NULL</b> \u2014 Lightweight';
+      var bar=el('schemaBar');
+      if(bar){bar.className='schema-bar safe';bar.textContent='\u2705 Zero downtime \u2014 schema changes are safe and controlled';}
+      var bc=el('schemaBlockedCount');
+      if(bc){bc.className='schema-blocked-count safe';bc.textContent='0 queries blocked \u2014 traffic flowing';}
+
+      var cells=el('schemaGrid');if(!cells)return;
+      var allCells=cells.children;
+
+      var safeIdx=0;
+      var sweep=setInterval(function(){
+        if(safeIdx<TOTAL){
+          allCells[safeIdx].classList.add('rewriting');
+          if(safeIdx>0){allCells[safeIdx-1].classList.remove('rewriting');allCells[safeIdx-1].classList.add('done');}
+          safeIdx++;
+          var pct=Math.round((safeIdx/TOTAL)*100);
+          var pf=el('schemaProgressFill');if(pf){pf.style.width=pct+'%';pf.className='schema-progress-fill safe';}
+          var pp=el('schemaProgressPct');if(pp)pp.textContent=pct+'%';
+        }
+      },60);
+      intervals.push(sweep);
+
+      timeouts.push(setTimeout(function(){
+        clearInterval(sweep);
+        for(var i=0;i<TOTAL;i++){allCells[i].className='schema-cell done';}
+        var pf=el('schemaProgressFill');if(pf)pf.style.width='100%';
+        var pp=el('schemaProgressPct');if(pp)pp.textContent='100% \u2014 instant';
+        var t=el('schemaTimer');if(t)t.textContent='Completed in <1s (metadata-only)';
+      },TOTAL*60+200));
+
+      intervals.push(setInterval(function(){
+        var q=el('schemaQueue'),bc2=el('schemaBlockedCount');
+        if(!q)return;
+        var qEl=document.createElement('div');
+        qEl.className='schema-query flowing';
+        var txt=QUERIES[Math.floor(Math.random()*QUERIES.length)];
+        qEl.innerHTML='<span class="sq-type">SELECT</span><span class="sq-text">'+txt.substring(0,28)+'\u2026</span><span class="sq-wait">\u2705</span>';
+        if(bc2)q.insertBefore(qEl,bc2);
+        var all=q.querySelectorAll('.schema-query');
+        if(all.length>6){for(var i=0;i<all.length-6;i++)all[i].remove();}
+      },900));
+    }
+
+    function stop(){clearTimers();running=false;}
+
+    function toggle(isOn){
+      var panel=el('schemaPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.toggle('open',true);
+        if(isOn)startSafe();else startDisaster();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{startDisaster:startDisaster,startSafe:startSafe,stop:stop,toggle:toggle,reset:reset,buildGrid:buildGrid};
+  })();
+
+  var nativeOn=true;
+
+  window.opgToggleNative=function(){
+    nativeOn=!nativeOn;
+    var section=document.getElementById('openai-pg');
+    var toggle=document.getElementById('nativeToggle');
+    if(section)section.classList.toggle('native-mode',nativeOn);
+    if(toggle)toggle.classList.toggle('on',nativeOn);
+    if(nativeOn){schemaViz.toggle();wlViz.toggle();woViz.toggle();haViz.toggle();cpViz.toggle();clViz.toggle();rlViz.toggle();}
+    if(!nativeOn){
+      ORDER.forEach(function(k){LAYERS[k].on=true;});
+      updateUI();
+    }
+  };
+
+  function closeAllVizPanels(){schemaViz.toggle();wlViz.toggle();woViz.toggle();haViz.toggle();cpViz.toggle();clViz.toggle();rlViz.toggle();}
+
+  window.opgToggle=function(key){
+    LAYERS[key].on=!LAYERS[key].on;
+    updateUI();
+    closeAllVizPanels();
+    if(key==='schemaMgmt') schemaViz.toggle(LAYERS.schemaMgmt.on);
+    else if(key==='workloadIso') wlViz.toggle(LAYERS.workloadIso.on);
+    else if(key==='writeOffload') woViz.toggle(LAYERS.writeOffload.on);
+    else if(key==='haFailover') haViz.toggle(LAYERS.haFailover.on);
+    else if(key==='connPool') cpViz.toggle(LAYERS.connPool.on);
+    else if(key==='caching') clViz.toggle(LAYERS.caching.on);
+    else if(key==='rateLimit') rlViz.toggle(LAYERS.rateLimit.on);
+  };
+  window.opgReset=function(){
+    ORDER.forEach(function(k){LAYERS[k].on=false;});
+    closeAllVizPanels();
+    updateUI();
+  };
+  window.opgEnableAll=function(){
+    ORDER.forEach(function(k){LAYERS[k].on=true;});
+    closeAllVizPanels();
+    updateUI();
+  };
+
+  document.addEventListener('DOMContentLoaded',function(){
+    buildSolar();
+    schemaViz.buildGrid();
+    document.getElementById('openai-pg').classList.add('native-mode');
+    updateUI();
+
+    if(new URLSearchParams(window.location.search).get('notes')==='true'){
+      var ns=document.getElementById('notesSection');
+      if(ns)ns.classList.add('visible');
+      var nn=document.getElementById('navNotes');
+      if(nn)nn.style.display='';
+    }
+  });
+})();
+</script>
+<script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+<script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+<script src="subscribe.js"></script>
+</body>
+</html>
