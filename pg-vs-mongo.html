@@ -539,6 +539,21 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 .cl-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
 .cl-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
 
+/* ── Query Optimization Viz Panel ──────────────────────── */
+.qo-panel{
+  max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
+  background:var(--bg2);border-top:1px solid var(--border);margin:0 -1.2rem;padding:0 1.2rem
+}
+.qo-panel.open{max-height:620px;padding-top:1rem;padding-bottom:1rem}
+.qo-diagram{position:relative;min-height:380px}
+.qo-diagram svg{width:100%;height:100%;display:block}
+.qo-bar{
+  font-size:.78rem;font-weight:600;text-align:center;padding:.5rem;
+  border-radius:6px;margin-top:.6rem;transition:all .4s;line-height:1.3
+}
+.qo-bar.danger{background:rgba(248,113,113,.08);color:var(--rd);border:1px solid rgba(248,113,113,.25)}
+.qo-bar.safe{background:rgba(0,237,100,.06);color:var(--mg);border:1px solid rgba(0,237,100,.25)}
+
 /* ── Rate Limiting Viz Panel ─────────────────────────── */
 .rl-panel{
   max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1);
@@ -1025,6 +1040,11 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
           <div class="opg-lname"><span class="opg-ldot" style="background:var(--c-perf)"></span>Query Optimization</div>
           <div class="opg-ldesc">ORM review, idle timeouts, join limits</div>
         </div>
+      </div>
+      <!-- Query Optimization Viz Panel (expandable) -->
+      <div class="qo-panel" id="qoPanel">
+        <div class="qo-diagram" id="qoDiagram"></div>
+        <div class="qo-bar danger" id="qoBar">⚠ Unreviewed ORM query — 12-table join saturating CPU across all replicas</div>
       </div>
 
       <div class="opg-layer" data-layer="workloadIso" onclick="opgToggle('workloadIso')">
@@ -1956,6 +1976,215 @@ Primary ─┤
     return{toggle:toggle,stop:stop};
   })();
 
+  /* ── Query Optimization Viz Controller ────────────── */
+  var qoViz=(function(){
+    var intervals=[],timeouts=[];
+    function el(id){return document.getElementById(id);}
+    function clearTimers(){intervals.forEach(clearInterval);timeouts.forEach(clearTimeout);intervals=[];timeouts=[];}
+
+    function startBadQuery(){
+      clearTimers();
+      var dia=el('qoDiagram');if(!dia)return;
+      var W=360,H=380;
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="qo-arr-r" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f87171" opacity=".6"/></marker>';
+      svg+='<marker id="qo-arr-y" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#fbbf24" opacity=".6"/></marker>';
+      svg+='<marker id="qo-arr-o" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#fb923c" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" letter-spacing=".5">ORM WITHOUT REVIEW \u2014 BAD QUERIES + INDEX SPRAWL</text>';
+
+      // ORM box
+      svg+='<rect x="10" y="28" width="120" height="84" rx="6" fill="rgba(251,191,36,.06)" stroke="rgba(251,191,36,.3)" stroke-width="1.5"/>';
+      svg+='<text x="70" y="44" text-anchor="middle" fill="#fbbf24" font-size="7" font-weight="700">Application ORM</text>';
+      svg+='<text x="70" y="58" text-anchor="middle" fill="#fbbf24" font-size="5.5" opacity=".6">auto-generated SQL</text>';
+      svg+='<text x="70" y="72" text-anchor="middle" fill="#f87171" font-size="5" opacity=".7">no query review</text>';
+      svg+='<text x="70" y="84" text-anchor="middle" fill="#f87171" font-size="5" opacity=".7">no idle timeout</text>';
+      svg+='<text x="70" y="96" text-anchor="middle" fill="#fb923c" font-size="5" opacity=".7">auto-creates indexes</text>';
+
+      // PostgreSQL box with alarm pulse
+      svg+='<rect x="230" y="28" width="120" height="84" rx="6" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.3)" stroke-width="1.5"/>';
+      svg+='<text x="290" y="44" text-anchor="middle" fill="#f87171" font-size="7" font-weight="700">PostgreSQL</text>';
+      svg+='<text x="290" y="58" text-anchor="middle" fill="#f87171" font-size="6" opacity=".6">CPU: 98%</text>';
+      svg+='<text x="290" y="72" text-anchor="middle" fill="#f87171" font-size="6" opacity=".6">12-table Seq Scan</text>';
+      svg+='<text x="290" y="86" text-anchor="middle" fill="#f87171" font-size="6" opacity=".6">WAL: critical</text>';
+      svg+='<text x="290" y="100" text-anchor="middle" fill="#f87171" font-size="6" opacity=".6">Disk I/O: saturated</text>';
+      svg+='<rect x="230" y="28" width="120" height="84" rx="6" fill="none" stroke="rgba(248,113,113,.2)" stroke-width="3">';
+      svg+='<animate attributeName="stroke-opacity" values=".1;.4;.1" dur="1.5s" repeatCount="indefinite"/></rect>';
+
+      // Query flow arrow
+      var qP="qoSend";
+      svg+='<path id="'+qP+'" d="M130,60 C170,60 190,60 230,60" stroke="#fbbf24" stroke-width="2" fill="none" opacity=".35" marker-end="url(#qo-arr-y)"/>';
+      svg+='<circle r="3" fill="#fbbf24"><animateMotion dur="1s" repeatCount="indefinite"><mpath href="#'+qP+'"/></animateMotion>';
+      svg+='<animate attributeName="opacity" values="0;.8;.8;0" dur="1s" repeatCount="indefinite"/></circle>';
+      svg+='<circle r="3" fill="#fbbf24"><animateMotion dur="1s" begin=".5s" repeatCount="indefinite"><mpath href="#'+qP+'"/></animateMotion>';
+      svg+='<animate attributeName="opacity" values="0;.6;.6;0" dur="1s" begin=".5s" repeatCount="indefinite"/></circle>';
+
+      // Bad query box
+      svg+='<rect x="10" y="122" width="340" height="30" rx="4" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.25)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="137" text-anchor="middle" fill="#f87171" font-size="5" font-weight="600" font-family="monospace">';
+      svg+='SELECT u.*, o.*, p.*, i.*, s.*, r.* ... FROM users u JOIN orders o JOIN ... (12 tables)</text>';
+      svg+='<text x="180" y="148" text-anchor="middle" fill="#f87171" font-size="4.5" opacity=".6">Seq Scan x 12 \u2022 Cartesian product \u2022 runs 47s+ \u2022 holds connections</text>';
+
+      // INDEX SPRAWL section
+      svg+='<text x="180" y="172" text-anchor="middle" fill="#fb923c" font-size="7" font-weight="700" letter-spacing=".3">ORM AUTO-CREATED INDEXES \u2014 WRITE AMPLIFICATION</text>';
+
+      var indexes=[
+        {name:'idx_users_email_lower', cols:'lower(email)', size:'2.4 GB', writes:'+18%'},
+        {name:'idx_orders_created_status', cols:'created_at, status', size:'6.1 GB', writes:'+25%'},
+        {name:'idx_products_name_gin', cols:'name gin_trgm', size:'4.8 GB', writes:'+22%'},
+        {name:'idx_orders_user_product', cols:'user_id, product_id', size:'5.2 GB', writes:'+20%'},
+        {name:'idx_inventory_sku_lower', cols:'lower(sku)', size:'1.9 GB', writes:'+15%'},
+        {name:'idx_shipping_tracking', cols:'tracking_no, status', size:'3.7 GB', writes:'+19%'}
+      ];
+      indexes.forEach(function(idx,i){
+        var y=182+i*28;
+        // index row
+        svg+='<rect x="10" y="'+y+'" width="340" height="22" rx="3" fill="rgba(251,146,60,.05)" stroke="rgba(251,146,60,.25)" stroke-width="1">';
+        svg+='<animate attributeName="fill" values="rgba(251,146,60,.05);rgba(251,146,60,.12);rgba(251,146,60,.05)" dur="'+(2+i*0.3)+'s" repeatCount="indefinite"/>';
+        svg+='</rect>';
+        svg+='<text x="16" y="'+(y+14)+'" fill="#fb923c" font-size="4.5" font-weight="600" font-family="monospace">'+idx.name+'</text>';
+        svg+='<text x="215" y="'+(y+14)+'" fill="#fb923c" font-size="4" opacity=".6">'+idx.size+'</text>';
+        svg+='<text x="270" y="'+(y+14)+'" fill="#f87171" font-size="4.5" font-weight="700">writes '+idx.writes+'</text>';
+        // write amplification particle going to WAL
+        var wid="qoW"+i;
+        svg+='<path id="'+wid+'" d="M350,'+(y+11)+' L355,'+(y+11)+' L355,70 L350,70" stroke="#fb923c" stroke-width="1" fill="none" opacity=".2"/>';
+        svg+='<circle r="1.5" fill="#fb923c"><animateMotion dur="'+(1.5+i*0.2)+'s" repeatCount="indefinite"><mpath href="#'+wid+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.6;.6;0" dur="'+(1.5+i*0.2)+'s" repeatCount="indefinite"/></circle>';
+      });
+
+      // Summary
+      svg+='<rect x="10" y="355" width="340" height="20" rx="4" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.22)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="368" text-anchor="middle" fill="#f87171" font-size="6" font-weight="600">';
+      svg+='6 unnecessary indexes \u2192 +119% total write amplification \u2192 WAL bloat \u2192 replication lag</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('qoBar');
+      if(bar){bar.className='qo-bar danger';bar.textContent='\u26A0 ORM auto-creates indexes for every query pattern \u2014 massive write amplification + WAL pressure';}
+    }
+
+    function startOptimized(){
+      clearTimers();
+      var dia=el('qoDiagram');if(!dia)return;
+      var W=360,H=380;
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" preserveAspectRatio="xMidYMid meet">';
+      svg+='<defs>';
+      svg+='<marker id="qo-arr-g" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#00ed64" opacity=".6"/></marker>';
+      svg+='<marker id="qo-arr-b" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#60a5fa" opacity=".6"/></marker>';
+      svg+='<marker id="qo-arr-rx" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6" fill="#f87171" opacity=".6"/></marker>';
+      svg+='</defs>';
+
+      svg+='<text x="180" y="16" text-anchor="middle" fill="var(--tx3)" font-size="7" font-weight="700" letter-spacing=".5">QUERY REVIEW GATE \u2014 BAD QUERIES + INDEXES BLOCKED</text>';
+
+      // Application
+      svg+='<rect x="10" y="28" width="100" height="72" rx="6" fill="rgba(96,165,250,.06)" stroke="rgba(96,165,250,.3)" stroke-width="1.5"/>';
+      svg+='<text x="60" y="46" text-anchor="middle" fill="#60a5fa" font-size="7" font-weight="700">Application</text>';
+      svg+='<text x="60" y="60" text-anchor="middle" fill="#60a5fa" font-size="5.5" opacity=".6">ORM queries</text>';
+      svg+='<text x="60" y="74" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".7">idle timeout: 30s</text>';
+      svg+='<text x="60" y="86" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".7">stmt timeout: 5s</text>';
+
+      // Review gate
+      svg+='<rect x="128" y="26" width="104" height="76" rx="6" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.25)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="42" text-anchor="middle" fill="#00ed64" font-size="6.5" font-weight="700">\u{1F6E1}\uFE0F Review Gate</text>';
+      svg+='<text x="180" y="55" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".6">EXPLAIN ANALYZE</text>';
+      svg+='<text x="180" y="66" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".6">join limit: 4 tables</text>';
+      svg+='<text x="180" y="77" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".6">index audit</text>';
+      svg+='<text x="180" y="88" text-anchor="middle" fill="#00ed64" font-size="5" opacity=".6">no auto-index</text>';
+
+      // PostgreSQL healthy
+      svg+='<rect x="250" y="28" width="100" height="72" rx="6" fill="rgba(51,103,145,.08)" stroke="rgba(90,155,197,.3)" stroke-width="1.5"/>';
+      svg+='<text x="300" y="46" text-anchor="middle" fill="#5a9bc5" font-size="7" font-weight="700">PostgreSQL</text>';
+      svg+='<text x="300" y="60" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".6">CPU: 35%</text>';
+      svg+='<text x="300" y="74" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".6">Index scans only</text>';
+      svg+='<text x="300" y="88" text-anchor="middle" fill="#5a9bc5" font-size="6" opacity=".6">WAL: normal</text>';
+
+      // Good queries pass through
+      var goodQueries=[
+        {q:'SELECT u.id, u.name FROM users WHERE id=$1',note:'1 table \u2022 index \u2022 cost: low'},
+        {q:'SELECT o.* FROM orders WHERE user_id=$1 LIMIT 50',note:'1 table \u2022 index \u2022 cost: low'},
+        {q:'SELECT p.name FROM products JOIN orders ON ...',note:'2 tables \u2022 index \u2022 cost: med'}
+      ];
+      var qy=112;
+      goodQueries.forEach(function(gq,i){
+        var y=qy+i*34;
+        svg+='<rect x="10" y="'+y+'" width="230" height="26" rx="4" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.2)" stroke-width="1"/>';
+        svg+='<text x="18" y="'+(y+11)+'" fill="#00ed64" font-size="4.5" font-family="monospace">'+gq.q+'</text>';
+        svg+='<text x="18" y="'+(y+21)+'" fill="#00ed64" font-size="3.5" opacity=".6">'+gq.note+'</text>';
+        svg+='<text x="232" y="'+(y+16)+'" fill="#00ed64" font-size="8">\u2705</text>';
+
+        var pid="qoG"+i;
+        svg+='<path id="'+pid+'" d="M242,'+(y+13)+' C255,'+(y+13)+' 255,64 250,64" stroke="#00ed64" stroke-width="1.5" fill="none" opacity=".3" marker-end="url(#qo-arr-g)"/>';
+        svg+='<circle r="2.5" fill="#00ed64"><animateMotion dur="'+(1.5+i*0.3)+'s" repeatCount="indefinite"><mpath href="#'+pid+'"/></animateMotion>';
+        svg+='<animate attributeName="opacity" values="0;.7;.7;0" dur="'+(1.5+i*0.3)+'s" repeatCount="indefinite"/></circle>';
+      });
+
+      // Bad query blocked
+      var badY=qy+goodQueries.length*34;
+      svg+='<rect x="10" y="'+badY+'" width="230" height="26" rx="4" fill="rgba(248,113,113,.06)" stroke="rgba(248,113,113,.25)" stroke-width="1"/>';
+      svg+='<text x="18" y="'+(badY+11)+'" fill="#f87171" font-size="4.5" font-family="monospace">SELECT * FROM users JOIN orders JOIN ... (12)</text>';
+      svg+='<text x="18" y="'+(badY+21)+'" fill="#f87171" font-size="3.5" opacity=".7">12 tables \u2022 seq scan \u2022 cost: extreme \u2022 BLOCKED</text>';
+      svg+='<text x="232" y="'+(badY+16)+'" fill="#f87171" font-size="8">\u{1F6AB}</text>';
+
+      // Rejected path
+      var rejP="qoRej";
+      svg+='<path id="'+rejP+'" d="M242,'+(badY+13)+' C265,'+(badY+13)+' 265,'+(badY+35)+' 140,'+(badY+35)+'" stroke="#f87171" stroke-width="1.5" fill="none" opacity=".3" stroke-dasharray="4,3" marker-end="url(#qo-arr-rx)"/>';
+      svg+='<circle r="2.5" fill="#f87171"><animateMotion dur="2s" repeatCount="indefinite"><mpath href="#'+rejP+'"/></animateMotion>';
+      svg+='<animate attributeName="opacity" values="0;.6;.6;0" dur="2s" repeatCount="indefinite"/></circle>';
+      svg+='<text x="200" y="'+(badY+44)+'" text-anchor="middle" fill="#f87171" font-size="5" opacity=".7">\u2190 rejected \u2014 rewrite required</text>';
+
+      // Auto-index blocked
+      var idxY=badY+55;
+      svg+='<text x="180" y="'+idxY+'" text-anchor="middle" fill="#00ed64" font-size="6" font-weight="700">INDEX AUDIT \u2014 UNUSED + DUPLICATE INDEXES DROPPED</text>';
+      var keptIdx=[
+        {name:'idx_users_pkey',status:'KEPT',reason:'primary key'},
+        {name:'idx_orders_user_id',status:'KEPT',reason:'high selectivity'},
+        {name:'idx_products_name_gin',status:'DROPPED',reason:'unused 90 days, +22% write amp'}
+      ];
+      keptIdx.forEach(function(ki,i){
+        var y=idxY+6+i*20;
+        var isKept=ki.status==='KEPT';
+        var fc=isKept?'#00ed64':'#f87171';
+        var bc=isKept?'rgba(0,237,100,.04)':'rgba(248,113,113,.06)';
+        var sc=isKept?'rgba(0,237,100,.2)':'rgba(248,113,113,.25)';
+        svg+='<rect x="10" y="'+y+'" width="340" height="16" rx="3" fill="'+bc+'" stroke="'+sc+'" stroke-width="1"/>';
+        svg+='<text x="18" y="'+(y+11)+'" fill="'+fc+'" font-size="4.5" font-family="monospace" font-weight="600">'+ki.name+'</text>';
+        svg+='<text x="220" y="'+(y+11)+'" fill="'+fc+'" font-size="4.5" font-weight="700">'+ki.status+'</text>';
+        svg+='<text x="260" y="'+(y+11)+'" fill="'+fc+'" font-size="4" opacity=".6">'+ki.reason+'</text>';
+      });
+
+      // Summary
+      var sumY=idxY+6+keptIdx.length*20+6;
+      svg+='<rect x="10" y="'+sumY+'" width="340" height="36" rx="5" fill="rgba(0,237,100,.04)" stroke="rgba(0,237,100,.2)" stroke-width="1.5"/>';
+      svg+='<text x="180" y="'+(sumY+14)+'" text-anchor="middle" fill="#00ed64" font-size="6.5" font-weight="600">Reviewed queries only \u2022 curated indexes \u2022 write amplification minimized</text>';
+      svg+='<text x="180" y="'+(sumY+27)+'" text-anchor="middle" fill="var(--tx3)" font-size="5">CPU 98%\u219235% \u2022 WAL volume -60% \u2022 replication lag eliminated \u2022 disk I/O -45%</text>';
+
+      svg+='</svg>';
+      dia.innerHTML=svg;
+
+      var bar=el('qoBar');
+      if(bar){bar.className='qo-bar safe';bar.textContent='\u2705 Query review gate + index audit \u2014 expensive queries blocked, unused indexes dropped, write amp minimized';}
+    }
+
+    function stop(){clearTimers();}
+
+    function toggle(isOn){
+      var panel=el('qoPanel');
+      if(!panel)return;
+      stop();
+      if(isOn!==undefined){
+        panel.classList.add('open');
+        if(isOn)startOptimized();else startBadQuery();
+      } else {
+        panel.classList.remove('open');
+      }
+    }
+
+    return{toggle:toggle,stop:stop};
+  })();
+
   /* ── Cache + Lock Viz Controller ─────────────────── */
   var clViz=(function(){
     var intervals=[],timeouts=[];
@@ -2732,14 +2961,14 @@ Primary ─┤
     var toggle=document.getElementById('nativeToggle');
     if(section)section.classList.toggle('native-mode',nativeOn);
     if(toggle)toggle.classList.toggle('on',nativeOn);
-    if(nativeOn){schemaViz.toggle();wlViz.toggle();woViz.toggle();haViz.toggle();cpViz.toggle();clViz.toggle();rlViz.toggle();}
+    if(nativeOn){schemaViz.toggle();wlViz.toggle();woViz.toggle();haViz.toggle();cpViz.toggle();clViz.toggle();rlViz.toggle();qoViz.toggle();}
     if(!nativeOn){
       ORDER.forEach(function(k){LAYERS[k].on=true;});
       updateUI();
     }
   };
 
-  function closeAllVizPanels(){schemaViz.toggle();wlViz.toggle();woViz.toggle();haViz.toggle();cpViz.toggle();clViz.toggle();rlViz.toggle();}
+  function closeAllVizPanels(){schemaViz.toggle();wlViz.toggle();woViz.toggle();haViz.toggle();cpViz.toggle();clViz.toggle();rlViz.toggle();qoViz.toggle();}
 
   window.opgToggle=function(key){
     LAYERS[key].on=!LAYERS[key].on;
@@ -2752,6 +2981,7 @@ Primary ─┤
     else if(key==='connPool') cpViz.toggle(LAYERS.connPool.on);
     else if(key==='caching') clViz.toggle(LAYERS.caching.on);
     else if(key==='rateLimit') rlViz.toggle(LAYERS.rateLimit.on);
+    else if(key==='queryOpt') qoViz.toggle(LAYERS.queryOpt.on);
   };
   window.opgReset=function(){
     ORDER.forEach(function(k){LAYERS[k].on=false;});
