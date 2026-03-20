@@ -1393,6 +1393,201 @@ Primary ─┤
      • <strong>Query digest limits</strong> alone can't stop a connection storm</p>
 
   <div class="callout"><strong>The retry storm problem:</strong> Without rate limits, a timeout cascade is inevitable. Service A times out → retries → doubles load → Service B starts timing out → retries → quadruples load. This exponential amplification is why a single runaway service at 50K QPS can take down a cluster that normally handles 200K QPS comfortably. The four layers ensure the blast radius is contained at the outermost possible point.</div>
+
+  <h3>Query Optimization & Index Management — The ORM Problem</h3>
+
+  <h4>Why ORMs Generate Bad Queries</h4>
+  <p>The <strong>object-relational impedance mismatch</strong> is the root cause. ORMs map object graphs to relational tables. When application code traverses <code>user.orders.products.reviews</code>, the ORM either lazy-loads (N+1 problem — one query per object) or eager-loads (massive JOINs across every related table). It doesn't understand data distribution, access patterns, or what indexes exist.</p>
+
+  <p>ORM-generated SQL is built for <strong>correctness, not performance</strong>. It uses <code>SELECT *</code> instead of projecting only needed columns. It generates JOINs based on model relationships, not on selectivity or index coverage. It has <strong>zero visibility</strong> into <code>EXPLAIN ANALYZE</code> — it doesn't know that a 12-table JOIN produces a plan with nested-loop sequential scans touching 4 million rows.</p>
+
+  <h4>The Index Sprawl Problem</h4>
+  <p>ORMs like Rails ActiveRecord, Django, and SQLAlchemy (via Alembic) auto-create indexes in database migrations — every foreign key gets one, every <code>unique=True</code> field, and sometimes indexes for common lookup patterns. Over time this accumulates. A mature Rails app can easily have <strong>200+ indexes</strong>, many unused or duplicated.</p>
+
+  <p>Every index on a table must be updated on <strong>every INSERT, UPDATE, and DELETE</strong>. This is the <strong>write amplification</strong> problem:</p>
+
+  <div class="code-block">
+Table: users (47M rows)
+Indexes:
+  idx_users_pkey           → updated every INSERT
+  idx_users_email_lower    → updated every INSERT + UPDATE on email
+  idx_users_created_at     → updated every INSERT
+  idx_users_status         → updated every INSERT + UPDATE on status
+  idx_users_org_id         → updated every INSERT + UPDATE on org_id
+  idx_users_name_gin       → updated every INSERT + UPDATE on name (GIN = expensive)
+
+6 indexes → a single INSERT causes <b>7 write operations</b> (1 heap + 6 indexes)
+Each generates WAL → replicated to 50 replicas → 350 total write ops per INSERT</div>
+
+  <p>At OpenAI's scale (millions of writes/day), unnecessary indexes translate directly into: higher WAL volume, more replication lag, more checkpoint I/O, and more disk usage. An index that adds +20% write amplification across 50 replicas is catastrophically expensive even if it's never used for reads.</p>
+
+  <h4>What OpenAI Actually Does</h4>
+  <p>Complete prevention is impossible — developers will always write new ORM code generating new patterns. Instead, they treat it as a <strong>continuous operational layer</strong>:</p>
+
+  <p>• <strong>Query review gates in CI/CD</strong> — hooks that run <code>EXPLAIN</code> on new queries against production-like data. If cost exceeds a threshold or a sequential scan appears on a large table, the PR is blocked before merge.<br>
+     • <strong><code>statement_timeout = 5s</code></strong> — PostgreSQL kills any query running longer than this. The bad 47s ORM join never finishes.<br>
+     • <strong>Idle connection timeouts</strong> — kill connections sitting idle too long, preventing pool exhaustion from leaked ORM connections.<br>
+     • <strong>Index audits via <code>pg_stat_user_indexes</code></strong> — periodic review to find indexes with <code>idx_scan = 0</code> (never used for reads). Drop them to reclaim write bandwidth.<br>
+     • <strong><code>pg_stat_statements</code></strong> — tracks query patterns by digest to identify top CPU-consuming queries for rewriting or targeted index creation.</p>
+
+  <div class="callout"><strong>Key insight:</strong> You cannot fully prevent ORM query/index sprawl. Developers will always write new code. The gate catches problems <em>before production</em>, but it's a continuous process — which is exactly why OpenAI treats this as an operational guardrail layer, not a solved problem.</div>
+
+  <h4>Index Builds — PostgreSQL vs MongoDB</h4>
+  <p>When ORM-created indexes need to be built (or dropped and rebuilt), the build process itself is a major operational concern:</p>
+
+  <table class="compare-table">
+    <tr><th>Aspect</th><th>PostgreSQL</th><th>MongoDB</th></tr>
+    <tr>
+      <td><strong>Default CREATE INDEX</strong></td>
+      <td>Takes <code>ACCESS EXCLUSIVE</code> lock on the table — blocks ALL reads and writes for the entire duration of the build. On a 47M row table, this can be minutes to hours.</td>
+      <td>Hybrid build (since 4.2) — brief exclusive lock at start and finish, but reads/writes continue during the bulk phase. Much less disruptive.</td>
+    </tr>
+    <tr>
+      <td><strong>Concurrent option</strong></td>
+      <td><code>CREATE INDEX CONCURRENTLY</code> — no write lock, but takes 2× longer, can fail and leave an invalid index, and cannot run inside a transaction.</td>
+      <td>N/A — hybrid is the only mode since 4.2. No choice needed, but also no way to force a faster exclusive build.</td>
+    </tr>
+    <tr>
+      <td><strong>Impact on replicas</strong></td>
+      <td>Each replica must build the index independently (physical replication replays the WAL, which includes the index build). Heavy WAL traffic during build.</td>
+      <td>Built on primary, then <strong>blocks replication on each secondary</strong> while the secondary builds its copy. Secondaries fall behind during build.</td>
+    </tr>
+    <tr>
+      <td><strong>The "finish lock" problem</strong></td>
+      <td><code>CONCURRENTLY</code> needs to wait for all transactions that started before the build to complete — can hang if long-running queries exist.</td>
+      <td>The commit lock at the end must drain the write queue and apply all changes made during the build. Under heavy write traffic, this lock can be significant.</td>
+    </tr>
+    <tr>
+      <td><strong>Write amplification</strong></td>
+      <td>Every index adds WAL overhead per write. Replicated to all replicas via WAL shipping.</td>
+      <td>Every index adds oplog overhead per write. Replicated to all secondaries via oplog.</td>
+    </tr>
+    <tr>
+      <td><strong>Background builds on secondaries</strong></td>
+      <td>Not applicable — WAL replay is the mechanism. Secondary is read-only.</td>
+      <td>Secondaries build indexes in the <strong>foreground</strong>, blocking replication. If all secondaries build simultaneously, you lose read capacity.</td>
+    </tr>
+  </table>
+
+  <h4>MongoDB Index Builds — The Nuance</h4>
+  <p>MongoDB's hybrid index build (4.2+) is often described as "background" but this is misleading:</p>
+
+  <p><strong>1. Lock at start</strong> — brief exclusive lock to register the build in the catalog. Usually milliseconds.</p>
+  <p><strong>2. Bulk build phase</strong> — reads and writes continue. The build scans the collection and builds the index in a side table. This is the "background" part.</p>
+  <p><strong>3. Lock at finish</strong> — this is the important one. The build takes an exclusive lock to commit the completed index. Under heavy write traffic, it must drain pending writes and apply all changes that happened during the build. This lock can be <strong>seconds to minutes</strong> on write-heavy collections.</p>
+  <p><strong>4. Secondaries</strong> — each secondary receives the index build via the oplog and builds it locally. During this build, <strong>replication is blocked</strong>. If you're building a large index, secondaries accumulate replication lag. Build on all secondaries simultaneously and you lose read capacity.</p>
+
+  <p><strong>Before 4.2</strong> — you had two bad choices: <code>foreground</code> (locks the entire collection, similar to PostgreSQL's default) or <code>background</code> (no lock but slower, more memory, and a less efficient B-tree). Neither was great.</p>
+
+  <div class="callout"><strong>Bottom line:</strong> MongoDB's index builds are genuinely less disruptive than PostgreSQL's default <code>CREATE INDEX</code>. But the ongoing <strong>write amplification cost</strong> of maintaining indexes is identical in both systems. The ORM index sprawl problem — 6 unnecessary indexes causing +119% write overhead — would hurt MongoDB just as much on the write path. The difference is that <em>creating</em> those indexes is less of an outage event in MongoDB, while <em>maintaining</em> them is equally expensive everywhere.</div>
+
+  <h3>VACUUM FULL vs Compact — Reclaiming Disk Space</h3>
+
+  <h4>The Problem: Dead Space</h4>
+  <p>Both databases accumulate wasted space over time after heavy deletes and updates. How they reclaim it is architecturally different — and the operational impact is dramatically different.</p>
+
+  <h4>PostgreSQL — VACUUM FULL</h4>
+  <p>PostgreSQL's MVCC stores dead tuples <strong>in-line in the heap file</strong>. When you UPDATE a row, the old version stays in the file as a dead tuple. When you DELETE, the row is marked dead but remains physically present. Regular <code>VACUUM</code> marks this space as reusable for future inserts, but the <strong>file never shrinks</strong>.</p>
+
+  <p>If you delete 50% of a 100GB table, you still have a 100GB file with 50GB of holes. Regular VACUUM makes those holes fillable, but the file stays 100GB on disk. Only <code>VACUUM FULL</code> physically compacts it.</p>
+
+  <p><code>VACUUM FULL</code> rewrites the <strong>entire table</strong> to a new physical file:</p>
+
+  <div class="code-block">
+VACUUM FULL users;   -- 100GB table, 50% bloat
+
+What happens:
+1. Takes <b>ACCESS EXCLUSIVE</b> lock → blocks ALL reads AND writes
+2. Creates a brand new file
+3. Copies every live row into the new file (compacted)
+4. Rebuilds every index on the table
+5. Swaps old file for new file
+6. Releases lock
+
+Duration: <b>hours</b> on large tables
+Disk needed: <b>~2× table size</b> (old + new coexist until swap)
+Impact: <b>total outage</b> for that table for the entire duration</div>
+
+  <h4>MongoDB — compact</h4>
+  <p>MongoDB with WiredTiger doesn't have the MVCC dead tuple problem. WiredTiger uses document-level concurrency with snapshot isolation, and dead versions are cleaned up by <strong>internal cache eviction</strong> — not by an external process like VACUUM. WiredTiger's checkpointing (every 60s) and page-level management (automatic splits and merges) handle most fragmentation without any manual intervention.</p>
+
+  <p>When you do need to reclaim space (e.g., after a mass delete), the <code>compact</code> command calls WiredTiger's internal <code>WT_SESSION::compact()</code>:</p>
+
+  <div class="code-block">
+db.users.runCommand({ compact: "users" })
+
+What happens:
+1. Calls WiredTiger internal compaction
+2. Shuffles pages within the <b>existing files</b> — moves data from end toward beginning
+3. <b>Blocks writes</b> on the collection, but <b>reads continue</b>
+4. Releases freed space at the end of the file back to OS
+
+Duration: <b>shorter</b> — no full copy, in-place reorganization
+Disk needed: <b>minimal extra</b> — no second copy
+Impact: <b>write-only outage</b> for that collection</div>
+
+  <h4>Head-to-Head Comparison</h4>
+
+  <table class="compare-table">
+    <tr><th>Aspect</th><th>PostgreSQL VACUUM FULL</th><th>MongoDB compact</th></tr>
+    <tr>
+      <td><strong>Lock type</strong></td>
+      <td><code>ACCESS EXCLUSIVE</code> — blocks all reads AND writes</td>
+      <td>Blocks writes on collection; reads continue</td>
+    </tr>
+    <tr>
+      <td><strong>Mechanism</strong></td>
+      <td>Rewrites entire table to new file + rebuilds all indexes</td>
+      <td>WiredTiger reorganizes pages in-place within existing files</td>
+    </tr>
+    <tr>
+      <td><strong>Disk space needed</strong></td>
+      <td>~2× table size (old file + new file)</td>
+      <td>Minimal — no second copy</td>
+    </tr>
+    <tr>
+      <td><strong>Duration (100GB table)</strong></td>
+      <td>Hours</td>
+      <td>Minutes to tens of minutes</td>
+    </tr>
+    <tr>
+      <td><strong>How often needed</strong></td>
+      <td>Whenever table bloat gets severe — MVCC dead tuples accumulate and regular VACUUM cannot shrink the file</td>
+      <td>Rarely — WiredTiger's checkpointing, cache eviction, and page management handle most fragmentation automatically</td>
+    </tr>
+    <tr>
+      <td><strong>Auto-maintenance</strong></td>
+      <td><code>autovacuum</code> runs regular VACUUM (marks dead space reusable) but <strong>never</strong> runs VACUUM FULL</td>
+      <td>MongoDB 7.0+ introduced <code>autoCompact</code> — background compaction without manual intervention</td>
+    </tr>
+    <tr>
+      <td><strong>Practical alternative</strong></td>
+      <td><code>pg_repack</code> — community tool that rewrites the table online with only a brief exclusive lock at the end</td>
+      <td>Usually not needed; WiredTiger self-manages</td>
+    </tr>
+    <tr>
+      <td><strong>Replica impact</strong></td>
+      <td>Must run independently on each replica</td>
+      <td>Run on secondaries first, stepdown primary, then compact</td>
+    </tr>
+  </table>
+
+  <h4>Why PostgreSQL Needs VACUUM at All</h4>
+  <p>PostgreSQL's MVCC design is the root cause. Every UPDATE creates a new tuple version and leaves the old one dead in the heap. Every DELETE marks a tuple dead but doesn't remove it. This is <strong>by design</strong> — it allows concurrent readers to see consistent snapshots without locking. But the cost is that dead tuples accumulate and the table file grows without bound.</p>
+
+  <p>Regular <code>VACUUM</code> (run by autovacuum) handles most of this — it marks dead space reusable so future inserts fill the gaps. But it cannot <strong>shrink the physical file</strong>. A table that grew to 200GB during a spike will stay at 200GB on disk forever, even if only 50GB of live data remains. The only way to reclaim that space is VACUUM FULL (or <code>pg_repack</code>).</p>
+
+  <h4>Why MongoDB Rarely Needs Compact</h4>
+  <p>WiredTiger's architecture avoids the accumulation problem:</p>
+  <p>• <strong>No in-line dead tuples</strong> — old document versions are cleaned up by internal cache eviction, not by an external process<br>
+     • <strong>Checkpointing every 60s</strong> — writes consolidated data to disk, naturally compacting<br>
+     • <strong>Page-level management</strong> — WiredTiger handles page splits and merges internally, resolving moderate fragmentation automatically<br>
+     • <strong>Block-manager reuse</strong> — freed blocks are tracked and reused immediately, unlike PostgreSQL's hole-in-the-middle problem</p>
+
+  <p>You typically only need <code>compact</code> after extreme scenarios — like dropping an entire large collection's worth of documents and wanting to return disk space to the OS.</p>
+
+  <div class="callout"><strong>Bottom line:</strong> MongoDB <code>compact</code> is <strong>significantly less impactful</strong> than PostgreSQL <code>VACUUM FULL</code>: it doesn't block reads, doesn't need double the disk space, and is faster. But the more important difference is that <strong>you rarely need it at all</strong> — WiredTiger self-manages fragmentation, while PostgreSQL's MVCC design guarantees that dead space will accumulate and eventually require manual intervention. The PostgreSQL community knows this is a problem — <code>pg_repack</code> exists specifically to work around VACUUM FULL's outage-inducing lock, and autovacuum tuning is critical at scale. But the need for an external tool to avoid an outage is itself a reflection of the architecture.</div>
+
 </section>
 
 </div>
