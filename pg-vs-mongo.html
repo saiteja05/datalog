@@ -611,10 +611,49 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 .notes-section{display:none;padding:3rem 0 4rem;border-top:1px solid var(--border)}
 .notes-section.visible{display:block}
 .notes-section h2{font-size:1.6rem;margin-bottom:1.5rem}
-.notes-section h3{font-size:1.2rem;font-weight:700;color:var(--c-both);margin:2rem 0 .6rem}
+.notes-section h3{font-size:1.2rem;font-weight:700;margin:2rem 0 .6rem}
 .notes-section h4{font-size:1rem;font-weight:700;color:var(--tx);margin:1.2rem 0 .4rem}
 .notes-section p{color:var(--tx2);font-size:.95rem;line-height:1.7;margin-bottom:.6rem;max-width:860px}
 .notes-section strong{color:var(--tx)}
+
+.notes-toc{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.8rem;
+  margin:1.5rem 0 2.5rem;padding:1.2rem;border-radius:10px;
+  background:rgba(255,255,255,.02);border:1px solid var(--border)
+}
+.notes-toc a{
+  display:flex;align-items:center;gap:.5rem;padding:.55rem .8rem;border-radius:6px;
+  font-size:.82rem;font-weight:600;color:var(--tx2);text-decoration:none;
+  border:1px solid transparent;transition:all .2s
+}
+.notes-toc a:hover{background:rgba(255,255,255,.04);border-color:var(--border)}
+.notes-toc .toc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+
+.notes-db-header{
+  display:flex;align-items:center;gap:.7rem;padding:1rem 1.2rem;margin:2.5rem 0 1.2rem;
+  border-radius:8px;border-left:4px solid
+}
+.notes-db-header h3{margin:0;font-size:1.15rem}
+.notes-db-header .ndb-icon{font-size:1.5rem}
+.notes-db-header .ndb-sub{font-size:.78rem;color:var(--tx3);margin-top:.15rem}
+
+.notes-db-header.pg{border-color:#60a5fa;background:rgba(96,165,250,.04)}
+.notes-db-header.pg h3{color:#60a5fa}
+.notes-db-header.mongo{border-color:#00ed64;background:rgba(0,237,100,.04)}
+.notes-db-header.mongo h3{color:#00ed64}
+.notes-db-header.mysql{border-color:#f59e0b;background:rgba(245,158,11,.04)}
+.notes-db-header.mysql h3{color:#f59e0b}
+.notes-db-header.compare{border-color:#c084fc;background:rgba(192,132,252,.04)}
+.notes-db-header.compare h3{color:#c084fc}
+.notes-db-header.ops{border-color:#fb923c;background:rgba(251,146,60,.04)}
+.notes-db-header.ops h3{color:#fb923c}
+
+.notes-topic{
+  margin:1rem 0 1.5rem;padding:1rem 1.2rem;border-radius:8px;
+  background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06)
+}
+.notes-topic h4:first-child{margin-top:0}
+
 .notes-section code{
   font-family:'JetBrains Mono',monospace;font-size:.85rem;
   background:rgba(255,255,255,.05);padding:.15rem .4rem;border-radius:4px;color:var(--cy)
@@ -663,6 +702,91 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 @media(max-width:420px){
   .opg-bottom>.opg-health{grid-template-columns:1fr}
 }
+
+/* ── Index Internals Section ───────────────────────────── */
+#internals{padding:3rem 0 3.5rem;border-bottom:1px solid var(--border)}
+.int-hdr{text-align:center;margin-bottom:1.5rem}
+.int-hdr h2{font-size:1.8rem;margin-bottom:.4rem}
+.int-hdr p{color:var(--tx2);font-size:1rem;max-width:720px;margin:.4rem auto 0;line-height:1.5}
+.int-controls{display:flex;align-items:center;gap:1rem;justify-content:center;margin-bottom:1.2rem;flex-wrap:wrap}
+.int-btn{
+  font-size:.82rem;font-weight:700;padding:.45rem 1.2rem;border-radius:6px;cursor:pointer;
+  border:1.5px solid rgba(96,165,250,.3);background:rgba(96,165,250,.06);color:#60a5fa;
+  transition:all .2s;font-family:inherit
+}
+.int-btn:hover{background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.5)}
+.int-btn:disabled{opacity:.35;cursor:default}
+.int-btn.reset{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05);color:#f87171}
+.int-btn.reset:hover{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.5)}
+.int-mode{display:flex;border-radius:6px;overflow:hidden;border:1.5px solid var(--border)}
+.int-mode button{
+  font-size:.78rem;font-weight:700;padding:.4rem 1rem;cursor:pointer;
+  border:none;background:transparent;color:var(--tx3);font-family:inherit;transition:all .2s
+}
+.int-mode button.active{background:rgba(96,165,250,.15);color:#60a5fa}
+.int-mode button:not(.active):hover{background:rgba(255,255,255,.04)}
+.int-counter{font-size:.8rem;color:var(--tx3);font-family:'JetBrains Mono',monospace}
+.int-explainer{
+  text-align:center;font-size:.82rem;color:var(--tx2);margin-bottom:1.2rem;
+  padding:.6rem 1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;
+  max-width:860px;margin-left:auto;margin-right:auto;line-height:1.5
+}
+.int-explainer strong{color:var(--tx)}
+.int-explainer code{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--cy);background:rgba(255,255,255,.05);padding:.1rem .3rem;border-radius:3px}
+.int-panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
+.int-panel{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
+  padding:1rem;min-height:300px;position:relative;overflow:hidden
+}
+.int-panel-title{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:.8rem;text-align:center}
+.int-panel-title span:not(.int-data-badge):not(.int-hop-label){color:var(--cy);font-size:.7rem;font-weight:500;display:block;margin-top:2px;letter-spacing:0;text-transform:none}
+.int-panel-title .int-data-badge{display:inline-block;margin-left:.3rem;text-transform:none;vertical-align:middle}
+.int-panel svg{width:100%;display:block}
+.int-data-badge{
+  display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;
+  padding:.2rem .5rem;border-radius:4px;margin-left:.5rem;vertical-align:middle;
+  animation:int-badge-pulse 2s ease-in-out infinite
+}
+.int-data-badge.here{background:rgba(0,237,100,.12);color:#00ed64;border:1px solid rgba(0,237,100,.3)}
+.int-data-badge.pointer{background:rgba(96,165,250,.08);color:#60a5fa;border:1px solid rgba(96,165,250,.25);animation:none}
+.int-data-badge.pointer-mysql{background:rgba(251,191,36,.08);color:#fbbf24;border:1px solid rgba(251,191,36,.25);animation:none}
+.int-no-storage{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;min-height:200px;text-align:center;gap:.8rem;padding:1.5rem
+}
+.int-no-storage .int-ns-icon{font-size:2.5rem;opacity:.5}
+.int-no-storage .int-ns-title{font-size:.9rem;font-weight:700;color:var(--tx)}
+.int-no-storage .int-ns-desc{font-size:.78rem;color:var(--tx3);line-height:1.5;max-width:220px}
+.int-hop-label{
+  font-size:.6rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:.15rem .4rem;border-radius:3px;display:inline-block;margin-top:.3rem
+}
+.int-hop-label.one{background:rgba(0,237,100,.1);color:#00ed64}
+.int-hop-label.two{background:rgba(251,191,36,.1);color:#fbbf24}
+.int-btn.update{border-color:rgba(192,132,252,.3);background:rgba(192,132,252,.05);color:#c084fc}
+.int-btn.update:hover{background:rgba(192,132,252,.12);border-color:rgba(192,132,252,.5)}
+.int-btn.delete{border-color:rgba(248,113,113,.3);background:rgba(248,113,113,.05);color:#f87171}
+.int-btn.delete:hover{background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.5)}
+.int-btn.vacuum{border-color:rgba(251,191,36,.3);background:rgba(251,191,36,.05);color:#fbbf24}
+.int-btn.vacuum:hover{background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.5)}
+.int-log{
+  margin:.6rem auto 1.2rem;max-width:860px;min-height:1.6rem;padding:.4rem .8rem;
+  border-radius:6px;font-size:.78rem;line-height:1.5;
+  background:rgba(255,255,255,.02);border:1px solid var(--border);color:var(--tx3);
+  font-family:'JetBrains Mono',monospace;transition:all .3s
+}
+.int-log.pg-log{border-color:rgba(248,113,113,.2)}
+.int-log.mongo-log{border-color:rgba(0,237,100,.2)}
+.int-log.mysql-log{border-color:rgba(251,191,36,.2)}
+.int-log strong{color:var(--tx)}
+.int-dead-count{
+  display:inline-block;font-size:.7rem;padding:.15rem .4rem;border-radius:4px;margin-left:.5rem;
+  background:rgba(248,113,113,.1);color:#f87171;font-weight:700;vertical-align:middle
+}
+@keyframes int-badge-pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes int-flash{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
+@keyframes int-dead{0%{opacity:1}100%{opacity:.4}}
+@media(max-width:900px){.int-panels{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -674,6 +798,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
       Postgres & MongoDB at Humongous Scale
     </div>
     <div class="nav-links">
+      <a href="#internals">Index Internals</a>
       <a href="#openai-pg">OpenAI + PostgreSQL</a>
       <a href="#notesSection" id="navNotes" style="display:none">Notes</a>
     </div>
@@ -686,6 +811,47 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
   <h1>Postgres and MongoDB at Humongous Scale</h1>
   <p>Real differentiators — beyond the surface-level comparisons.</p>
 </div>
+
+<section id="internals">
+  <div class="int-hdr">
+    <h2>Understand Internals</h2>
+    <p>How PostgreSQL, MySQL/InnoDB, and MongoDB store data and build indexes on disk. Insert, update, and delete rows to see dead tuples (PG), in-place updates (MongoDB/MySQL), MVCC bloat, and how VACUUM / compact works.</p>
+  </div>
+
+  <div class="int-controls">
+    <button class="int-btn" id="intInsert" onclick="intViz.insertNext()">Insert Row</button>
+    <button class="int-btn update" id="intUpdate" onclick="intViz.updateRandom()" disabled>Update Row</button>
+    <button class="int-btn delete" id="intDelete" onclick="intViz.deleteRandom()" disabled>Delete Row</button>
+    <button class="int-btn vacuum" id="intVacuum" onclick="intViz.vacuum()" disabled>Vacuum / Compact</button>
+    <button class="int-btn reset" id="intReset" onclick="intViz.reset()">Reset</button>
+    <span class="int-counter" id="intCounter">0 / 15 rows</span>
+    <div class="int-mode" id="intMode">
+      <button class="active" onclick="intViz.switchMode('pg')">PostgreSQL</button>
+      <button onclick="intViz.switchMode('mysql')">MySQL / InnoDB</button>
+      <button onclick="intViz.switchMode('mongo')">MongoDB</button>
+    </div>
+  </div>
+  <div class="int-log" id="intLog">Click <strong>Insert Row</strong> to start. Then try Update and Delete to see how each engine handles mutations.</div>
+
+  <div class="int-explainer" id="intExplainer">
+    <strong>PostgreSQL:</strong> Data stored in an unordered <strong>heap</strong>. Both primary and secondary indexes are regular B-Trees pointing to <code>ctid (page, offset)</code>.<br><span class="int-hop-label one">Primary lookup = 1 hop &nbsp;|&nbsp; Secondary lookup = 1 hop</span>
+  </div>
+
+  <div class="int-panels">
+    <div class="int-panel" id="intStorage" style="border-color:rgba(0,237,100,.3)">
+      <div class="int-panel-title">Storage <span class="int-data-badge here">&#x1F4BE; DATA LIVES HERE</span><span id="intStorageSub">Heap — rows in insertion order</span></div>
+      <div id="intStorageViz"></div>
+    </div>
+    <div class="int-panel" id="intPrimary">
+      <div class="int-panel-title">Primary Index <span class="int-data-badge pointer">POINTER → HEAP</span><span>B-Tree on id</span></div>
+      <div id="intPrimaryViz"></div>
+    </div>
+    <div class="int-panel" id="intSecondary">
+      <div class="int-panel-title">Secondary Index <span class="int-data-badge pointer">1 HOP → HEAP</span><span>B-Tree on name</span></div>
+      <div id="intSecondaryViz"></div>
+    </div>
+  </div>
+</section>
 
 <section id="openai-pg">
   <div class="opg-hdr">
@@ -1192,407 +1358,953 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 <!-- ── Notes Section (visible only with ?notes=true) ── -->
 <section class="notes-section" id="notesSection">
   <h2>Deep-Dive Notes</h2>
+  <p style="color:var(--tx3);margin-bottom:.5rem">Technical reference organized by database engine. Click to jump.</p>
 
-  <h3>WAL Replication — Why It Chokes the Primary</h3>
+  <!-- ═══ TABLE OF CONTENTS ═══ -->
+  <div class="notes-toc">
+    <a href="#notes-pg"><span class="toc-dot" style="background:#60a5fa"></span>PostgreSQL Internals</a>
+    <a href="#notes-mongo"><span class="toc-dot" style="background:#00ed64"></span>MongoDB Internals</a>
+    <a href="#notes-mysql"><span class="toc-dot" style="background:#f59e0b"></span>MySQL / InnoDB</a>
+    <a href="#notes-compare"><span class="toc-dot" style="background:#c084fc"></span>Cross-Engine Comparisons</a>
+    <a href="#notes-ops"><span class="toc-dot" style="background:#fb923c"></span>OpenAI Operational Layers</a>
+  </div>
 
-  <h4>Physical vs. Logical: Why WAL Is Bigger Than Oplog</h4>
-  <p>WAL records <strong>how the disk changed</strong>. Oplog records <strong>what the user did</strong>. That difference is massive at scale.</p>
+  <!-- ═══════════════════════════════════════════════════════
+       POSTGRESQL
+       ═══════════════════════════════════════════════════════ -->
+  <div class="notes-db-header pg" id="notes-pg">
+    <div>
+      <div class="ndb-icon">&#x1F418;</div>
+    </div>
+    <div>
+      <h3>PostgreSQL Internals</h3>
+      <div class="ndb-sub">Process-per-connection &middot; MVCC with heap dead tuples &middot; Physical WAL replication</div>
+    </div>
+  </div>
 
-  <h4>PostgreSQL WAL — Physical Replication</h4>
-  <p>WAL operates at the <strong>storage page level</strong>. PostgreSQL stores data in 8KB pages. When you do:</p>
-  <div class="code-block"><b>UPDATE</b> users <b>SET</b> name = 'Alice' <b>WHERE</b> id = 42;</div>
-  <p>WAL doesn't log "set name to Alice for id 42". It logs:</p>
-  <p>• The <strong>full 8KB data page</strong> image (or a diff of it) for the heap tuple<br>
-     • Page changes for <strong>every index</strong> on that table (B-tree leaf page modifications) — 5 indexes means 5 more page-level changes<br>
-     • TOAST table changes if the row has large values<br>
-     • Visibility map updates (for MVCC)<br>
-     • Free space map updates</p>
-  <p>A single logical row change can produce <strong>tens of kilobytes</strong> of WAL because it's recording the physical byte changes across multiple pages.</p>
+  <div class="notes-topic">
+    <h4>WAL — Physical Replication</h4>
+    <p>WAL operates at the <strong>storage page level</strong>. PostgreSQL stores data in 8KB pages. When you do:</p>
+    <div class="code-block"><b>UPDATE</b> users <b>SET</b> name = 'Alice' <b>WHERE</b> id = 42;</div>
+    <p>WAL doesn't log "set name to Alice for id 42". It logs:</p>
+    <p>• The <strong>full 8KB data page</strong> image (or a diff of it) for the heap tuple<br>
+       • Page changes for <strong>every index</strong> on that table (B-tree leaf page modifications) — 5 indexes means 5 more page-level changes<br>
+       • TOAST table changes if the row has large values<br>
+       • Visibility map updates (for MVCC)<br>
+       • Free space map updates</p>
+    <p>A single logical row change can produce <strong>tens of kilobytes</strong> of WAL because it's recording the physical byte changes across multiple pages.</p>
+    <div class="callout"><strong>Why full page images?</strong> After a crash, PostgreSQL needs to recover to a consistent state at the page level. It can't just "replay the UPDATE" because it doesn't know if the page was half-written to disk (torn page). So on the first modification of each page after a checkpoint, WAL writes the <strong>entire 8KB page</strong> (Full Page Write / FPW). Safe, but extremely verbose.</div>
+  </div>
 
-  <div class="callout"><strong>Why full page images?</strong> After a crash, PostgreSQL needs to recover to a consistent state at the page level. It can't just "replay the UPDATE" because it doesn't know if the page was half-written to disk (torn page). So on the first modification of each page after a checkpoint, WAL writes the <strong>entire 8KB page</strong> (Full Page Write / FPW). Safe, but extremely verbose.</div>
+  <div class="notes-topic">
+    <h4>Fan-Out: Why 50 Replicas Kills the Primary</h4>
+    <p>Primary serializes and ships the bloated WAL stream 50 times. If WAL generation is 200MB/s, that's <strong>~10GB/s outbound</strong> from the primary. Each <code>wal_sender</code> process copies and pushes full page images.</p>
+    <h4>CPU Cost of WAL Senders</h4>
+    <p>Each <code>wal_sender</code> process on the primary:</p>
+    <p>• Copies WAL data from shared buffers or disk<br>
+       • Handles the replication protocol (keepalives, feedback, flow control)<br>
+       • For synchronous replication (to the standby), blocks the committing transaction until the standby acknowledges</p>
+    <p>At 50 replicas, that's <strong>50 OS processes</strong> competing for CPU time on the same machine that's already handling all write workload.</p>
+    <div class="callout"><strong>The fundamental tension:</strong> The very mechanism that makes failover reliable (physical WAL) is the one that chokes the primary when you have 50 replicas hanging off it. This is why OpenAI flagged WAL as a scaling concern.</div>
+  </div>
 
-  <h4>MongoDB Oplog — Logical Replication</h4>
-  <p>The oplog records the <strong>logical operation</strong>:</p>
-  <div class="code-block">{
-  "op": "u",
-  "ns": "mydb.users",
-  "o2": { "_id": ObjectId("...") },
-  "o":  { "$set": { "name": "Alice" } }
-}</div>
-  <p>That's it. ~150 bytes. It doesn't care about which pages were touched on disk, index updates (the secondary applies the operation and its own storage engine handles indexes locally), internal storage engine page splits, or how WiredTiger organized data physically.</p>
+  <div class="notes-topic">
+    <h4>max_wal_senders — The Connection Ceiling</h4>
+    <p>Each replica streaming from the primary consumes a <code>wal_sender</code> process — a full forked PostgreSQL backend. Controlled by <code>max_wal_senders</code> (separate from <code>max_connections</code>), so they don't block user connection slots. But each one consumes:</p>
+    <p>• Its own <strong>memory allocation</strong> (work_mem, process-level buffers)<br>
+       • <strong>CPU time</strong> for reading WAL segments and streaming them over the network<br>
+       • A <strong>file descriptor</strong> for the replication TCP socket<br>
+       • <strong>Shared buffer access</strong> for reading WAL pages from <code>pg_wal</code></p>
+    <p>The <code>max_wal_senders</code> GUC defaults to <strong>10</strong> (since PG 10). With 50 replicas, OpenAI would need <code>max_wal_senders = 60</code> to leave headroom for <code>pg_basebackup</code>, backup tools (Barman), and monitoring tools that read WAL. Each slot <strong>pre-allocates shared memory at startup</strong>.</p>
+  </div>
 
-  <h4>Size Comparison</h4>
-  <table class="compare-table">
-    <thead><tr><th>Factor</th><th>PostgreSQL WAL</th><th>MongoDB Oplog</th></tr></thead>
-    <tbody>
-      <tr><td>Single row UPDATE</td><td>8KB+ (full page image + indexes)</td><td>~100–200 bytes</td></tr>
-      <tr><td>What's logged</td><td>Physical page diffs</td><td>Logical operation</td></tr>
-      <tr><td>Index changes</td><td>Included in WAL</td><td>Not in oplog (secondary rebuilds locally)</td></tr>
-      <tr><td>Full page writes</td><td>Yes, after each checkpoint</td><td>No concept of this</td></tr>
-      <tr><td>Bulk INSERT 1000 rows</td><td>Every page touched × page size</td><td>1000 small insert ops</td></tr>
-    </tbody>
-  </table>
-  <p>At OpenAI's scale with heavy writes, WAL volume can easily be <strong>10–50× larger</strong> than an equivalent oplog for the same logical changes.</p>
-
-  <h4>Fan-Out: Why 50 Replicas Kills the Primary</h4>
-  <p><strong>PostgreSQL:</strong> Primary serializes and ships the bloated WAL stream 50 times. If WAL generation is 200MB/s, that's <strong>~10GB/s outbound</strong> from the primary. Each <code>wal_sender</code> process copies and pushes full page images.</p>
-  <p><strong>MongoDB:</strong> Primary's oplog is ~10–20MB/s for the same workload. Secondaries <strong>pull from each other</strong> (chained replication) — the primary might only directly feed 2–3 secondaries, and they feed the rest. Primary outbound: ~30–60MB/s total.</p>
-
-  <h4>CPU Cost of WAL Senders</h4>
-  <p>Each <code>wal_sender</code> process on the primary:</p>
-  <p>• Copies WAL data from shared buffers or disk<br>
-     • Handles the replication protocol (keepalives, feedback, flow control)<br>
-     • For synchronous replication (to the standby), blocks the committing transaction until the standby acknowledges</p>
-  <p>At 50 replicas, that's <strong>50 OS processes</strong> competing for CPU time on the same machine that's already handling all write workload.</p>
-
-  <h4>Why Not Logical Replication for Standbys?</h4>
-  <p>PostgreSQL does have logical replication (since PG 10), but it <strong>can't replicate DDL</strong> (CREATE TABLE, ALTER TABLE), can't replicate sequences or large objects, has higher apply latency (re-executes through the full query engine), and <strong>doesn't support failover</strong> — you can't promote a logical replica to primary seamlessly.</p>
-  <p>Physical WAL replication guarantees a <strong>byte-identical copy</strong> of the primary, which is what you need for reliable failover. That exactness comes at the cost of verbosity.</p>
-
-  <div class="callout"><strong>The fundamental tension:</strong> The very mechanism that makes failover reliable (physical WAL) is the one that chokes the primary when you have 50 replicas hanging off it. This is why OpenAI flagged WAL as a scaling concern.</div>
-
-  <h4>Each Replica = A wal_sender Process on the Primary</h4>
-  <p>Each replica streaming from the primary consumes a <code>wal_sender</code> process — a full forked PostgreSQL backend. These are controlled by <code>max_wal_senders</code> (separate from <code>max_connections</code>), so they don't block user connection slots. But each one still consumes:</p>
-  <p>• Its own <strong>memory allocation</strong> (work_mem, process-level buffers)<br>
-     • <strong>CPU time</strong> for reading WAL segments and streaming them over the network<br>
-     • A <strong>file descriptor</strong> for the replication TCP socket<br>
-     • <strong>Shared buffer access</strong> for reading WAL pages from <code>pg_wal</code></p>
-  <p>With 50 replicas directly connected, that's <strong>50 wal_sender processes</strong> competing with your actual query workload for CPU, memory, and I/O on the same primary machine.</p>
-
-  <h4>max_wal_senders — The Connection Ceiling</h4>
-  <p>The <code>max_wal_senders</code> GUC controls how many concurrent WAL sender processes can run. It defaults to <strong>10</strong> (since PG 10). With 50 replicas, OpenAI would need it set to at least 50 — likely something like <code>max_wal_senders = 60</code> to leave headroom for <code>pg_basebackup</code>, backup tools (Barman), and monitoring tools that read WAL.</p>
-  <p>Each slot <strong>pre-allocates shared memory at startup</strong>, so even unused slots have a (small) cost. At their scale the memory overhead is negligible — the real cost is the 50 active processes consuming CPU and network.</p>
-  <p>It's also possible not all 50 replicas connect directly to the primary. Some may already cascade through the hot standby manually, even if the full automated orchestration layer is listed as future work. Nothing in PostgreSQL prevents pointing a replica's <code>primary_conninfo</code> at another standby today — the gap is the automation to manage topology changes, re-pointing, and monitoring at scale.</p>
-
-  <h4>Cascading Replication — The Solution PostgreSQL Has (but OpenAI Hasn't Deployed Yet)</h4>
-  <p>PostgreSQL has supported <strong>cascading replication since PG 9.2</strong>. Instead of every replica connecting directly to the primary, you can chain them:</p>
-  <div class="code-block">                        ┌─ Replica 3
+  <div class="notes-topic">
+    <h4>Cascading Replication — Available Since PG 9.2</h4>
+    <p>Instead of every replica connecting directly to the primary, you can chain them:</p>
+    <div class="code-block">                        ┌─ Replica 3
          ┌─ Standby A ─┼─ Replica 4
          │              └─ Replica 5
 Primary ─┤
          │              ┌─ Replica 6
          └─ Standby B ─┼─ Replica 7
                         └─ Replica 8</div>
-  <p>The primary only feeds 2–3 intermediate standbys, and those standbys feed the rest. This dramatically reduces the primary's fan-out:</p>
-  <table class="compare-table">
-    <thead><tr><th>Topology</th><th>Primary wal_senders</th><th>Primary outbound (at 200MB/s WAL)</th></tr></thead>
-    <tbody>
-      <tr><td>Direct (current)</td><td>50</td><td>~10 GB/s</td></tr>
-      <tr><td>Cascading via 3 standbys</td><td>3</td><td>~600 MB/s</td></tr>
-      <tr><td>Cascading via 5 standbys</td><td>5</td><td>~1 GB/s</td></tr>
-    </tbody>
-  </table>
+    <p>Primary only feeds 2–3 intermediate standbys — fan-out drops from ~10 GB/s to ~600 MB/s. OpenAI has flagged this as <strong>future development</strong> because it adds complexity: replication lag compounds per hop, intermediate standby failover needs automation, and there's no built-in orchestration for topology changes.</p>
+  </div>
 
-  <h4>Why Hasn't OpenAI Deployed Cascading Replication?</h4>
-  <p>Cascading replication adds complexity:</p>
-  <p>• <strong>Replication lag compounds</strong> — each hop adds latency. A replica 2 hops away sees changes later than a direct replica.<br>
-     • <strong>Failover of intermediate standbys</strong> — if Standby A dies, all its downstream replicas lose their WAL source. You need automation to re-point them.<br>
-     • <strong>Monitoring complexity</strong> — you now have a tree topology to track instead of a simple star.<br>
-     • <strong>No built-in orchestration</strong> — PostgreSQL provides the mechanism (<code>primary_conninfo</code> pointing to another standby), but not the management layer to handle topology changes automatically.</p>
-  <p>OpenAI has flagged this as <strong>future development</strong>. The tooling to manage cascading topology at their scale (automatic re-pointing, lag monitoring per hop, intermediate standby failover) doesn't exist off-the-shelf and needs to be built.</p>
+  <div class="notes-topic">
+    <h4>Why Not Logical Replication for Standbys?</h4>
+    <p>PostgreSQL has logical replication (since PG 10), but it <strong>can't replicate DDL</strong>, can't replicate sequences or large objects, has higher apply latency, and <strong>doesn't support failover</strong>. Physical WAL guarantees a <strong>byte-identical copy</strong> — exactness at the cost of verbosity.</p>
+  </div>
 
-  <div class="callout"><strong>Contrast with MongoDB:</strong> MongoDB's replica sets do chained replication <strong>by default</strong> — secondaries automatically choose the nearest sync source (often another secondary) via the <code>chainingAllowed</code> setting (true by default). The topology is self-managing: if a secondary's sync source goes down, it automatically picks a new one. No manual re-pointing, no custom orchestration needed.</div>
+  <div class="notes-topic">
+    <h4>Connections — Process-Per-Connection Architecture</h4>
+    <p>PostgreSQL uses a <strong>process-per-connection</strong> model inherited from its 1990s Postgres95 roots. Every client connection forks a dedicated OS process. Each backend gets:</p>
+    <p>• Its own <strong>process memory</strong> — <code>work_mem</code> (default 4MB, but can be much more per sort/hash), maintenance memory, temp buffers<br>
+       • A <strong>private copy of the catalog cache</strong> — parsed table schemas, type info, function bodies<br>
+       • A <strong>PGPROC slot</strong> in shared memory — tracked in ProcArray for MVCC visibility checks<br>
+       • An <strong>OS-level process</strong> — context switching, TLB flushes, scheduling overhead</p>
+    <p>At 5,000 connections (OpenAI's scale), you have <strong>5,000 OS processes</strong>, each consuming 5–50MB of private memory.</p>
+    <h4>Why High Connection Counts Kill Performance</h4>
+    <p><strong>1. ProcArray contention:</strong> Every transaction start/end scans ProcArray (all active backends) for MVCC snapshots. O(n) at 5,000 connections.</p>
+    <p><strong>2. Context switching:</strong> Linux scheduler wasn't designed for 5,000+ CPU-bound processes. Cache lines (L1/L2/L3) thrashed on every switch.</p>
+    <p><strong>3. Memory bloat:</strong> 5,000 backends × 10MB = <strong>50GB</strong> private memory before <code>shared_buffers</code>.</p>
+    <p><strong>4. Shared buffer contention:</strong> Hot pages (like an index root) become lightweight lock bottlenecks.</p>
+    <p><strong>5. File descriptor explosion:</strong> Each backend opens its own FDs (not shared across processes). At 5,000 backends caching ~200 FDs each → <strong>~1,000,000 open FDs</strong>. Requires <code>ulimit -n</code> 10,000+, kernel <code>fs.file-max</code> in millions, and <code>fs.nr_open</code> adjustments. Every FD consumes a kernel <code>struct file</code> (~256 bytes) plus inode/dentry cache entries.</p>
+  </div>
 
-  <h3>DDL & Schema Changes — Does PostgreSQL Support Live DDL?</h3>
-
-  <h4>What PostgreSQL Does Well (metadata-only, near-instant)</h4>
-  <p>• <code>ADD COLUMN</code> with no default or with a constant default — since <strong>PG 11</strong>, this is metadata-only, no rewrite. The <code>ACCESS EXCLUSIVE</code> lock is held for milliseconds.<br>
-     • <code>DROP COLUMN</code> — metadata-only (marks it as invisible, doesn't physically remove data).<br>
-     • <code>RENAME COLUMN</code> / <code>RENAME TABLE</code> — instant.</p>
-
-  <h4>What Still Requires a Full Table Rewrite</h4>
-  <p>• <code>ALTER COLUMN TYPE</code> (e.g., changing <code>varchar(50)</code> to <code>text</code>, or <code>int</code> to <code>bigint</code>) — rewrites every single row.<br>
-     • <code>ALTER COLUMN SET NOT NULL</code> — requires a full table scan to validate (PG 12+ can skip this if a matching <code>CHECK</code> constraint exists).<br>
-     • Adding a column with a <strong>volatile</strong> default (e.g., <code>DEFAULT now()</code>) — rewrite.<br>
-     • <code>CLUSTER</code> / <code>VACUUM FULL</code> — full rewrite.</p>
-
-  <h4>The Real Killer: Lock Queuing</h4>
-  <p>Even for "fast" DDL, PostgreSQL acquires an <code>ACCESS EXCLUSIVE</code> lock. If there's a long-running transaction (say a 30-minute analytics query), the DDL <strong>waits</strong> for it. And while it waits, <strong>every new query queues behind the DDL</strong>. This cascading queue is what causes outages at OpenAI's scale — not necessarily the rewrite itself, but the lock contention.</p>
-  <p>That's why OpenAI added a <strong>5-second <code>lock_timeout</code></strong> — if the lock can't be acquired in 5s, the DDL fails rather than causing a traffic jam.</p>
-
-  <div class="callout"><strong>Contrast with MongoDB:</strong> MongoDB's schema is flexible by design (schemaless documents), so there's no concept of <code>ALTER TABLE</code>. Adding a new field is just writing a document with the new field. Schema validation changes are metadata operations. This is one of the genuine differentiators at scale.</div>
-
-  <h4>Tools the Community Built to Work Around It</h4>
-  <p><strong>pg_repack</strong>, <strong>pgroll</strong>, <strong>pg_osc</strong> — these all do "shadow table" approaches (create a new table, copy data with triggers, swap) to avoid holding the lock during the rewrite. The fact that these tools need to exist tells the story.</p>
-
-  <h3>Connections — Why PostgreSQL Chokes at Scale</h3>
-
-  <h4>The Process-Per-Connection Architecture</h4>
-  <p>PostgreSQL uses a <strong>process-per-connection</strong> model inherited from its 1990s Postgres95 roots. Every client connection forks a dedicated OS process — the <code>postgres</code> backend. Each backend gets:</p>
-  <p>• Its own <strong>process memory</strong> — <code>work_mem</code> (default 4MB, but can be much more per sort/hash), maintenance memory, temp buffers<br>
-     • A <strong>private copy of the catalog cache</strong> — parsed table schemas, type info, function bodies<br>
-     • A <strong>PGPROC slot</strong> in shared memory — tracked in the ProcArray for MVCC visibility checks<br>
-     • An <strong>OS-level process</strong> — context switching, TLB flushes, scheduling overhead</p>
-  <p>At 100 connections, this is fine. At 5,000 connections (OpenAI's scale), you have <strong>5,000 OS processes</strong>, each consuming 5–50MB of private memory, and the OS scheduler falls apart trying to context-switch between them.</p>
-
-  <h4>Why High Connection Counts Kill Performance</h4>
-  <p><strong>1. Lock contention on ProcArray:</strong> Every transaction start/end must scan the ProcArray (list of all active backends) for MVCC snapshot generation. At 5,000 connections, this scan becomes a serialization bottleneck — each <code>GetSnapshotData()</code> call iterates all 5,000 slots while holding a shared lock.</p>
-  <p><strong>2. Context switching overhead:</strong> The Linux kernel wasn't designed to efficiently schedule 5,000+ CPU-bound processes. At this scale, the scheduler itself burns significant CPU just deciding who runs next. Cache lines (L1/L2/L3) get thrashed on every context switch.</p>
-  <p><strong>3. Memory bloat:</strong> 5,000 backends × 10MB each = <strong>50GB</strong> just for backend private memory, before you even count shared_buffers. With <code>work_mem = 64MB</code> (common for analytics), a single complex query per connection could need <strong>320GB</strong>.</p>
-  <p><strong>4. Shared buffer contention:</strong> All backends access the same shared buffer pool. Each buffer page has a lightweight lock. At 5,000 backends, hot pages (like a frequently-read index root) become severe lock contention points.</p>
-
-  <p><strong>5. File descriptor explosion:</strong> Each backend opens its own file handles — PostgreSQL doesn't share FDs across processes. A query touching a table with 5 indexes across 3 partitions needs <strong>18+ file descriptors</strong> in that single backend. PostgreSQL caches these per-backend (controlled by <code>max_files_per_process</code>, default 1000) to avoid constant <code>open()</code>/<code>close()</code> syscalls.</p>
-  <p>At 5,000 backends caching ~200 FDs each, that's <strong>~1,000,000 open file descriptors</strong> system-wide. This requires:</p>
-  <p>• <code>ulimit -n</code> raised to 10,000+ per process (Linux default is 1024)<br>
-     • Kernel <code>fs.file-max</code> raised to millions<br>
-     • <code>fs.nr_open</code> raised from its default</p>
-  <p>Every open FD consumes a kernel <code>struct file</code> (~256 bytes) plus inode/dentry cache entries. At a million FDs, the kernel's VFS layer itself becomes a contention point — file descriptor table lookups, inode cache pressure, and dentry slab allocation all degrade.</p>
-
-  <div class="callout"><strong>Contrast with MongoDB:</strong> Since all connections share a single <code>mongod</code> process, file descriptors are shared too. WiredTiger opens each data file <strong>once</strong> and all threads access it via <code>pread()</code>/<code>pwrite()</code> (thread-safe with explicit offsets). A MongoDB instance with 5,000 connections and the same schema holds <strong>a few hundred</strong> FDs total — not a million.</div>
-
-  <h4>Why PgBouncer Exists</h4>
-  <p>PgBouncer is a lightweight connection <strong>multiplexer</strong> that sits between your application and PostgreSQL. 5,000 app connections hit PgBouncer, which maintains only ~100–200 actual backend connections to PostgreSQL.</p>
-  <div class="code-block">5,000 app connections
+  <div class="notes-topic">
+    <h4>PgBouncer — Why It Exists</h4>
+    <p>PgBouncer is a lightweight connection <strong>multiplexer</strong>. 5,000 app connections hit PgBouncer, which maintains only ~100–200 actual backend connections.</p>
+    <div class="code-block">5,000 app connections
         │
    <b>[PgBouncer]</b> ─── transaction-level pooling
         │
    ~150 PostgreSQL backends</div>
-  <p>It works because most connections are <strong>idle most of the time</strong> — waiting for the app to build the next query. PgBouncer only assigns a real backend for the duration of a transaction, then returns it to the pool.</p>
-  <p>OpenAI runs <strong>1 PgBouncer container per replica in Kubernetes</strong> — each pod gets its own pooler as a sidecar, eliminating the pooler itself as a single point of failure.</p>
+    <p>OpenAI runs <strong>1 PgBouncer container per replica in Kubernetes</strong> — each pod gets its own pooler as a sidecar.</p>
+    <div class="callout"><strong>The irony:</strong> PgBouncer can't handle prepared statements in transaction mode (the most efficient pooling mode), because prepared statements are tied to a specific backend's session. PgBouncer 1.21+ added <code>prepared_statement_cache</code> to work around this, but it's still a leaky abstraction.</div>
+  </div>
 
-  <div class="callout"><strong>The irony:</strong> PgBouncer can't handle prepared statements in transaction mode (the most efficient pooling mode), because prepared statements are tied to a specific backend's session. This forces apps to either avoid prepared statements or use session-level pooling (which defeats the purpose). PgBouncer 1.21+ added <code>prepared_statement_cache</code> to work around this, but it's still a leaky abstraction.</div>
+  <div class="notes-topic">
+    <h4>DDL & Schema Changes</h4>
+    <p><strong>What's fast (metadata-only):</strong></p>
+    <p>• <code>ADD COLUMN</code> with no default or constant default — since <strong>PG 11</strong>, no rewrite. Lock held for milliseconds.<br>
+       • <code>DROP COLUMN</code> — metadata-only (marks invisible, doesn't remove data).<br>
+       • <code>RENAME COLUMN</code> / <code>RENAME TABLE</code> — instant.</p>
+    <p><strong>What requires a full table rewrite:</strong></p>
+    <p>• <code>ALTER COLUMN TYPE</code> (e.g., <code>int → bigint</code>) — rewrites every row.<br>
+       • <code>ALTER COLUMN SET NOT NULL</code> — full table scan (PG 12+ can skip if a matching <code>CHECK</code> constraint exists).<br>
+       • Adding a column with a <strong>volatile</strong> default (e.g., <code>DEFAULT now()</code>) — rewrite.</p>
+    <h4>The Real Killer: Lock Queuing</h4>
+    <p>Even for "fast" DDL, PostgreSQL acquires an <code>ACCESS EXCLUSIVE</code> lock. If there's a long-running transaction, the DDL <strong>waits</strong>. While it waits, <strong>every new query queues behind the DDL</strong>. This cascading queue causes outages at scale — not the rewrite itself, but the lock contention.</p>
+    <p>OpenAI added a <strong>5-second <code>lock_timeout</code></strong> — if the lock can't be acquired in 5s, the DDL fails rather than causing a traffic jam.</p>
+    <h4>Community Workarounds</h4>
+    <p><strong>pg_repack</strong>, <strong>pgroll</strong>, <strong>pg_osc</strong> — "shadow table" approaches (create new table, copy data with triggers, swap) to avoid holding the lock during a rewrite. The fact that these tools need to exist tells the story.</p>
+  </div>
 
-  <h4>Contrast with MongoDB</h4>
-  <p>MongoDB uses a <strong>thread-per-connection</strong> model with a shared-process architecture. All connections live inside the <code>mongod</code> process as lightweight threads sharing the same address space.</p>
-  <table class="compare-table">
-    <thead><tr><th>Factor</th><th>PostgreSQL</th><th>MongoDB</th></tr></thead>
-    <tbody>
-      <tr><td>Model</td><td>Process-per-connection (forked OS process)</td><td>Thread-per-connection (within single process)</td></tr>
-      <tr><td>Memory per connection</td><td>5–50MB (private process memory)</td><td>~1MB (thread stack)</td></tr>
-      <tr><td>5,000 connections memory</td><td>25–250 GB</td><td>~5 GB</td></tr>
-      <tr><td>Context switching</td><td>OS process switches (expensive — TLB flush)</td><td>Thread switches (cheap — shared address space)</td></tr>
-      <tr><td>Connection pooler needed?</td><td>Yes, always at scale (PgBouncer, pgcat)</td><td>No — built-in thread pool handles it</td></tr>
-      <tr><td>Max practical connections</td><td>~300–500 without pooler, ~5,000 with</td><td>~50,000+ (limited by <code>maxIncomingConnections</code>)</td></tr>
-      <tr><td>MVCC snapshot cost</td><td>O(n) scan of all backends</td><td>Timestamp-based (O(1) per transaction)</td></tr>
-    </tbody>
-  </table>
-  <p>MongoDB 4.4+ also added a <strong>service executor thread pool</strong> — instead of 1:1 thread-per-connection, incoming connections are serviced by a fixed pool of worker threads, further reducing overhead at high connection counts.</p>
+  <div class="notes-topic">
+    <h4>VACUUM — Dead Tuple Problem</h4>
+    <p>PostgreSQL's MVCC stores dead tuples <strong>in-line in the heap file</strong>. Every UPDATE creates a new tuple version, leaving the old one dead. Every DELETE marks a tuple dead but doesn't remove it. Dead tuples accumulate, file grows without bound.</p>
+    <p>Regular <code>VACUUM</code> (run by autovacuum) marks dead space reusable but <strong>cannot shrink the physical file</strong>. A table that grew to 200GB stays at 200GB on disk forever, even with only 50GB of live data.</p>
+    <h4>VACUUM FULL — The Nuclear Option</h4>
+    <div class="code-block">VACUUM FULL users;   -- 100GB table, 50% bloat
 
-  <div class="callout"><strong>The bottom line:</strong> PostgreSQL needs an external component (PgBouncer) to handle what MongoDB does natively. At OpenAI's scale, they run PgBouncer as a sidecar in every pod — that's hundreds of extra containers just to work around a 30-year-old architectural decision. The connection overhead alone consumed engineering months that could have been spent on product.</div>
-
-  <h3>Rate Limiting — Four Layers of Defense</h3>
-  <p>OpenAI implements rate limiting at <strong>four distinct layers</strong>, each catching what the others miss. This is defense in depth — the same principle as the entire solar system architecture.</p>
-
-  <h4>Layer 1: App-Level Rate Limiting</h4>
-  <p>The application itself enforces per-service quotas. Each internal service (ChatGPT, API platform, batch jobs) gets a budget — e.g., "this service can send max 5K QPS to the database." If a service goes rogue (bugs, infinite retry loops, misconfigured batch jobs), it gets rejected with <strong>HTTP 429</strong> before the request ever leaves the app layer. This is the first and cheapest line of defense.</p>
-
-  <h4>Layer 2: Pooler-Level Limiting (PgBouncer)</h4>
-  <p>PgBouncer enforces <code>max_client_conn</code> and <code>max_db_connections</code>. Even if a service bypasses app-level limits, PgBouncer will queue or reject connections that exceed the pool size. This catches <strong>connection storms</strong> — if a deployment spins up 500 new pods simultaneously, each trying to open connections, PgBouncer absorbs the burst instead of letting all 500 fork PostgreSQL backends.</p>
-
-  <h4>Layer 3: Proxy-Level Limiting</h4>
-  <p>A reverse proxy sitting in front of the database cluster enforces <strong>global QPS caps</strong>. This is the aggregate view — regardless of which service is sending traffic, the proxy ensures total throughput to PostgreSQL doesn't exceed what the cluster can handle. It's the "no matter what, the DB will never see more than X QPS" guarantee.</p>
-
-  <h4>Layer 4: Per-Query-Digest Caps</h4>
-  <p>The most granular layer. Queries are hashed by their pattern (the "digest" — <code>SELECT * FROM users WHERE id = ?</code> regardless of the actual <code>id</code> value), and each pattern gets its own rate limit. This catches the scenario where a single expensive query pattern (like a 12-table ORM join) starts dominating — even if total QPS is under the global cap, that one pattern can be throttled independently without affecting other queries.</p>
-
-  <h4>Why Four Layers Instead of One?</h4>
-  <p>Each layer catches what the others miss:</p>
-  <p>• <strong>App limits</strong> miss rogue services that don't implement the SDK properly<br>
-     • <strong>Pooler limits</strong> miss non-connection-based overload (e.g., one connection sending 10K queries/sec)<br>
-     • <strong>Proxy limits</strong> are too blunt to differentiate between cheap and expensive queries<br>
-     • <strong>Query digest limits</strong> alone can't stop a connection storm</p>
-
-  <div class="callout"><strong>The retry storm problem:</strong> Without rate limits, a timeout cascade is inevitable. Service A times out → retries → doubles load → Service B starts timing out → retries → quadruples load. This exponential amplification is why a single runaway service at 50K QPS can take down a cluster that normally handles 200K QPS comfortably. The four layers ensure the blast radius is contained at the outermost possible point.</div>
-
-  <h3>Query Optimization & Index Management — The ORM Problem</h3>
-
-  <h4>Why ORMs Generate Bad Queries</h4>
-  <p>The <strong>object-relational impedance mismatch</strong> is the root cause. ORMs map object graphs to relational tables. When application code traverses <code>user.orders.products.reviews</code>, the ORM either lazy-loads (N+1 problem — one query per object) or eager-loads (massive JOINs across every related table). It doesn't understand data distribution, access patterns, or what indexes exist.</p>
-
-  <p>ORM-generated SQL is built for <strong>correctness, not performance</strong>. It uses <code>SELECT *</code> instead of projecting only needed columns. It generates JOINs based on model relationships, not on selectivity or index coverage. It has <strong>zero visibility</strong> into <code>EXPLAIN ANALYZE</code> — it doesn't know that a 12-table JOIN produces a plan with nested-loop sequential scans touching 4 million rows.</p>
-
-  <h4>The Index Sprawl Problem</h4>
-  <p>ORMs like Rails ActiveRecord, Django, and SQLAlchemy (via Alembic) auto-create indexes in database migrations — every foreign key gets one, every <code>unique=True</code> field, and sometimes indexes for common lookup patterns. Over time this accumulates. A mature Rails app can easily have <strong>200+ indexes</strong>, many unused or duplicated.</p>
-
-  <p>Every index on a table must be updated on <strong>every INSERT, UPDATE, and DELETE</strong>. This is the <strong>write amplification</strong> problem:</p>
-
-  <div class="code-block">
-Table: users (47M rows)
-Indexes:
-  idx_users_pkey           → updated every INSERT
-  idx_users_email_lower    → updated every INSERT + UPDATE on email
-  idx_users_created_at     → updated every INSERT
-  idx_users_status         → updated every INSERT + UPDATE on status
-  idx_users_org_id         → updated every INSERT + UPDATE on org_id
-  idx_users_name_gin       → updated every INSERT + UPDATE on name (GIN = expensive)
-
-6 indexes → a single INSERT causes <b>7 write operations</b> (1 heap + 6 indexes)
-Each generates WAL → replicated to 50 replicas → 350 total write ops per INSERT</div>
-
-  <p>At OpenAI's scale (millions of writes/day), unnecessary indexes translate directly into: higher WAL volume, more replication lag, more checkpoint I/O, and more disk usage. An index that adds +20% write amplification across 50 replicas is catastrophically expensive even if it's never used for reads.</p>
-
-  <h4>What OpenAI Actually Does</h4>
-  <p>Complete prevention is impossible — developers will always write new ORM code generating new patterns. Instead, they treat it as a <strong>continuous operational layer</strong>:</p>
-
-  <p>• <strong>Query review gates in CI/CD</strong> — hooks that run <code>EXPLAIN</code> on new queries against production-like data. If cost exceeds a threshold or a sequential scan appears on a large table, the PR is blocked before merge.<br>
-     • <strong><code>statement_timeout = 5s</code></strong> — PostgreSQL kills any query running longer than this. The bad 47s ORM join never finishes.<br>
-     • <strong>Idle connection timeouts</strong> — kill connections sitting idle too long, preventing pool exhaustion from leaked ORM connections.<br>
-     • <strong>Index audits via <code>pg_stat_user_indexes</code></strong> — periodic review to find indexes with <code>idx_scan = 0</code> (never used for reads). Drop them to reclaim write bandwidth.<br>
-     • <strong><code>pg_stat_statements</code></strong> — tracks query patterns by digest to identify top CPU-consuming queries for rewriting or targeted index creation.</p>
-
-  <div class="callout"><strong>Key insight:</strong> You cannot fully prevent ORM query/index sprawl. Developers will always write new code. The gate catches problems <em>before production</em>, but it's a continuous process — which is exactly why OpenAI treats this as an operational guardrail layer, not a solved problem.</div>
-
-  <h4>Index Builds — PostgreSQL vs MongoDB</h4>
-  <p>When ORM-created indexes need to be built (or dropped and rebuilt), the build process itself is a major operational concern:</p>
-
-  <table class="compare-table">
-    <tr><th>Aspect</th><th>PostgreSQL</th><th>MongoDB</th></tr>
-    <tr>
-      <td><strong>Default CREATE INDEX</strong></td>
-      <td>Takes <code>ACCESS EXCLUSIVE</code> lock on the table — blocks ALL reads and writes for the entire duration of the build. On a 47M row table, this can be minutes to hours.</td>
-      <td>Hybrid build (since 4.2) — brief exclusive lock at start and finish, but reads/writes continue during the bulk phase. Much less disruptive.</td>
-    </tr>
-    <tr>
-      <td><strong>Concurrent option</strong></td>
-      <td><code>CREATE INDEX CONCURRENTLY</code> — no write lock, but takes 2× longer, can fail and leave an invalid index, and cannot run inside a transaction.</td>
-      <td>N/A — hybrid is the only mode since 4.2. No choice needed, but also no way to force a faster exclusive build.</td>
-    </tr>
-    <tr>
-      <td><strong>Impact on replicas</strong></td>
-      <td>Each replica must build the index independently (physical replication replays the WAL, which includes the index build). Heavy WAL traffic during build.</td>
-      <td>Built on primary, then <strong>blocks replication on each secondary</strong> while the secondary builds its copy. Secondaries fall behind during build.</td>
-    </tr>
-    <tr>
-      <td><strong>The "finish lock" problem</strong></td>
-      <td><code>CONCURRENTLY</code> needs to wait for all transactions that started before the build to complete — can hang if long-running queries exist.</td>
-      <td>The commit lock at the end must drain the write queue and apply all changes made during the build. Under heavy write traffic, this lock can be significant.</td>
-    </tr>
-    <tr>
-      <td><strong>Write amplification</strong></td>
-      <td>Every index adds WAL overhead per write. Replicated to all replicas via WAL shipping.</td>
-      <td>Every index adds oplog overhead per write. Replicated to all secondaries via oplog.</td>
-    </tr>
-    <tr>
-      <td><strong>Background builds on secondaries</strong></td>
-      <td>Not applicable — WAL replay is the mechanism. Secondary is read-only.</td>
-      <td>Secondaries build indexes in the <strong>foreground</strong>, blocking replication. If all secondaries build simultaneously, you lose read capacity.</td>
-    </tr>
-  </table>
-
-  <h4>MongoDB Index Builds — The Nuance</h4>
-  <p>MongoDB's hybrid index build (4.2+) is often described as "background" but this is misleading:</p>
-
-  <p><strong>1. Lock at start</strong> — brief exclusive lock to register the build in the catalog. Usually milliseconds.</p>
-  <p><strong>2. Bulk build phase</strong> — reads and writes continue. The build scans the collection and builds the index in a side table. This is the "background" part.</p>
-  <p><strong>3. Lock at finish</strong> — this is the important one. The build takes an exclusive lock to commit the completed index. Under heavy write traffic, it must drain pending writes and apply all changes that happened during the build. This lock can be <strong>seconds to minutes</strong> on write-heavy collections.</p>
-  <p><strong>4. Secondaries</strong> — each secondary receives the index build via the oplog and builds it locally. During this build, <strong>replication is blocked</strong>. If you're building a large index, secondaries accumulate replication lag. Build on all secondaries simultaneously and you lose read capacity.</p>
-
-  <p><strong>Before 4.2</strong> — you had two bad choices: <code>foreground</code> (locks the entire collection, similar to PostgreSQL's default) or <code>background</code> (no lock but slower, more memory, and a less efficient B-tree). Neither was great.</p>
-
-  <div class="callout"><strong>Bottom line:</strong> MongoDB's index builds are genuinely less disruptive than PostgreSQL's default <code>CREATE INDEX</code>. But the ongoing <strong>write amplification cost</strong> of maintaining indexes is identical in both systems. The ORM index sprawl problem — 6 unnecessary indexes causing +119% write overhead — would hurt MongoDB just as much on the write path. The difference is that <em>creating</em> those indexes is less of an outage event in MongoDB, while <em>maintaining</em> them is equally expensive everywhere.</div>
-
-  <h3>VACUUM FULL vs Compact — Reclaiming Disk Space</h3>
-
-  <h4>The Problem: Dead Space</h4>
-  <p>Both databases accumulate wasted space over time after heavy deletes and updates. How they reclaim it is architecturally different — and the operational impact is dramatically different.</p>
-
-  <h4>PostgreSQL — VACUUM FULL</h4>
-  <p>PostgreSQL's MVCC stores dead tuples <strong>in-line in the heap file</strong>. When you UPDATE a row, the old version stays in the file as a dead tuple. When you DELETE, the row is marked dead but remains physically present. Regular <code>VACUUM</code> marks this space as reusable for future inserts, but the <strong>file never shrinks</strong>.</p>
-
-  <p>If you delete 50% of a 100GB table, you still have a 100GB file with 50GB of holes. Regular VACUUM makes those holes fillable, but the file stays 100GB on disk. Only <code>VACUUM FULL</code> physically compacts it.</p>
-
-  <p><code>VACUUM FULL</code> rewrites the <strong>entire table</strong> to a new physical file:</p>
-
-  <div class="code-block">
-VACUUM FULL users;   -- 100GB table, 50% bloat
-
-What happens:
 1. Takes <b>ACCESS EXCLUSIVE</b> lock → blocks ALL reads AND writes
 2. Creates a brand new file
-3. Copies every live row into the new file (compacted)
-4. Rebuilds every index on the table
-5. Swaps old file for new file
-6. Releases lock
+3. Copies every live row (compacted)
+4. Rebuilds every index
+5. Swaps files, releases lock
 
-Duration: <b>hours</b> on large tables
-Disk needed: <b>~2× table size</b> (old + new coexist until swap)
-Impact: <b>total outage</b> for that table for the entire duration</div>
+Duration: <b>hours</b> &middot; Disk: <b>~2× table size</b> &middot; Impact: <b>total outage</b> for that table</div>
+    <p>Alternative: <code>pg_repack</code> — rewrites online with only a brief exclusive lock at the end.</p>
+  </div>
 
-  <h4>MongoDB — compact</h4>
-  <p>MongoDB with WiredTiger doesn't have the MVCC dead tuple problem. WiredTiger uses document-level concurrency with snapshot isolation, and dead versions are cleaned up by <strong>internal cache eviction</strong> — not by an external process like VACUUM. WiredTiger's checkpointing (every 60s) and page-level management (automatic splits and merges) handle most fragmentation without any manual intervention.</p>
+  <div class="notes-topic">
+    <h4>Foreign Keys ≠ Indexes</h4>
+    <p>When you declare a foreign key in PostgreSQL, <strong>no index is created</strong> on the referencing column:</p>
+    <div class="code-block">CREATE TABLE orders (
+  id SERIAL PRIMARY KEY,
+  user_id INT <b>REFERENCES users(id)</b>  -- constraint only, NO index
+);</div>
+    <p>You must manually create it. Without it: JOINs do sequential scans, DELETEs seq-scan dependent tables. Many production databases have this footgun. Diagnostic query:</p>
+    <div class="code-block">SELECT c.conrelid::regclass AS table_name,
+       a.attname AS fk_column
+FROM pg_constraint c
+JOIN pg_attribute a
+  ON a.attrelid = c.conrelid AND a.attnum = ANY(c.conkey)
+WHERE c.contype = 'f'
+  AND NOT EXISTS (
+    SELECT 1 FROM pg_index i
+    WHERE i.indrelid = c.conrelid
+      AND a.attnum = ANY(i.indkey)
+  );</div>
+  </div>
 
-  <p>When you do need to reclaim space (e.g., after a mass delete), the <code>compact</code> command calls WiredTiger's internal <code>WT_SESSION::compact()</code>:</p>
+  <div class="notes-topic">
+    <h4>Index Builds</h4>
+    <p><strong>Default <code>CREATE INDEX</code>:</strong> Takes <code>ACCESS EXCLUSIVE</code> lock — blocks ALL reads and writes for the entire build. On a 47M row table, can be minutes to hours.</p>
+    <p><strong><code>CREATE INDEX CONCURRENTLY</code>:</strong> No write lock, but takes 2× longer, can fail and leave an invalid index, cannot run inside a transaction. Needs to wait for all pre-existing transactions to complete.</p>
+    <p>Each replica builds the index independently via WAL replay, generating heavy WAL traffic during the build.</p>
+  </div>
 
-  <div class="code-block">
-db.users.runCommand({ compact: "users" })
+  <div class="notes-topic">
+    <h4>ORM-Driven Index Sprawl &amp; Write Amplification</h4>
+    <p>ORMs like Rails ActiveRecord, Django, and SQLAlchemy auto-create indexes in migrations — every FK, every <code>unique=True</code>. A mature Rails app can have <strong>200+ indexes</strong>.</p>
+    <div class="code-block">Table: users (47M rows), 6 indexes
+→ a single INSERT causes <b>7 write operations</b> (1 heap + 6 indexes)
+→ each generates WAL → replicated to 50 replicas
+→ <b>350 total write ops per INSERT</b></div>
+    <p>An index that adds +20% write amplification across 50 replicas is catastrophically expensive even if it's never used for reads.</p>
+  </div>
 
-What happens:
-1. Calls WiredTiger internal compaction
-2. Shuffles pages within the <b>existing files</b> — moves data from end toward beginning
-3. <b>Blocks writes</b> on the collection, but <b>reads continue</b>
-4. Releases freed space at the end of the file back to OS
 
-Duration: <b>shorter</b> — no full copy, in-place reorganization
-Disk needed: <b>minimal extra</b> — no second copy
-Impact: <b>write-only outage</b> for that collection</div>
+  <!-- ═══════════════════════════════════════════════════════
+       MONGODB
+       ═══════════════════════════════════════════════════════ -->
+  <div class="notes-db-header mongo" id="notes-mongo">
+    <div>
+      <div class="ndb-icon">&#x1F343;</div>
+    </div>
+    <div>
+      <h3>MongoDB Internals</h3>
+      <div class="ndb-sub">Thread-per-connection &middot; WiredTiger storage &middot; Logical oplog replication</div>
+    </div>
+  </div>
 
-  <h4>Head-to-Head Comparison</h4>
+  <div class="notes-topic">
+    <h4>Oplog — Logical Replication</h4>
+    <p>The oplog records the <strong>logical operation</strong>:</p>
+    <div class="code-block">{
+  "op": "u",
+  "ns": "mydb.users",
+  "o2": { "_id": ObjectId("...") },
+  "o":  { "$set": { "name": "Alice" } }
+}</div>
+    <p>~150 bytes. It doesn't care about which pages were touched on disk, index updates (secondaries apply the operation and their own storage engine handles indexes locally), internal page splits, or how WiredTiger organized data physically.</p>
+    <h4>Chained Replication — Built-In</h4>
+    <p>Secondaries <strong>pull from each other</strong> — the primary might only directly feed 2–3 secondaries, and they feed the rest. Primary outbound for the same workload: ~30–60MB/s total vs. PostgreSQL's ~10GB/s.</p>
+    <p>Topology is self-managing via <code>chainingAllowed</code> (true by default): if a secondary's sync source goes down, it automatically picks a new one. No manual re-pointing, no custom orchestration.</p>
+  </div>
 
-  <table class="compare-table">
-    <tr><th>Aspect</th><th>PostgreSQL VACUUM FULL</th><th>MongoDB compact</th></tr>
-    <tr>
-      <td><strong>Lock type</strong></td>
-      <td><code>ACCESS EXCLUSIVE</code> — blocks all reads AND writes</td>
-      <td>Blocks writes on collection; reads continue</td>
-    </tr>
-    <tr>
-      <td><strong>Mechanism</strong></td>
-      <td>Rewrites entire table to new file + rebuilds all indexes</td>
-      <td>WiredTiger reorganizes pages in-place within existing files</td>
-    </tr>
-    <tr>
-      <td><strong>Disk space needed</strong></td>
-      <td>~2× table size (old file + new file)</td>
-      <td>Minimal — no second copy</td>
-    </tr>
-    <tr>
-      <td><strong>Duration (100GB table)</strong></td>
-      <td>Hours</td>
-      <td>Minutes to tens of minutes</td>
-    </tr>
-    <tr>
-      <td><strong>How often needed</strong></td>
-      <td>Whenever table bloat gets severe — MVCC dead tuples accumulate and regular VACUUM cannot shrink the file</td>
-      <td>Rarely — WiredTiger's checkpointing, cache eviction, and page management handle most fragmentation automatically</td>
-    </tr>
-    <tr>
-      <td><strong>Auto-maintenance</strong></td>
-      <td><code>autovacuum</code> runs regular VACUUM (marks dead space reusable) but <strong>never</strong> runs VACUUM FULL</td>
-      <td>MongoDB 7.0+ introduced <code>autoCompact</code> — background compaction without manual intervention</td>
-    </tr>
-    <tr>
-      <td><strong>Practical alternative</strong></td>
-      <td><code>pg_repack</code> — community tool that rewrites the table online with only a brief exclusive lock at the end</td>
-      <td>Usually not needed; WiredTiger self-manages</td>
-    </tr>
-    <tr>
-      <td><strong>Replica impact</strong></td>
-      <td>Must run independently on each replica</td>
-      <td>Run on secondaries first, stepdown primary, then compact</td>
-    </tr>
-  </table>
+  <div class="notes-topic">
+    <h4>Connections — Thread-Per-Connection, Shared Process</h4>
+    <p>All connections live inside the <code>mongod</code> process as lightweight threads sharing the same address space:</p>
+    <p>• <strong>~1MB per connection</strong> (thread stack) vs. PostgreSQL's 5–50MB per process<br>
+       • <strong>No context switch TLB flush</strong> — threads share address space<br>
+       • <strong>No connection pooler needed</strong> — built-in thread pool handles it<br>
+       • <strong>50,000+ connections</strong> practical (limited by <code>maxIncomingConnections</code>)</p>
+    <p>MongoDB 4.4+ added a <strong>service executor thread pool</strong> — fixed pool of worker threads services incoming connections, further reducing overhead.</p>
+    <h4>File Descriptors — Shared, Not Duplicated</h4>
+    <p>WiredTiger opens each data file <strong>once</strong> and all threads access it via <code>pread()</code>/<code>pwrite()</code> (thread-safe with explicit offsets). A MongoDB instance with 5,000 connections holds <strong>a few hundred</strong> FDs total — not a million like PostgreSQL.</p>
+  </div>
 
-  <h4>Why PostgreSQL Needs VACUUM at All</h4>
-  <p>PostgreSQL's MVCC design is the root cause. Every UPDATE creates a new tuple version and leaves the old one dead in the heap. Every DELETE marks a tuple dead but doesn't remove it. This is <strong>by design</strong> — it allows concurrent readers to see consistent snapshots without locking. But the cost is that dead tuples accumulate and the table file grows without bound.</p>
+  <div class="notes-topic">
+    <h4>Schema Flexibility — No ALTER TABLE Concept</h4>
+    <p>MongoDB's schema is flexible by design (schemaless documents). Adding a new field is just writing a document with the new field. Schema validation changes are metadata operations. No <code>ACCESS EXCLUSIVE</code> locks, no table rewrites, no lock queuing cascade. This is one of the genuine differentiators at scale.</p>
+  </div>
 
-  <p>Regular <code>VACUUM</code> (run by autovacuum) handles most of this — it marks dead space reusable so future inserts fill the gaps. But it cannot <strong>shrink the physical file</strong>. A table that grew to 200GB during a spike will stay at 200GB on disk forever, even if only 50GB of live data remains. The only way to reclaim that space is VACUUM FULL (or <code>pg_repack</code>).</p>
+  <div class="notes-topic">
+    <h4>Compact — Rarely Needed</h4>
+    <p>WiredTiger doesn't have the MVCC dead tuple problem. Dead versions are cleaned up by <strong>internal cache eviction</strong>. Checkpointing (every 60s) and page-level management handle most fragmentation automatically.</p>
+    <div class="code-block">db.users.runCommand({ compact: "users" })
 
-  <h4>Why MongoDB Rarely Needs Compact</h4>
-  <p>WiredTiger's architecture avoids the accumulation problem:</p>
-  <p>• <strong>No in-line dead tuples</strong> — old document versions are cleaned up by internal cache eviction, not by an external process<br>
-     • <strong>Checkpointing every 60s</strong> — writes consolidated data to disk, naturally compacting<br>
-     • <strong>Page-level management</strong> — WiredTiger handles page splits and merges internally, resolving moderate fragmentation automatically<br>
-     • <strong>Block-manager reuse</strong> — freed blocks are tracked and reused immediately, unlike PostgreSQL's hole-in-the-middle problem</p>
+1. WiredTiger reorganizes pages <b>in-place</b> within existing files
+2. <b>Blocks writes</b> on collection, but <b>reads continue</b>
+3. Releases freed space back to OS
 
-  <p>You typically only need <code>compact</code> after extreme scenarios — like dropping an entire large collection's worth of documents and wanting to return disk space to the OS.</p>
+Duration: <b>minutes</b> &middot; Disk: <b>minimal extra</b> &middot; Impact: <b>write-only outage</b></div>
+    <p>WiredTiger avoids accumulation: no in-line dead tuples, 60s checkpointing consolidates data, page splits/merges handled internally, freed blocks reused immediately.</p>
+    <p>MongoDB 7.0+ introduced <code>autoCompact</code> — background compaction without manual intervention. You typically only need <code>compact</code> after extreme scenarios like mass-deleting an entire large collection.</p>
+  </div>
 
-  <div class="callout"><strong>Bottom line:</strong> MongoDB <code>compact</code> is <strong>significantly less impactful</strong> than PostgreSQL <code>VACUUM FULL</code>: it doesn't block reads, doesn't need double the disk space, and is faster. But the more important difference is that <strong>you rarely need it at all</strong> — WiredTiger self-manages fragmentation, while PostgreSQL's MVCC design guarantees that dead space will accumulate and eventually require manual intervention. The PostgreSQL community knows this is a problem — <code>pg_repack</code> exists specifically to work around VACUUM FULL's outage-inducing lock, and autovacuum tuning is critical at scale. But the need for an external tool to avoid an outage is itself a reflection of the architecture.</div>
+  <div class="notes-topic">
+    <h4>Index Builds — Hybrid Since 4.2</h4>
+    <p><strong>1. Lock at start</strong> — brief exclusive lock to register the build. Milliseconds.</p>
+    <p><strong>2. Bulk build phase</strong> — reads and writes continue. Scans collection and builds index in a side table.</p>
+    <p><strong>3. Lock at finish</strong> — exclusive lock to commit. Under heavy writes, must drain pending changes. Can be <strong>seconds to minutes</strong>.</p>
+    <p><strong>4. Secondaries</strong> — each secondary builds locally. <strong>Replication is blocked</strong> during build. Build on all secondaries simultaneously and you lose read capacity.</p>
+    <p><strong>Before 4.2</strong> — two bad choices: <code>foreground</code> (locks entire collection) or <code>background</code> (no lock but slower, less efficient B-tree).</p>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Document Model — Why Fewer Indexes Are Needed</h4>
+    <p>In relational databases, data is normalized across many tables. A "user profile" needs 4+ tables and 4+ JOIN indexes:</p>
+    <div class="code-block">SELECT u.name, a.street, o.total, p.method
+FROM <b>users</b> u
+JOIN <b>addresses</b> a ON a.user_id = u.id
+JOIN <b>orders</b> o ON o.user_id = u.id
+JOIN <b>payments</b> p ON p.order_id = o.id;</div>
+    <p>In MongoDB, that's one document:</p>
+    <div class="code-block">{
+  "_id": 42, "name": "Alice",
+  "address": { "street": "123 Main" },
+  "orders": [{ "total": 99, "payment": { "method": "card" } }]
+}</div>
+    <p><strong>The math:</strong> Relational = N−1 JOIN indexes + filter/sort per table. Document = 0 JOIN indexes + only query-driven indexes.</p>
+    <p><strong>The trade-off:</strong> MongoDB pays with <strong>data duplication</strong> (denormalization). Shared data embedded in multiple documents means multi-document updates when it changes.</p>
+  </div>
+
+  <div class="notes-topic">
+    <h4>No Foreign Keys — By Design</h4>
+    <p>References between documents are just plain fields (<code>user_id: ObjectId("...")</code>). No constraint enforcement, no automatic indexes. You index only what you query on. Referential integrity is the application's responsibility.</p>
+    <p>This means <strong>zero FK-related index overhead</strong> — no forgotten unindexed FKs (PostgreSQL's footgun) and no auto-created FK indexes adding write amplification (MySQL's overhead).</p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       MYSQL / INNODB
+       ═══════════════════════════════════════════════════════ -->
+  <div class="notes-db-header mysql" id="notes-mysql">
+    <div>
+      <div class="ndb-icon">&#x1F42C;</div>
+    </div>
+    <div>
+      <h3>MySQL / InnoDB</h3>
+      <div class="ndb-sub">Clustered index architecture &middot; Automatic FK indexes &middot; 2-hop secondary lookups</div>
+    </div>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Clustered Index — The PK IS the Table</h4>
+    <p>InnoDB stores data <strong>sorted by primary key</strong> in B-Tree leaf pages. There is no separate heap. The primary key B-Tree leaf pages contain the full row data. This means:</p>
+    <p>• Primary key lookups are always fast — you land directly on the data.<br>
+       • Range scans on the PK are sequential I/O — physically adjacent rows are stored together.<br>
+       • But <strong>random inserts</strong> (e.g., UUID PKs) cause page splits and fragmentation.</p>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Secondary Indexes — The 2-Hop Tax</h4>
+    <p>Secondary indexes in InnoDB store <code>(key → primary key value)</code>, not a physical address. Every secondary index lookup requires <strong>2 hops</strong>:</p>
+    <p>1. Secondary index B-Tree → find the primary key value<br>
+       2. Clustered index B-Tree → find the actual row data</p>
+    <p>Contrast with PostgreSQL/MongoDB where secondary indexes point to a physical address (<code>ctid</code> / <code>RecordId</code>) — always 1 hop.</p>
+    <p>The 2-hop tax matters at scale: covering indexes (that include all queried columns in the index itself) can avoid the second hop, but they increase index size and write amplification.</p>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Automatic FK Indexes</h4>
+    <p>InnoDB <strong>automatically creates an index</strong> on every foreign key column — you don't have a choice. This is safer by default (avoids PostgreSQL's unindexed FK footgun) but contributes to index sprawl and write amplification on every INSERT/UPDATE/DELETE, whether you query on those columns or not.</p>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       CROSS-ENGINE COMPARISONS
+       ═══════════════════════════════════════════════════════ -->
+  <div class="notes-db-header compare" id="notes-compare">
+    <div>
+      <div class="ndb-icon">&#x2696;</div>
+    </div>
+    <div>
+      <h3>Cross-Engine Comparisons</h3>
+      <div class="ndb-sub">Side-by-side tables for replication, connections, maintenance, indexes, and foreign keys</div>
+    </div>
+  </div>
+
+  <div class="notes-topic">
+    <h4>WAL vs Oplog — Size Comparison</h4>
+    <table class="compare-table">
+      <thead><tr><th>Factor</th><th>PostgreSQL WAL</th><th>MongoDB Oplog</th></tr></thead>
+      <tbody>
+        <tr><td>Single row UPDATE</td><td>8KB+ (full page image + indexes)</td><td>~100–200 bytes</td></tr>
+        <tr><td>What's logged</td><td>Physical page diffs</td><td>Logical operation</td></tr>
+        <tr><td>Index changes</td><td>Included in WAL</td><td>Not in oplog (secondary rebuilds locally)</td></tr>
+        <tr><td>Full page writes</td><td>Yes, after each checkpoint</td><td>No concept of this</td></tr>
+        <tr><td>Bulk INSERT 1000 rows</td><td>Every page touched × page size</td><td>1000 small insert ops</td></tr>
+      </tbody>
+    </table>
+    <p>At OpenAI's scale with heavy writes, WAL volume can easily be <strong>10–50× larger</strong> than an equivalent oplog for the same logical changes.</p>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Fan-Out: 50 Replicas</h4>
+    <table class="compare-table">
+      <thead><tr><th>Factor</th><th>PostgreSQL</th><th>MongoDB</th></tr></thead>
+      <tbody>
+        <tr><td>Replication model</td><td>Physical WAL — primary pushes to all</td><td>Logical oplog — secondaries pull from nearest</td></tr>
+        <tr><td>Primary outbound (200MB/s WAL)</td><td>~10 GB/s (50 × 200MB/s)</td><td>~30–60 MB/s (chained, only feeds 2–3 directly)</td></tr>
+        <tr><td>Cascading topology</td><td>Supported since PG 9.2 but needs manual orchestration</td><td>Built-in, self-managing (<code>chainingAllowed</code>)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Connections at Scale</h4>
+    <table class="compare-table">
+      <thead><tr><th>Factor</th><th>PostgreSQL</th><th>MongoDB</th></tr></thead>
+      <tbody>
+        <tr><td>Model</td><td>Process-per-connection (forked OS process)</td><td>Thread-per-connection (within single process)</td></tr>
+        <tr><td>Memory per connection</td><td>5–50MB (private process memory)</td><td>~1MB (thread stack)</td></tr>
+        <tr><td>5,000 connections memory</td><td>25–250 GB</td><td>~5 GB</td></tr>
+        <tr><td>Context switching</td><td>OS process switches (expensive — TLB flush)</td><td>Thread switches (cheap — shared address space)</td></tr>
+        <tr><td>Connection pooler needed?</td><td>Yes, always at scale (PgBouncer, pgcat)</td><td>No — built-in thread pool handles it</td></tr>
+        <tr><td>Max practical connections</td><td>~300–500 without pooler, ~5,000 with</td><td>~50,000+ (limited by <code>maxIncomingConnections</code>)</td></tr>
+        <tr><td>MVCC snapshot cost</td><td>O(n) scan of all backends</td><td>Timestamp-based (O(1) per transaction)</td></tr>
+        <tr><td>File descriptors at 5K conn</td><td>~1,000,000 (per-process FD caching)</td><td>A few hundred (shared process, WiredTiger opens files once)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="notes-topic">
+    <h4>VACUUM FULL vs Compact</h4>
+    <table class="compare-table">
+      <tr><th>Aspect</th><th>PostgreSQL VACUUM FULL</th><th>MongoDB compact</th></tr>
+      <tr><td><strong>Lock type</strong></td><td><code>ACCESS EXCLUSIVE</code> — blocks all reads AND writes</td><td>Blocks writes on collection; reads continue</td></tr>
+      <tr><td><strong>Mechanism</strong></td><td>Rewrites entire table to new file + rebuilds all indexes</td><td>WiredTiger reorganizes pages in-place within existing files</td></tr>
+      <tr><td><strong>Disk space needed</strong></td><td>~2× table size (old file + new file)</td><td>Minimal — no second copy</td></tr>
+      <tr><td><strong>Duration (100GB table)</strong></td><td>Hours</td><td>Minutes to tens of minutes</td></tr>
+      <tr><td><strong>How often needed</strong></td><td>Whenever bloat is severe (dead tuples accumulate)</td><td>Rarely — WiredTiger self-manages</td></tr>
+      <tr><td><strong>Auto-maintenance</strong></td><td><code>autovacuum</code> runs VACUUM (never VACUUM FULL)</td><td>MongoDB 7.0+ <code>autoCompact</code></td></tr>
+      <tr><td><strong>Practical alternative</strong></td><td><code>pg_repack</code> (community, online rewrite)</td><td>Usually not needed</td></tr>
+      <tr><td><strong>Replica impact</strong></td><td>Must run independently on each replica</td><td>Run on secondaries first, stepdown primary, then compact</td></tr>
+    </table>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Dead Row Cleanup — All Four Engines</h4>
+    <p>Every database must deal with old row versions created by updates and deletes. <strong>Where</strong> those dead versions live determines how painful cleanup is:</p>
+    <table class="compare-table">
+      <tr><th>Engine</th><th>Dead row location</th><th>Cleanup mechanism</th><th>Manual compaction</th><th>Lock type</th></tr>
+      <tr>
+        <td><strong>PostgreSQL</strong></td>
+        <td>In the heap (in-place)</td>
+        <td>VACUUM (manual / autovacuum)</td>
+        <td>VACUUM FULL</td>
+        <td><code>ACCESS EXCLUSIVE</code> (total outage)</td>
+      </tr>
+      <tr>
+        <td><strong>MongoDB</strong></td>
+        <td>None (WiredTiger cleans internally)</td>
+        <td>Automatic (cache eviction + checkpoint)</td>
+        <td>compact (rarely needed)</td>
+        <td>Blocks writes only</td>
+      </tr>
+      <tr>
+        <td><strong>MySQL / InnoDB</strong></td>
+        <td>Undo tablespace (separate from table)</td>
+        <td>Purge thread (automatic)</td>
+        <td><code>OPTIMIZE TABLE</code></td>
+        <td>Online DDL (minimal lock in 5.6+)</td>
+      </tr>
+      <tr>
+        <td><strong>Oracle</strong></td>
+        <td>Undo tablespace (separate)</td>
+        <td>Automatic Undo Management (AUM)</td>
+        <td><code>SHRINK SPACE</code> / <code>MOVE ONLINE</code></td>
+        <td>Online (12c+) or exclusive</td>
+      </tr>
+    </table>
+
+    <p><strong>PostgreSQL is the only engine that stores dead row versions in the table itself.</strong> Everyone else (MongoDB, MySQL, Oracle) keeps old versions elsewhere or cleans them up internally.</p>
+
+    <h4>MySQL / InnoDB — Purge Thread + OPTIMIZE TABLE</h4>
+    <p>InnoDB avoids the dead-tuple-in-the-table problem entirely:</p>
+    <p>&bull; <strong>Undo log + purge thread:</strong> When you UPDATE or DELETE, the old row version goes into the <strong>undo tablespace</strong> (not the table). A background <strong>purge thread</strong> asynchronously cleans up undo records once no active transaction needs them. Fully automatic.</p>
+    <p>&bull; <strong><code>OPTIMIZE TABLE</code>:</strong> The closest equivalent to VACUUM FULL. Rebuilds the clustered index by creating a new copy, then swaps. Used when you have significant fragmentation from bulk deletes.</p>
+    <p>&bull; <strong><code>ALTER TABLE ... ENGINE=InnoDB</code>:</strong> A common trick — does the same thing as OPTIMIZE TABLE but works more reliably with online DDL in MySQL 5.6+.</p>
+    <p>&bull; <strong>Page-level reuse:</strong> InnoDB pages with deleted rows have free space that gets reused by future inserts. The file doesn't grow without bound the way PG's heap does.</p>
+
+    <h4>Oracle — Automatic Undo Management</h4>
+    <p>&bull; <strong>Undo tablespace:</strong> Like InnoDB, old row versions go to a separate undo tablespace. Automatic Undo Management (AUM) handles cleanup.</p>
+    <p>&bull; <strong><code>ALTER TABLE ... SHRINK SPACE</code>:</strong> Compacts the table in-place, reclaiming space from deleted rows. Requires row movement enabled. Can run online (no exclusive lock) but invalidates rowids.</p>
+    <p>&bull; <strong><code>ALTER TABLE ... MOVE ONLINE</code> (12c+):</strong> Full table rebuild without locking. Before 12c, MOVE required exclusive lock and invalidated all indexes (must rebuild after).</p>
+    <p>&bull; <strong>Segment Advisor:</strong> Built-in advisor proactively identifies tables with wasted space and recommends shrink operations.</p>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Why VACUUM and compact Exist for Fundamentally Different Reasons</h4>
+    <p>This is a common point of confusion. VACUUM and compact sound similar but solve <strong>completely different problems</strong>:</p>
+
+    <table class="compare-table">
+      <tr><th></th><th>PostgreSQL VACUUM</th><th>MongoDB compact</th></tr>
+      <tr><td><strong>Why it exists</strong></td><td>Dead tuples accumulate <strong>in the table</strong> (MVCC design)</td><td>File-level fragmentation after bulk deletes</td></tr>
+      <tr><td><strong>What it cleans</strong></td><td>Dead row versions + stale index entries</td><td>Reorganizes live pages within the file (defragmentation)</td></tr>
+      <tr><td><strong>Is it mandatory?</strong></td><td><strong>Yes</strong> — without it, table grows forever and eventually transaction ID wraparound <strong>shuts down the database</strong></td><td><strong>No</strong> — WiredTiger works fine without it, just wastes disk space</td></tr>
+      <tr><td><strong>What if you never run it?</strong></td><td>Database eventually <strong>stops accepting writes</strong></td><td>Nothing breaks — you just use more disk than needed</td></tr>
+      <tr><td><strong>Frequency</strong></td><td>autovacuum runs constantly (every few seconds)</td><td>Maybe once a year after a major data cleanup, if ever</td></tr>
+      <tr><td><strong>Analogy</strong></td><td>Taking out the trash — <strong>mandatory or the house becomes uninhabitable</strong></td><td>Defragmenting a hard drive — nice to have, not necessary</td></tr>
+    </table>
+
+    <h4>Why MongoDB Doesn't Have the Dead Tuple Problem</h4>
+    <p>WiredTiger has <strong>zero dead tuple accumulation</strong>. Old document versions are cleaned up by internal cache eviction and 60-second checkpointing. No equivalent of MVCC bloat.</p>
+    <p>But the <strong>physical file</strong> on disk can become fragmented after extreme events. Example: a 100GB collection where you delete 80% of documents. WiredTiger immediately reuses freed space within pages (future inserts fill gaps), but the <strong>file stays 100GB on disk</strong>. The OS doesn't get the space back.</p>
+    <p>This is a <strong>file system</strong> problem, not a data structure problem. The B-tree and storage pages are clean — there are no dead documents lingering. Pages just have free space WiredTiger can reuse internally. <code>compact</code> calls <code>WT_SESSION::compact()</code> to reorganize pages, move data toward the beginning, and truncate the file tail.</p>
+
+    <div class="callout"><strong>Key insight:</strong> PostgreSQL's VACUUM is <strong>garbage collection</strong> — mandatory cleanup of dead data inside the table. MongoDB's compact is <strong>defragmentation</strong> — optional reorganization of live data in the file. MySQL and Oracle don't need either because their purge threads handle dead versions automatically and their storage engines reuse space efficiently. PostgreSQL is architecturally unique in requiring an external process to remain functional.</div>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Index Builds</h4>
+    <table class="compare-table">
+      <tr><th>Aspect</th><th>PostgreSQL</th><th>MongoDB</th></tr>
+      <tr><td><strong>Default build</strong></td><td><code>ACCESS EXCLUSIVE</code> lock — blocks ALL reads/writes</td><td>Hybrid (4.2+) — brief lock at start/finish, reads/writes continue during bulk phase</td></tr>
+      <tr><td><strong>Concurrent option</strong></td><td><code>CREATE INDEX CONCURRENTLY</code> — 2× slower, can fail</td><td>N/A — hybrid is the only mode</td></tr>
+      <tr><td><strong>Impact on replicas</strong></td><td>Each replica builds independently via WAL replay</td><td>Secondaries build locally, <strong>replication blocked</strong> during build</td></tr>
+      <tr><td><strong>Finish lock</strong></td><td>Must wait for all pre-existing transactions</td><td>Must drain write queue and apply buffered changes</td></tr>
+      <tr><td><strong>Write amplification</strong></td><td>Every index adds WAL overhead per write</td><td>Every index adds oplog overhead per write</td></tr>
+    </table>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Foreign Key Indexing</h4>
+    <table class="compare-table">
+      <tr><th>Engine</th><th>FK creates index?</th><th>FK enforced?</th><th>Index implication</th></tr>
+      <tr><td><strong>PostgreSQL</strong></td><td>No (manual)</td><td>Yes</td><td>Forgotten FK indexes cause slow deletes &amp; joins</td></tr>
+      <tr><td><strong>MySQL / InnoDB</strong></td><td>Yes (automatic)</td><td>Yes</td><td>More indexes → more write amplification</td></tr>
+      <tr><td><strong>MongoDB</strong></td><td>N/A</td><td>No (app-level)</td><td>Only query-driven indexes exist</td></tr>
+    </table>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Storage &amp; Index Architecture</h4>
+    <table class="compare-table">
+      <tr><th>Aspect</th><th>PostgreSQL</th><th>MongoDB</th><th>MySQL / InnoDB</th></tr>
+      <tr><td><strong>Data storage</strong></td><td>Unordered heap</td><td>WiredTiger blocks (insertion order)</td><td>Clustered index (sorted by PK)</td></tr>
+      <tr><td><strong>Primary index points to</strong></td><td><code>ctid</code> (page, offset)</td><td><code>RecordId</code> (internal address)</td><td>N/A — leaf IS the data</td></tr>
+      <tr><td><strong>Secondary index points to</strong></td><td><code>ctid</code> (1 hop)</td><td><code>RecordId</code> (1 hop)</td><td>PK value (2 hops)</td></tr>
+      <tr><td><strong>Separate heap?</strong></td><td>Yes</td><td>Yes (WiredTiger files)</td><td>No</td></tr>
+      <tr><td><strong>Typical index count</strong></td><td>High (JOINs + FKs + filters)</td><td>Low (no JOINs, no FKs)</td><td>High (auto FK + JOINs + filters)</td></tr>
+    </table>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       OPENAI OPERATIONAL LAYERS
+       ═══════════════════════════════════════════════════════ -->
+  <div class="notes-db-header ops" id="notes-ops">
+    <div>
+      <div class="ndb-icon">&#x1F6E1;</div>
+    </div>
+    <div>
+      <h3>OpenAI Operational Layers</h3>
+      <div class="ndb-sub">Rate limiting &middot; Query optimization &middot; ORM governance — not database-specific, but critical at their scale</div>
+    </div>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Rate Limiting — Four Layers of Defense</h4>
+    <p>OpenAI implements rate limiting at <strong>four distinct layers</strong>, each catching what the others miss:</p>
+    <p><strong>Layer 1 — App-Level:</strong> Per-service quotas. Each internal service (ChatGPT, API platform, batch jobs) gets a budget. Rogue services rejected with <strong>HTTP 429</strong> before touching the database.</p>
+    <p><strong>Layer 2 — Pooler-Level (PgBouncer):</strong> <code>max_client_conn</code> and <code>max_db_connections</code>. Catches <strong>connection storms</strong> — 500 new pods spinning up simultaneously get queued, not forked.</p>
+    <p><strong>Layer 3 — Proxy-Level:</strong> Global QPS caps via a reverse proxy. "No matter what, the DB will never see more than X QPS."</p>
+    <p><strong>Layer 4 — Per-Query-Digest:</strong> Queries hashed by pattern; each pattern gets its own rate limit. An expensive 12-table ORM join can be throttled independently without affecting other queries.</p>
+    <h4>Why Four Layers?</h4>
+    <p>• App limits miss rogue services that don't implement the SDK properly<br>
+       • Pooler limits miss non-connection-based overload (1 connection sending 10K queries/sec)<br>
+       • Proxy limits are too blunt to differentiate cheap vs. expensive queries<br>
+       • Query digest limits alone can't stop a connection storm</p>
+    <div class="callout"><strong>The retry storm problem:</strong> Service A times out → retries → doubles load → Service B times out → retries → quadruples load. A single runaway service at 50K QPS can take down a cluster that handles 200K QPS comfortably. The four layers contain the blast radius at the outermost possible point.</div>
+  </div>
+
+  <div class="notes-topic">
+    <h4>Query Optimization &amp; ORM Governance</h4>
+    <p><strong>Why ORMs generate bad queries:</strong> The object-relational impedance mismatch. ORMs map object graphs to relational tables. Traversing <code>user.orders.products.reviews</code> either lazy-loads (N+1 problem) or eager-loads (massive JOINs). ORM SQL is built for <strong>correctness, not performance</strong> — <code>SELECT *</code>, JOINs based on model relationships, zero visibility into <code>EXPLAIN ANALYZE</code>.</p>
+    <h4>What OpenAI Actually Does</h4>
+    <p>• <strong>Query review gates in CI/CD</strong> — <code>EXPLAIN</code> on new queries; block PR if cost is too high<br>
+       • <strong><code>statement_timeout = 5s</code></strong> — kill any query running longer<br>
+       • <strong>Idle connection timeouts</strong> — prevent pool exhaustion from leaked ORM connections<br>
+       • <strong>Index audits via <code>pg_stat_user_indexes</code></strong> — find indexes with <code>idx_scan = 0</code>, drop them<br>
+       • <strong><code>pg_stat_statements</code></strong> — track query patterns by digest to identify top CPU-consuming queries</p>
+    <div class="callout"><strong>Key insight:</strong> You cannot fully prevent ORM query/index sprawl. The gate catches problems <em>before production</em>, but it's a continuous process — which is exactly why OpenAI treats this as an operational guardrail layer, not a solved problem.</div>
+  </div>
 
 </section>
 
 </div>
 
 <script>
+/* ══════════════════════════════════════════════════════════
+   Index Internals Visualization
+   ══════════════════════════════════════════════════════════ */
+var intViz=(function(){
+  'use strict';
+  var ROWS=[
+    {id:7,  name:'Grace',  age:31},
+    {id:2,  name:'Bob',    age:28},
+    {id:11, name:'Kai',    age:22},
+    {id:4,  name:'Diana',  age:35},
+    {id:14, name:'Nora',   age:27},
+    {id:1,  name:'Alice',  age:24},
+    {id:9,  name:'Ivy',    age:33},
+    {id:5,  name:'Eve',    age:29},
+    {id:13, name:'Mia',    age:26},
+    {id:3,  name:'Carol',  age:38},
+    {id:15, name:'Olivia', age:21},
+    {id:8,  name:'Heidi',  age:30},
+    {id:6,  name:'Fay',    age:32},
+    {id:12, name:'Lena',   age:25},
+    {id:10, name:'Jade',   age:34}
+  ];
+  var PS=4;
+
+  /*
+     heapSlots[]: the physical storage array (heap pages for PG, WT blocks for Mongo).
+     Each slot: {id, name, age, _dead:bool}
+     PG: dead tuples stay in-place until VACUUM.
+     Mongo/MySQL: rows removed/updated in-place immediately.
+
+     staleIdx[]: index entries that point to dead heap tuples (PG only).
+     Each: {id, name, slotIdx, type:'pri'|'sec'|'both'}
+     These stay in the B-tree panels until VACUUM.
+  */
+  var heapSlots=[], staleIdx=[], insertIdx=0, mode='pg', deadCount=0;
+  var lastAction={type:null,id:-1};
+
+  function el(id){return document.getElementById(id);}
+  function liveRows(){return heapSlots.filter(function(r){return !r._dead;});}
+
+  function log(html){
+    var l=el('intLog');
+    if(l){l.innerHTML=html;l.className='int-log '+(mode==='pg'?'pg-log':mode==='mongo'?'mongo-log':'mysql-log');}
+  }
+
+  function refreshButtons(){
+    var live=liveRows();
+    el('intInsert').disabled=insertIdx>=ROWS.length;
+    el('intUpdate').disabled=live.length<1;
+    el('intDelete').disabled=live.length<1;
+    var vbtn=el('intVacuum');
+    if(mode==='pg'){vbtn.disabled=deadCount<1;vbtn.textContent='Vacuum';}
+    else if(mode==='mongo'){vbtn.disabled=true;vbtn.textContent='Compact (auto)';}
+    else{vbtn.disabled=true;vbtn.textContent='Purge (auto)';}
+    el('intCounter').textContent=live.length+' live'+(deadCount>0?' \u00b7 '+deadCount+' dead':'')+(staleIdx.length>0?' \u00b7 '+staleIdx.length+' stale idx':'');
+  }
+
+  function render(){renderStorage();renderPrimary();renderSecondary();refreshButtons();updateBadges();}
+
+  function updateBadges(){
+    var sp=el('intStorage'),pp=el('intPrimary'),sec=el('intSecondary');if(!sp)return;
+    sp.style.borderColor=mode==='mysql'?'var(--border)':'rgba(0,237,100,.3)';
+    pp.style.borderColor=mode==='mysql'?'rgba(0,237,100,.3)':'var(--border)';
+    sec.style.borderColor=staleIdx.length>0?'rgba(248,113,113,.3)':'var(--border)';
+  }
+
+  function slotCTID(idx){return Math.floor(idx/PS)+','+idx%PS;}
+  function slotRecId(idx){return 'x'+(4096+idx*128).toString(16);}
+
+  function getCTID(id){
+    for(var i=0;i<heapSlots.length;i++){if(heapSlots[i].id===id&&!heapSlots[i]._dead)return slotCTID(i);}
+    return '?';
+  }
+  function getRecordId(id){
+    for(var i=0;i<heapSlots.length;i++){if(heapSlots[i].id===id&&!heapSlots[i]._dead)return slotRecId(i);}
+    return '?';
+  }
+
+  /* ═══ STORAGE PANEL ═══════════════════════════════════ */
+  function renderStorage(){
+    var c=el('intStorageViz');if(!c)return;
+    var titleEl=el('intStorage').querySelector('.int-panel-title');
+
+    if(mode==='mysql'){
+      titleEl.innerHTML='Storage<span>No separate heap exists</span>';
+      if(heapSlots.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">No rows yet</div>';return;}
+      c.innerHTML='<div class="int-no-storage"><div class="int-ns-icon">\u274C</div><div class="int-ns-title">No Separate Storage</div><div class="int-ns-desc">In InnoDB the clustered index leaf pages <strong>ARE</strong> the table.</div><div class="int-hop-label two">look at Primary Index \u2192</div></div>';
+      return;
+    }
+
+    var deadBadge=deadCount>0?' <span class="int-dead-count">'+deadCount+' dead tuple'+(deadCount>1?'s':'')+'</span>':'';
+    var subLabel=mode==='mongo'?'WiredTiger \u2014 documents in insertion order':'Heap \u2014 rows in insertion order';
+    titleEl.innerHTML='Storage <span class="int-data-badge here">\u{1F4BE} DATA LIVES HERE</span>'+deadBadge+'<span id="intStorageSub">'+subLabel+'</span>';
+
+    if(heapSlots.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">No rows yet</div>';return;}
+
+    var pages=[];for(var i=0;i<heapSlots.length;i+=PS)pages.push(heapSlots.slice(i,i+PS));
+
+    var RH=22,PAD=8,GAP=12,HDR=18,W=280;
+    var totalH=0;pages.forEach(function(p){totalH+=HDR+p.length*RH+PAD*2+GAP;});totalH-=GAP;
+
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'">';
+    var y=0;
+    pages.forEach(function(page,pi){
+      var pH=HDR+page.length*RH+PAD*2;
+      svg+='<rect x="0" y="'+y+'" width="'+W+'" height="'+pH+'" rx="5" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.12)" stroke-width="1"/>';
+      svg+='<text x="8" y="'+(y+13)+'" fill="var(--tx3)" font-size="9" font-weight="700">'+(mode==='mongo'?'Block':'Page')+' '+pi+'</text>';
+      page.forEach(function(row,ri){
+        var ry=y+HDR+PAD+ri*RH, sIdx=pi*PS+ri;
+        var isDead=row._dead, isHL=lastAction.id===row.id&&!isDead;
+        var fill,stroke;
+        if(isDead){fill='rgba(248,113,113,.08)';stroke='rgba(248,113,113,.25)';}
+        else if(isHL){fill=lastAction.type==='update'?'rgba(192,132,252,.15)':'rgba(251,191,36,.15)';stroke=lastAction.type==='update'?'rgba(192,132,252,.4)':'rgba(251,191,36,.4)';}
+        else{fill='rgba(255,255,255,.03)';stroke='rgba(255,255,255,.08)';}
+        svg+='<rect x="4" y="'+ry+'" width="'+(W-8)+'" height="'+(RH-2)+'" rx="3" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1"';
+        if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='/>';
+        if(isDead){
+          svg+='<line x1="6" y1="'+(ry+RH/2-1)+'" x2="'+(W-6)+'" y2="'+(ry+RH/2-1)+'" stroke="rgba(248,113,113,.4)" stroke-width="1"/>';
+          svg+='<text x="10" y="'+(ry+14)+'" fill="rgba(248,113,113,.5)" font-size="8" font-family="\'JetBrains Mono\',monospace">';
+          svg+='<tspan font-weight="700">'+row.id+'</tspan> '+row.name+' age:'+row.age;
+          svg+=' <tspan font-size="6.5">('+slotCTID(sIdx)+')</tspan></text>';
+          svg+='<text x="'+(W-8)+'" y="'+(ry+14)+'" text-anchor="end" fill="#f87171" font-size="6.5" font-weight="700">DEAD</text>';
+        } else {
+          var addr=mode==='pg'?' <tspan fill="var(--tx3)" font-size="7">('+slotCTID(sIdx)+')</tspan>':mode==='mongo'?' <tspan fill="var(--tx3)" font-size="7">RecId:'+slotRecId(sIdx)+'</tspan>':'';
+          var idC=isHL?'#fbbf24':mode==='mongo'?'#00ed64':'#60a5fa';
+          var idL=mode==='mongo'?'_id:'+row.id:String(row.id);
+          svg+='<text x="10" y="'+(ry+14)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="8.5" font-family="\'JetBrains Mono\',monospace">';
+          svg+='<tspan fill="'+idC+'" font-weight="700">'+idL+'</tspan>';
+          svg+=' '+row.name+' <tspan fill="var(--tx3)">age:'+row.age+'</tspan>'+addr+'</text>';
+        }
+      });
+      y+=pH+GAP;
+    });
+    svg+='</svg>';c.innerHTML=svg;
+  }
+
+  /* ═══ PRIMARY INDEX ═══════════════════════════════════ */
+  function renderPrimary(){
+    var c=el('intPrimaryViz');if(!c)return;
+    var titleEl=el('intPrimary').querySelector('.int-panel-title');
+    var isMg=mode==='mongo',isMy=mode==='mysql';
+    var priC=isMg?'#00ed64':'#60a5fa',priR=isMg?'0,237,100':'96,165,250';
+    var live=liveRows();
+
+    /* In PG mode: stale primary index entries still visible (point to dead tuple) */
+    var stalePri=mode==='pg'?staleIdx.filter(function(s){return s.type==='pri'||s.type==='both';}):[];
+    var bloatBadge=stalePri.length>0?' <span class="int-dead-count">'+stalePri.length+' stale</span>':'';
+
+    if(isMy)titleEl.innerHTML='Primary Index <span class="int-data-badge here">\u{1F4BE} DATA LIVES HERE</span>'+bloatBadge+'<span>Clustered B-Tree on id \u2014 leaf = full row</span>';
+    else if(isMg)titleEl.innerHTML='_id Index <span class="int-data-badge pointer">POINTER \u2192 STORAGE</span>'+bloatBadge+'<span>B-Tree on _id \u2192 RecordId</span>';
+    else titleEl.innerHTML='Primary Index <span class="int-data-badge pointer">POINTER \u2192 HEAP</span>'+bloatBadge+'<span>B-Tree on id \u2192 ctid</span>';
+
+    /* Build combined entries: live rows + stale ghost entries (PG) */
+    var entries=live.map(function(r){return{id:r.id,name:r.name,age:r.age,dead:false};});
+    stalePri.forEach(function(s){entries.push({id:s.id,name:s.name,age:s.age,dead:true,deadCTID:slotCTID(s.slotIdx)});});
+    entries.sort(function(a,b){return a.id-b.id;});
+
+    if(entries.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">Empty</div>';return;}
+
+    var leaves=[];for(var i=0;i<entries.length;i+=PS)leaves.push(entries.slice(i,i+PS));
+
+    var W=280,EH=isMy?28:18;
+    var LW=isMy?Math.min(180,Math.max(80,(W-16)/leaves.length-6)):Math.min(140,Math.max(60,(W-20)/leaves.length-6));
+    var rH=24,rY=10,lY=60;
+    var totalH=lY+10;leaves.forEach(function(lf){var h=lf.length*EH+12;if(lY+h>totalH)totalH=lY+h;});totalH+=10;
+
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'">';
+    svg+='<defs><marker id="int-arr" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="rgba('+priR+',.5)"/></marker></defs>';
+
+    var rKeys=[];for(var li=1;li<leaves.length;li++){var k=leaves[li][0].id;rKeys.push(isMg?'_id:'+k:k);}
+    var rW=Math.max(40,rKeys.length*(isMg?42:28)+16),rX=(W-rW)/2;
+    svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="4" fill="rgba('+priR+',.08)" stroke="rgba('+priR+',.3)" stroke-width="1.5"/>';
+    svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+16)+'" text-anchor="middle" fill="'+priC+'" font-size="9" font-weight="700" font-family="\'JetBrains Mono\',monospace">'+(rKeys.length?rKeys.join(' | '):'root')+'</text>';
+
+    var tLW=leaves.length*LW+(leaves.length-1)*8,sX=(W-tLW)/2;if(sX<2)sX=2;
+
+    leaves.forEach(function(leaf,li){
+      var lx=sX+li*(LW+8),lh=leaf.length*EH+10;
+      svg+='<line x1="'+(rX+rW/2)+'" y1="'+(rY+rH)+'" x2="'+(lx+LW/2)+'" y2="'+lY+'" stroke="rgba('+priR+',.25)" stroke-width="1" marker-end="url(#int-arr)"/>';
+      var lFill=isMy?'rgba(0,237,100,.03)':'rgba(255,255,255,.02)',lStroke=isMy?'rgba(0,237,100,.25)':'rgba('+priR+',.2)';
+      svg+='<rect x="'+lx+'" y="'+lY+'" width="'+LW+'" height="'+lh+'" rx="4" fill="'+lFill+'" stroke="'+lStroke+'" stroke-width="'+(isMy?'1.5':'1')+'"/>';
+
+      leaf.forEach(function(e,ri){
+        var ey=lY+6+ri*EH,isHL=lastAction.id===e.id&&!e.dead;
+        if(e.dead){
+          /* Stale entry: red, points to dead ctid */
+          svg+='<line x1="'+(lx+2)+'" y1="'+(ey+6)+'" x2="'+(lx+LW-2)+'" y2="'+(ey+6)+'" stroke="rgba(248,113,113,.3)" stroke-width="1"/>';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="rgba(248,113,113,.5)" font-size="7" font-family="\'JetBrains Mono\',monospace">';
+          svg+='<tspan font-weight="700">'+e.id+'</tspan> \u2192 '+e.deadCTID+' <tspan fill="#f87171" font-weight="700">DEAD</tspan></text>';
+        } else if(isMy){
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+10)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="\'JetBrains Mono\',monospace"';
+          if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
+          svg+='<tspan font-weight="700" fill="'+(isHL?'#fbbf24':'#60a5fa')+'">'+e.id+'</tspan> '+e.name+' age:'+e.age+'</text>';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+21)+'" fill="#00ed64" font-size="5.5" opacity=".6">\u2714 full row in leaf</text>';
+        } else {
+          var ptr=isMg?getRecordId(e.id):getCTID(e.id);
+          var pL=isMg?'_id:'+e.id:String(e.id);
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7.5" font-family="\'JetBrains Mono\',monospace"';
+          if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
+          svg+='<tspan font-weight="700" fill="'+(isHL?'#fbbf24':priC)+'">'+pL+'</tspan>';
+          svg+=' <tspan fill="var(--tx3)">\u2192 '+ptr+'</tspan></text>';
+        }
+      });
+    });
+    svg+='</svg>';c.innerHTML=svg;
+  }
+
+  /* ═══ SECONDARY INDEX ═════════════════════════════════ */
+  function renderSecondary(){
+    var c=el('intSecondaryViz');if(!c)return;
+    var titleEl=el('intSecondary').querySelector('.int-panel-title');
+    var isMy=mode==='mysql';
+    var live=liveRows();
+
+    var staleSec=mode==='pg'?staleIdx.filter(function(s){return s.type==='sec'||s.type==='both';}):[];
+    var bloatBadge=staleSec.length>0?' <span class="int-dead-count">'+staleSec.length+' stale</span>':'';
+
+    if(isMy)titleEl.innerHTML='Secondary Index <span class="int-data-badge pointer-mysql">2 HOPS \u2192 PK \u2192 DATA</span>'+bloatBadge+'<span>B-Tree on name \u2192 PK value</span>';
+    else if(mode==='mongo')titleEl.innerHTML='Secondary Index <span class="int-data-badge pointer">1 HOP \u2192 STORAGE</span>'+bloatBadge+'<span>B-Tree on name \u2192 RecordId</span>';
+    else titleEl.innerHTML='Secondary Index <span class="int-data-badge pointer">1 HOP \u2192 HEAP</span>'+bloatBadge+'<span>B-Tree on name \u2192 ctid</span>';
+
+    var entries=live.map(function(r){return{id:r.id,name:r.name,dead:false};});
+    staleSec.forEach(function(s){entries.push({id:s.id,name:s.name,dead:true,deadCTID:slotCTID(s.slotIdx)});});
+    entries.sort(function(a,b){return a.name<b.name?-1:a.name>b.name?1:0;});
+
+    if(entries.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">Empty</div>';return;}
+
+    var leaves=[];for(var i=0;i<entries.length;i+=PS)leaves.push(entries.slice(i,i+PS));
+    var W=280,LW=isMy?Math.min(160,Math.max(80,(W-16)/leaves.length-6)):Math.min(140,Math.max(70,(W-20)/leaves.length-6));
+    var EH=isMy?28:18,rH=24,rY=10,lY=60;
+    var totalH=lY+10;leaves.forEach(function(lf){var h=lf.length*EH+12;if(lY+h>totalH)totalH=lY+h;});totalH+=10;
+
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'">';
+    svg+='<defs><marker id="int-arr2" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="rgba(0,237,100,.5)"/></marker></defs>';
+
+    var rKeys=[];for(var li=1;li<leaves.length;li++)rKeys.push(leaves[li][0].name);
+    var rW=Math.max(40,rKeys.length*48+16);if(rW>W-10)rW=W-10;var rX=(W-rW)/2;
+    svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="4" fill="rgba(0,237,100,.06)" stroke="rgba(0,237,100,.25)" stroke-width="1.5"/>';
+    svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+16)+'" text-anchor="middle" fill="#00ed64" font-size="8.5" font-weight="700" font-family="\'JetBrains Mono\',monospace">'+(rKeys.length?rKeys.join(' | '):'root')+'</text>';
+
+    var tLW=leaves.length*LW+(leaves.length-1)*8,sX=(W-tLW)/2;if(sX<0)sX=2;
+
+    leaves.forEach(function(leaf,li){
+      var lx=sX+li*(LW+8),lh=leaf.length*EH+10;
+      svg+='<line x1="'+(rX+rW/2)+'" y1="'+(rY+rH)+'" x2="'+(lx+LW/2)+'" y2="'+lY+'" stroke="rgba(0,237,100,.2)" stroke-width="1" marker-end="url(#int-arr2)"/>';
+      svg+='<rect x="'+lx+'" y="'+lY+'" width="'+LW+'" height="'+lh+'" rx="4" fill="rgba(255,255,255,.02)" stroke="rgba(0,237,100,.18)" stroke-width="1"/>';
+
+      leaf.forEach(function(e,ri){
+        var ey=lY+6+ri*EH,isHL=lastAction.id===e.id&&!e.dead;
+        if(e.dead){
+          svg+='<line x1="'+(lx+2)+'" y1="'+(ey+6)+'" x2="'+(lx+LW-2)+'" y2="'+(ey+6)+'" stroke="rgba(248,113,113,.3)" stroke-width="1"/>';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="rgba(248,113,113,.5)" font-size="7" font-family="\'JetBrains Mono\',monospace">';
+          svg+='<tspan font-weight="700">'+e.name+'</tspan> \u2192 '+e.deadCTID+' <tspan fill="#f87171" font-weight="700">DEAD</tspan></text>';
+        } else {
+          var ptr;
+          if(mode==='pg')ptr=getCTID(e.id);else if(mode==='mongo')ptr=getRecordId(e.id);else ptr='pk:'+e.id;
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7.5" font-family="\'JetBrains Mono\',monospace"';
+          if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
+          svg+='<tspan font-weight="700" fill="'+(isHL?'#fbbf24':'#00ed64')+'">'+e.name+'</tspan>';
+          svg+=' <tspan fill="var(--tx3)">\u2192 '+ptr+'</tspan></text>';
+          if(isMy)svg+='<text x="'+(lx+4)+'" y="'+(ey+23)+'" fill="#fbbf24" font-size="5.5" opacity=".6">\u26A0 must look up PK in clustered index</text>';
+        }
+      });
+    });
+    svg+='</svg>';c.innerHTML=svg;
+  }
+
+  /* ═══ INSERT ══════════════════════════════════════════ */
+  function insertNext(){
+    if(insertIdx>=ROWS.length)return;
+    var r=ROWS[insertIdx];insertIdx++;
+    heapSlots.push({id:r.id,name:r.name,age:r.age,_dead:false});
+    lastAction={type:'insert',id:r.id};
+    log('<strong>INSERT</strong> id='+r.id+' name='+r.name+' \u2192 appended to slot '+(heapSlots.length-1)+'. Primary + secondary index entries added.');
+    render();
+    setTimeout(function(){lastAction={type:null,id:-1};render();},2000);
+  }
+
+  /* ═══ UPDATE ══════════════════════════════════════════ */
+  function updateRandom(){
+    var live=liveRows();if(live.length<1)return;
+    var pick=live[Math.floor(Math.random()*live.length)];
+    var oldName=pick.name,oldAge=pick.age;
+    var newAge=oldAge+10;
+    var newName=oldName.charAt(oldName.length-1)==='*'?oldName:oldName+'*';
+
+    if(mode==='pg'){
+      var oldSlot=-1;
+      for(var i=0;i<heapSlots.length;i++){
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){oldSlot=i;heapSlots[i]._dead=true;deadCount++;break;}
+      }
+      heapSlots.push({id:pick.id,name:newName,age:newAge,_dead:false});
+      /* Stale index entries: PK index entry for this id now has TWO versions — old pointing to dead slot, new pointing to live.
+         For unique PK, PG uses the HOT chain internally. We show the old entry as stale.
+         Secondary index: old "name" entry stale, new "name*" entry added. */
+      staleIdx.push({id:pick.id,name:oldName,age:oldAge,slotIdx:oldSlot,type:'sec'});
+      lastAction={type:'update',id:pick.id};
+      log('<strong>UPDATE</strong> id='+pick.id+': '+oldName+' \u2192 '+newName+', age '+oldAge+' \u2192 '+newAge+
+        '<br><span style="color:#f87171">\u2718 Old tuple at ('+slotCTID(oldSlot)+') marked <strong>DEAD</strong> — stays in heap, wastes space</span>'+
+        '<br><span style="color:#c084fc">\u2714 New tuple appended at slot '+(heapSlots.length-1)+' ('+slotCTID(heapSlots.length-1)+')</span>'+
+        '<br><span style="color:#f87171">\u2718 Secondary index: old entry "<strong>'+oldName+' \u2192 '+slotCTID(oldSlot)+'</strong>" still in B-tree — now points to DEAD tuple</span>'+
+        '<br><span style="color:#c084fc">\u2714 Secondary index: new entry "<strong>'+newName+' \u2192 '+slotCTID(heapSlots.length-1)+'</strong>" added</span>'+
+        '<br><span style="color:var(--tx3)">\u23F3 Both dead heap tuple and stale index entries persist until VACUUM</span>');
+    } else if(mode==='mongo'){
+      for(var i=0;i<heapSlots.length;i++){
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots[i].name=newName;heapSlots[i].age=newAge;break;}
+      }
+      lastAction={type:'update',id:pick.id};
+      log('<strong>UPDATE</strong> _id:'+pick.id+': '+oldName+' \u2192 '+newName+', age '+oldAge+' \u2192 '+newAge+
+        '<br><span style="color:#00ed64">\u2714 Document updated <strong>in-place</strong> in WiredTiger page — no dead version created</span>'+
+        '<br><span style="color:#00ed64">\u2714 _id index unchanged (same RecordId)</span>'+
+        '<br><span style="color:#c084fc">\u2714 Secondary index: old "'+oldName+'" entry removed, new "'+newName+'" entry added — <strong>no stale entries</strong></span>');
+    } else {
+      for(var i=0;i<heapSlots.length;i++){
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots[i].name=newName;heapSlots[i].age=newAge;break;}
+      }
+      lastAction={type:'update',id:pick.id};
+      log('<strong>UPDATE</strong> id='+pick.id+': '+oldName+' \u2192 '+newName+', age '+oldAge+' \u2192 '+newAge+
+        '<br><span style="color:#f59e0b">\u2714 Row updated in-place in clustered index leaf page</span>'+
+        '<br><span style="color:#c084fc">\u2714 Secondary index: old "'+oldName+'" removed, new "'+newName+'" added</span>'+
+        '<br><span style="color:var(--tx3)">\u2022 Old version saved in undo log (not visible in table)</span>');
+    }
+    render();
+    setTimeout(function(){lastAction={type:null,id:-1};render();},3000);
+  }
+
+  /* ═══ DELETE ══════════════════════════════════════════ */
+  function deleteRandom(){
+    var live=liveRows();if(live.length<1)return;
+    var pick=live[Math.floor(Math.random()*live.length)];
+
+    if(mode==='pg'){
+      var oldSlot=-1;
+      for(var i=0;i<heapSlots.length;i++){
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){oldSlot=i;heapSlots[i]._dead=true;deadCount++;break;}
+      }
+      /* Both primary and secondary index entries become stale */
+      staleIdx.push({id:pick.id,name:pick.name,age:pick.age,slotIdx:oldSlot,type:'both'});
+      lastAction={type:'delete',id:pick.id};
+      log('<strong>DELETE</strong> id='+pick.id+' ('+pick.name+') at ('+slotCTID(oldSlot)+')'+
+        '<br><span style="color:#f87171">\u2718 Tuple marked <strong>DEAD</strong> in heap — not removed, still occupies '+( mode==='pg'?'8KB page space':'disk space')+'</span>'+
+        '<br><span style="color:#f87171">\u2718 Primary index: entry "<strong>'+pick.id+' \u2192 '+slotCTID(oldSlot)+'</strong>" still in B-tree — points to DEAD tuple</span>'+
+        '<br><span style="color:#f87171">\u2718 Secondary index: entry "<strong>'+pick.name+' \u2192 '+slotCTID(oldSlot)+'</strong>" still in B-tree — points to DEAD tuple</span>'+
+        '<br><span style="color:var(--tx3)">\u23F3 All three (heap + 2 index entries) persist as bloat until VACUUM</span>');
+    } else if(mode==='mongo'){
+      for(var i=0;i<heapSlots.length;i++){
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots.splice(i,1);break;}
+      }
+      lastAction={type:'delete',id:pick.id};
+      log('<strong>DELETE</strong> _id:'+pick.id+' ('+pick.name+')'+
+        '<br><span style="color:#00ed64">\u2714 Document removed from WiredTiger page <strong>immediately</strong></span>'+
+        '<br><span style="color:#00ed64">\u2714 _id index entry removed immediately</span>'+
+        '<br><span style="color:#00ed64">\u2714 Secondary index entry removed immediately</span>'+
+        '<br><span style="color:var(--tx3)">\u2022 Freed space reused by block manager — no bloat accumulation</span>');
+    } else {
+      for(var i=0;i<heapSlots.length;i++){
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots.splice(i,1);break;}
+      }
+      lastAction={type:'delete',id:pick.id};
+      log('<strong>DELETE</strong> id='+pick.id+' ('+pick.name+')'+
+        '<br><span style="color:#f59e0b">\u2714 Row removed from clustered index leaf page</span>'+
+        '<br><span style="color:#c084fc">\u2714 Secondary index entry removed</span>'+
+        '<br><span style="color:var(--tx3)">\u2022 Old version in undo log (purge thread cleans async)</span>');
+    }
+    render();
+    setTimeout(function(){lastAction={type:null,id:-1};render();},3000);
+  }
+
+  /* ═══ VACUUM / COMPACT ════════════════════════════════ */
+  function vacuum(){
+    if(mode!=='pg')return;
+    var before=heapSlots.length,stBefore=staleIdx.length;
+    heapSlots=heapSlots.filter(function(r){return !r._dead;});
+    var reclaimed=before-heapSlots.length;
+    staleIdx=[];deadCount=0;
+    lastAction={type:null,id:-1};
+    log('<strong>VACUUM</strong> completed'+
+      '<br><span style="color:#fbbf24">\u2714 '+reclaimed+' dead heap tuple'+(reclaimed!==1?'s':'')+' removed — space marked reusable</span>'+
+      '<br><span style="color:#fbbf24">\u2714 '+stBefore+' stale index entr'+(stBefore!==1?'ies':'y')+' cleaned from B-trees</span>'+
+      '<br><span style="color:var(--tx3)">\u2022 Regular VACUUM marks space reusable but <strong>heap file doesn\'t shrink on disk</strong></span>'+
+      '<br><span style="color:var(--tx3)">\u2022 Only VACUUM FULL (ACCESS EXCLUSIVE lock, hours of downtime) shrinks the file</span>');
+    render();
+  }
+
+  /* ═══ RESET ═══════════════════════════════════════════ */
+  function reset(){
+    heapSlots=[];staleIdx=[];insertIdx=0;lastAction={type:null,id:-1};deadCount=0;
+    log('Click <strong>Insert Row</strong> to start. Then try Update and Delete to see how each engine handles mutations.');
+    render();
+  }
+
+  /* ═══ MODE SWITCH ═════════════════════════════════════ */
+  function switchMode(m){
+    mode=m;
+    var btns=el('intMode').querySelectorAll('button');
+    btns[0].className=m==='pg'?'active':'';
+    btns[1].className=m==='mysql'?'active':'';
+    btns[2].className=m==='mongo'?'active':'';
+    var exp=el('intExplainer');
+    if(m==='pg')exp.innerHTML='<strong>PostgreSQL:</strong> Heap storage + B-Tree indexes pointing to <code>ctid</code>. UPDATE = mark old tuple DEAD + append new tuple + stale index entries. DELETE = mark DEAD + stale index entries. VACUUM cleans all.<br><span class="int-hop-label one">Primary = 1 hop &nbsp;|&nbsp; Secondary = 1 hop</span>';
+    else if(m==='mysql')exp.innerHTML='<strong>MySQL / InnoDB:</strong> Clustered index (PK = table). UPDATE = in-place modify + undo log. DELETE = remove from leaf + undo log. No dead tuples in the table.<br><span class="int-hop-label two">Primary = direct &nbsp;|&nbsp; Secondary = 2 hops</span>';
+    else exp.innerHTML='<strong>MongoDB (WiredTiger):</strong> UPDATE = in-place modify, no dead tuples. DELETE = immediate removal. Block manager reuses freed space. No VACUUM needed.<br><span class="int-hop-label one">Primary = 1 hop &nbsp;|&nbsp; Secondary = 1 hop</span>';
+    heapSlots=[];staleIdx=[];insertIdx=0;lastAction={type:null,id:-1};deadCount=0;
+    log('Switched to <strong>'+({pg:'PostgreSQL',mysql:'MySQL / InnoDB',mongo:'MongoDB'}[m])+'</strong>. Insert rows, then try Update and Delete.');
+    render();
+  }
+
+  render();
+  return{insertNext:insertNext,updateRandom:updateRandom,deleteRandom:deleteRandom,vacuum:vacuum,reset:reset,switchMode:switchMode};
+})();
+
+/* ══════════════════════════════════════════════════════════
+   OpenAI PostgreSQL Guardrails
+   ══════════════════════════════════════════════════════════ */
 (function(){
   'use strict';
 

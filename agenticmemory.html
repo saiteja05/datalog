@@ -538,6 +538,261 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(8px); }
         }
+        /* ── MCP Demo Section ── */
+        .mcp-tab-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+        .mcp-tab-btn.active {
+            background: rgba(0, 237, 100, 0.1);
+            color: var(--accent);
+            border-color: var(--border-accent);
+        }
+        .mcp-tab-btn:not(.active) {
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-muted);
+        }
+        .mcp-tab-btn:not(.active):hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-secondary);
+        }
+        .mcp-feature-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 6px 14px;
+            background: rgba(0, 237, 100, 0.08);
+            border: 1px solid var(--border-accent);
+            border-radius: 20px;
+            font-size: 0.75rem; font-weight: 500; color: var(--accent);
+        }
+        .mcp-glow-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid var(--border-accent);
+            border-radius: 24px;
+            font-size: 0.8rem; font-weight: 600; color: var(--accent);
+        }
+        .mcp-lifecycle-container {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+        .mcp-lifecycle-header {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+            padding: 16px 24px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .mcp-lifecycle-phases {
+            display: flex; gap: 8px;
+            padding: 20px 24px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid var(--border-subtle);
+            overflow-x: auto;
+        }
+        .mcp-phase-step {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            font-size: 0.8rem; white-space: nowrap;
+            transition: all 0.3s ease;
+            cursor: pointer; min-width: 110px;
+        }
+        .mcp-phase-step > span { font-size: 1.3rem; }
+        .mcp-phase-subtitle {
+            font-size: 0.65rem; color: var(--text-muted);
+            opacity: 0.6; font-weight: 400; white-space: nowrap;
+        }
+        .mcp-phase-step.active {
+            background: rgba(0, 237, 100, 0.1);
+            border-color: var(--accent); color: var(--accent);
+        }
+        .mcp-phase-step.active .mcp-phase-subtitle { color: var(--accent); opacity: 0.9; }
+        .mcp-phase-step.completed {
+            background: rgba(0, 237, 100, 0.05);
+            border-color: rgba(0, 237, 100, 0.3); color: var(--accent);
+        }
+        .mcp-phase-arrow { color: var(--text-muted); font-size: 1.2rem; }
+        .mcp-phase-arrow.loop { color: var(--accent); animation: mcpLoopPulse 1.5s ease-in-out infinite; }
+        @keyframes mcpLoopPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+        .mcp-lifecycle-body {
+            display: grid; grid-template-columns: 1fr 1fr 1fr;
+            min-height: 500px; gap: 0;
+        }
+        @media (max-width: 1280px) {
+            .mcp-lifecycle-body { grid-template-columns: 1fr 1fr; }
+            .mcp-lifecycle-center-col { display: none; }
+        }
+        @media (max-width: 768px) {
+            .mcp-lifecycle-body { grid-template-columns: 1fr; }
+        }
+        .mcp-lifecycle-left {
+            padding: 24px;
+            border-right: 1px solid var(--border-subtle);
+            background: rgba(0, 237, 100, 0.02);
+        }
+        .mcp-lifecycle-center-col {
+            padding: 24px;
+            border-right: 1px solid var(--border-subtle);
+            background: linear-gradient(180deg, rgba(138, 43, 226, 0.03), rgba(75, 0, 130, 0.02));
+            display: flex; flex-direction: column;
+        }
+        .mcp-lifecycle-right {
+            padding: 24px;
+            background: rgba(0, 0, 0, 0.15);
+        }
+        .mcp-call {
+            background: #0d1117;
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px; margin-bottom: 12px;
+            overflow: hidden; transition: all 0.3s ease;
+        }
+        .mcp-call.highlight {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 237, 100, 0.15);
+        }
+        .mcp-call.llm-call {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.08), rgba(75, 0, 130, 0.05));
+            border-color: rgba(138, 43, 226, 0.3);
+        }
+        .mcp-call.llm-call .mcp-tool-badge {
+            background: rgba(138, 43, 226, 0.2); color: #b794f6;
+        }
+        .mcp-call-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-subtle);
+            font-size: 0.75rem;
+        }
+        .mcp-tool-badge {
+            background: rgba(0, 237, 100, 0.15); color: var(--accent);
+            padding: 3px 10px; border-radius: 6px;
+            font-weight: 600; font-size: 0.7rem;
+        }
+        .mcp-call-body {
+            padding: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem; line-height: 1.6; color: #8b949e;
+            max-height: 120px; overflow: hidden; text-overflow: ellipsis;
+        }
+        .mcp-memory-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px;
+            background: rgba(0, 237, 100, 0.08);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+            border-radius: 6px; font-size: 0.7rem; color: var(--accent);
+        }
+        .mcp-agent-thought {
+            background: rgba(0, 237, 100, 0.05);
+            border-left: 3px solid var(--accent);
+            padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0;
+        }
+        .mcp-agent-thought-label { font-size: 0.7rem; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+        .mcp-agent-thought-text { font-size: 0.85rem; color: var(--text-secondary); font-style: italic; }
+        .mcp-conversation-bubble {
+            padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; max-width: 85%;
+        }
+        .mcp-conversation-bubble.user {
+            background: var(--bg-card-hover);
+            border: 1px solid var(--border-subtle); margin-left: auto;
+        }
+        .mcp-conversation-bubble.agent {
+            background: rgba(0, 237, 100, 0.08);
+            border: 1px solid rgba(0, 237, 100, 0.2);
+        }
+        .mcp-conversation-label { font-size: 0.65rem; font-weight: 600; margin-bottom: 4px; text-transform: uppercase; }
+        .mcp-conversation-label.user { color: var(--text-muted); }
+        .mcp-conversation-label.agent { color: var(--accent); }
+        .mcp-loop-indicator {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 12px;
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px dashed var(--accent);
+            border-radius: 10px; color: var(--accent);
+            font-size: 0.8rem; font-weight: 600; margin-top: 16px;
+        }
+        .mcp-stats-bar {
+            display: flex; gap: 16px;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px; margin-top: 16px;
+        }
+        .mcp-stat-item { text-align: center; }
+        .mcp-stat-value { font-size: 1.2rem; font-weight: 700; color: var(--accent); }
+        .mcp-stat-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+        .mcp-message-flow-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10;
+        }
+        .mcp-node { position: relative; }
+        .mcp-node::after {
+            content: ''; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%; height: 100%;
+            border: 2px solid var(--accent); border-radius: 12px;
+            opacity: 0; pointer-events: none;
+        }
+        .mcp-node.pulse::after { animation: mcpNodePulse 0.6s ease-out; }
+        @keyframes mcpNodePulse {
+            0% { opacity: 0.8; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1.3); }
+        }
+        .mcp-llm-panel-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 16px; padding-bottom: 12px;
+            border-bottom: 1px solid rgba(138, 43, 226, 0.2);
+        }
+        .mcp-llm-panel-title {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.85rem; font-weight: 600; color: #b794f6;
+        }
+        .mcp-llm-badge {
+            background: rgba(138, 43, 226, 0.2); color: #b794f6;
+            padding: 3px 10px; border-radius: 6px;
+            font-size: 0.65rem; font-weight: 600;
+        }
+        .mcp-llm-content-area {
+            flex: 1; display: flex; flex-direction: column; gap: 16px;
+            overflow-y: auto; overflow-x: hidden; min-height: 300px; max-height: 400px;
+        }
+        .mcp-llm-section {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(138, 43, 226, 0.2);
+            border-radius: 10px; padding: 14px;
+        }
+        .mcp-llm-section-label {
+            display: flex; align-items: center; gap: 6px;
+            font-size: 0.7rem; font-weight: 600; color: #b794f6;
+            margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .mcp-llm-section-content {
+            font-size: 0.8rem; line-height: 1.6; color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .mcp-llm-thinking {
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+            color: #b794f6; font-size: 0.75rem; font-style: italic; padding: 20px;
+        }
+        .mcp-llm-thinking::before { content: '💭'; animation: mcpThinkPulse 1.5s ease-in-out infinite; }
+        @keyframes mcpThinkPulse { 0%, 100% { opacity: 0.5; transform: scale(1); } 50% { opacity: 1; transform: scale(1.1); } }
+        .mcp-llm-empty-state {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100%; color: var(--text-muted); font-size: 0.8rem; opacity: 0.5;
+        }
+        @keyframes mcpFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body class="bg-mongo-bg text-mongo-textSec">
@@ -557,6 +812,7 @@
                 <a href="#architecture">Architecture</a>
                 <a href="#scenario">Scenario</a>
                 <a href="#timeline">Timeline</a>
+                <a href="#mcp-server">MCP Server</a>
                 <a href="#why-atlas">Why Atlas</a>
             </div>
         </div>
@@ -1914,6 +2170,317 @@ db.<span class="fn">shared_knowledge</span>.<span class="fn">find</span>({
     <div class="section-divider"></div>
 
     <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- SECTION : MCP SERVER — INTERACTIVE DEMO                      -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <section id="mcp-server" class="py-24 px-6 bg-mongo-bg2/50">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-16 fade-in">
+                <div class="mcp-glow-badge mb-6">
+                    <span>🔌</span>
+                    <span>Model Context Protocol</span>
+                </div>
+                <h2 class="text-3xl md:text-5xl font-bold text-mongo-textPri mb-4">MongoDB MCP Server</h2>
+                <p class="mt-4 text-lg text-mongo-textMuted max-w-3xl mx-auto">
+                    The frameworks above show how to wire memory into your agent code.
+                    But with the <strong class="text-mongo-textSec">MongoDB MCP Server</strong>, AI agents
+                    can query, update, and manage their memory store <em>directly</em> — in natural language,
+                    with no driver code required.
+                </p>
+            </div>
+
+            <!-- What is MCP — 3 Cards -->
+            <div class="grid md:grid-cols-3 gap-8 mb-16 fade-in fade-in-delay-1">
+                <div class="arch-box">
+                    <div class="text-3xl mb-3">🔗</div>
+                    <h3 class="text-lg font-bold text-mongo-textPri mb-2">Standardized Protocol</h3>
+                    <p class="text-sm text-mongo-textMuted">
+                        MCP provides a universal interface for LLMs to communicate with any data source,
+                        eliminating custom integrations for each tool.
+                    </p>
+                </div>
+                <div class="arch-box">
+                    <div class="text-3xl mb-3">🛡️</div>
+                    <h3 class="text-lg font-bold text-mongo-textPri mb-2">Secure by Design</h3>
+                    <p class="text-sm text-mongo-textMuted">
+                        MCP servers run locally or in your infrastructure. Your data never leaves your control —
+                        the AI only sees what you allow.
+                    </p>
+                </div>
+                <div class="arch-box">
+                    <div class="text-3xl mb-3">🧩</div>
+                    <h3 class="text-lg font-bold text-mongo-textPri mb-2">25+ Database Tools</h3>
+                    <p class="text-sm text-mongo-textMuted">
+                        MongoDB's MCP server exposes tools for querying, aggregation, indexes,
+                        vector search, Atlas management, and more.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Architecture Flow -->
+            <div class="fade-in fade-in-delay-2 mb-16">
+                <div class="grid md:grid-cols-7 gap-4 items-center">
+                    <div class="arch-box md:col-span-2">
+                        <div class="text-3xl mb-2">🤖</div>
+                        <div class="text-mongo-textPri font-bold text-sm">MCP Host</div>
+                        <div class="text-mongo-textMuted text-xs mt-1">Claude / VS Code / Cursor</div>
+                    </div>
+                    <div class="arch-connector hidden md:flex">
+                        <div class="flow-dot"></div>
+                        <span class="text-xl">→</span>
+                    </div>
+                    <div class="arch-box md:col-span-2 border-mongo-accent/30">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <span class="text-2xl">🔌</span>
+                            <span class="text-mongo-accent font-bold text-sm">MCP Server</span>
+                        </div>
+                        <div class="text-mongo-textMuted text-xs">mongodb-mcp-server</div>
+                        <div class="flex flex-wrap gap-1 mt-3 justify-center">
+                            <span class="text-xs px-2 py-0.5 rounded bg-mongo-accent/10 text-mongo-accent">Tools</span>
+                            <span class="text-xs px-2 py-0.5 rounded bg-mongo-accent/10 text-mongo-accent">Resources</span>
+                        </div>
+                    </div>
+                    <div class="arch-connector hidden md:flex">
+                        <div class="flow-dot"></div>
+                        <span class="text-xl">→</span>
+                    </div>
+                    <div class="arch-box">
+                        <div class="flex items-center justify-center gap-2 mb-2">
+                            <img src="assets/mongodb-leaf.png" alt="" class="w-6 h-6">
+                        </div>
+                        <div class="text-mongo-textPri font-bold text-sm">MongoDB Atlas</div>
+                        <div class="text-mongo-textMuted text-xs mt-1">All 8 Memory Layers</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Interactive Lifecycle Simulation ── -->
+            <div class="text-center mb-10 fade-in">
+                <h3 class="text-2xl md:text-3xl font-bold text-mongo-textPri mb-3">See It In Action</h3>
+                <p class="text-base text-mongo-textMuted max-w-3xl mx-auto">
+                    Watch a complete agentic lifecycle using <strong class="text-mongo-textSec">only MCP tools</strong> for every step.
+                    See how the agent uses MongoDB for memory, the LLM for reasoning, and MCP for all data operations.
+                </p>
+            </div>
+
+            <div class="mcp-lifecycle-container fade-in fade-in-delay-1" style="position: relative;">
+                <canvas id="mcpFlowCanvas" class="mcp-message-flow-canvas"></canvas>
+
+                <div class="mcp-lifecycle-header">
+                    <div class="flex items-center gap-3">
+                        <span class="text-2xl">🤖</span>
+                        <div>
+                            <div class="text-mongo-textPri font-bold">Support Agent v2</div>
+                            <div class="text-mongo-textMuted text-xs">Powered by MongoDB MCP Server</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <span class="text-xs text-mongo-textMuted">Iteration:</span>
+                        <span class="text-mongo-accent font-bold" id="mcp-iteration-count">1</span>
+                        <button onclick="mcpResetLifecycle()" class="px-3 py-1 bg-mongo-card border border-white/10 rounded-lg text-xs text-mongo-textMuted hover:border-white/20">Reset</button>
+                        <div class="flex items-center gap-2 border-l border-white/10 pl-3">
+                            <button onclick="mcpStepPrev()" class="px-3 py-1 bg-mongo-card border border-white/10 rounded-lg text-xs text-mongo-textMuted hover:border-white/20">◀ Prev</button>
+                            <button onclick="mcpStepNext()" class="px-3 py-1 bg-mongo-card border border-white/10 rounded-lg text-xs text-mongo-textMuted hover:border-white/20">Next ▶</button>
+                        </div>
+                        <div class="flex items-center gap-2 border-l border-white/10 pl-3">
+                            <button onclick="mcpPauseLifecycle()" id="mcp-pause-btn" class="px-3 py-1 bg-mongo-card border border-white/10 rounded-lg text-xs text-mongo-textMuted hover:border-white/20" style="display: none;">⏸ Pause</button>
+                            <button onclick="mcpAutoRun()" id="mcp-auto-btn" class="px-4 py-1 bg-mongo-accent text-mongo-bg rounded-lg text-xs font-semibold hover:bg-mongo-accentDim">▶ Auto Run</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mcp-lifecycle-phases">
+                    <div class="mcp-phase-step" data-mcp-phase="perceive" onclick="mcpGoToPhase('perceive')">
+                        <span>👁️</span><div>Perceive</div><div class="mcp-phase-subtitle">User → Agent</div>
+                    </div>
+                    <span class="mcp-phase-arrow">→</span>
+                    <div class="mcp-phase-step" data-mcp-phase="retrieve" onclick="mcpGoToPhase('retrieve')">
+                        <span>🔍</span><div>Retrieve</div><div class="mcp-phase-subtitle">Agent ↔ MongoDB</div>
+                    </div>
+                    <span class="mcp-phase-arrow">→</span>
+                    <div class="mcp-phase-step" data-mcp-phase="reason" onclick="mcpGoToPhase('reason')">
+                        <span>🧠</span><div>Reason</div><div class="mcp-phase-subtitle">Agent → LLM</div>
+                    </div>
+                    <span class="mcp-phase-arrow">→</span>
+                    <div class="mcp-phase-step" data-mcp-phase="act" onclick="mcpGoToPhase('act')">
+                        <span>⚡</span><div>Act</div><div class="mcp-phase-subtitle">Agent → MongoDB</div>
+                    </div>
+                    <span class="mcp-phase-arrow">→</span>
+                    <div class="mcp-phase-step" data-mcp-phase="store" onclick="mcpGoToPhase('store')">
+                        <span>💾</span><div>Store</div><div class="mcp-phase-subtitle">Agent → MongoDB</div>
+                    </div>
+                    <span class="mcp-phase-arrow loop" id="mcp-loop-arrow">↩</span>
+                    <div class="mcp-phase-step" data-mcp-phase="loop" onclick="mcpGoToPhase('loop')">
+                        <span>🔄</span><div>Loop</div><div class="mcp-phase-subtitle">Next Turn</div>
+                    </div>
+                </div>
+
+                <div class="mcp-lifecycle-body">
+                    <div class="mcp-lifecycle-left">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="text-mongo-textPri font-semibold">
+                                <span id="mcp-mongodb-node" class="mcp-node" style="display: inline-block; padding: 4px 12px; background: rgba(0,237,100,0.1); border-radius: 8px;">
+                                    🍃 MongoDB
+                                </span>
+                            </div>
+                            <div class="flex gap-2" id="mcp-memory-indicators"></div>
+                        </div>
+                        <div id="mcp-calls-container" style="min-height: 300px; max-height: 400px; overflow-y: auto; overflow-x: hidden;">
+                            <div class="text-mongo-textMuted text-sm">Click a phase or send a message to begin...</div>
+                        </div>
+                        <div class="mcp-stats-bar">
+                            <div class="mcp-stat-item"><div class="mcp-stat-value" id="mcp-stat-reads">0</div><div class="mcp-stat-label">Reads</div></div>
+                            <div class="mcp-stat-item"><div class="mcp-stat-value" id="mcp-stat-writes">0</div><div class="mcp-stat-label">Writes</div></div>
+                            <div class="mcp-stat-item"><div class="mcp-stat-value" id="mcp-stat-tools">0</div><div class="mcp-stat-label">Tools Used</div></div>
+                            <div class="mcp-stat-item"><div class="mcp-stat-value" id="mcp-stat-latency">0ms</div><div class="mcp-stat-label">Latency</div></div>
+                        </div>
+                    </div>
+
+                    <div class="mcp-lifecycle-center-col">
+                        <div class="mcp-llm-panel-header">
+                            <div class="mcp-llm-panel-title"><span>🧠</span><span>LLM Reasoning</span></div>
+                            <span class="mcp-llm-badge">Claude Sonnet 4</span>
+                        </div>
+                        <div class="mcp-llm-content-area" id="mcp-llm-content">
+                            <div class="mcp-llm-empty-state">
+                                <span style="font-size: 2rem; opacity: 0.3;">🧠</span>
+                                <div>LLM reasoning will appear during the "Reason" phase</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mcp-lifecycle-right">
+                        <div class="text-mongo-textPri font-semibold mb-4">
+                            <span id="mcp-agent-node" class="mcp-node" style="display: inline-block; padding: 4px 12px; background: rgba(0,237,100,0.1); border-radius: 8px;">
+                                🤖 Agent
+                            </span>
+                        </div>
+                        <div class="mcp-agent-thought" id="mcp-thought-box">
+                            <div class="mcp-agent-thought-label">💭 Current Thought</div>
+                            <div class="mcp-agent-thought-text" id="mcp-thought-text">Waiting for user input...</div>
+                        </div>
+                        <div id="mcp-conversation" style="max-height: 250px; overflow-y: auto; margin-bottom: 16px;">
+                            <div class="text-mongo-textMuted text-sm">No messages yet. Try a suggestion below!</div>
+                        </div>
+                        <div class="mt-4">
+                            <div class="flex gap-2">
+                                <input type="text" id="mcp-user-input" placeholder="Type a message or click a suggestion..."
+                                    class="flex-1 px-4 py-3 bg-mongo-bg border border-white/10 rounded-xl text-mongo-textPri text-sm focus:border-mongo-accent focus:outline-none"
+                                    onkeypress="if(event.key==='Enter')mcpSendMessage()">
+                                <button onclick="mcpSendMessage()" class="px-6 py-3 bg-mongo-accent text-mongo-bg font-semibold rounded-xl hover:bg-mongo-accentDim">Send</button>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <button onclick="document.getElementById('mcp-user-input').value='My order #4521 arrived damaged'" class="px-3 py-1.5 bg-mongo-card/50 border border-white/5 rounded-lg text-xs text-mongo-textMuted hover:border-white/15">📦 Damaged order</button>
+                                <button onclick="document.getElementById('mcp-user-input').value='Can I get a refund?'" class="px-3 py-1.5 bg-mongo-card/50 border border-white/5 rounded-lg text-xs text-mongo-textMuted hover:border-white/15">💰 Refund request</button>
+                                <button onclick="document.getElementById('mcp-user-input').value='What is the status of my replacement?'" class="px-3 py-1.5 bg-mongo-card/50 border border-white/5 rounded-lg text-xs text-mongo-textMuted hover:border-white/15">🔄 Status check</button>
+                                <button onclick="document.getElementById('mcp-user-input').value='Yes, please switch to replacement'" class="px-3 py-1.5 bg-mongo-card/50 border border-white/5 rounded-lg text-xs text-mongo-textMuted hover:border-white/15">✅ Switch to replacement</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase Legend -->
+            <div class="mt-8 grid md:grid-cols-5 gap-4 fade-in fade-in-delay-2">
+                <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4 text-center">
+                    <div class="text-xl mb-2">👁️</div>
+                    <div class="text-mongo-textPri font-semibold text-sm">Perceive</div>
+                    <div class="text-mongo-textMuted text-xs mt-1">Store input to working memory</div>
+                    <div class="mt-2"><span class="mcp-tool-badge">insert-many</span></div>
+                </div>
+                <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4 text-center">
+                    <div class="text-xl mb-2">🔍</div>
+                    <div class="text-mongo-textPri font-semibold text-sm">Retrieve</div>
+                    <div class="text-mongo-textMuted text-xs mt-1">Query all memory layers</div>
+                    <div class="mt-2"><span class="mcp-tool-badge">find</span> <span class="mcp-tool-badge">aggregate</span></div>
+                </div>
+                <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4 text-center">
+                    <div class="text-xl mb-2">🧠</div>
+                    <div class="text-mongo-textPri font-semibold text-sm">Reason</div>
+                    <div class="text-mongo-textMuted text-xs mt-1">LLM processes context</div>
+                    <div class="mt-2"><span class="mcp-tool-badge">collection-schema</span></div>
+                </div>
+                <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4 text-center">
+                    <div class="text-xl mb-2">⚡</div>
+                    <div class="text-mongo-textPri font-semibold text-sm">Act</div>
+                    <div class="text-mongo-textMuted text-xs mt-1">Execute tools & respond</div>
+                    <div class="mt-2"><span class="mcp-tool-badge">find</span> <span class="mcp-tool-badge">update-many</span></div>
+                </div>
+                <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4 text-center">
+                    <div class="text-xl mb-2">💾</div>
+                    <div class="text-mongo-textPri font-semibold text-sm">Store</div>
+                    <div class="text-mongo-textMuted text-xs mt-1">Persist episode & update profile</div>
+                    <div class="mt-2"><span class="mcp-tool-badge">insert-many</span> <span class="mcp-tool-badge">update-many</span></div>
+                </div>
+            </div>
+
+            <!-- ── Quick Setup Guide ── -->
+            <div class="mt-20 fade-in">
+                <div class="text-center mb-10">
+                    <h3 class="text-2xl md:text-3xl font-bold text-mongo-textPri mb-3">Quick Setup</h3>
+                    <p class="text-base text-mongo-textMuted max-w-2xl mx-auto">
+                        Get your agents talking to MongoDB in under 2 minutes. Choose your AI client.
+                    </p>
+                </div>
+                <div class="flex flex-wrap gap-3 justify-center mb-8">
+                    <button class="mcp-tab-btn active" data-mcp-client="claude" onclick="mcpSetClient('claude')">🤖 Claude Desktop</button>
+                    <button class="mcp-tab-btn" data-mcp-client="vscode" onclick="mcpSetClient('vscode')">💻 VS Code</button>
+                    <button class="mcp-tab-btn" data-mcp-client="cursor" onclick="mcpSetClient('cursor')">⚡ Cursor</button>
+                    <button class="mcp-tab-btn" data-mcp-client="windsurf" onclick="mcpSetClient('windsurf')">🌊 Windsurf</button>
+                </div>
+                <div class="grid lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div>
+                        <h4 class="text-lg font-bold text-mongo-textPri mb-4">Step 1: Add Configuration</h4>
+                        <p class="text-mongo-textMuted text-sm mb-4" id="mcp-setup-instruction">
+                            Add this to your <code class="text-mongo-accent">claude_desktop_config.json</code> file:
+                        </p>
+                        <div class="code-block">
+                            <div class="code-header">
+                                <span id="mcp-setup-filename">claude_desktop_config.json</span>
+                                <button class="code-copy" onclick="copyCode(this)">Copy</button>
+                            </div>
+                            <div class="code-body"><pre><code id="mcp-setup-code"></code></pre></div>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="text-lg font-bold text-mongo-textPri mb-4">Step 2: Restart & Connect</h4>
+                        <div class="space-y-4">
+                            <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl">1️⃣</span>
+                                    <span class="text-mongo-textSec text-sm">Restart your AI client to load the MCP server</span>
+                                </div>
+                            </div>
+                            <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl">2️⃣</span>
+                                    <span class="text-mongo-textSec text-sm">Look for the 🔌 MCP icon indicating the server is connected</span>
+                                </div>
+                            </div>
+                            <div class="bg-mongo-card/30 border border-white/5 rounded-xl p-4">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-xl">3️⃣</span>
+                                    <span class="text-mongo-textSec text-sm">Start asking questions about your MongoDB data!</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6 p-4 bg-mongo-accent/10 border border-mongo-accent/20 rounded-xl">
+                            <div class="flex items-start gap-3">
+                                <span class="text-lg">💡</span>
+                                <div class="text-sm text-mongo-textSec">
+                                    <strong class="text-mongo-accent">Tip:</strong> The MCP server runs locally via npx —
+                                    no global installation required. It downloads automatically on first use.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div class="section-divider"></div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
     <!-- SECTION 10 : WHY MONGODB ATLAS                              -->
     <!-- ════════════════════════════════════════════════════════════ -->
     <section id="why-atlas" class="py-24 px-6">
@@ -2342,7 +2909,561 @@ db.<span class="fn">shared_knowledge</span>.<span class="fn">find</span>({
 
         sections.forEach(s => navObserver.observe(s));
 
-        // ── Neural Network Canvas ──
+    })();
+    </script>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- MCP LIFECYCLE SIMULATION JS                                  -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <script>
+    (function() {
+        // ── Setup Configurations ──
+        const mcpSetupConfigs = {
+            claude: { filename: 'claude_desktop_config.json', instruction: 'Add this to your <code class="text-mongo-accent">claude_desktop_config.json</code> file:', code: '{\n  "mcpServers": {\n    "mongodb": {\n      "command": "npx",\n      "args": [\n        "-y",\n        "mongodb-mcp-server",\n        "--connectionString",\n        "mongodb+srv://<user>:<password>@cluster.mongodb.net"\n      ]\n    }\n  }\n}' },
+            vscode: { filename: '.vscode/mcp.json', instruction: 'Create <code class="text-mongo-accent">.vscode/mcp.json</code> in your workspace:', code: '{\n  "servers": {\n    "mongodb": {\n      "command": "npx",\n      "args": [\n        "-y",\n        "mongodb-mcp-server",\n        "--connectionString",\n        "mongodb+srv://<user>:<password>@cluster.mongodb.net"\n      ]\n    }\n  }\n}' },
+            cursor: { filename: '.cursor/mcp.json', instruction: 'Create <code class="text-mongo-accent">.cursor/mcp.json</code> in your workspace:', code: '{\n  "mcpServers": {\n    "mongodb": {\n      "command": "npx",\n      "args": [\n        "-y",\n        "mongodb-mcp-server",\n        "--connectionString",\n        "mongodb+srv://<user>:<password>@cluster.mongodb.net"\n      ]\n    }\n  }\n}' },
+            windsurf: { filename: '~/.codeium/windsurf/mcp_config.json', instruction: 'Add to your Windsurf MCP config at <code class="text-mongo-accent">~/.codeium/windsurf/mcp_config.json</code>:', code: '{\n  "mcpServers": {\n    "mongodb": {\n      "command": "npx",\n      "args": [\n        "-y",\n        "mongodb-mcp-server",\n        "--connectionString",\n        "mongodb+srv://<user>:<password>@cluster.mongodb.net"\n      ]\n    }\n  }\n}' }
+        };
+
+        window.mcpSetClient = function(client) {
+            const config = mcpSetupConfigs[client];
+            document.getElementById('mcp-setup-instruction').innerHTML = config.instruction;
+            document.getElementById('mcp-setup-filename').textContent = config.filename;
+            document.getElementById('mcp-setup-code').textContent = config.code;
+            document.querySelectorAll('.mcp-tab-btn[data-mcp-client]').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mcpClient === client);
+            });
+        };
+        mcpSetClient('claude');
+
+        // ── Lifecycle Scenarios Data ──
+        const mcpScenarios = [
+            {
+                userInput: "My order #4521 arrived damaged",
+                phases: {
+                    perceive: {
+                        thought: "User reports damaged order #4521. Need to capture this in working memory and begin support workflow.",
+                        calls: [{ tool: 'insert-many', collection: 'working_memory', params: { documents: [{ type: 'user_input', text: 'My order #4521 arrived damaged', orderId: '4521', sessionId: 'sess_892' }] }, response: { insertedCount: 1, insertedIds: ['wm_001'] } }]
+                    },
+                    retrieve: {
+                        thought: "Retrieving user profile, order history, and past support interactions to understand context.",
+                        calls: [
+                            { tool: 'find', collection: 'user_profiles', params: { filter: { sessionId: 'sess_892' }, limit: 1 }, response: { _id: 'user_alice', name: 'Alice Chen', tier: 'premium', totalOrders: 47, sentiment: 'positive' } },
+                            { tool: 'find', collection: 'orders', params: { filter: { orderId: '4521' }, limit: 1 }, response: { orderId: '4521', items: ['Laptop Stand'], total: 89.99, status: 'delivered' } },
+                            { tool: 'aggregate', collection: 'episodic_memory', params: { pipeline: [{ $match: { userId: 'user_alice' } }, { $sort: { timestamp: -1 } }, { $limit: 3 }] }, response: [{ episode: 'Purchased laptop stand' }, { episode: 'Asked about shipping' }] }
+                        ]
+                    },
+                    reason: {
+                        thought: "Premium customer (47 orders) with positive history. Order #4521 delivered 2 days ago. First complaint. High priority - offer immediate resolution.",
+                        calls: [],
+                        llm: {
+                            prompt: "Context:\n- User: Alice Chen (Premium, 47 orders, positive sentiment)\n- Issue: Order #4521 (Laptop Stand, $89.99) arrived damaged\n- Delivered: 2 days ago\n- History: First complaint ever\n\nTask: Determine best resolution approach.",
+                            response: "Recommended Action: IMMEDIATE RESOLUTION\n\nReasoning:\n1. Premium customer with excellent history\n2. Low-value item ($89.99) - replacement < losing customer\n3. Recent delivery - issue is fresh and urgent\n\nProposed Response:\n- Offer BOTH refund AND replacement options\n- Emphasize expedited handling for premium tier\n- Update order status to 'issue_reported'"
+                        }
+                    },
+                    act: {
+                        thought: "Updating order status and preparing refund/replacement options for premium customer.",
+                        calls: [
+                            { tool: 'update-many', collection: 'orders', params: { filter: { orderId: '4521' }, update: { $set: { status: 'issue_reported', issueType: 'damaged' } } }, response: { matchedCount: 1, modifiedCount: 1 } },
+                            { tool: 'find', collection: 'policies', params: { filter: { type: 'damaged_goods', tier: 'premium' } }, response: { policy: 'immediate_replacement_or_refund', noQuestionsAsked: true } }
+                        ]
+                    },
+                    store: {
+                        thought: "Persisting this support episode and updating user profile with interaction.",
+                        calls: [
+                            { tool: 'insert-many', collection: 'episodic_memory', params: { documents: [{ userId: 'user_alice', episode: 'Reported damaged order #4521', resolution: 'offered_replacement_refund' }] }, response: { insertedCount: 1, insertedIds: ['ep_445'] } },
+                            { tool: 'update-many', collection: 'user_profiles', params: { filter: { _id: 'user_alice' }, update: { $inc: { supportTickets: 1 } } }, response: { matchedCount: 1, modifiedCount: 1 } }
+                        ]
+                    }
+                },
+                agentResponse: "I'm sorry to hear your laptop stand arrived damaged, Alice! I've pulled up order #4521. As a premium customer, I can offer you:\n\n1. **Full refund** (processed in 1-2 business days)\n2. **Free replacement** with expedited shipping (arrives in 2 days)\n\nWhich would you prefer?"
+            },
+            {
+                userInput: "Can I get a refund?",
+                isLoopback: true,
+                phases: {
+                    perceive: {
+                        thought: "User chose refund option. Storing this decision in working memory.",
+                        calls: [{ tool: 'insert-many', collection: 'working_memory', params: { documents: [{ type: 'user_input', text: 'Can I get a refund?', decision: 'refund', sessionId: 'sess_892' }] }, response: { insertedCount: 1, insertedIds: ['wm_002'] } }]
+                    },
+                    retrieve: {
+                        thought: "🔄 LOOPBACK: Retrieving previous episode about damaged order to maintain context continuity.",
+                        calls: [
+                            { tool: 'aggregate', collection: 'episodic_memory', params: { pipeline: [{ $match: { userId: 'user_alice' } }, { $sort: { timestamp: -1 } }, { $limit: 1 }] }, response: [{ episode: 'Reported damaged order #4521', resolution: 'offered_replacement_refund' }], highlight: 'loopback' },
+                            { tool: 'find', collection: 'working_memory', params: { filter: { sessionId: 'sess_892' }, sort: { timestamp: -1 }, limit: 2 }, response: [{ text: 'Can I get a refund?' }, { text: 'My order #4521 arrived damaged' }], highlight: 'loopback' }
+                        ]
+                    },
+                    reason: {
+                        thought: "User selected refund from the two options I offered. Previous context confirms order #4521 damaged goods case. Proceeding with refund workflow.",
+                        calls: [],
+                        llm: {
+                            prompt: "Context:\n- Turn 1: User reported damaged order #4521\n- Turn 1 Response: Offered refund OR replacement\n- Turn 2: User says 'Can I get a refund?'\n\nTask: Determine next action.",
+                            response: "Recommended Action: PROCESS REFUND\n\n1. 🔄 LOOPBACK CONFIRMED: User chose refund\n2. Clear decision - no ambiguity\n3. Premium customer expects fast processing\n\nPlan: Process refund → Provide ID → State timeline"
+                        }
+                    },
+                    act: {
+                        thought: "Processing refund and updating order status to refunded.",
+                        calls: [
+                            { tool: 'update-many', collection: 'orders', params: { filter: { orderId: '4521' }, update: { $set: { status: 'refunded', refundAmount: 89.99 } } }, response: { matchedCount: 1, modifiedCount: 1 } },
+                            { tool: 'insert-many', collection: 'refunds', params: { documents: [{ orderId: '4521', userId: 'user_alice', amount: 89.99, status: 'processing' }] }, response: { insertedCount: 1, insertedIds: ['refund_782'] } }
+                        ]
+                    },
+                    store: {
+                        thought: "Storing refund resolution and linking to previous episode.",
+                        calls: [
+                            { tool: 'insert-many', collection: 'episodic_memory', params: { documents: [{ userId: 'user_alice', episode: 'Processed refund for order #4521', amount: 89.99, linkedEpisode: 'ep_445' }] }, response: { insertedCount: 1, insertedIds: ['ep_446'] } },
+                            { tool: 'update-many', collection: 'user_profiles', params: { filter: { _id: 'user_alice' }, update: { $set: { sentiment: 'satisfied' } } }, response: { matchedCount: 1, modifiedCount: 1 } }
+                        ]
+                    }
+                },
+                agentResponse: "Perfect! ✅ I've processed your refund of $89.99 for order #4521. You'll see it back on your original payment method within 1-2 business days.\n\nRefund ID: #refund_782\n\nIs there anything else I can help you with today?"
+            },
+            {
+                userInput: "What is the status of my replacement?",
+                isLoopback: true,
+                phases: {
+                    perceive: {
+                        thought: "User asking about replacement status. Need to clarify - they chose refund, not replacement.",
+                        calls: [{ tool: 'insert-many', collection: 'working_memory', params: { documents: [{ type: 'user_input', text: "What's the status of my replacement?", sessionId: 'sess_892' }] }, response: { insertedCount: 1, insertedIds: ['wm_003'] } }]
+                    },
+                    retrieve: {
+                        thought: "🔄 DOUBLE LOOPBACK: Retrieving last 2 episodes to understand the full conversation thread.",
+                        calls: [
+                            { tool: 'aggregate', collection: 'episodic_memory', params: { pipeline: [{ $match: { userId: 'user_alice', episode: { $regex: '#4521' } } }, { $sort: { timestamp: -1 } }, { $limit: 2 }] }, response: [{ episode: 'Processed refund for order #4521', amount: 89.99 }, { episode: 'Reported damaged order #4521' }], highlight: 'loopback' },
+                            { tool: 'find', collection: 'orders', params: { filter: { orderId: '4521' } }, response: { orderId: '4521', status: 'refunded', refundAmount: 89.99 }, highlight: 'loopback' }
+                        ]
+                    },
+                    reason: {
+                        thought: "Context shows user chose REFUND (not replacement) in previous turn. They may be confused. Need to clarify politely and offer to switch.",
+                        calls: [],
+                        llm: {
+                            prompt: "Context:\n- Turn 1: Damaged order #4521 reported\n- Turn 2: User chose REFUND (processed as #refund_782)\n- Turn 3: User asks 'What's the status of my replacement?'\n- 🔄 DOUBLE LOOPBACK\n- Order status: 'refunded'\n\nTask: Resolve contradiction.",
+                            response: "Action: CLARIFY & OFFER SWITCH\n\n🚨 CONTRADICTION: User asking about replacement but chose refund\n- Politely clarify they chose refund\n- Check inventory for replacement option\n- Offer to switch if desired"
+                        }
+                    },
+                    act: {
+                        thought: "Checking if replacement is still available as an option.",
+                        calls: [{ tool: 'find', collection: 'inventory', params: { filter: { productName: 'Laptop Stand' } }, response: { productName: 'Laptop Stand', inStock: true, availableQuantity: 234 } }]
+                    },
+                    store: {
+                        thought: "Storing this clarification interaction.",
+                        calls: [{ tool: 'insert-many', collection: 'episodic_memory', params: { documents: [{ userId: 'user_alice', episode: 'Asked about replacement after choosing refund', clarification: 'offered_to_switch' }] }, response: { insertedCount: 1, insertedIds: ['ep_447'] } }]
+                    }
+                },
+                agentResponse: "Just to clarify - we processed a **refund** of $89.99 for your damaged order #4521 (you chose that option earlier).\n\nHowever, if you'd prefer a **replacement** instead, I can:\n1. Cancel the refund\n2. Ship a new laptop stand with expedited delivery (arrives in 2 days)\n\nThe item is in stock! Would you like me to switch to a replacement?"
+            },
+            {
+                userInput: "Yes, please switch to replacement",
+                isLoopback: true,
+                phases: {
+                    perceive: {
+                        thought: "User confirmed they want to switch from refund to replacement. Storing decision.",
+                        calls: [{ tool: 'insert-many', collection: 'working_memory', params: { documents: [{ type: 'user_input', text: 'Yes, please switch to replacement', decision: 'switch_to_replacement', sessionId: 'sess_892' }] }, response: { insertedCount: 1, insertedIds: ['wm_004'] } }]
+                    },
+                    retrieve: {
+                        thought: "🔄 TRIPLE LOOPBACK: Retrieving full conversation history to reverse refund and initiate replacement.",
+                        calls: [
+                            { tool: 'aggregate', collection: 'episodic_memory', params: { pipeline: [{ $match: { userId: 'user_alice', episode: { $regex: '#4521' } } }, { $sort: { timestamp: -1 } }, { $limit: 3 }] }, response: [{ episode: 'Asked about replacement after choosing refund' }, { episode: 'Processed refund for order #4521' }, { episode: 'Reported damaged order #4521' }], highlight: 'loopback' },
+                            { tool: 'find', collection: 'refunds', params: { filter: { orderId: '4521', status: 'processing' } }, response: { refundId: 'refund_782', amount: 89.99, canCancel: true }, highlight: 'loopback' },
+                            { tool: 'find', collection: 'inventory', params: { filter: { productName: 'Laptop Stand' } }, response: { productName: 'Laptop Stand', sku: 'LS-2024', inStock: true } }
+                        ]
+                    },
+                    reason: {
+                        thought: "User wants to reverse refund and get replacement. Refund still processing (can cancel). Inventory available. Execute: Cancel refund → Create replacement → Expedite shipping.",
+                        calls: [],
+                        llm: {
+                            prompt: "Context:\n- Full 4-turn conversation history\n- 🔄 TRIPLE LOOPBACK: Retrieved all 3 previous episodes\n- Refund 'processing' (canCancel: true)\n- Inventory: Laptop Stand in stock\n\nTask: Execute change of mind.",
+                            response: "Action: REVERSE & REPLACE\n\n✅ Refund can be cancelled\n✅ Inventory available (234 units)\n✅ Premium customer → expedited shipping\n\nPlan:\n1. Cancel refund #refund_782\n2. Create replacement order #4521-R\n3. Apply expedited shipping\n4. Provide tracking ETA"
+                        }
+                    },
+                    act: {
+                        thought: "Cancelling refund and creating replacement order with expedited shipping.",
+                        calls: [
+                            { tool: 'update-many', collection: 'refunds', params: { filter: { refundId: 'refund_782' }, update: { $set: { status: 'cancelled', reason: 'customer_chose_replacement' } } }, response: { matchedCount: 1, modifiedCount: 1 } },
+                            { tool: 'insert-many', collection: 'orders', params: { documents: [{ orderId: '4521-R', type: 'replacement', originalOrder: '4521', items: ['Laptop Stand'], shippingSpeed: 'expedited' }] }, response: { insertedCount: 1, insertedIds: ['order_4521R'] } },
+                            { tool: 'update-many', collection: 'orders', params: { filter: { orderId: '4521' }, update: { $set: { status: 'replacement_issued', replacementOrderId: '4521-R' } } }, response: { matchedCount: 1, modifiedCount: 1 } }
+                        ]
+                    },
+                    store: {
+                        thought: "Persisting the refund-to-replacement switch and updating user profile.",
+                        calls: [
+                            { tool: 'insert-many', collection: 'episodic_memory', params: { documents: [{ userId: 'user_alice', episode: 'Switched from refund to replacement for order #4521', replacementOrder: '4521-R', linkedEpisodes: ['ep_445', 'ep_446', 'ep_447'] }] }, response: { insertedCount: 1, insertedIds: ['ep_448'] } },
+                            { tool: 'update-many', collection: 'user_profiles', params: { filter: { _id: 'user_alice' }, update: { $set: { sentiment: 'very_satisfied', flexibilityShown: true } } }, response: { matchedCount: 1, modifiedCount: 1 } }
+                        ]
+                    }
+                },
+                agentResponse: "Perfect! ✅ I've made the switch:\n\n**Cancelled:** Refund #refund_782 ($89.99)\n**Created:** Replacement Order #4521-R\n**Shipping:** Expedited (FREE) - Arrives **March 19th**\n\nYou'll receive tracking info via email within 2 hours. Thanks for your patience, Alice!"
+            }
+        ];
+
+        // ── Lifecycle State ──
+        let mcpState = {
+            iteration: 1, currentPhase: null,
+            conversation: [], mcpCalls: [],
+            stats: { reads: 0, writes: 0, tools: 0, latency: 0 },
+            isRunning: false, isPaused: false,
+            currentScenarioIdx: 0, currentPhaseIdx: 0,
+            phases: ['perceive', 'retrieve', 'reason', 'act', 'store']
+        };
+
+        // ── Reset ──
+        window.mcpResetLifecycle = function() {
+            mcpState = {
+                iteration: 1, currentPhase: null,
+                conversation: [], mcpCalls: [],
+                stats: { reads: 0, writes: 0, tools: 0, latency: 0 },
+                isRunning: false, isPaused: false,
+                currentScenarioIdx: 0, currentPhaseIdx: 0,
+                phases: ['perceive', 'retrieve', 'reason', 'act', 'store']
+            };
+            document.getElementById('mcp-iteration-count').textContent = '1';
+            document.getElementById('mcp-calls-container').innerHTML = '<div class="text-mongo-textMuted text-sm">Click a phase or send a message to begin...</div>';
+            document.getElementById('mcp-conversation').innerHTML = '<div class="text-mongo-textMuted text-sm">No messages yet. Try a suggestion below!</div>';
+            document.getElementById('mcp-thought-text').textContent = 'Waiting for user input...';
+            document.getElementById('mcp-memory-indicators').innerHTML = '';
+            document.getElementById('mcp-user-input').value = '';
+            document.getElementById('mcp-pause-btn').style.display = 'none';
+            var autoBtn = document.getElementById('mcp-auto-btn');
+            autoBtn.style.display = 'inline-block';
+            autoBtn.textContent = '▶ Auto Run';
+            autoBtn.disabled = false;
+            mcpUpdateStats(0, 0, 0, 0);
+            mcpUpdatePhaseIndicators(null);
+        };
+
+        // ── Send Message ──
+        window.mcpSendMessage = function() {
+            var input = document.getElementById('mcp-user-input');
+            var message = input.value.trim();
+            if (!message) return;
+            var scenarioIdx = mcpScenarios.findIndex(function(s) {
+                return s.userInput.toLowerCase().includes(message.toLowerCase()) ||
+                    message.toLowerCase().includes(s.userInput.toLowerCase().split(' ').slice(0, 3).join(' ').toLowerCase());
+            });
+            if (scenarioIdx === -1) { alert('Please use one of the suggested prompts for this demo!'); return; }
+            mcpState.conversation.push({ role: 'user', text: message });
+            mcpRenderConversation();
+            input.value = '';
+            mcpRunScenario(scenarioIdx);
+        };
+
+        // ── Go To Phase ──
+        window.mcpGoToPhase = function(phaseName) {
+            if (mcpState.conversation.length === 0) { alert('Send a message first to start the lifecycle!'); return; }
+            var idx = mcpState.iteration - 1;
+            if (idx >= mcpScenarios.length) return;
+            var scenario = mcpScenarios[idx];
+            if (phaseName === 'loop' && mcpState.iteration < mcpScenarios.length) {
+                mcpState.iteration++;
+                document.getElementById('mcp-iteration-count').textContent = mcpState.iteration;
+                mcpUpdatePhaseIndicators(null);
+                mcpState.currentPhase = null;
+                document.getElementById('mcp-thought-text').innerHTML = '<div class="mcp-loop-indicator">🔄 Looping back — Ready for next input (Iteration ' + mcpState.iteration + ')</div>';
+                return;
+            }
+            mcpExecutePhase(phaseName, scenario);
+        };
+
+        function mcpExecutePhase(phaseName, scenario) {
+            mcpState.currentPhase = phaseName;
+            mcpUpdatePhaseIndicators(phaseName);
+            var phaseData = scenario.phases[phaseName];
+            if (!phaseData) return;
+            document.getElementById('mcp-thought-text').textContent = phaseData.thought;
+            mcpState.mcpCalls = phaseData.calls || [];
+            mcpRenderCalls(phaseData.llm);
+            if (phaseData.calls && phaseData.calls.length > 0) {
+                phaseData.calls.forEach(function(call, i) {
+                    setTimeout(function() {
+                        var isRead = ['find', 'aggregate', 'collection-schema'].indexOf(call.tool) !== -1;
+                        mcpAnimateFlow(isRead);
+                    }, i * 270);
+                });
+            }
+            var reads = phaseData.calls.filter(function(c) { return ['find', 'aggregate', 'collection-schema'].indexOf(c.tool) !== -1; }).length;
+            var writes = phaseData.calls.filter(function(c) { return ['insert-many', 'update-many', 'delete-many'].indexOf(c.tool) !== -1; }).length;
+            var tools = phaseData.calls.length;
+            var latency = tools * 45 + Math.random() * 30;
+            mcpState.stats.reads += reads;
+            mcpState.stats.writes += writes;
+            mcpState.stats.tools += tools;
+            mcpState.stats.latency = Math.round(latency);
+            mcpUpdateStats(mcpState.stats.reads, mcpState.stats.writes, mcpState.stats.tools, mcpState.stats.latency);
+            mcpUpdateMemoryIndicators(phaseData.calls);
+            if (phaseName === 'act' && scenario.agentResponse) {
+                setTimeout(function() {
+                    mcpState.conversation.push({ role: 'agent', text: scenario.agentResponse });
+                    mcpRenderConversation();
+                }, 700);
+            }
+        }
+
+        function mcpRunScenario(scenarioIdx) {
+            var scenario = mcpScenarios[scenarioIdx];
+            mcpState.iteration = scenarioIdx + 1;
+            document.getElementById('mcp-iteration-count').textContent = mcpState.iteration;
+            var phases = ['perceive', 'retrieve', 'reason', 'act', 'store'];
+            var phaseIdx = 0;
+            function runNext() {
+                if (mcpState.isPaused) return;
+                if (phaseIdx < phases.length) {
+                    mcpExecutePhase(phases[phaseIdx], scenario);
+                    phaseIdx++;
+                    setTimeout(runNext, 1100);
+                } else {
+                    mcpUpdatePhaseIndicators('completed');
+                }
+            }
+            runNext();
+        }
+
+        // ── Auto Run ──
+        function mcpRunNextScenario() {
+            if (mcpState.isPaused) return;
+            if (mcpState.currentScenarioIdx < mcpScenarios.length) {
+                var scenario = mcpScenarios[mcpState.currentScenarioIdx];
+                mcpState.conversation.push({ role: 'user', text: scenario.userInput });
+                mcpRenderConversation();
+                setTimeout(function() {
+                    if (mcpState.isPaused) return;
+                    mcpRunScenario(mcpState.currentScenarioIdx);
+                    mcpState.currentScenarioIdx++;
+                    setTimeout(mcpRunNextScenario, 6700);
+                }, 1300);
+            } else {
+                mcpState.isRunning = false;
+                mcpState.isPaused = false;
+                var btn = document.getElementById('mcp-auto-btn');
+                btn.textContent = '✓ Complete';
+                btn.style.display = 'inline-block';
+                document.getElementById('mcp-pause-btn').style.display = 'none';
+                setTimeout(function() { btn.textContent = '▶ Auto Run'; btn.disabled = false; }, 2000);
+            }
+        }
+
+        window.mcpAutoRun = function() {
+            if (mcpState.isRunning && !mcpState.isPaused) return;
+            mcpState.isRunning = true;
+            mcpState.isPaused = false;
+            document.getElementById('mcp-auto-btn').style.display = 'none';
+            document.getElementById('mcp-pause-btn').style.display = 'inline-block';
+            document.getElementById('mcp-pause-btn').textContent = '⏸ Pause';
+            mcpResetLifecycle();
+            mcpState.currentScenarioIdx = 0;
+            mcpState.isRunning = true;
+            mcpRunNextScenario();
+        };
+
+        window.mcpPauseLifecycle = function() {
+            if (mcpState.isPaused) {
+                document.getElementById('mcp-pause-btn').textContent = '⏸ Pause';
+                mcpAutoRun();
+            } else {
+                mcpState.isPaused = true;
+                mcpState.isRunning = false;
+                document.getElementById('mcp-pause-btn').textContent = '▶ Resume';
+            }
+        };
+
+        // ── Step Controls ──
+        window.mcpStepNext = function() {
+            if (mcpState.isRunning) {
+                mcpState.isPaused = true;
+                mcpState.isRunning = false;
+                document.getElementById('mcp-pause-btn').style.display = 'none';
+                document.getElementById('mcp-auto-btn').style.display = 'inline-block';
+            }
+            if (mcpState.currentScenarioIdx === 0 && mcpState.currentPhaseIdx === 0 && mcpState.conversation.length === 0) {
+                mcpResetLifecycle();
+                var s = mcpScenarios[0];
+                mcpState.conversation.push({ role: 'user', text: s.userInput });
+                mcpRenderConversation();
+            }
+            var scenario = mcpScenarios[mcpState.currentScenarioIdx];
+            if (mcpState.currentPhaseIdx < mcpState.phases.length) {
+                mcpExecutePhase(mcpState.phases[mcpState.currentPhaseIdx], scenario);
+                mcpState.currentPhaseIdx++;
+            } else {
+                mcpState.currentPhaseIdx = 0;
+                mcpState.currentScenarioIdx++;
+                if (mcpState.currentScenarioIdx < mcpScenarios.length) {
+                    mcpState.iteration = mcpState.currentScenarioIdx + 1;
+                    document.getElementById('mcp-iteration-count').textContent = mcpState.iteration;
+                    var next = mcpScenarios[mcpState.currentScenarioIdx];
+                    mcpState.conversation.push({ role: 'user', text: next.userInput });
+                    mcpRenderConversation();
+                    mcpExecutePhase(mcpState.phases[0], next);
+                    mcpState.currentPhaseIdx = 1;
+                } else {
+                    mcpUpdatePhaseIndicators('completed');
+                }
+            }
+        };
+
+        window.mcpStepPrev = function() {
+            if (mcpState.isRunning) {
+                mcpState.isPaused = true;
+                mcpState.isRunning = false;
+                document.getElementById('mcp-pause-btn').style.display = 'none';
+                document.getElementById('mcp-auto-btn').style.display = 'inline-block';
+            }
+            if (mcpState.currentPhaseIdx > 0) {
+                mcpState.currentPhaseIdx--;
+                mcpExecutePhase(mcpState.phases[mcpState.currentPhaseIdx], mcpScenarios[mcpState.currentScenarioIdx]);
+            } else if (mcpState.currentScenarioIdx > 0) {
+                mcpState.currentScenarioIdx--;
+                mcpState.currentPhaseIdx = mcpState.phases.length - 1;
+                mcpState.iteration = mcpState.currentScenarioIdx + 1;
+                document.getElementById('mcp-iteration-count').textContent = mcpState.iteration;
+                if (mcpState.conversation.length > 0) { mcpState.conversation.pop(); mcpRenderConversation(); }
+                mcpExecutePhase(mcpState.phases[mcpState.currentPhaseIdx], mcpScenarios[mcpState.currentScenarioIdx]);
+            }
+        };
+
+        // ── Rendering ──
+        function mcpRenderCalls(llmData) {
+            var container = document.getElementById('mcp-calls-container');
+            mcpRenderLLM(llmData);
+            var html = '';
+            if (llmData) {
+                html += '<div class="mcp-call llm-call" style="animation: mcpFadeIn 0.3s ease both"><div class="mcp-call-header"><span class="mcp-tool-badge">🧠 LLM Reasoning</span><span class="text-mongo-textMuted">→ Claude Sonnet 4</span></div><div class="mcp-call-body"><div style="color:#b794f6;">// Agent sends context to LLM</div><div style="color:#8b949e;margin-top:4px;">See center panel for full interaction →</div></div></div>';
+            }
+            if (mcpState.mcpCalls.length === 0 && !llmData) {
+                container.innerHTML = '<div class="text-mongo-textMuted text-sm">No MCP calls in this phase</div>';
+                return;
+            }
+            html += mcpState.mcpCalls.map(function(call, idx) {
+                var isLoop = call.highlight === 'loopback';
+                var delay = llmData ? (idx + 1) * 0.1 : idx * 0.1;
+                return '<div class="mcp-call' + (isLoop ? ' highlight' : '') + '" style="animation: mcpFadeIn 0.3s ease ' + delay + 's both"><div class="mcp-call-header"><span class="mcp-tool-badge">' + call.tool + '</span><span class="text-mongo-textMuted">→ ' + call.collection + '</span>' + (isLoop ? '<span class="text-mongo-accent text-xs ml-auto">🔄 LOOPBACK</span>' : '') + '</div><div class="mcp-call-body"><div style="color:#58a6ff;">// Parameters</div><div>' + JSON.stringify(call.params, null, 2).substring(0, 200) + '</div><div style="color:#58a6ff;margin-top:8px;">// Response</div><div style="color:#7ee787;">' + JSON.stringify(call.response, null, 2).substring(0, 200) + '</div></div></div>';
+            }).join('');
+            container.innerHTML = html;
+        }
+
+        function mcpRenderLLM(llmData) {
+            var c = document.getElementById('mcp-llm-content');
+            if (!llmData) {
+                c.innerHTML = '<div class="mcp-llm-empty-state"><span style="font-size:2rem;opacity:0.3;">🧠</span><div>LLM reasoning will appear during the "Reason" phase</div></div>';
+                return;
+            }
+            c.innerHTML = '<div class="mcp-llm-thinking" style="animation:mcpFadeIn 0.3s ease both">Analyzing context...</div><div class="mcp-llm-section" style="animation:mcpFadeIn 0.5s ease 0.3s both"><div class="mcp-llm-section-label"><span>📤</span><span>Context Sent to LLM</span></div><div class="mcp-llm-section-content">' + llmData.prompt.replace(/\n/g, '<br>') + '</div></div><div class="mcp-llm-section" style="animation:mcpFadeIn 0.5s ease 0.6s both"><div class="mcp-llm-section-label"><span>📥</span><span>LLM Decision</span></div><div class="mcp-llm-section-content">' + llmData.response.replace(/\n/g, '<br>') + '</div></div>';
+        }
+
+        function mcpRenderConversation() {
+            var c = document.getElementById('mcp-conversation');
+            c.innerHTML = mcpState.conversation.map(function(msg, idx) {
+                return '<div class="mcp-conversation-bubble ' + msg.role + '" style="animation:mcpFadeIn 0.3s ease ' + (idx * 0.1) + 's both"><div class="mcp-conversation-label ' + msg.role + '">' + (msg.role === 'user' ? '👤 User' : '🤖 Agent') + '</div><div class="text-mongo-textPri text-sm">' + msg.text + '</div></div>';
+            }).join('');
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function mcpUpdateStats(r, w, t, l) {
+            document.getElementById('mcp-stat-reads').textContent = r;
+            document.getElementById('mcp-stat-writes').textContent = w;
+            document.getElementById('mcp-stat-tools').textContent = t;
+            document.getElementById('mcp-stat-latency').textContent = l + 'ms';
+        }
+
+        function mcpUpdatePhaseIndicators(current) {
+            var phases = ['perceive', 'retrieve', 'reason', 'act', 'store', 'loop'];
+            phases.forEach(function(phase) {
+                var el = document.querySelector('.mcp-phase-step[data-mcp-phase="' + phase + '"]');
+                if (!el) return;
+                el.classList.remove('active', 'completed');
+                if (current === 'completed') { if (phase !== 'loop') el.classList.add('completed'); }
+                else if (phase === current) el.classList.add('active');
+                else if (current && phases.indexOf(phase) < phases.indexOf(current)) el.classList.add('completed');
+            });
+        }
+
+        function mcpUpdateMemoryIndicators(calls) {
+            var c = document.getElementById('mcp-memory-indicators');
+            var types = new Set();
+            calls.forEach(function(call) {
+                if (call.collection.indexOf('working') !== -1) types.add('Working');
+                if (call.collection.indexOf('episodic') !== -1) types.add('Episodic');
+                if (call.collection.indexOf('semantic') !== -1) types.add('Semantic');
+                if (call.collection.indexOf('procedural') !== -1) types.add('Procedural');
+                if (call.collection.indexOf('user_profile') !== -1) types.add('Profile');
+            });
+            c.innerHTML = Array.from(types).map(function(t) { return '<span class="mcp-memory-indicator">💾 ' + t + '</span>'; }).join('');
+        }
+
+        // ── Message Flow Animation ──
+        var mcpFlowCanvas, mcpFlowCtx;
+        function mcpInitCanvas() {
+            mcpFlowCanvas = document.getElementById('mcpFlowCanvas');
+            if (!mcpFlowCanvas) return;
+            mcpFlowCtx = mcpFlowCanvas.getContext('2d');
+            function resize() {
+                var p = mcpFlowCanvas.parentElement;
+                mcpFlowCanvas.width = p.offsetWidth;
+                mcpFlowCanvas.height = p.offsetHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+        }
+
+        function mcpAnimateFlow(isRead) {
+            if (!mcpFlowCanvas || !mcpFlowCtx) return;
+            var agentNode = document.getElementById('mcp-agent-node');
+            var mongoNode = document.getElementById('mcp-mongodb-node');
+            if (!agentNode || !mongoNode) return;
+            var aR = agentNode.getBoundingClientRect();
+            var mR = mongoNode.getBoundingClientRect();
+            var cR = mcpFlowCanvas.getBoundingClientRect();
+            var sX = isRead ? mR.left + mR.width/2 - cR.left : aR.left + aR.width/2 - cR.left;
+            var sY = isRead ? mR.top + mR.height/2 - cR.top : aR.top + aR.height/2 - cR.top;
+            var eX = isRead ? aR.left + aR.width/2 - cR.left : mR.left + mR.width/2 - cR.left;
+            var eY = isRead ? aR.top + aR.height/2 - cR.top : mR.top + mR.height/2 - cR.top;
+            var src = isRead ? mongoNode : agentNode;
+            src.classList.add('pulse');
+            setTimeout(function() { src.classList.remove('pulse'); }, 600);
+            for (var i = 0; i < 3; i++) {
+                (function(delay) {
+                    setTimeout(function() { mcpAnimateParticle(sX, sY, eX, eY, isRead); }, delay);
+                })(i * 100);
+            }
+        }
+
+        function mcpAnimateParticle(sX, sY, eX, eY, isRead) {
+            var dur = 800, start = Date.now();
+            function draw() {
+                var elapsed = Date.now() - start;
+                var p = Math.min(elapsed / dur, 1);
+                mcpFlowCtx.clearRect(0, 0, mcpFlowCanvas.width, mcpFlowCanvas.height);
+                if (p < 1) {
+                    var t = p;
+                    var cx = (sX + eX) / 2, cy = Math.min(sY, eY) - 50;
+                    var x = (1-t)*(1-t)*sX + 2*(1-t)*t*cx + t*t*eX;
+                    var y = (1-t)*(1-t)*sY + 2*(1-t)*t*cy + t*t*eY;
+                    var op = p < 0.1 ? p*10 : (p > 0.9 ? (1-p)*10 : 1);
+                    mcpFlowCtx.shadowBlur = 15;
+                    mcpFlowCtx.shadowColor = 'rgba(0,237,100,0.8)';
+                    mcpFlowCtx.fillStyle = 'rgba(0,237,100,' + op + ')';
+                    mcpFlowCtx.beginPath();
+                    mcpFlowCtx.arc(x, y, 4, 0, Math.PI * 2);
+                    mcpFlowCtx.fill();
+                    requestAnimationFrame(draw);
+                } else {
+                    var dest = isRead ? document.getElementById('mcp-agent-node') : document.getElementById('mcp-mongodb-node');
+                    dest.classList.add('pulse');
+                    setTimeout(function() { dest.classList.remove('pulse'); }, 600);
+                }
+            }
+            draw();
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', mcpInitCanvas);
+        } else {
+            mcpInitCanvas();
+        }
+    })();
+    </script>
+
+    <script>
+    (function() {
         const canvas = document.getElementById('neuralCanvas');
         if (canvas) {
             const ctx = canvas.getContext('2d');
