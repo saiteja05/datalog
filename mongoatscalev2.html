@@ -850,9 +850,193 @@
             border-radius: 3px;
             font-weight: 600;
         }
+
+        /* Particle Canvas */
+        #particleCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Scroll Reveal Animations */
+        .reveal {
+            opacity: 0;
+            transform: translateY(24px);
+            transition: opacity 0.55s cubic-bezier(.22,1,.36,1), transform 0.55s cubic-bezier(.22,1,.36,1);
+        }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Tab Hero Banners */
+        .tab-hero {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+            padding: 1.75rem 2rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0,237,100,0.06) 0%, rgba(0,51,69,0.4) 100%);
+            border: 1px solid rgba(0,237,100,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+        .tab-hero::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 200px; height: 100%;
+            background: radial-gradient(circle at 100% 50%, rgba(0,237,100,0.06), transparent 70%);
+            pointer-events: none;
+        }
+        .tab-hero-icon {
+            width: 48px; height: 48px;
+            padding: 10px;
+            background: rgba(0,237,100,0.1);
+            border-radius: 12px;
+            color: var(--mongo-green);
+            flex-shrink: 0;
+        }
+        .tab-hero-icon svg { width: 100%; height: 100%; }
+        .tab-hero-text h2 {
+            font-size: 1.6rem;
+            margin-bottom: 0.25rem;
+            color: #fff;
+        }
+        .tab-hero-text p {
+            margin: 0;
+            color: var(--mongo-text-muted);
+            font-size: 0.92rem;
+        }
+
+        /* Metric Cards */
+        .metric-row {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        .metric-card {
+            flex: 1;
+            min-width: 140px;
+            padding: 1.25rem 1rem;
+            background: rgba(0,30,43,0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0,237,100,0.12);
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .metric-card:hover {
+            border-color: rgba(0,237,100,0.35);
+            box-shadow: 0 0 20px rgba(0,237,100,0.08);
+            transform: translateY(-2px);
+        }
+        .metric-card .mc-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: var(--mongo-green);
+            line-height: 1.2;
+        }
+        .metric-card .mc-label {
+            font-size: 0.78rem;
+            color: var(--mongo-text-muted);
+            margin-top: 0.35rem;
+        }
+
+        /* Section Dividers */
+        .section-divider {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(0,237,100,0.25), transparent);
+            margin: 2.5rem 0;
+        }
+
+        /* Sidebar count badge */
+        .sidebar-count {
+            font-size: 0.65rem;
+            background: rgba(0,237,100,0.12);
+            color: var(--mongo-text-muted);
+            padding: 0.15rem 0.45rem;
+            border-radius: 8px;
+            margin-left: auto;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .sidebar-nav-item.active .sidebar-count {
+            background: rgba(0,237,100,0.2);
+            color: var(--mongo-green);
+        }
+        .sidebar-nav-item.active {
+            box-shadow: inset 3px 0 12px rgba(0,237,100,0.1);
+        }
+
+        /* Footer */
+        .site-footer {
+            margin-left: var(--sidebar-width);
+            padding: 2rem 3rem;
+            border-top: 1px solid rgba(0,237,100,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--mongo-text-muted);
+            font-size: 0.82rem;
+            position: relative;
+            z-index: 1;
+        }
+        .site-footer a {
+            color: var(--mongo-green);
+            text-decoration: none;
+        }
+        .site-footer a:hover { text-decoration: underline; }
+        @media (max-width: 1024px) {
+            .site-footer { margin-left: 0; }
+        }
+
+        /* Code Language Label */
+        .code-container { position: relative; }
+        .code-lang {
+            position: absolute;
+            top: 0; left: 0;
+            padding: 0.2rem 0.65rem;
+            font-size: 0.65rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--mongo-text-muted);
+            background: rgba(0,237,100,0.08);
+            border-bottom-right-radius: 6px;
+            border-top-left-radius: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            z-index: 2;
+        }
+
+        /* Architecture Diagram Tooltips */
+        .arch-tooltip {
+            position: absolute;
+            padding: 0.6rem 0.9rem;
+            background: rgba(0,30,43,0.95);
+            border: 1px solid rgba(0,237,100,0.3);
+            border-radius: 8px;
+            color: var(--mongo-text);
+            font-size: 0.78rem;
+            max-width: 220px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 10;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+        }
+        .arch-tooltip.show { opacity: 1; }
+        .arch-node { cursor: pointer; transition: filter 0.2s; }
+        .arch-node:hover { filter: brightness(1.3); }
     </style>
 </head>
 <body>
+    <canvas id="particleCanvas"></canvas>
     <!-- Scroll Progress Bar -->
     <div class="scroll-progress" id="scrollProgress"></div>
     
@@ -887,6 +1071,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
             </svg>
             Emergency FAQs
+            <span class="sidebar-count">19</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="growth">
@@ -894,27 +1079,31 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path>
             </svg>
             Capacity Planning
+            <span class="sidebar-count">8</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="performance">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
             </svg>
-            Performance Troubleshooting
+            Performance
+            <span class="sidebar-count">10</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="enterprise">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
             </svg>
-            Enterprise Advanced
+            Enterprise
+            <span class="sidebar-count">5</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="architecture">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
             </svg>
-            Architecture & Best Practices
+            Architecture
+            <span class="sidebar-count">25</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="features">
@@ -922,20 +1111,23 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
             </svg>
             Core Features
+            <span class="sidebar-count">14</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="advanced">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
             </svg>
-            Advanced Features
+            Advanced
+            <span class="sidebar-count">6</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="governance">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
             </svg>
-            Governance & Operations
+            Governance
+            <span class="sidebar-count">20</span>
         </a>
         
         <a href="#" class="sidebar-nav-item" data-tab="api">
@@ -943,13 +1135,23 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
             </svg>
             API Examples
+            <span class="sidebar-count">6</span>
         </a>
+
     </nav>
     
     <!-- Main Content -->
     <main class="main-content">
             <div id="tab-faq" class="tab-content active p-6 md:p-10 space-y-8">
-                
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Emergency FAQs</h2>
+                        <p>Battle-tested runbooks for CPU spikes, failovers, connection storms, backup recovery, and more.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
                     <h4 class="text-[--mongo-green] font-bold mb-2 uppercase text-xs tracking-wider">Emergency Categories</h4>
@@ -961,6 +1163,13 @@
                         <a href="#faq-advanced" class="text-sm text-[--mongo-text-muted] hover:text-white bg-[--mongo-card] hover:bg-[--mongo-card-accent] px-3 py-1 rounded-full transition-colors border border-[--mongo-border]">Advanced Features</a>
                         <a href="#faq-general" class="text-sm text-[--mongo-text-muted] hover:text-white bg-[--mongo-card] hover:bg-[--mongo-card-accent] px-3 py-1 rounded-full transition-colors border border-[--mongo-border]">General / How-To</a>
                     </div>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-card"><div class="mc-value">5-10s</div><div class="mc-label">Avg Failover Time</div></div>
+                    <div class="metric-card"><div class="mc-value">6</div><div class="mc-label">Emergency Categories</div></div>
+                    <div class="metric-card"><div class="mc-value">rs.stepDown()</div><div class="mc-label">Controlled Failover</div></div>
+                    <div class="metric-card"><div class="mc-value">PIT</div><div class="mc-label">Point-in-Time Recovery</div></div>
                 </div>
 
                 <!-- Section 1: Emergency Performance -->
@@ -1115,6 +1324,7 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
                     </div>
                 </section>
 
+                <div class="section-divider"></div>
 
                 <!-- Section 2: Sharding -->
                 <section id="faq-sharding" class="faq-sharding">
@@ -1195,6 +1405,8 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
                         </details>
                     </div>
                 </section>
+
+                <div class="section-divider"></div>
 
                 <!-- Section 3: Backup & DR -->
                 <section id="faq-backup" class="faq-backup">
@@ -1278,6 +1490,8 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
                     </div>
                 </section>
 
+                <div class="section-divider"></div>
+
                 <!-- Section 4: Security -->
                 <section id="faq-security" class="faq-security">
                     <div class="flex items-center text-[--mongo-green] mb-4">
@@ -1340,6 +1554,8 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
                         </details>
                     </div>
                 </section>
+
+                <div class="section-divider"></div>
 
                 <!-- Section 5: Advanced Features -->
                 <section id="faq-advanced" class="faq-advanced">
@@ -1435,6 +1651,8 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
                     </div>
                 </section>
 
+                <div class="section-divider"></div>
+
                 <!-- Section 6: General -->
                 <section id="faq-general" class="faq-general">
                     <div class="flex items-center text-[--mongo-green] mb-4">
@@ -1482,7 +1700,15 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
 
             <!-- Tab 9: API Examples -->
             <div id="tab-growth" class="tab-content p-6 md:p-10 space-y-8">
-                
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Capacity Planning</h2>
+                        <p>Scale from gigabytes to petabytes — pre-sharding strategies, growth playbooks, and rebalancing guides.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="quick-links">
                     <h4>Quick Links</h4>
@@ -1649,6 +1875,15 @@ db.system.profile.find().sort({ts: -1}).limit(10).pretty()</div>
 
             <!-- Tab 2: Core & Advanced Features -->
             <div id="tab-performance" class="tab-content p-6 md:p-10 space-y-8">
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Performance Troubleshooting</h2>
+                        <p>Systematic workflows for diagnosing latency, optimizing queries, tuning shards, and managing connections.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
                     <h4 class="text-[--mongo-green] font-bold mb-2 uppercase text-xs tracking-wider">Quick Links</h4>
@@ -2024,6 +2259,15 @@ db.users.find({ status: "active", city: "NY" })
 
             <!-- Tab 8: Frequent FAQs -->
             <div id="tab-enterprise" class="tab-content p-6 md:p-10 space-y-8">
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Enterprise Advanced</h2>
+                        <p>On-premises deployment with Ops Manager, Kubernetes Operator, and enterprise-grade audit & encryption.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
                     <h4 class="text-[--mongo-green] font-bold mb-2 uppercase text-xs tracking-wider">Quick Links</h4>
@@ -2224,6 +2468,15 @@ db.users.find({ status: "active", city: "NY" })
 
             <!-- Tab 6: Governance & Operations -->
             <div id="tab-architecture" class="tab-content p-6 md:p-10 space-y-8">
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Architecture &amp; Best Practices</h2>
+                        <p>Multi-tenancy patterns, zero-downtime operations, HA topologies, backup strategies, and Online Archive.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
                     <h4 class="text-[--mongo-green] font-bold mb-2 uppercase text-xs tracking-wider">Quick Links</h4>
@@ -2235,6 +2488,124 @@ db.users.find({ status: "active", city: "NY" })
                         <a href="#arch-online-archive" class="text-sm text-[--mongo-text-muted] hover:text-white bg-[--mongo-card] hover:bg-[--mongo-card-accent] px-3 py-1 rounded-full transition-colors border border-[--mongo-border]">Online Archive</a>
                     </div>
                 </div>
+
+                <div class="metric-row">
+                    <div class="metric-card"><div class="mc-value">99.995%</div><div class="mc-label">Atlas SLA</div></div>
+                    <div class="metric-card"><div class="mc-value">&lt;2s</div><div class="mc-label">Election Failover</div></div>
+                    <div class="metric-card"><div class="mc-value">0</div><div class="mc-label">Downtime Upgrades</div></div>
+                    <div class="metric-card"><div class="mc-value">PIT</div><div class="mc-label">Continuous Backup</div></div>
+                </div>
+
+                <!-- Interactive Architecture Diagrams -->
+                <section class="reveal">
+                    <div class="flex items-center text-[--mongo-green] mb-4">
+                        <svg class="card-icon mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/></svg>
+                        <h3 class="text-2xl font-bold">Core Topology Diagrams</h3>
+                    </div>
+                    <p class="text-[--mongo-text-muted] mb-6">Hover over any component to learn what it does. These are the two foundational deployment topologies for MongoDB.</p>
+
+                    <h4>Replica Set (3-Node)</h4>
+                    <div class="svg-diagram" style="justify-content:center;padding:2rem;">
+                        <svg viewBox="0 0 620 320" width="100%" style="max-width:620px;" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <marker id="ah" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="rgba(0,237,100,0.6)"/></marker>
+                                <filter id="glow"><feGaussianBlur stdDeviation="3" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+                            </defs>
+                            <!-- Primary -->
+                            <g class="arch-node" data-tip="Primary: Accepts all write operations. Replicates data to secondaries via the oplog. Elected through Raft-based consensus.">
+                                <rect x="230" y="20" width="160" height="60" rx="10" fill="#003345" stroke="#00ED64" stroke-width="2" filter="url(#glow)"/>
+                                <text x="310" y="45" text-anchor="middle" fill="#00ED64" font-size="13" font-weight="700" font-family="Space Grotesk,sans-serif">PRIMARY</text>
+                                <text x="310" y="65" text-anchor="middle" fill="#7fa8bc" font-size="10" font-family="Inter,sans-serif">Reads + Writes</text>
+                            </g>
+                            <!-- Secondary 1 -->
+                            <g class="arch-node" data-tip="Secondary: Maintains a copy of the primary's data via oplog replication. Can serve read queries with readPreference=secondary. Participates in elections.">
+                                <rect x="40" y="160" width="160" height="60" rx="10" fill="#002838" stroke="#7fa8bc" stroke-width="1.5"/>
+                                <text x="120" y="185" text-anchor="middle" fill="#fafafa" font-size="13" font-weight="600" font-family="Space Grotesk,sans-serif">SECONDARY 1</text>
+                                <text x="120" y="205" text-anchor="middle" fill="#7fa8bc" font-size="10" font-family="Inter,sans-serif">Reads (optional)</text>
+                            </g>
+                            <!-- Secondary 2 -->
+                            <g class="arch-node" data-tip="Secondary: Identical role to Secondary 1. Having two secondaries ensures the replica set can survive one node failure and still elect a new primary (majority quorum).">
+                                <rect x="420" y="160" width="160" height="60" rx="10" fill="#002838" stroke="#7fa8bc" stroke-width="1.5"/>
+                                <text x="500" y="185" text-anchor="middle" fill="#fafafa" font-size="13" font-weight="600" font-family="Space Grotesk,sans-serif">SECONDARY 2</text>
+                                <text x="500" y="205" text-anchor="middle" fill="#7fa8bc" font-size="10" font-family="Inter,sans-serif">Reads (optional)</text>
+                            </g>
+                            <!-- Oplog arrows -->
+                            <line x1="270" y1="80" x2="150" y2="158" stroke="rgba(0,237,100,0.4)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+                            <line x1="350" y1="80" x2="470" y2="158" stroke="rgba(0,237,100,0.4)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#ah)"/>
+                            <text x="175" y="120" fill="#00ED64" font-size="10" font-family="Inter,sans-serif" font-weight="600" transform="rotate(-30,175,120)">oplog replication</text>
+                            <text x="435" y="120" fill="#00ED64" font-size="10" font-family="Inter,sans-serif" font-weight="600" transform="rotate(30,435,120)">oplog replication</text>
+                            <!-- Heartbeat -->
+                            <line x1="200" y1="195" x2="420" y2="195" stroke="rgba(127,168,188,0.3)" stroke-width="1" stroke-dasharray="3,3"/>
+                            <text x="310" y="215" text-anchor="middle" fill="#7fa8bc" font-size="9" font-family="Inter,sans-serif">heartbeat (every 2s)</text>
+                            <!-- Election box -->
+                            <g class="arch-node" data-tip="Election: If the primary is unreachable for 10s (electionTimeoutMillis), secondaries hold a Raft-based election. The secondary with the most recent oplog entry wins. Typical failover: 5-10s.">
+                                <rect x="220" y="260" width="180" height="45" rx="8" fill="rgba(0,237,100,0.08)" stroke="rgba(0,237,100,0.3)" stroke-width="1" stroke-dasharray="4,2"/>
+                                <text x="310" y="287" text-anchor="middle" fill="#00ED64" font-size="11" font-family="Inter,sans-serif" font-weight="600">Automatic Election (5-10s)</text>
+                            </g>
+                            <line x1="120" y1="220" x2="265" y2="260" stroke="rgba(0,237,100,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+                            <line x1="500" y1="220" x2="355" y2="260" stroke="rgba(0,237,100,0.2)" stroke-width="1" stroke-dasharray="3,3"/>
+                        </svg>
+                    </div>
+
+                    <h4>Sharded Cluster</h4>
+                    <div class="svg-diagram" style="justify-content:center;padding:2rem;">
+                        <svg viewBox="0 0 700 400" width="100%" style="max-width:700px;" xmlns="http://www.w3.org/2000/svg">
+                            <defs><marker id="ah2" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6" fill="rgba(0,237,100,0.6)"/></marker></defs>
+                            <!-- Application -->
+                            <g class="arch-node" data-tip="Application: Connects to mongos routers, not directly to shards. The driver handles automatic routing and retry logic.">
+                                <rect x="270" y="10" width="160" height="45" rx="8" fill="#003345" stroke="#00c853" stroke-width="2"/>
+                                <text x="350" y="38" text-anchor="middle" fill="#fafafa" font-size="13" font-weight="700" font-family="Space Grotesk,sans-serif">Application</text>
+                            </g>
+                            <!-- Mongos routers -->
+                            <g class="arch-node" data-tip="mongos Router: Stateless query router. Routes queries to the correct shard(s) based on the shard key. Deploy multiple for HA. No persistent storage needed.">
+                                <rect x="120" y="90" width="130" height="45" rx="8" fill="#002838" stroke="#00ED64" stroke-width="1.5"/>
+                                <text x="185" y="117" text-anchor="middle" fill="#00ED64" font-size="12" font-weight="600" font-family="Space Grotesk,sans-serif">mongos Router</text>
+                            </g>
+                            <g class="arch-node" data-tip="mongos Router: A second mongos for high availability. If one fails, the driver automatically reconnects to the other.">
+                                <rect x="450" y="90" width="130" height="45" rx="8" fill="#002838" stroke="#00ED64" stroke-width="1.5"/>
+                                <text x="515" y="117" text-anchor="middle" fill="#00ED64" font-size="12" font-weight="600" font-family="Space Grotesk,sans-serif">mongos Router</text>
+                            </g>
+                            <line x1="310" y1="55" x2="210" y2="90" stroke="rgba(0,237,100,0.4)" stroke-width="1.5" marker-end="url(#ah2)"/>
+                            <line x1="390" y1="55" x2="490" y2="90" stroke="rgba(0,237,100,0.4)" stroke-width="1.5" marker-end="url(#ah2)"/>
+                            <!-- Config Server RS -->
+                            <g class="arch-node" data-tip="Config Server Replica Set: Stores cluster metadata — shard key ranges, chunk distribution, and migration state. A 3-node replica set for durability.">
+                                <rect x="265" y="170" width="170" height="50" rx="8" fill="#002838" stroke="#a855f7" stroke-width="1.5"/>
+                                <text x="350" y="192" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="600" font-family="Space Grotesk,sans-serif">Config Server RS</text>
+                                <text x="350" y="208" text-anchor="middle" fill="#7fa8bc" font-size="9" font-family="Inter,sans-serif">Metadata + Chunk Map</text>
+                            </g>
+                            <line x1="185" y1="135" x2="310" y2="170" stroke="rgba(168,85,247,0.3)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah2)"/>
+                            <line x1="515" y1="135" x2="390" y2="170" stroke="rgba(168,85,247,0.3)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah2)"/>
+                            <!-- Shards -->
+                            <g class="arch-node" data-tip="Shard A: Each shard is a replica set holding a subset of the data (chunks). Responsible for chunk ranges assigned by the balancer. Contains Primary + Secondaries.">
+                                <rect x="30" y="280" width="180" height="55" rx="8" fill="#002838" stroke="#00ED64" stroke-width="1.5"/>
+                                <text x="120" y="303" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" font-family="Space Grotesk,sans-serif">Shard A (RS)</text>
+                                <text x="120" y="322" text-anchor="middle" fill="#7fa8bc" font-size="9" font-family="Inter,sans-serif">Chunks: A-M</text>
+                            </g>
+                            <g class="arch-node" data-tip="Shard B: Holds chunks N-Z. The balancer automatically migrates chunks between shards to maintain even distribution as data grows.">
+                                <rect x="260" y="280" width="180" height="55" rx="8" fill="#002838" stroke="#00ED64" stroke-width="1.5"/>
+                                <text x="350" y="303" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" font-family="Space Grotesk,sans-serif">Shard B (RS)</text>
+                                <text x="350" y="322" text-anchor="middle" fill="#7fa8bc" font-size="9" font-family="Inter,sans-serif">Chunks: N-Z</text>
+                            </g>
+                            <g class="arch-node" data-tip="Shard N: Additional shards can be added online with zero downtime. The balancer redistributes chunks automatically. Scale horizontally as your data grows.">
+                                <rect x="490" y="280" width="180" height="55" rx="8" fill="#002838" stroke="#00ED64" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <text x="580" y="303" text-anchor="middle" fill="#fafafa" font-size="12" font-weight="600" font-family="Space Grotesk,sans-serif">Shard N (RS)</text>
+                                <text x="580" y="322" text-anchor="middle" fill="#7fa8bc" font-size="9" font-family="Inter,sans-serif">Add shards online</text>
+                            </g>
+                            <!-- Routing lines -->
+                            <line x1="165" y1="135" x2="120" y2="278" stroke="rgba(0,237,100,0.25)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah2)"/>
+                            <line x1="185" y1="135" x2="350" y2="278" stroke="rgba(0,237,100,0.25)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah2)"/>
+                            <line x1="515" y1="135" x2="580" y2="278" stroke="rgba(0,237,100,0.25)" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#ah2)"/>
+                            <!-- Balancer label -->
+                            <g class="arch-node" data-tip="Balancer: Background process that migrates chunks between shards to maintain even data distribution. Runs on the config server primary. Can be scheduled during maintenance windows.">
+                                <rect x="240" y="360" width="220" height="35" rx="6" fill="rgba(0,237,100,0.06)" stroke="rgba(0,237,100,0.2)" stroke-width="1"/>
+                                <text x="350" y="382" text-anchor="middle" fill="#00ED64" font-size="10" font-family="Inter,sans-serif" font-weight="600">Balancer — auto chunk migration</text>
+                            </g>
+                        </svg>
+                    </div>
+                </section>
+
+                <div class="section-divider"></div>
+
                 <!-- Section 4: Multi-Tenancy Models -->
                 <section>
                     <div class="flex items-center text-[--mongo-green] mb-3">
@@ -2267,6 +2638,8 @@ db.users.find({ status: "active", city: "NY" })
                         </div>
                     </details>
                 </section>
+
+                <div class="section-divider"></div>
                 
                 <!-- Section 5: Critical Best Practices -->
                 <section>
@@ -2321,6 +2694,8 @@ db.settings.updateOne(
                         </div>
                     </details>
                 </section>
+
+                <div class="section-divider"></div>
 
                 <!-- Section 6: Zero Downtime -->
                 <section>
@@ -3229,8 +3604,15 @@ db.getSiblingDB("federated").events.aggregate([
 
             <!-- Tab 5: Enterprise Advanced (On-Prem) -->
             <div id="tab-features" class="tab-content p-6 md:p-10 space-y-8">
-                
-                <!-- Quick Links Index -->
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Core Features</h2>
+                        <p>Document model, sharding, replica sets, ACID transactions, aggregation pipeline, and Atlas Triggers.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
                     <h4 class="text-[--mongo-green] font-bold mb-2 uppercase text-xs tracking-wider">Quick Links</h4>
@@ -3347,7 +3729,15 @@ db.getSiblingDB("federated").events.aggregate([
 
             <!-- Tab 3: Advanced Features -->
             <div id="tab-advanced" class="tab-content p-6 md:p-10 space-y-8">
-                
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Advanced Features</h2>
+                        <p>Atlas Search, Vector Search, hybrid queries, Voyage AI embeddings, and time-series collections.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="quick-links">
                     <h4>Quick Links</h4>
@@ -3358,6 +3748,13 @@ db.getSiblingDB("federated").events.aggregate([
                         <li><a href="#advanced-voyage">VoyageAI Embeddings</a></li>
                         <li><a href="#advanced-timeseries">Time Series</a></li>
                     </ul>
+                </div>
+
+                <div class="metric-row">
+                    <div class="metric-card"><div class="mc-value">70%</div><div class="mc-label">Cost Reduction</div></div>
+                    <div class="metric-card"><div class="mc-value">3x</div><div class="mc-label">Faster Development</div></div>
+                    <div class="metric-card"><div class="mc-value">10x</div><div class="mc-label">Query Throughput</div></div>
+                    <div class="metric-card"><div class="mc-value">90%</div><div class="mc-label">Storage Savings</div></div>
                 </div>
 
                 <!-- Full-Text Search (Atlas Search) -->
@@ -3540,6 +3937,15 @@ db.getSiblingDB("federated").events.aggregate([
 
             <!-- Tab 4: Architecture & Best Practices -->
             <div id="tab-governance" class="tab-content p-6 md:p-10 space-y-8">
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>Governance &amp; Operations</h2>
+                        <p>Security hardening, observability, cost management, change management, and compliance playbooks.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links Index -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-4 mb-8">
                     <h4 class="text-[--mongo-green] font-bold mb-2 uppercase text-xs tracking-wider">Quick Links</h4>
@@ -3589,6 +3995,8 @@ db.getSiblingDB("federated").events.aggregate([
                         <div class="expandable-box-content"><p>Atlas encrypts all data at rest and in transit by default. This is good. However, for highly sensitive data (PII, financial info), this is not enough. You must use Client-Side Field Level Encryption (CSFLE) or Queryable Encryption. This encrypts sensitive fields *before* they are sent from your application server, making them unreadable to MongoDB, Atlas staff, and even your own DBAs.</p></div>
                     </details>
                 </section>
+
+                <div class="section-divider"></div>
 
                 <!-- Section 8: Observability -->
                 <section>
@@ -3726,7 +4134,15 @@ db.getSiblingDB("federated").events.aggregate([
 
             <!-- Tab 6: Performance Troubleshooting -->
             <div id="tab-api" class="tab-content p-6 md:p-10 space-y-8">
-               
+
+                <div class="tab-hero reveal">
+                    <div class="tab-hero-icon"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg></div>
+                    <div class="tab-hero-text">
+                        <h2>API Examples</h2>
+                        <p>Copy-paste code for PyMongo, Pandas, PyMongoArrow, window functions, and advanced aggregation patterns.</p>
+                    </div>
+                </div>
+
                 <!-- Quick Links -->
                 <div class="bg-[#001E2B] border border-[--mongo-green] rounded-lg p-5 mb-8">
                     <h4 class="text-[--mongo-green] text-sm font-bold uppercase tracking-wide mb-3">Quick Links</h4>
@@ -4463,7 +4879,10 @@ process_batch()</div>
         </div>
     </main>
 
-    </main>
+    <footer class="site-footer">
+        <span>&copy; <script>document.write(new Date().getFullYear())</script> MongoDB Unpacked</span>
+        <a href="home.html">Home</a>
+    </footer>
     
     <script>
         // Sidebar Navigation
@@ -4477,7 +4896,11 @@ process_batch()</div>
                 document.querySelectorAll('.tab-content').forEach(content => {
                     content.classList.remove('active');
                 });
-                document.getElementById(`tab-${tab}`)?.classList.add('active');
+                const activeTab = document.getElementById(`tab-${tab}`);
+                if (activeTab) {
+                    activeTab.classList.add('active');
+                    setTimeout(() => observeReveals(activeTab), 50);
+                }
             });
         });
         
@@ -4614,6 +5037,108 @@ process_batch()</div>
                 }
             }
         });
+
+        // Particle Canvas
+        (function() {
+            const c = document.getElementById('particleCanvas');
+            const ctx = c.getContext('2d');
+            let w, h, particles = [];
+            function resize() { w = c.width = innerWidth; h = c.height = innerHeight; }
+            resize();
+            window.addEventListener('resize', resize);
+            for (let i = 0; i < 60; i++) {
+                particles.push({ x: Math.random()*w, y: Math.random()*h, r: Math.random()*1.5+0.5, dx: (Math.random()-0.5)*0.3, dy: (Math.random()-0.5)*0.3, a: Math.random()*0.3+0.05 });
+            }
+            function draw() {
+                ctx.clearRect(0,0,w,h);
+                particles.forEach(p => {
+                    p.x += p.dx; p.y += p.dy;
+                    if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
+                    if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+                    ctx.fillStyle = `rgba(0,237,100,${p.a})`;
+                    ctx.fill();
+                });
+                for (let i = 0; i < particles.length; i++) {
+                    for (let j = i+1; j < particles.length; j++) {
+                        const dx = particles[i].x - particles[j].x;
+                        const dy = particles[i].y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx+dy*dy);
+                        if (dist < 150) {
+                            ctx.beginPath();
+                            ctx.moveTo(particles[i].x, particles[i].y);
+                            ctx.lineTo(particles[j].x, particles[j].y);
+                            ctx.strokeStyle = `rgba(0,237,100,${0.04*(1-dist/150)})`;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+            draw();
+        })();
+
+        // Scroll Reveal (IntersectionObserver) — re-observe on tab switch
+        const revealIO = new IntersectionObserver((entries) => {
+            entries.forEach((e, i) => {
+                if (e.isIntersecting) {
+                    e.target.style.transitionDelay = (i * 60) + 'ms';
+                    e.target.classList.add('visible');
+                    revealIO.unobserve(e.target);
+                }
+            });
+        }, { threshold: 0.08 });
+        function observeReveals(root) {
+            (root || document).querySelectorAll('.reveal:not(.visible)').forEach(el => revealIO.observe(el));
+        }
+        document.querySelectorAll('.expandable-box, .tab-hero, .metric-row, section.reveal').forEach(el => el.classList.add('reveal'));
+        observeReveals(document.querySelector('.tab-content.active'));
+
+        // Architecture Diagram Tooltips
+        (function() {
+            const tooltip = document.createElement('div');
+            tooltip.className = 'arch-tooltip';
+            document.body.appendChild(tooltip);
+            document.addEventListener('mouseover', e => {
+                const node = e.target.closest('.arch-node');
+                if (!node || !node.dataset.tip) return;
+                tooltip.textContent = node.dataset.tip;
+                tooltip.classList.add('show');
+                const r = node.getBoundingClientRect();
+                tooltip.style.left = (r.left + r.width/2 - tooltip.offsetWidth/2) + 'px';
+                tooltip.style.top = (r.top - tooltip.offsetHeight - 8 + window.scrollY) + 'px';
+            });
+            document.addEventListener('mouseout', e => {
+                if (e.target.closest('.arch-node')) tooltip.classList.remove('show');
+            });
+        })();
+
+        // Code Block Enhancements: language labels + fix escaped newlines
+        (function() {
+            document.querySelectorAll('.code-block').forEach(block => {
+                const text = block.textContent;
+                // Fix literal \n characters
+                if (text.includes('\\n')) {
+                    block.innerHTML = block.innerHTML.replace(/\\n/g, '\n');
+                }
+                // Auto-detect language
+                let lang = 'shell';
+                if (/^\s*(\/\/|db\.|rs\.|sh\.|use |mongosh|mongos)/.test(text)) lang = 'mongosh';
+                else if (/^\s*(from |import |def |class |pip |python)/.test(text)) lang = 'python';
+                else if (/^\s*(const |let |var |function |=>|require)/.test(text)) lang = 'javascript';
+                else if (/^\s*(\{|\[)/.test(text)) lang = 'json';
+                else if (/^\s*(#|export |curl |mongodump|mongorestore|mongosync)/.test(text)) lang = 'shell';
+                // Insert label
+                const container = block.closest('.code-container');
+                if (container && !container.querySelector('.code-lang')) {
+                    const lbl = document.createElement('span');
+                    lbl.className = 'code-lang';
+                    lbl.textContent = lang;
+                    container.insertBefore(lbl, container.firstChild);
+                }
+            });
+        })();
     </script>
     <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
     <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
