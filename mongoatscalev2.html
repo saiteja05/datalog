@@ -914,41 +914,6 @@
             font-size: 0.92rem;
         }
 
-        /* Metric Cards */
-        .metric-row {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            flex-wrap: wrap;
-        }
-        .metric-card {
-            flex: 1;
-            min-width: 140px;
-            padding: 1.25rem 1rem;
-            background: rgba(0,30,43,0.5);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0,237,100,0.12);
-            border-radius: 10px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        .metric-card:hover {
-            border-color: rgba(0,237,100,0.35);
-            box-shadow: 0 0 20px rgba(0,237,100,0.08);
-            transform: translateY(-2px);
-        }
-        .metric-card .mc-value {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 1.65rem;
-            font-weight: 700;
-            color: var(--mongo-green);
-            line-height: 1.2;
-        }
-        .metric-card .mc-label {
-            font-size: 0.78rem;
-            color: var(--mongo-text-muted);
-            margin-top: 0.35rem;
-        }
 
         /* Section Dividers */
         .section-divider {
@@ -1165,12 +1130,6 @@
                     </div>
                 </div>
 
-                <div class="metric-row">
-                    <div class="metric-card"><div class="mc-value">5-10s</div><div class="mc-label">Avg Failover Time</div></div>
-                    <div class="metric-card"><div class="mc-value">6</div><div class="mc-label">Emergency Categories</div></div>
-                    <div class="metric-card"><div class="mc-value">rs.stepDown()</div><div class="mc-label">Controlled Failover</div></div>
-                    <div class="metric-card"><div class="mc-value">PIT</div><div class="mc-label">Point-in-Time Recovery</div></div>
-                </div>
 
                 <!-- Section 1: Emergency Performance -->
                 <section id="faq-emergency" class="faq-emergency">
@@ -2489,12 +2448,6 @@ db.users.find({ status: "active", city: "NY" })
                     </div>
                 </div>
 
-                <div class="metric-row">
-                    <div class="metric-card"><div class="mc-value">99.995%</div><div class="mc-label">Atlas SLA</div></div>
-                    <div class="metric-card"><div class="mc-value">&lt;2s</div><div class="mc-label">Election Failover</div></div>
-                    <div class="metric-card"><div class="mc-value">0</div><div class="mc-label">Downtime Upgrades</div></div>
-                    <div class="metric-card"><div class="mc-value">PIT</div><div class="mc-label">Continuous Backup</div></div>
-                </div>
 
                 <!-- Interactive Architecture Diagrams -->
                 <section class="reveal">
@@ -3750,12 +3703,6 @@ db.getSiblingDB("federated").events.aggregate([
                     </ul>
                 </div>
 
-                <div class="metric-row">
-                    <div class="metric-card"><div class="mc-value">70%</div><div class="mc-label">Cost Reduction</div></div>
-                    <div class="metric-card"><div class="mc-value">3x</div><div class="mc-label">Faster Development</div></div>
-                    <div class="metric-card"><div class="mc-value">10x</div><div class="mc-label">Query Throughput</div></div>
-                    <div class="metric-card"><div class="mc-value">90%</div><div class="mc-label">Storage Savings</div></div>
-                </div>
 
                 <!-- Full-Text Search (Atlas Search) -->
                 <section id="advanced-search">
@@ -5092,7 +5039,7 @@ process_batch()</div>
         function observeReveals(root) {
             (root || document).querySelectorAll('.reveal:not(.visible)').forEach(el => revealIO.observe(el));
         }
-        document.querySelectorAll('.expandable-box, .tab-hero, .metric-row, section.reveal').forEach(el => el.classList.add('reveal'));
+        document.querySelectorAll('.expandable-box, .tab-hero, section.reveal').forEach(el => el.classList.add('reveal'));
         observeReveals(document.querySelector('.tab-content.active'));
 
         // Architecture Diagram Tooltips
