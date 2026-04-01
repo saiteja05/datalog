@@ -1118,6 +1118,48 @@ db.shards.find({}, { _id: 1, tags: 1 }).forEach(s => {
 - **Zone ranges overlap** — Chunks may bounce between zones. Review and fix ranges.
 - **Chunks on wrong shard for their zone** — Data residency violation. Enable balancer and wait for correct placement.
 
+### 11.8 Unsharded Collections in a Sharded Cluster
+
+**How to Check**
+
+```javascript
+// List all sharded collections
+use config
+const shardedNs = new Set();
+db.collections.find({ dropped: { $ne: true } }).forEach(c => shardedNs.add(c._id));
+
+// Find large unsharded collections across all databases
+db.adminCommand({ listDatabases: 1 }).databases.forEach(d => {
+  if (["admin", "local", "config"].includes(d.name)) return;
+  const dbRef = db.getSiblingDB(d.name);
+  dbRef.getCollectionNames().forEach(c => {
+    const ns = `${d.name}.${c}`;
+    if (!shardedNs.has(ns)) {
+      const stats = dbRef.getCollection(c).stats();
+      const docs = stats.count || 0;
+      const sizeMB = (stats.size || 0) / 1024 / 1024;
+      if (docs > 100000 || sizeMB > 100) {
+        print(`⚠ UNSHARDED: ${ns} | ${docs.toLocaleString()} docs | ${sizeMB.toFixed(2)} MB`)
+      }
+    }
+  })
+})
+```
+
+In a sharded cluster, unsharded collections live entirely on the **primary shard** for their database. This means one shard handles 100% of the read/write load for those collections, regardless of how many shards you have.
+
+**Red Flags**
+
+- **Large unsharded collections (> 100K docs or > 100MB)** — All traffic for this collection is pinned to a single shard. If the collection grows, that shard becomes a hotspot while other shards sit idle. Evaluate whether the collection's access patterns benefit from sharding.
+- **Primary shard overloaded due to unsharded collections** — Multiple large unsharded collections may all land on the same primary shard. Use `sh.status()` to check which shard is primary for each database, and `db.adminCommand({ movePrimary: "mydb", to: "shardB" })` to redistribute if needed. **Warning**: `movePrimary` copies all unsharded data — run during maintenance.
+- **Unsharded collections with high write throughput** — Even if the data is small, high write volume on an unsharded collection creates a single-shard bottleneck. Consider sharding with a hashed key for even distribution.
+- **No periodic audit of unsharded collections** — As applications evolve, collections that started small can grow into bottlenecks. Include this check in your monthly review.
+
+**When NOT to shard:**
+- Collections under 10K documents or under 10MB — sharding overhead outweighs benefit.
+- Configuration or metadata collections that are rarely written to.
+- Collections that are always queried with a full-collection scan (e.g., small lookup tables).
+
 ---
 
 ## Part 12: Schema Design
@@ -1306,6 +1348,7 @@ print(`Requests: ${net.numRequests}`)
 | Adding shards = slower | Scatter-gather queries | 11.5 | `.explain("executionStats")` on top queries |
 | Chunks uneven | Jumbo chunks or balancer off | 11.1/11.3 | `sh.getBalancerState()` + `db.chunks.find({jumbo:true})` |
 | All writes to one shard | Monotonic shard key | 11.4 | Compare insert opcounters per shard |
+| One shard overloaded despite balanced chunks | Large unsharded collections | 11.8 | List unsharded collections per database vs `config.collections` |
 | Secondaries falling behind | Oplog too small / write overload | 2.2/2.3 | `rs.printSecondaryReplicationInfo()` |
 | Connection errors | Pool exhausted | 5.1 | `db.serverStatus().connections` |
 | Disk filling up fast | No TTL / no archival | 3.2 | Check TTL indexes + collection sizes |

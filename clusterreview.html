@@ -430,6 +430,7 @@
             ["11. Sharding", "11.9", "Per-shard resource utilization is balanced", "Weekly", "High", "One shard CPU/IOPS > 2x others", "Atlas UI → Metrics → compare per shard"],
             ["11. Sharding", "11.10", "Migration rate reasonable (< 10/hour sustained)", "Weekly", "Medium", "> 10/hour sustained — cluster thrashing", "db.changelog.aggregate count per day"],
             ["11. Sharding", "11.11", "Zone ranges correct (no overlaps/gaps)", "Monthly", "High", "Overlapping zones; chunks on wrong shard", "use config; db.tags.find()"],
+            ["11. Sharding", "11.12", "Large unsharded collections identified and reviewed", "Monthly", "High", "Collections > 100K docs or > 100MB on a single shard", "Compare config.collections vs db.getCollectionNames() per database"],
             ["12. Schema", "12.1", "No unbounded arrays (> 1000 elements)", "Quarterly", "High", "Arrays growing without limit", "Aggregate $size on array fields"],
             ["12. Schema", "12.2", "No documents approaching 16MB BSON limit", "Quarterly", "High", "Documents > 8MB", "db.coll.find({$expr:{$gt:[{$bsonSize:'$$ROOT'},8388608]}})"],
             ["12. Schema", "12.3", "No mixed types in same field", "Quarterly", "Medium", "Field sometimes string, sometimes number", "Aggregate $type per field on sample"],
