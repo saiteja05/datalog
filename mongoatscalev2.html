@@ -17,16 +17,15 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap">
     <style>
         :root {
-            /* MongoDB Official Brand Colors */
             --mongo-green: #00ED64;
-            --mongo-green-dark: #3FA037;
+            --mongo-green-dark: #00c853;
             --mongo-dark-blue: #001E2B;
-            --mongo-dark-green: #2d5a2f;
-            --mongo-card: #001E2B;
-            --mongo-card-accent: #002535;
-            --mongo-text: #E8E7D5;
-            --mongo-text-muted: #C1BEBC;
-            --mongo-border: #3FA037;
+            --mongo-dark-green: #003345;
+            --mongo-card: #002838;
+            --mongo-card-accent: #003345;
+            --mongo-text: #fafafa;
+            --mongo-text-muted: #7fa8bc;
+            --mongo-border: rgba(0, 237, 100, 0.2);
             
             /* Sidebar */
             --sidebar-width: 280px;
@@ -45,7 +44,7 @@
         
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #001218 0%, #001E2B 50%, #001218 100%);
+            background: linear-gradient(135deg, #001E2B 0%, #002838 50%, #001E2B 100%);
             background-attachment: fixed;
             color: var(--mongo-text);
             line-height: 1.65;
@@ -64,8 +63,8 @@
             width: 100%;
             height: 100%;
             background-image: 
-                radial-gradient(circle at 20% 50%, rgba(77, 179, 61, 0.02) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(63, 160, 55, 0.015) 0%, transparent 50%);
+                radial-gradient(circle at 20% 50%, rgba(0, 237, 100, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(0, 237, 100, 0.015) 0%, transparent 50%);
             pointer-events: none;
             z-index: 0;
         }
@@ -82,9 +81,9 @@
         h1 { font-size: 2.5rem; font-weight: 700; }
         h2 { font-size: 2rem; font-weight: 600; margin-bottom: 1.5rem; }
         h3 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1.25rem; color: #FFFFFF; }
-        h4 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: #6BC157; }
-        h5 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.875rem; color: #5AB649; }
-        h6 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--mongo-green-dark); }
+        h4 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; color: var(--mongo-green); }
+        h5 { font-size: 1.1rem; font-weight: 600; margin-bottom: 0.875rem; color: #b8d8e8; }
+        h6 { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: #b8d8e8; }
         
         p {
             margin-bottom: 1.25rem;
@@ -104,7 +103,7 @@
             height: var(--header-height);
             background: rgba(0, 30, 43, 0.98);
             backdrop-filter: blur(24px) saturate(180%);
-            border-bottom: 1px solid rgba(77, 179, 61, 0.1);
+            border-bottom: 1px solid rgba(0, 237, 100, 0.1);
             z-index: 1000;
             display: flex;
             align-items: center;
@@ -125,7 +124,7 @@
         .header-logo svg {
             width: 32px;
             height: 32px;
-            filter: drop-shadow(0 1px 4px rgba(77, 179, 61, 0.3));
+            filter: drop-shadow(0 1px 4px rgba(0, 237, 100, 0.3));
         }
         
         .header-actions {
@@ -146,7 +145,7 @@
             width: 100%;
             padding: 0.7rem 1rem 0.7rem 2.75rem;
             background: rgba(0, 30, 43, 0.5);
-            border: 1px solid rgba(77, 179, 61, 0.2);
+            border: 1px solid rgba(0, 237, 100, 0.2);
             border-radius: 10px;
             color: var(--mongo-text);
             font-size: 0.9rem;
@@ -155,9 +154,9 @@
         
         .search-input:focus {
             outline: none;
-            border-color: rgba(77, 179, 61, 0.5);
+            border-color: rgba(0, 237, 100, 0.5);
             background: rgba(0, 30, 43, 0.8);
-            box-shadow: 0 0 0 3px rgba(77, 179, 61, 0.08);
+            box-shadow: 0 0 0 3px rgba(0, 237, 100, 0.08);
         }
         
         .search-icon {
@@ -175,8 +174,8 @@
             right: 1rem;
             top: 50%;
             transform: translateY(-50%);
-            background: rgba(77, 179, 61, 0.1);
-            border: 1px solid rgba(77, 179, 61, 0.2);
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid rgba(0, 237, 100, 0.2);
             border-radius: 4px;
             padding: 0.2rem 0.5rem;
             font-size: 0.75rem;
@@ -193,7 +192,7 @@
             height: calc(100vh - var(--header-height));
             background: rgba(0, 30, 43, 0.98);
             backdrop-filter: blur(24px) saturate(180%);
-            border-right: 1px solid rgba(77, 179, 61, 0.1);
+            border-right: 1px solid rgba(0, 237, 100, 0.1);
             overflow-y: auto;
             z-index: 900;
             padding: 2rem 0;
@@ -209,7 +208,7 @@
         }
         
         .sidebar::-webkit-scrollbar-thumb {
-            background: rgba(77, 179, 61, 0.4);
+            background: rgba(0, 237, 100, 0.4);
             border-radius: 3px;
         }
         
@@ -230,13 +229,13 @@
         
         .sidebar-nav-item:hover {
             color: var(--mongo-text);
-            background: rgba(77, 179, 61, 0.06);
+            background: rgba(0, 237, 100, 0.06);
             border-left-color: var(--mongo-green);
         }
         
         .sidebar-nav-item.active {
             color: var(--mongo-green);
-            background: rgba(77, 179, 61, 0.12);
+            background: rgba(0, 237, 100, 0.12);
             border-left-color: var(--mongo-green);
             font-weight: 600;
         }
@@ -283,7 +282,7 @@
         
         .code-block {
             background: linear-gradient(135deg, #0a1520 0%, #000810 100%);
-            border: 1px solid rgba(77, 179, 61, 0.2);
+            border: 1px solid rgba(0, 237, 100, 0.2);
             border-radius: 10px;
             padding: 1.5rem;
             color: #E0E0E0;
@@ -301,8 +300,8 @@
             top: 1rem;
             right: 1rem;
             padding: 0.5rem 1rem;
-            background: rgba(77, 179, 61, 0.1);
-            border: 1px solid rgba(77, 179, 61, 0.25);
+            background: rgba(0, 237, 100, 0.1);
+            border: 1px solid rgba(0, 237, 100, 0.25);
             border-radius: 6px;
             color: var(--mongo-green);
             font-size: 0.8rem;
@@ -315,13 +314,13 @@
         }
         
         .copy-button:hover {
-            background: rgba(77, 179, 61, 0.18);
+            background: rgba(0, 237, 100, 0.18);
             transform: translateY(-1px);
-            box-shadow: 0 2px 8px rgba(77, 179, 61, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 237, 100, 0.15);
         }
         
         .copy-button.copied {
-            background: rgba(77, 179, 61, 0.3);
+            background: rgba(0, 237, 100, 0.3);
         }
         
         /* Scroll Progress */
@@ -406,8 +405,8 @@
         }
         
         .quick-links a:hover {
-            background: rgba(77, 179, 61, 0.1);
-            border-color: rgba(77, 179, 61, 0.4);
+            background: rgba(0, 237, 100, 0.1);
+            border-color: rgba(0, 237, 100, 0.4);
             color: white;
             transform: translateY(-1px);
         }
@@ -469,7 +468,7 @@
         
         .expandable-box:hover {
             background: linear-gradient(135deg, rgba(0, 30, 43, 0.6) 0%, rgba(0, 37, 53, 0.6) 100%);
-            box-shadow: 0 4px 16px rgba(77, 179, 61, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 4px 16px rgba(0, 237, 100, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2);
             transform: translateY(-1px);
         }
         
@@ -496,7 +495,7 @@
         }
         
         .faq-security .expandable-box {
-            border-left-color: #3FA037;
+            border-left-color: #00c853;
         }
         .faq-security .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
@@ -548,14 +547,14 @@
         }
         
         #advanced-hybrid .expandable-box {
-            border-left-color: #3FA037;
+            border-left-color: #00c853;
         }
         #advanced-hybrid .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.2), 0 4px 6px -2px rgba(236, 72, 153, 0.1);
         }
         
         #advanced-voyage .expandable-box {
-            border-left-color: #3FA037;
+            border-left-color: #00c853;
         }
         #advanced-voyage .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(245, 158, 11, 0.2), 0 4px 6px -2px rgba(245, 158, 11, 0.1);
@@ -591,7 +590,7 @@
         }
         
         #api-pymongoarrow .expandable-box {
-            border-left-color: #3FA037;
+            border-left-color: #00c853;
         }
         #api-pymongoarrow .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(249, 115, 22, 0.2), 0 4px 6px -2px rgba(249, 115, 22, 0.1);
@@ -605,7 +604,7 @@
         }
         
         #api-advanced .expandable-box {
-            border-left-color: #3FA037;
+            border-left-color: #00c853;
         }
         #api-advanced .expandable-box:hover {
             box-shadow: 0 10px 15px -3px rgba(236, 72, 153, 0.2), 0 4px 6px -2px rgba(236, 72, 153, 0.1);
@@ -633,7 +632,7 @@
         
         #perf-monitoring + div .bg-\[#001E2B\],
         #perf-monitoring + div .bg-\[--mongo-card-accent\] {
-            border-left: 4px solid #3FA037;
+            border-left: 4px solid #00c853;
         }
         
         #perf-connections + div .bg-\[#001E2B\],
@@ -643,7 +642,7 @@
         
         #perf-tips + div .bg-\[#001E2B\],
         #perf-tips + div .bg-\[--mongo-card-accent\] {
-            border-left: 4px solid #3FA037;
+            border-left: 4px solid #00c853;
         }
         
         .expandable-box summary {
