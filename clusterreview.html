@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Atlas Health Check</title>
+    <style>
+        :root {
+            --bg: #ffffff;
+            --bg2: #f8fafc;
+            --bg3: #f1f5f9;
+            --tx: #0f172a;
+            --tx2: #475569;
+            --tx3: #94a3b8;
+            --bd: #e2e8f0;
+            --bd2: #cbd5e1;
+            --green: #16a34a;
+            --greenbg: #dcfce7;
+            --yellow: #a16207;
+            --yellowbg: #fef9c3;
+            --red: #dc2626;
+            --redbg: #fee2e2;
+            --blue: #2563eb;
+            --bluebg: #dbeafe;
+            --orange: #ea580c
+        }
+
+        @media(prefers-color-scheme:dark) {
+            :root {
+                --bg: #0f172a;
+                --bg2: #1e293b;
+                --bg3: #334155;
+                --tx: #f1f5f9;
+                --tx2: #94a3b8;
+                --tx3: #64748b;
+                --bd: #334155;
+                --bd2: #475569;
+                --greenbg: #052e16;
+                --yellowbg: #422006;
+                --redbg: #450a0a;
+                --bluebg: #172554
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--tx);
+            line-height: 1.5
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 16px
+        }
+
+        h1 {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 2px
+        }
+
+        .subtitle {
+            font-size: 12px;
+            color: var(--tx3);
+            margin-bottom: 16px
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 12px
+        }
+
+        .toolbar input,
+        .toolbar select {
+            padding: 7px 10px;
+            border: 1px solid var(--bd);
+            border-radius: 6px;
+            font-size: 13px;
+            background: var(--bg);
+            color: var(--tx);
+            outline: none
+        }
+
+        .toolbar input:focus,
+        .toolbar select:focus {
+            border-color: var(--blue)
+        }
+
+        .btn {
+            padding: 7px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap
+        }
+
+        .btn-green {
+            background: var(--green);
+            color: #fff
+        }
+
+        .btn-blue {
+            background: var(--blue);
+            color: #fff
+        }
+
+        .btn-gray {
+            background: var(--bg3);
+            color: var(--tx2)
+        }
+
+        .btn:hover {
+            opacity: 0.9
+        }
+
+        .stats {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px
+        }
+
+        .stat {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700
+        }
+
+        .tbl-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--bd);
+            border-radius: 8px
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        thead tr {
+            background: var(--bg2)
+        }
+
+        th {
+            padding: 8px 5px;
+            text-align: left;
+            border-bottom: 2px solid var(--bd);
+            font-weight: 700;
+            font-size: 11px;
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            background: var(--bg2);
+            z-index: 1
+        }
+
+        .sec-row td {
+            padding: 10px 5px 5px;
+            font-weight: 700;
+            font-size: 13px;
+            background: var(--bg3);
+            border-bottom: 1px solid var(--bd)
+        }
+
+        td {
+            padding: 5px;
+            border-bottom: 1px solid var(--bd);
+            vertical-align: top
+        }
+
+        .mono {
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 10px;
+            color: var(--tx3);
+            word-break: break-all
+        }
+
+        .id-cell {
+            font-family: monospace;
+            font-size: 11px;
+            color: var(--tx3);
+            white-space: nowrap
+        }
+
+        .item-cell {
+            font-weight: 500;
+            max-width: 260px
+        }
+
+        .freq-cell {
+            font-size: 11px;
+            color: var(--tx2);
+            white-space: nowrap
+        }
+
+        .red-cell {
+            font-size: 11px;
+            color: var(--red);
+            max-width: 230px
+        }
+
+        .cmd-cell {
+            max-width: 230px
+        }
+
+        .pill {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 700;
+            color: #fff;
+            display: inline-block
+        }
+
+        .p-critical {
+            background: var(--red)
+        }
+
+        .p-high {
+            background: var(--orange)
+        }
+
+        .p-medium {
+            background: var(--yellow)
+        }
+
+        .p-low {
+            background: var(--green)
+        }
+
+        td select,
+        td input {
+            padding: 4px 5px;
+            border: 1px solid var(--bd);
+            border-radius: 4px;
+            font-size: 11px;
+            background: var(--bg);
+            color: var(--tx);
+            outline: none
+        }
+
+        td select {
+            width: 108px
+        }
+
+        td input.assignee {
+            width: 88px
+        }
+
+        td input.notes {
+            width: 140px
+        }
+
+        .footer {
+            margin-top: 10px;
+            font-size: 11px;
+            color: var(--tx3)
+        }
+
+        .save-note {
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: var(--bluebg);
+            border-radius: 6px;
+            font-size: 11px;
+            color: var(--blue);
+            display: none
+        }
+
+        .tbl-scroll {
+            max-height: 70vh;
+            overflow-y: auto
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>MongoDB Atlas Health Check</h1>
+
+        <div class="toolbar">
+            <input id="cluster" placeholder="Cluster Name" style="width:150px">
+            <input id="checkdate" type="date" style="width:145px">
+            <input id="search" placeholder="Search checks..." style="width:170px">
+            <select id="secFilter">
+                <option>All Sections</option>
+            </select>
+            <select id="freqFilter">
+                <option>All Frequencies</option>
+                <option>Daily</option>
+                <option>Weekly</option>
+                <option>Monthly</option>
+                <option>Quarterly</option>
+            </select>
+            <button class="btn btn-green" onclick="exportCSV()">Export CSV</button>
+            <button class="btn btn-blue" onclick="resetAll()">Reset All</button>
+        </div>
+
+        <div class="stats" id="stats"></div>
+        <div class="tbl-wrap">
+            <div class="tbl-scroll">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Check Item</th>
+                            <th>Freq</th>
+                            <th>Priority</th>
+                            <th>Red Flag</th>
+                            <th>Command</th>
+                            <th>Status</th>
+                            <th>Assignee</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody"></tbody>
+                </table>
+            </div>
+        </div>
+        <p class="footer" id="footer"></p>
+        <div class="save-note" id="saveNote">Data saved to browser storage.</div>
+    </div>
+
+    <script>
+        const C = [
+            ["1. Cluster Config", "1.1", "Cluster tier matches workload (not M10/M20 in prod)", "Quarterly", "High", "M10/M20 running production traffic", "Atlas UI → Cluster → Overview → Tier"],
+            ["1. Cluster Config", "1.2", "Auto-scaling enabled (compute + storage)", "Quarterly", "High", "Auto-scaling disabled on production cluster", "Atlas UI → Cluster → Configuration → Auto-scaling"],
+            ["1. Cluster Config", "1.3", "MongoDB version is current (not EOL)", "Quarterly", "High", "Version > 1 major behind or past EOL", "db.version()"],
+            ["1. Cluster Config", "1.4", "FCV matches binary version (post-upgrade)", "Quarterly", "Medium", "FCV lower than binary for > 2 weeks", "db.adminCommand({getParameter:1, featureCompatibilityVersion:1})"],
+            ["1. Cluster Config", "1.5", "Multi-region deployment for critical apps", "Quarterly", "High", "Single-region for business-critical workload", "Atlas UI → Cluster → Overview → Region"],
+            ["1. Cluster Config", "1.6", "Electable nodes >= 3", "Quarterly", "Critical", "< 3 electable members", "rs.status().members.length"],
+            ["1. Cluster Config", "1.7", "Tier right-sizing review (CPU/IOPS/memory headroom)", "Quarterly", "Medium", "Metrics consistently < 30% or > 70% of limits", "Atlas UI → Cluster → Metrics (compare all)"],
+            ["2. Replication", "2.1", "All replica set members healthy (PRIMARY/SECONDARY)", "Daily", "Critical", "Any member RECOVERING, DOWN, or STARTUP", "rs.status()"],
+            ["2. Replication", "2.2", "No frequent unplanned elections", "Weekly", "High", "Multiple elections per week without maintenance", "db.adminCommand({getLog:'global'}) — filter 'election'"],
+            ["2. Replication", "2.3", "Replication lag < 10 seconds", "Daily", "Critical", "Lag > 10s sustained or increasing over time", "rs.printSecondaryReplicationInfo()"],
+            ["2. Replication", "2.4", "Replication lag not correlated with batch jobs", "Weekly", "Medium", "Lag spikes during ETL/batch processing", "Atlas UI → Metrics → Replication Lag"],
+            ["2. Replication", "2.5", "Oplog window >= 24 hours (minimum 4 hours)", "Monthly", "High", "Oplog window < 4 hours", "rs.printReplicationInfo()"],
+            ["2. Replication", "2.6", "Oplog window not shrinking over time", "Monthly", "Medium", "Window shrinking > 10% per month", "db.getReplicationInfo().timeDiffHours"],
+            ["2. Replication", "2.7", "Oplog window covers change stream resume needs", "Monthly", "High", "Window < 2x max app downtime (change streams)", "db.getReplicationInfo()"],
+            ["2. Replication", "2.8", "Write concern is w:'majority' for critical data", "Quarterly", "High", "Default write concern is w:1 for critical collections", "db.adminCommand({getDefaultRWConcern:1})"],
+            ["2. Replication", "2.9", "Member priorities match failover intent", "Quarterly", "Medium", "Remote region secondary has same priority as local", "rs.conf().members → check priorities"],
+            ["3. Storage & Disk", "3.1", "Disk utilization < 80%", "Daily", "Critical", "> 80% utilization; > 90% is emergency", "Atlas UI → Metrics → Disk Utilization %"],
+            ["3. Storage & Disk", "3.2", "Disk IOPS < 80% of tier limit", "Daily", "High", "> 80% of provisioned IOPS", "Atlas UI → Metrics → Disk IOPS"],
+            ["3. Storage & Disk", "3.3", "Disk queue depth < 1 sustained", "Weekly", "High", "Queue depth > 1 sustained", "Atlas UI → Metrics → Disk Queue Depth"],
+            ["3. Storage & Disk", "3.4", "No severe fragmentation (storageSize/dataSize < 2x)", "Monthly", "Medium", "Fragmentation ratio > 2x", "db.stats() → compare storageSize vs dataSize"],
+            ["3. Storage & Disk", "3.5", "No single collection > 50% of total storage", "Monthly", "Medium", "One collection dominates storage", "db.collection.stats() for each collection"],
+            ["3. Storage & Disk", "3.6", "Average document size reasonable (< 10KB for high-throughput)", "Monthly", "Medium", "avgObjSize > 10KB on hot collections", "db.collection.stats().avgObjSize"],
+            ["3. Storage & Disk", "3.7", "TTL indexes exist on time-series/log data", "Monthly", "High", "No TTL on unbounded log/event collections", "Check indexes for expireAfterSeconds"],
+            ["3. Storage & Disk", "3.8", "TTL indexes working (deletedDocuments > 0)", "Monthly", "High", "TTL exists but collection keeps growing", "db.serverStatus().metrics.ttl"],
+            ["3. Storage & Disk", "3.9", "No collections > 100M docs unsharded", "Quarterly", "Medium", "Unsharded collection > 100M documents", "db.collection.estimatedDocumentCount()"],
+            ["4. Memory & Cache", "4.1", "WiredTiger cache utilization < 80%", "Weekly", "High", "Cache consistently > 80% full", "db.serverStatus().wiredTiger.cache"],
+            ["4. Memory & Cache", "4.2", "Cache hit ratio > 95%", "Weekly", "Critical", "Hit ratio < 95% — excessive disk reads", "pages requested vs pages read into cache"],
+            ["4. Memory & Cache", "4.3", "Dirty bytes < 20% of cache", "Weekly", "Medium", "Dirty bytes > 20% — checkpoint bottleneck", "tracked dirty bytes / max cache"],
+            ["4. Memory & Cache", "4.4", "No application thread eviction", "Weekly", "Critical", "App threads doing eviction (latency impact)", "app threads page write from cache to disk > 0"],
+            ["4. Memory & Cache", "4.5", "Page faults stable (not increasing)", "Weekly", "Medium", "Page faults increasing rapidly", "db.serverStatus().extra_info.page_faults"],
+            ["5. Connections", "5.1", "Connection count < 80% of tier limit", "Daily", "High", "> 80% of max connections", "db.serverStatus().connections"],
+            ["5. Connections", "5.2", "No excessive connection churn (< 10/sec avg)", "Weekly", "Medium", "> 50 new connections/sec — missing pooling", "totalCreated / uptime"],
+            ["5. Connections", "5.3", "Connection count drops after app scale-down", "Weekly", "Medium", "Connections never decrease — leak detected", "Compare current connections over time"],
+            ["5. Connections", "5.4", "Idle connections not excessive", "Weekly", "Medium", "Hundreds of idle connections — pool oversized", "db.currentOp(true).inprog — count !active"],
+            ["5. Connections", "5.5", "No long-running operations > 60s (unexpected)", "Daily", "High", "Operations running > 60s without explanation", "db.currentOp({active:true, secs_running:{$gt:60}})"],
+            ["5. Connections", "5.6", "No operations waiting for locks", "Daily", "High", "Multiple ops blocked on locks", "db.currentOp({waitingForLock:true})"],
+            ["5. Connections", "5.7", "No retry storms (same query repeated dozens of times)", "Weekly", "Medium", "Same query pattern simultaneously 20+ times", "db.currentOp() — look for duplicate patterns"],
+            ["6. Indexing", "6.1", "No unused indexes (0 ops since restart > 7 days)", "Monthly", "High", "Indexes with 0 ops wasting RAM and write throughput", "db.collection.aggregate([{$indexStats:{}}])"],
+            ["6. Indexing", "6.2", "No redundant indexes (prefix overlaps)", "Monthly", "High", "Both {a:1} and {a:1,b:1} exist — first is redundant", "db.collection.getIndexes() — compare prefixes"],
+            ["6. Indexing", "6.3", "Total index size < data size per collection", "Monthly", "Medium", "Index size > data size — over-indexed", "db.collection.stats() — totalIndexSize vs size"],
+            ["6. Indexing", "6.4", "No collection has > 10 indexes", "Monthly", "Medium", "> 10 indexes — severe write penalty", "db.collection.getIndexes().length"],
+            ["6. Indexing", "6.5", "No COLLSCAN on collections > 10K docs", "Monthly", "Critical", "Collection scan on large collections", "db.system.profile.find({planSummary:/COLLSCAN/})"],
+            ["6. Indexing", "6.6", "Query targeting ratio < 10:1", "Monthly", "High", "Ratio > 10:1 — scanning 10x more than returning", "Atlas UI → Metrics → Query Targeting"],
+            ["6. Indexing", "6.7", "Performance Advisor suggestions reviewed", "Monthly", "High", "High-impact suggestions ignored for weeks", "Atlas UI → Performance Advisor"],
+            ["6. Indexing", "6.8", "Profiler enabled (level 1, appropriate slowms)", "Monthly", "Medium", "Profiler at level 0 — blind to slow queries", "db.getProfilingStatus()"],
+            ["7. Query Perf", "7.1", "No recurring slow queries (same pattern repeated)", "Weekly", "High", "Same query pattern repeatedly in slow log", "db.system.profile.find().sort({millis:-1}).limit(10)"],
+            ["7. Query Perf", "7.2", "No queries > 1 second (unless expected batch)", "Weekly", "High", "User-facing queries > 1 second", "db.system.profile.find({millis:{$gt:1000}})"],
+            ["7. Query Perf", "7.3", "No $regex with leading wildcards", "Monthly", "Medium", "/.*pattern/ queries — can't use indexes", "Review profiler for regex patterns"],
+            ["7. Query Perf", "7.4", "No disk-spilling sorts (usedDisk: true)", "Weekly", "High", "Sort exceeds 100MB memory limit", "db.system.profile.find({usedDisk:true})"],
+            ["7. Query Perf", "7.5", "Aggregation $match stages are first and use indexes", "Monthly", "High", "$match after $project — can't use index", "Review pipeline explain() output"],
+            ["7. Query Perf", "7.6", "$lookup collections have indexes on foreignField", "Monthly", "High", "$lookup without index — O(n*m) join", "Check indexes on $lookup target collections"],
+            ["7. Query Perf", "7.7", "No $unwind on large unbounded arrays", "Monthly", "Medium", "$unwind causing document explosion", "Review profiler for $unwind pipelines"],
+            ["7. Query Perf", "7.8", "maxTimeMS set on user-facing queries", "Quarterly", "Medium", "Queries can run indefinitely without timeout", "Review application code"],
+            ["8. Security", "8.1", "No 0.0.0.0/0 in IP Access List", "Monthly", "Critical", "Entire internet can attempt connections", "Atlas UI → Network Access → IP Access List"],
+            ["8. Security", "8.2", "No stale IPs from former infrastructure", "Monthly", "Medium", "Old IPs could be reassigned", "Cross-reference IP list with current infra"],
+            ["8. Security", "8.3", "Private endpoints / VPC peering for production", "Quarterly", "High", "Production traffic over public internet", "Atlas UI → Network Access → Private Endpoints"],
+            ["8. Security", "8.4", "No app users with root/atlasAdmin/readWriteAnyDB", "Monthly", "Critical", "Application has cluster-wide admin access", "db.system.users.find() → check roles"],
+            ["8. Security", "8.5", "No shared credentials across applications", "Monthly", "High", "Multiple apps use same DB user", "db.system.users.find() + app config review"],
+            ["8. Security", "8.6", "Stale/unknown users removed", "Monthly", "Medium", "Users created months ago nobody recognizes", "db.system.users.find()"],
+            ["8. Security", "8.7", "Custom roles used (not just built-in)", "Quarterly", "Medium", "Everyone uses readWrite — over-broad permissions", "db.system.roles.find()"],
+            ["8. Security", "8.8", "Encryption at rest enabled", "Quarterly", "High", "Data on disk is unencrypted", "Atlas UI → Cluster → Security"],
+            ["8. Security", "8.9", "TLS enforced (requireTLS mode)", "Quarterly", "High", "Connections could fall back to unencrypted", "db.adminCommand({getParameter:1,tlsMode:1})"],
+            ["8. Security", "8.10", "Audit logging enabled (if compliance required)", "Quarterly", "High", "No audit trail for SOC2/HIPAA/PCI", "Atlas UI → Advanced → Auditing"],
+            ["8. Security", "8.11", "Field-level encryption for PII (if required)", "Quarterly", "High", "SSN, credit cards readable by DBAs", "Review CSFLE implementation"],
+            ["9. Backup", "9.1", "Backups enabled", "Monthly", "Critical", "Backups disabled — zero recovery path", "Atlas UI → Cluster → Backup"],
+            ["9. Backup", "9.2", "Last successful snapshot < 24 hours old", "Monthly", "Critical", "Snapshots may be failing silently", "Atlas UI → Backup → Snapshots"],
+            ["9. Backup", "9.3", "Snapshot retention policy adequate", "Quarterly", "Medium", "Retention too short (e.g., 1 day)", "Atlas UI → Backup → Policies"],
+            ["9. Backup", "9.4", "Point-in-time recovery (PITR) enabled", "Quarterly", "High", "Can only restore to snapshot boundaries", "Atlas UI → Backup → Continuous Cloud Backup"],
+            ["9. Backup", "9.5", "Cross-region snapshot copies (if applicable)", "Quarterly", "Medium", "Region outage = backups lost too", "Atlas UI → Backup → Copy Settings"],
+            ["9. Backup", "9.6", "RTO/RPO documented", "Quarterly", "High", "No defined recovery targets", "Review internal documentation"],
+            ["9. Backup", "9.7", "Restore tested (quarterly drill)", "Quarterly", "Critical", "Never tested — backup may not restore", "Perform test restore to temp cluster"],
+            ["9. Backup", "9.8", "Restore time <= RTO", "Quarterly", "High", "Restore takes longer than allowed downtime", "Time test restore vs RTO target"],
+            ["9. Backup", "9.9", "Restore runbook exists and is current", "Quarterly", "Medium", "No documented process", "Review runbook documentation"],
+            ["10. Alerts", "10.1", "Alerts configured for all critical metrics", "Monthly", "High", "Missing alerts for disk, CPU, lag, connections", "Atlas UI → Project → Alerts → Settings"],
+            ["10. Alerts", "10.2", "Alerts go to PagerDuty/Slack (not just email)", "Monthly", "High", "Email-only — nobody checks at 3 AM", "Atlas UI → Integrations"],
+            ["10. Alerts", "10.3", "Alert thresholds appropriate (not too high/low)", "Monthly", "Medium", "Disk alert at 95% (too late) or alert fatigue", "Review threshold values vs tier limits"],
+            ["10. Alerts", "10.4", "Alert integrations working (test alert sent)", "Monthly", "Medium", "Integration broken — alerts go nowhere", "Trigger a test alert"],
+            ["10. Alerts", "10.5", "Baseline metrics documented", "Quarterly", "Medium", "Can't tell if values are normal or abnormal", "Capture weekly snapshots of db.serverStatus()"],
+            ["10. Alerts", "10.6", "Application-level monitoring exists (APM)", "Quarterly", "Medium", "Only server-side metrics — no E2E latency", "Verify Datadog/New Relic/OTel integration"],
+            ["10. Alerts", "10.7", "Monitoring covers p95/p99 (not just averages)", "Quarterly", "Medium", "Averages hide tail latency spikes", "Review dashboards for percentiles"],
+            ["11. Sharding", "11.1", "Balancer enabled and running", "Weekly", "Critical", "Balancer disabled — chunks never rebalance", "sh.getBalancerState() + sh.isBalancerRunning()"],
+            ["11. Sharding", "11.2", "Balancer window sufficient (>= 6hrs or unrestricted)", "Weekly", "Medium", "Window < 2 hours", "use config; db.settings.find({_id:'balancer'})"],
+            ["11. Sharding", "11.3", "No failed chunk migrations", "Weekly", "High", "ChunkTooBig, ExceededTimeLimit errors", "db.changelog.find({what:/moveChunk/}).sort({time:-1})"],
+            ["11. Sharding", "11.4", "Chunk distribution even across shards", "Weekly", "High", "One shard has 2x+ chunks vs others", "db.chunks.aggregate group by shard"],
+            ["11. Sharding", "11.5", "No jumbo chunks", "Weekly", "Critical", "Any jumbo chunks — can't be migrated", "db.chunks.find({jumbo:true})"],
+            ["11. Sharding", "11.6", "Shard key has high cardinality (> 1000 distinct)", "Quarterly", "Critical", "< 1000 distinct values; top value > 10%", "db.coll.aggregate $group + $count"],
+            ["11. Sharding", "11.7", "Shard key is not monotonic", "Quarterly", "Critical", "ObjectId/timestamp range — all writes to 1 shard", "Compare insert opcounters across shards"],
+            ["11. Sharding", "11.8", "Top queries are targeted (not scatter-gather)", "Monthly", "High", "> 50% queries missing shard key", "explain('executionStats') on top queries"],
+            ["11. Sharding", "11.9", "Per-shard resource utilization is balanced", "Weekly", "High", "One shard CPU/IOPS > 2x others", "Atlas UI → Metrics → compare per shard"],
+            ["11. Sharding", "11.10", "Migration rate reasonable (< 10/hour sustained)", "Weekly", "Medium", "> 10/hour sustained — cluster thrashing", "db.changelog.aggregate count per day"],
+            ["11. Sharding", "11.11", "Zone ranges correct (no overlaps/gaps)", "Monthly", "High", "Overlapping zones; chunks on wrong shard", "use config; db.tags.find()"],
+            ["12. Schema", "12.1", "No unbounded arrays (> 1000 elements)", "Quarterly", "High", "Arrays growing without limit", "Aggregate $size on array fields"],
+            ["12. Schema", "12.2", "No documents approaching 16MB BSON limit", "Quarterly", "High", "Documents > 8MB", "db.coll.find({$expr:{$gt:[{$bsonSize:'$$ROOT'},8388608]}})"],
+            ["12. Schema", "12.3", "No mixed types in same field", "Quarterly", "Medium", "Field sometimes string, sometimes number", "Aggregate $type per field on sample"],
+            ["12. Schema", "12.4", "Dates stored as BSON Date (not strings)", "Quarterly", "Medium", "String dates break TTL & range queries", "Check $type of date fields"],
+            ["12. Schema", "12.5", "Schema validation on external-input collections", "Quarterly", "Medium", "No validation — garbage data insertable", "db.getCollectionInfos() → check validator"],
+            ["12. Schema", "12.6", "No excessive $lookups (consider embedding)", "Quarterly", "Medium", "Same 2 collections always joined", "Review profiler for $lookup patterns"],
+            ["13. Network", "13.1", "App and cluster in same region", "Quarterly", "High", "Cross-region adds 50-200ms per op", "Compare app region vs Atlas region"],
+            ["13. Network", "13.2", "Connection string uses SRV format", "Quarterly", "Medium", "Direct host won't adapt to topology changes", "Review app connection strings"],
+            ["13. Network", "13.3", "retryWrites=true in connection string", "Quarterly", "High", "Transient failures cause app errors", "Review app connection strings"],
+            ["13. Network", "13.4", "appName set in connection string", "Quarterly", "Medium", "Can't identify which app owns connections", "Review app connection strings"],
+            ["13. Network", "13.5", "Reasonable socketTimeoutMS configured", "Quarterly", "Medium", "No timeout = stuck queries hold connections forever", "Review app connection strings"],
+            ["13. Network", "13.6", "Write concern not w:0 in production", "Quarterly", "High", "Unacknowledged writes — data silently lost", "Review connection strings + default write concern"],
+        ];
+
+        const STATUSES = ["", "Pass", "Warning", "Fail", "In Progress", "N/A"];
+        const SEMOJI = {
+            "Pass": "\u2705",
+            "Warning": "\u26a0\ufe0f",
+            "Fail": "\u274c",
+            "In Progress": "\ud83d\udd04",
+            "N/A": "\u2796"
+        };
+        const PCLS = {
+            "Critical": "p-critical",
+            "High": "p-high",
+            "Medium": "p-medium",
+            "Low": "p-low"
+        };
+        const SKEY = "mongo_healthcheck_v1";
+
+        let state = C.map(r => ({
+            sec: r[0],
+            id: r[1],
+            item: r[2],
+            freq: r[3],
+            pri: r[4],
+            red: r[5],
+            cmd: r[6],
+            status: "N/A",
+            assignee: "",
+            notes: ""
+        }));
+
+        function loadState() {
+            try {
+                const s = localStorage.getItem(SKEY);
+                if (s) {
+                    const saved = JSON.parse(s);
+                    if (saved.rows) {
+                        saved.rows.forEach((sr, i) => {
+                            if (state[i]) {
+                                state[i].status = sr.s || "";
+                                state[i].assignee = sr.a || "";
+                                state[i].notes = sr.n || "";
+                            }
+                        });
+                    }
+                    if (saved.cluster) document.getElementById("cluster").value = saved.cluster;
+                    if (saved.date) document.getElementById("checkdate").value = saved.date;
+                }
+            } catch (e) {}
+        }
+
+        function saveState() {
+            try {
+                const d = {
+                    cluster: document.getElementById("cluster").value,
+                    date: document.getElementById("checkdate").value,
+                    rows: state.map(r => ({
+                        s: r.status,
+                        a: r.assignee,
+                        n: r.notes
+                    }))
+                };
+                localStorage.setItem(SKEY, JSON.stringify(d));
+                const n = document.getElementById("saveNote");
+                n.style.display = "block";
+                setTimeout(() => n.style.display = "none", 1500);
+            } catch (e) {}
+        }
+
+        function getFiltered() {
+            const sec = document.getElementById("secFilter").value;
+            const freq = document.getElementById("freqFilter").value;
+            const q = document.getElementById("search").value.toLowerCase();
+            return state.filter(r => {
+                if (sec !== "All Sections" && r.sec !== sec) return false;
+                if (freq !== "All Frequencies" && r.freq !== freq) return false;
+                if (q && !r.item.toLowerCase().includes(q) && !r.red.toLowerCase().includes(q) && !r.cmd.toLowerCase().includes(q)) return false;
+                return true;
+            });
+        }
+
+        function updateStats() {
+            const t = state.length,
+                p = state.filter(r => r.status === "Pass").length,
+                w = state.filter(r => r.status === "Warning").length,
+                f = state.filter(r => r.status === "Fail").length,
+                ip = state.filter(r => r.status === "In Progress").length,
+                u = state.filter(r => !r.status).length;
+            document.getElementById("stats").innerHTML =
+                `<div class="stat" style="background:var(--bg3);color:var(--tx2)">Total: ${t}</div>` +
+                `<div class="stat" style="background:var(--greenbg);color:var(--green)">Pass: ${p}</div>` +
+                `<div class="stat" style="background:var(--yellowbg);color:var(--yellow)">Warning: ${w}</div>` +
+                `<div class="stat" style="background:var(--redbg);color:var(--red)">Fail: ${f}</div>` +
+                `<div class="stat" style="background:var(--bluebg);color:var(--blue)">In Progress: ${ip}</div>` +
+                `<div class="stat" style="background:var(--bg3);color:var(--tx3)">Unchecked: ${u}</div>` +
+                `<div class="stat" style="background:var(--greenbg);color:var(--green);border:1px solid var(--green)">Pass Rate: ${t?((p/t)*100).toFixed(0):0}%</div>`;
+        }
+
+        function render() {
+            const rows = getFiltered();
+            let html = "",
+                lastSec = "";
+            rows.forEach(r => {
+                const ri = state.indexOf(r);
+                if (r.sec !== lastSec) {
+                    lastSec = r.sec;
+                    html += `<tr class="sec-row"><td colspan="9">${r.sec}</td></tr>`;
+                }
+                const opts = STATUSES.map(s => `<option value="${s}"${r.status===s?" selected":""}>${s?(SEMOJI[s]||"")+" "+s:"Select..."}</option>`).join("");
+                html += `<tr>
+      <td class="id-cell">${r.id}</td>
+      <td class="item-cell">${r.item}</td>
+      <td class="freq-cell">${r.freq}</td>
+      <td><span class="pill ${PCLS[r.pri]||""}">${r.pri}</span></td>
+      <td class="red-cell">${r.red}</td>
+      <td class="cmd-cell mono">${r.cmd}</td>
+      <td><select onchange="upd(${ri},'status',this.value)">${opts}</select></td>
+      <td><input class="assignee" value="${esc(r.assignee)}" placeholder="Name" onchange="upd(${ri},'assignee',this.value)"></td>
+      <td><input class="notes" value="${esc(r.notes)}" placeholder="Notes..." onchange="upd(${ri},'notes',this.value)"></td>
+    </tr>`;
+            });
+            document.getElementById("tbody").innerHTML = html;
+            document.getElementById("footer").textContent = `${rows.length} of ${state.length} checks shown`;
+            updateStats();
+        }
+
+        function esc(s) {
+            return (s || "").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+        }
+
+        function upd(i, f, v) {
+            state[i][f] = v;
+            updateStats();
+            saveState();
+        }
+
+        function resetAll() {
+            if (!confirm("Reset all statuses, assignees, and notes?")) return;
+            state.forEach(r => {
+                r.status = "";
+                r.assignee = "";
+                r.notes = "";
+            });
+            render();
+            saveState();
+        }
+
+        function escCSV(v) {
+            const s = String(v || "");
+            return (s.includes(",") || s.includes('"') || s.includes("\n")) ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }
+
+        function exportCSV() {
+            const cl = document.getElementById("cluster").value,
+                dt = document.getElementById("checkdate").value;
+            const hdr = ["Section", "ID", "Check Item", "Frequency", "Priority", "Red Flag", "Command", "Status", "Assignee", "Notes", "Cluster", "Check Date"];
+            const rows = state.filter(r => r.status !== "Pass" && r.status !== "N/A").map(r => [r.sec, r.id, r.item, r.freq, r.pri, r.red, r.cmd, r.status || "Unchecked", r.assignee, r.notes, cl, dt]);
+            const csv = "\uFEFF" + [hdr, ...rows].map(r => r.map(escCSV).join(",")).join("\r\n");
+            const b = new Blob([csv], {
+                type: "text/csv;charset=utf-8;"
+            });
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(b);
+            a.download = `MongoDB_HealthCheck_${cl||"cluster"}_${dt}.csv`;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        // Init
+        (function() {
+            document.getElementById("checkdate").value = new Date().toISOString().split("T")[0];
+            const secs = [...new Set(state.map(r => r.sec))];
+            const sel = document.getElementById("secFilter");
+            secs.forEach(s => {
+                const o = document.createElement("option");
+                o.textContent = s;
+                sel.appendChild(o);
+            });
+            loadState();
+            render();
+            document.getElementById("search").addEventListener("input", render);
+            document.getElementById("secFilter").addEventListener("change", render);
+            document.getElementById("freqFilter").addEventListener("change", render);
+            document.getElementById("cluster").addEventListener("change", saveState);
+            document.getElementById("checkdate").addEventListener("change", saveState);
+        })();
+    </script>
+</body>
+
+</html>
