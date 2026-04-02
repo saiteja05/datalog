@@ -488,6 +488,14 @@
             border-color: rgba(34,197,94,0.5);
         }
 
+        .zone-circle { transition: all 0.3s; }
+        #zone-us:hover .zone-circle { fill: rgba(255,153,0,0.15); r: 45; }
+        #zone-eu:hover .zone-circle { fill: rgba(66,133,244,0.15); r: 45; }
+        #zone-apac:hover .zone-circle { fill: rgba(0,120,212,0.15); r: 45; }
+
+        .sk-tab-btn { transition: all 0.2s; cursor: pointer; }
+        .sk-tab-btn:hover { opacity: 0.85; }
+
         .ov-footer-pill {
             display: inline-flex;
             align-items: center;
@@ -828,117 +836,213 @@
                                 across multiple servers (horizontal scaling). This allows for near-limitless
                                 scalability.</p>
                             <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                                <div class="relative min-h-[400px]">
+                                <!-- Interactive Topology -->
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-8">
                                     <!-- Application -->
-                                    <div
-                                        class="absolute top-0 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">
-                                        Application</div>
-
-                                    <!-- Mongos -->
-                                    <div
-                                        class="absolute top-24 left-1/2 -translate-x-1/2 diagram-component p-4 rounded-lg border border-indigo-400 w-48 text-center">
-                                        mongos (Router)</div>
-
-                                    <!-- Connecting Lines -->
-                                    <svg class="absolute top-0 left-0 w-full h-full" style="pointer-events: none;">
-                                        <!-- App to Mongos -->
-                                        <line x1="50%" y1="68px" x2="50%" y2="100px" stroke="#6366f1" stroke-width="2"
-                                            marker-end="url(#arrowhead)" />
-                                        <!-- Mongos to Shards -->
-                                        <line x1="50%" y1="164px" x2="25%" y2="220px" stroke="#4f46e5" stroke-width="2"
-                                            stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-                                        <line x1="50%" y1="164px" x2="75%" y2="220px" stroke="#4f46e5" stroke-width="2"
-                                            stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-                                        <!-- Mongos to Config Servers -->
-                                        <line x1="50%" y1="164px" x2="50%" y2="340px" stroke="#4f46e5" stroke-width="2"
-                                            stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
-                                        <defs>
-                                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5"
-                                                orient="auto">
-                                                <polygon points="0 0, 10 3.5, 0 7" fill="#6366f1" />
-                                            </marker>
-                                        </defs>
-                                    </svg>
-
-                                    <!-- Shards -->
-                                    <div class="absolute top-56 w-full flex justify-around">
-                                        <div class="w-1/3 text-center">
-                                            <h4 class="font-bold mb-2">Shard A</h4>
-                                            <div
-                                                class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
-                                                <div>P</div>
-                                                <div>S</div>
-                                                <div>S</div>
-                                            </div>
-                                        </div>
-                                        <div class="w-1/3 text-center">
-                                            <h4 class="font-bold mb-2">Shard B</h4>
-                                            <div
-                                                class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 space-y-2">
-                                                <div>P</div>
-                                                <div>S</div>
-                                                <div>S</div>
-                                            </div>
+                                    <div class="md:col-span-5 flex justify-center">
+                                        <div id="shard-app" class="diagram-component p-4 rounded-lg border border-indigo-400 w-52 text-center cursor-pointer transition-all" onclick="shardInsertDoc()">
+                                            <div class="text-sm text-gray-400 mb-1">Application</div>
+                                            <div class="text-xs text-green-400">Click to insert a document</div>
                                         </div>
                                     </div>
-
-                                    <!-- Config Servers -->
-                                    <div class="absolute bottom-0 left-1/2 -translate-x-1/2 text-center">
-                                        <h4 class="font-bold mb-2">Config Server Replica Set</h4>
-                                        <div
-                                            class="diagram-component p-3 bg-gray-800 rounded-lg border border-gray-600 flex space-x-2">
-                                            <div>P</div>
-                                            <div>S</div>
-                                            <div>S</div>
+                                    <!-- Arrow down -->
+                                    <div class="md:col-span-5 flex justify-center"><svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#6366f1" stroke-width="2"/><polygon points="6,24 12,32 18,24" fill="#6366f1"/></svg></div>
+                                    <!-- Mongos -->
+                                    <div class="md:col-span-5 flex justify-center">
+                                        <div id="shard-mongos" class="diagram-component p-4 rounded-lg border border-indigo-400 w-52 text-center transition-all">
+                                            <div class="font-bold text-indigo-300">mongos</div>
+                                            <div class="text-xs text-gray-500">Query Router</div>
+                                            <div id="mongos-status" class="text-[10px] text-green-400 mt-1 h-4"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Arrows to shards -->
+                                    <div class="md:col-span-5 flex justify-center gap-24">
+                                        <svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4"/><polygon points="6,24 12,32 18,24" fill="#4f46e5"/></svg>
+                                        <svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4"/><polygon points="6,24 12,32 18,24" fill="#4f46e5"/></svg>
+                                        <svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4"/><polygon points="6,24 12,32 18,24" fill="#4f46e5"/></svg>
+                                    </div>
+                                    <!-- 3 Shards -->
+                                    <div class="md:col-start-1 md:col-span-1"></div>
+                                    <div id="shard-a" class="diagram-component p-4 rounded-lg border border-green-700 bg-gray-800 text-center transition-all">
+                                        <h4 class="font-bold text-green-400 text-sm">Shard A</h4>
+                                        <div class="text-[10px] text-gray-500 mb-2">Key range: A–I</div>
+                                        <div class="flex justify-center gap-1">
+                                            <span class="w-6 h-6 bg-blue-900 border border-blue-500 rounded-full text-[10px] flex items-center justify-center font-bold">P</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                        </div>
+                                        <div id="shard-a-bar" class="mt-2 h-2 rounded-full bg-gray-700 overflow-hidden"><div class="h-full bg-green-500 transition-all duration-500" style="width:0%"></div></div>
+                                        <div id="shard-a-count" class="text-[10px] text-gray-500 mt-1">0 docs</div>
+                                    </div>
+                                    <div id="shard-b" class="diagram-component p-4 rounded-lg border border-green-700 bg-gray-800 text-center transition-all">
+                                        <h4 class="font-bold text-green-400 text-sm">Shard B</h4>
+                                        <div class="text-[10px] text-gray-500 mb-2">Key range: J–R</div>
+                                        <div class="flex justify-center gap-1">
+                                            <span class="w-6 h-6 bg-blue-900 border border-blue-500 rounded-full text-[10px] flex items-center justify-center font-bold">P</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                        </div>
+                                        <div id="shard-b-bar" class="mt-2 h-2 rounded-full bg-gray-700 overflow-hidden"><div class="h-full bg-green-500 transition-all duration-500" style="width:0%"></div></div>
+                                        <div id="shard-b-count" class="text-[10px] text-gray-500 mt-1">0 docs</div>
+                                    </div>
+                                    <div id="shard-c" class="diagram-component p-4 rounded-lg border border-green-700 bg-gray-800 text-center transition-all">
+                                        <h4 class="font-bold text-green-400 text-sm">Shard C</h4>
+                                        <div class="text-[10px] text-gray-500 mb-2">Key range: S–Z</div>
+                                        <div class="flex justify-center gap-1">
+                                            <span class="w-6 h-6 bg-blue-900 border border-blue-500 rounded-full text-[10px] flex items-center justify-center font-bold">P</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                        </div>
+                                        <div id="shard-c-bar" class="mt-2 h-2 rounded-full bg-gray-700 overflow-hidden"><div class="h-full bg-green-500 transition-all duration-500" style="width:0%"></div></div>
+                                        <div id="shard-c-count" class="text-[10px] text-gray-500 mt-1">0 docs</div>
+                                    </div>
+                                    <div class="md:col-span-1"></div>
+                                    <!-- Config Server -->
+                                    <div class="md:col-span-5 flex justify-center mt-4">
+                                        <div class="diagram-component p-3 rounded-lg border border-purple-600 bg-gray-800 text-center w-64">
+                                            <div class="font-bold text-purple-400 text-sm">Config Server RS</div>
+                                            <div class="text-[10px] text-gray-500">Chunk map &amp; metadata</div>
+                                            <div class="flex justify-center gap-1 mt-1">
+                                                <span class="w-5 h-5 bg-purple-900/40 border border-purple-500/50 rounded-full text-[9px] flex items-center justify-center">P</span>
+                                                <span class="w-5 h-5 bg-purple-900/30 border border-purple-400/30 rounded-full text-[9px] flex items-center justify-center">S</span>
+                                                <span class="w-5 h-5 bg-purple-900/30 border border-purple-400/30 rounded-full text-[9px] flex items-center justify-center">S</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="mt-6 text-slate-300 pt-4 border-t border-gray-700">
+
+                                <p id="shard-insert-status" class="text-center text-sm text-green-400 h-6 mb-4"></p>
+
+                                <div class="flex justify-center gap-3 mb-6">
+                                    <button onclick="shardInsertDoc()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors">Insert Random Document</button>
+                                    <button onclick="shardBulkInsert()" class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors">Bulk Insert (20 docs)</button>
+                                    <button onclick="shardReset()" class="bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm py-2 px-4 rounded-lg transition-colors border border-gray-600">Reset</button>
+                                </div>
+
+                                <div class="text-slate-300 pt-4 border-t border-gray-700">
                                     <h4 class="font-bold text-lg text-white mb-2">Key Components:</h4>
-                                    <ul class="list-disc list-inside space-y-2">
-                                        <li><strong>Shards:</strong> Each shard is an independent replica set that
-                                            stores a subset of the data.</li>
-                                        <li><strong>mongos (Query Router):</strong> The application connects to
-                                            `mongos`, not individual shards. This router acts as an intelligent proxy,
-                                            directing queries to the correct shard(s) based on the shard key.</li>
-                                        <li><strong>Config Servers:</strong> A dedicated replica set that stores the
-                                            cluster's metadata, including the mapping of data ranges to shards. The
-                                            `mongos` instances cache this data to route queries efficiently.</li>
+                                    <ul class="list-disc list-inside space-y-2 text-sm">
+                                        <li><strong class="text-green-400">Shards:</strong> Each shard is an independent replica set storing a subset of the data, determined by shard key ranges.</li>
+                                        <li><strong class="text-green-400">mongos (Query Router):</strong> The application connects to <code class="text-green-400">mongos</code>, not individual shards. It routes queries to the correct shard(s) based on the shard key.</li>
+                                        <li><strong class="text-green-400">Config Servers:</strong> A dedicated replica set storing the cluster's metadata — the chunk map that tells mongos which shard holds which key ranges.</li>
                                     </ul>
                                     <h4 class="font-bold text-lg text-white mt-6 mb-2">The Shard Key is Critical</h4>
-                                    <p>The choice of a <span class="font-semibold text-green-400">shard key</span> (a
-                                        field or fields in your documents) is the most important decision in a sharded
-                                        cluster. It determines how data is distributed. A poor key can lead to "hot
-                                        shards" that become bottlenecks, while a good key ensures an even spread of data
-                                        and workload. <a href="https://www.mongodb.com/docs/manual/sharding/"
-                                            target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Sharding
-                                            Docs]</a></p>
+                                    <p class="text-sm">The choice of a <span class="font-semibold text-green-400">shard key</span> determines how data is distributed. A poor key leads to "hot shards" (bottlenecks), while a good key ensures even distribution.
+                                        <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Sharding Docs]</a></p>
                                 </div>
                             </div>
                         </section>
                         <div class="space-y-8 mt-8">
-
-                            <!-- Section 1: Interactive Sharding Example -->
+                            <!-- Shard Key Strategy Comparison -->
                             <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
                                 <div class="p-8">
-                                    <h2 class="text-2xl font-bold text-green-400 mb-3">Interactive Sharding Example</h2>
-                                    <p class="text-gray-400 mb-6">Sharding distributes data across multiple servers
-                                        (shards) to support high throughput operations and large data sets. Click a user
-                                        document below to see how the `mongos` router directs it to the correct shard
-                                        based on the "country" shard key.</p>
-                                    <div class="mt-4 p-4 rounded-lg bg-black">
-                                        <svg id="sharding-svg" viewBox="0 0 600 400" class="w-full">
-                                            <!-- SVG content for sharding diagram will be inserted here by JS -->
-                                        </svg>
+                                    <h2 class="text-2xl font-bold text-green-400 mb-3">Shard Key Strategy Comparison</h2>
+                                    <p class="text-gray-400 mb-6">The choice of shard key defines how evenly data and queries spread across shards. Compare three common strategies below — click each tab to see the trade-offs.</p>
+                                    <div class="flex gap-2 mb-6 flex-wrap">
+                                        <button class="sk-tab-btn bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg" onclick="selectSkTab('ranged')">Ranged</button>
+                                        <button class="sk-tab-btn bg-gray-700 text-gray-300 text-sm font-semibold py-2 px-4 rounded-lg" onclick="selectSkTab('hashed')">Hashed</button>
+                                        <button class="sk-tab-btn bg-gray-700 text-gray-300 text-sm font-semibold py-2 px-4 rounded-lg" onclick="selectSkTab('compound')">Compound</button>
                                     </div>
+                                    <div id="sk-ranged" class="sk-panel">
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h3 class="font-bold text-white mb-2">Ranged Shard Key</h3>
+                                                <p class="text-sm text-gray-400 mb-3">Data is partitioned into contiguous ranges based on the shard key value. Documents with "close" shard key values are likely on the same chunk/shard.</p>
+                                                <div class="text-sm space-y-1">
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Efficient range queries — one shard for sequential scans</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Good for time-series or alphabetical lookups</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Monotonic keys (timestamps) cause "hot shard" — all writes go to one shard</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Uneven distribution if key values cluster</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-black rounded-lg p-4">
+                                                <div class="text-xs text-gray-500 mb-2 font-mono">// Ranged on "lastName"</div>
+                                                <div class="flex flex-col gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 0</div>
+                                                        <div class="flex-1 h-6 bg-green-800/40 rounded flex items-center px-2 text-[10px] text-green-300 border border-green-700/40">A — F</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 1</div>
+                                                        <div class="flex-1 h-6 bg-green-800/40 rounded flex items-center px-2 text-[10px] text-green-300 border border-green-700/40">G — N</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 2</div>
+                                                        <div class="flex-1 h-6 bg-green-800/40 rounded flex items-center px-2 text-[10px] text-green-300 border border-green-700/40">O — Z</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="sk-hashed" class="sk-panel" style="display:none">
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h3 class="font-bold text-white mb-2">Hashed Shard Key</h3>
+                                                <p class="text-sm text-gray-400 mb-3">MongoDB hashes the shard key value and distributes chunks based on hash ranges. This gives near-perfect uniformity.</p>
+                                                <div class="text-sm space-y-1">
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Even write distribution — no hot shards</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Great for high-write, point-lookup workloads</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Range queries scatter across all shards (broadcast)</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">No natural ordering — sorted results require merge sort</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-black rounded-lg p-4">
+                                                <div class="text-xs text-gray-500 mb-2 font-mono">// Hashed on "_id"</div>
+                                                <div class="flex flex-col gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 0</div>
+                                                        <div class="flex-1 h-6 bg-indigo-800/40 rounded flex items-center px-2 text-[10px] text-indigo-300 border border-indigo-700/40">hash: MinKey — -3074457...</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 1</div>
+                                                        <div class="flex-1 h-6 bg-indigo-800/40 rounded flex items-center px-2 text-[10px] text-indigo-300 border border-indigo-700/40">hash: -3074457... — 3074457...</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 2</div>
+                                                        <div class="flex-1 h-6 bg-indigo-800/40 rounded flex items-center px-2 text-[10px] text-indigo-300 border border-indigo-700/40">hash: 3074457... — MaxKey</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="sk-compound" class="sk-panel" style="display:none">
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h3 class="font-bold text-white mb-2">Compound Shard Key</h3>
+                                                <p class="text-sm text-gray-400 mb-3">Combines multiple fields (e.g., <code class="text-green-400">{tenantId: 1, createdAt: 1}</code>) for the best of both worlds — tenant isolation + time ordering.</p>
+                                                <div class="text-sm space-y-1">
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Targeted queries when prefix (tenantId) is included</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Fine-grained distribution — avoids monotonic hot spots</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Supports range scans on suffix field within a tenant</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Queries missing prefix hit all shards (broadcast)</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-black rounded-lg p-4">
+                                                <div class="text-xs text-gray-500 mb-2 font-mono">// Compound: {tenantId: 1, createdAt: 1}</div>
+                                                <div class="flex flex-col gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 0</div>
+                                                        <div class="flex-1 h-6 bg-amber-800/30 rounded flex items-center px-2 text-[10px] text-amber-300 border border-amber-700/40">tenant_A, 2024-01 → 2024-06</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 1</div>
+                                                        <div class="flex-1 h-6 bg-amber-800/30 rounded flex items-center px-2 text-[10px] text-amber-300 border border-amber-700/40">tenant_A, 2024-07+ | tenant_B, 2024-01→04</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 2</div>
+                                                        <div class="flex-1 h-6 bg-amber-800/30 rounded flex items-center px-2 text-[10px] text-amber-300 border border-amber-700/40">tenant_B, 2024-05+ | tenant_C, ...</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-4"><a href="https://www.mongodb.com/docs/manual/core/sharding-shard-key/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Shard Key Selection]</a></p>
                                 </div>
                             </div>
-
-
                         </div>
 
                         <section id="multi-region" class="mt-16">
-                            <h2 class="section-heading">Global Deployments</h2>
+                            <h2 class="section-heading">Global Deployments — Zone Sharding</h2>
                             <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters use
                                 <strong class="text-green-400">zone sharding</strong> to partition data across regions
                                 by a location field in the shard key. Each region owns its shard — writes are local to that
@@ -946,64 +1050,130 @@
                                 millisecond latency for every user, everywhere.
                             </p>
                             <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
-                                <p class="text-center text-sm text-gray-500 mb-4">Click a region to simulate a local write to that zone's shard</p>
-                                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
-                                    <!-- Zone 1: US -->
-                                    <div class="global-region diagram-component p-4 rounded-lg border cloud-aws cursor-pointer" onclick="simulateGlobalWrite('aws')" id="region-aws">
-                                        <h4 class="font-bold cloud-aws">AWS (us-east-1)</h4>
-                                        <p class="text-xs text-gray-500 mb-1">Zone: US</p>
-                                        <p class="text-sm">App Server</p>
-                                        <div class="mt-1"><span class="io-badge write">Local Write</span> <span class="io-badge read">Local Read</span></div>
-                                        <svg class="w-full h-12">
-                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#ff9900" stroke-width="2" class="global-flow-line" />
-                                        </svg>
-                                        <div class="p-2 bg-gray-800 rounded text-sm">Shard 1 <span class="text-gray-500">(3-node RS)</span></div>
-                                        <p class="text-[10px] text-gray-500 mt-1">location: "US"</p>
-                                        <div class="latency-badge mt-2" id="latency-aws">~2ms local</div>
+                                <!-- Interactive world map -->
+                                <p class="text-center text-sm text-gray-500 mb-2">Click a region to simulate a local write to that zone's shard</p>
+                                <div class="relative max-w-4xl mx-auto">
+                                    <svg viewBox="0 0 800 380" class="w-full" id="zone-map-svg">
+                                        <!-- Simplified world map outline -->
+                                        <rect x="0" y="0" width="800" height="380" fill="#0a1628" rx="12"/>
+                                        <!-- Grid lines -->
+                                        <line x1="0" y1="190" x2="800" y2="190" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="4 4"/>
+                                        <line x1="400" y1="0" x2="400" y2="380" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="4 4"/>
+                                        <!-- Continent shapes (simplified polygons) -->
+                                        <!-- North America -->
+                                        <path d="M80,60 L190,45 L220,70 L230,110 L210,140 L190,170 L160,180 L130,175 L100,190 L90,170 L70,130 L60,90 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- South America -->
+                                        <path d="M160,200 L200,185 L220,210 L230,250 L220,290 L200,320 L175,330 L155,310 L145,270 L140,230 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Europe -->
+                                        <path d="M360,55 L420,45 L440,60 L450,90 L430,110 L400,115 L380,100 L370,80 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Africa -->
+                                        <path d="M380,130 L430,120 L450,150 L460,200 L450,250 L430,280 L400,290 L380,270 L370,230 L365,180 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Asia -->
+                                        <path d="M460,50 L580,40 L650,60 L680,90 L690,130 L670,160 L620,170 L560,165 L500,140 L470,110 L450,80 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Australia -->
+                                        <path d="M620,230 L680,220 L710,240 L720,270 L700,290 L660,295 L630,280 L615,255 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+
+                                        <!-- Zone Circles (clickable) -->
+                                        <!-- US Zone -->
+                                        <g id="zone-us" class="cursor-pointer" onclick="simulateZoneWrite('us')">
+                                            <circle cx="160" cy="120" r="40" fill="rgba(255,153,0,0.08)" stroke="#ff9900" stroke-width="1.5" stroke-dasharray="4 4" class="zone-circle"/>
+                                            <circle cx="160" cy="120" r="6" fill="#ff9900" id="zone-us-dot"/>
+                                            <text x="160" y="105" text-anchor="middle" fill="#ff9900" font-size="11" font-weight="700">US</text>
+                                            <text x="160" y="145" text-anchor="middle" fill="#888" font-size="8">AWS us-east-1</text>
+                                            <text x="160" y="156" text-anchor="middle" fill="#666" font-size="7" id="zone-us-latency"></text>
+                                        </g>
+                                        <!-- EU Zone -->
+                                        <g id="zone-eu" class="cursor-pointer" onclick="simulateZoneWrite('eu')">
+                                            <circle cx="410" cy="85" r="40" fill="rgba(66,133,244,0.08)" stroke="#4285f4" stroke-width="1.5" stroke-dasharray="4 4" class="zone-circle"/>
+                                            <circle cx="410" cy="85" r="6" fill="#4285f4" id="zone-eu-dot"/>
+                                            <text x="410" y="70" text-anchor="middle" fill="#4285f4" font-size="11" font-weight="700">EU</text>
+                                            <text x="410" y="110" text-anchor="middle" fill="#888" font-size="8">GCP europe-west1</text>
+                                            <text x="410" y="121" text-anchor="middle" fill="#666" font-size="7" id="zone-eu-latency"></text>
+                                        </g>
+                                        <!-- APAC Zone -->
+                                        <g id="zone-apac" class="cursor-pointer" onclick="simulateZoneWrite('apac')">
+                                            <circle cx="650" cy="120" r="40" fill="rgba(0,120,212,0.08)" stroke="#0078d4" stroke-width="1.5" stroke-dasharray="4 4" class="zone-circle"/>
+                                            <circle cx="650" cy="120" r="6" fill="#0078d4" id="zone-apac-dot"/>
+                                            <text x="650" y="105" text-anchor="middle" fill="#0078d4" font-size="11" font-weight="700">APAC</text>
+                                            <text x="650" y="145" text-anchor="middle" fill="#888" font-size="8">Azure japaneast</text>
+                                            <text x="650" y="156" text-anchor="middle" fill="#666" font-size="7" id="zone-apac-latency"></text>
+                                        </g>
+
+                                        <!-- Animated pulse lines (hidden until triggered) -->
+                                        <circle id="zone-pulse" cx="0" cy="0" r="0" fill="none" stroke="#00ED64" stroke-width="2" opacity="0"/>
+
+                                        <!-- Shard boxes at bottom -->
+                                        <rect x="80" y="300" width="160" height="55" rx="8" fill="#1a2332" stroke="#ff9900" stroke-width="1"/>
+                                        <text x="160" y="320" text-anchor="middle" fill="#ff9900" font-size="10" font-weight="600">Shard 1 (3-node RS)</text>
+                                        <text x="160" y="335" text-anchor="middle" fill="#666" font-size="8">location: "US"</text>
+                                        <text x="160" y="348" text-anchor="middle" fill="#444" font-size="7" id="zone-us-count">0 writes</text>
+
+                                        <rect x="320" y="300" width="160" height="55" rx="8" fill="#1a2332" stroke="#4285f4" stroke-width="1"/>
+                                        <text x="400" y="320" text-anchor="middle" fill="#4285f4" font-size="10" font-weight="600">Shard 2 (3-node RS)</text>
+                                        <text x="400" y="335" text-anchor="middle" fill="#666" font-size="8">location: "EU"</text>
+                                        <text x="400" y="348" text-anchor="middle" fill="#444" font-size="7" id="zone-eu-count">0 writes</text>
+
+                                        <rect x="560" y="300" width="160" height="55" rx="8" fill="#1a2332" stroke="#0078d4" stroke-width="1"/>
+                                        <text x="640" y="320" text-anchor="middle" fill="#0078d4" font-size="10" font-weight="600">Shard 3 (3-node RS)</text>
+                                        <text x="640" y="335" text-anchor="middle" fill="#666" font-size="8">location: "APAC"</text>
+                                        <text x="640" y="348" text-anchor="middle" fill="#444" font-size="7" id="zone-apac-count">0 writes</text>
+
+                                        <!-- Routing lines (zone dot → shard box) -->
+                                        <line x1="160" y1="160" x2="160" y2="300" stroke="#ff9900" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" class="zone-route-line"/>
+                                        <line x1="410" y1="125" x2="400" y2="300" stroke="#4285f4" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" class="zone-route-line"/>
+                                        <line x1="650" y1="160" x2="640" y2="300" stroke="#0078d4" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" class="zone-route-line"/>
+
+                                        <!-- Legend -->
+                                        <text x="400" y="375" text-anchor="middle" fill="#555" font-size="8">✕ No cross-region replication — each shard is independent, data stays in its zone</text>
+                                    </svg>
+                                </div>
+
+                                <p id="zone-write-status" class="text-center mt-4 text-green-400 text-sm h-6"></p>
+
+                                <div class="flex justify-center gap-3 mt-3">
+                                    <button onclick="simulateZoneWrite('us')" class="text-xs font-semibold py-2 px-4 rounded-lg border transition-all" style="color:#ff9900;border-color:#ff9900;background:rgba(255,153,0,0.05)">Write to US Zone</button>
+                                    <button onclick="simulateZoneWrite('eu')" class="text-xs font-semibold py-2 px-4 rounded-lg border transition-all" style="color:#4285f4;border-color:#4285f4;background:rgba(66,133,244,0.05)">Write to EU Zone</button>
+                                    <button onclick="simulateZoneWrite('apac')" class="text-xs font-semibold py-2 px-4 rounded-lg border transition-all" style="color:#0078d4;border-color:#0078d4;background:rgba(0,120,212,0.05)">Write to APAC Zone</button>
+                                </div>
+
+                                <!-- Zone details grid -->
+                                <div class="grid md:grid-cols-3 gap-4 mt-8">
+                                    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                        <h4 class="font-bold text-sm" style="color:#ff9900">US Zone</h4>
+                                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                                            <div class="flex justify-between"><span>Cloud</span><span class="text-gray-300">AWS us-east-1</span></div>
+                                            <div class="flex justify-between"><span>Shard</span><span class="text-gray-300">Shard 1</span></div>
+                                            <div class="flex justify-between"><span>Zone Key</span><span class="text-green-400">location: "US"</span></div>
+                                            <div class="flex justify-between"><span>Local Latency</span><span class="text-green-400">~2ms</span></div>
+                                            <div class="flex justify-between"><span>Data Sovereignty</span><span class="text-green-400">US only</span></div>
+                                        </div>
                                     </div>
-                                    <!-- Zone 2: EU -->
-                                    <div class="global-region diagram-component p-4 rounded-lg border cloud-gcp cursor-pointer" onclick="simulateGlobalWrite('gcp')" id="region-gcp">
-                                        <h4 class="font-bold cloud-gcp">GCP (europe-west1)</h4>
-                                        <p class="text-xs text-gray-500 mb-1">Zone: EU</p>
-                                        <p class="text-sm">App Server</p>
-                                        <div class="mt-1"><span class="io-badge write">Local Write</span> <span class="io-badge read">Local Read</span></div>
-                                        <svg class="w-full h-12">
-                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#4285f4" stroke-width="2" class="global-flow-line" />
-                                        </svg>
-                                        <div class="p-2 bg-gray-800 rounded text-sm">Shard 2 <span class="text-gray-500">(3-node RS)</span></div>
-                                        <p class="text-[10px] text-gray-500 mt-1">location: "EU"</p>
-                                        <div class="latency-badge mt-2" id="latency-gcp">~2ms local</div>
+                                    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                        <h4 class="font-bold text-sm" style="color:#4285f4">EU Zone</h4>
+                                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                                            <div class="flex justify-between"><span>Cloud</span><span class="text-gray-300">GCP europe-west1</span></div>
+                                            <div class="flex justify-between"><span>Shard</span><span class="text-gray-300">Shard 2</span></div>
+                                            <div class="flex justify-between"><span>Zone Key</span><span class="text-green-400">location: "EU"</span></div>
+                                            <div class="flex justify-between"><span>Local Latency</span><span class="text-green-400">~3ms</span></div>
+                                            <div class="flex justify-between"><span>Data Sovereignty</span><span class="text-green-400">GDPR compliant</span></div>
+                                        </div>
                                     </div>
-                                    <!-- Zone 3: APAC -->
-                                    <div class="global-region diagram-component p-4 rounded-lg border cloud-azure cursor-pointer" onclick="simulateGlobalWrite('azure')" id="region-azure">
-                                        <h4 class="font-bold cloud-azure">Azure (japaneast)</h4>
-                                        <p class="text-xs text-gray-500 mb-1">Zone: APAC</p>
-                                        <p class="text-sm">App Server</p>
-                                        <div class="mt-1"><span class="io-badge write">Local Write</span> <span class="io-badge read">Local Read</span></div>
-                                        <svg class="w-full h-12">
-                                            <line x1="50%" y1="100%" x2="50%" y2="0" stroke="#0078d4" stroke-width="2" class="global-flow-line" />
-                                        </svg>
-                                        <div class="p-2 bg-gray-800 rounded text-sm">Shard 3 <span class="text-gray-500">(3-node RS)</span></div>
-                                        <p class="text-[10px] text-gray-500 mt-1">location: "APAC"</p>
-                                        <div class="latency-badge mt-2" id="latency-azure">~2ms local</div>
+                                    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                        <h4 class="font-bold text-sm" style="color:#0078d4">APAC Zone</h4>
+                                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                                            <div class="flex justify-between"><span>Cloud</span><span class="text-gray-300">Azure japaneast</span></div>
+                                            <div class="flex justify-between"><span>Shard</span><span class="text-gray-300">Shard 3</span></div>
+                                            <div class="flex justify-between"><span>Zone Key</span><span class="text-green-400">location: "APAC"</span></div>
+                                            <div class="flex justify-between"><span>Local Latency</span><span class="text-green-400">~2ms</span></div>
+                                            <div class="flex justify-between"><span>Data Sovereignty</span><span class="text-green-400">APAC only</span></div>
+                                        </div>
                                     </div>
                                 </div>
 
-                                <!-- No cross-region lines — shards are independent -->
-                                <div class="mt-4 text-center">
-                                    <span class="inline-block bg-gray-800 text-gray-400 text-xs px-4 py-2 rounded-full border border-gray-700">
-                                        ✕ No cross-region replication — each shard is independent, data stays in its zone
-                                    </span>
-                                </div>
-
-                                <p id="global-write-status" class="text-center mt-2 text-green-400 text-sm h-6"></p>
-
-                                <p class="text-center mt-4 text-slate-400">
-                                    The <code class="text-green-400 text-xs">mongos</code> router uses the
-                                    <code class="text-green-400 text-xs">location</code> field in the shard key to route
-                                    each document to the correct zone's shard. A user in the EU writes to Shard 2 locally
-                                    (~2ms); that data never leaves Europe. Each shard is a 3-member replica set for HA
-                                    within the zone.
+                                <p class="text-center mt-6 text-slate-400 text-sm">
+                                    The <code class="text-green-400">mongos</code> router uses the
+                                    <code class="text-green-400">location</code> field in the shard key to route
+                                    each document to the correct zone's shard. Data never leaves the zone. Each shard is a 3-member replica set for HA within the zone.
                                     <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank" rel="noopener noreferrer"
                                         class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a>
                                 </p>
@@ -1014,9 +1184,9 @@
                             <h2 class="section-heading">Simplicity of Document Model</h2>
                             <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
                                 <div class="p-8">
-                                    <h2 class="text-2xl font-bold text-green-400 mb-3">From 4NF to Document Model</h2>
-                                    <p class="text-gray-400 mb-6">Relational databases often require complex schemas
-                                        (like 4th Normal Form) with many tables and joins to avoid data redundancy. The
+                                    <h2 class="text-2xl font-bold text-green-400 mb-3">From 3NF to Document Model</h2>
+                                    <p class="text-gray-400 mb-6">Relational databases typically use 3rd Normal Form (3NF) schemas
+                                        with multiple tables and foreign-key joins to reduce data redundancy. The
                                         document model simplifies this by embedding related data in a single document.
                                         Click a relational table to see how it maps to the intuitive document structure.
                                     </p>
@@ -1414,55 +1584,124 @@
 
         document.addEventListener('DOMContentLoaded', function () {
 
-            // --- Sharding Diagram Logic ---
-            const shardingSVG = document.getElementById('sharding-svg');
-            if (shardingSVG) {
-                const dataPoints = [
-                    { id: 'user1', country: 'USA', color: '#f56565' },
-                    { id: 'user2', country: 'India', color: '#48bb78' },
-                    { id: 'user3', country: 'Germany', color: '#4299e1' },
-                    { id: 'user4', country: 'Hungary', color: '#f56545' },
-                ];
+            // --- Interactive Sharding Simulation ---
+            const shardCounts = { a: 0, b: 0, c: 0 };
+            const words = ['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliet','Kilo','Lima','Mike','November','Oscar','Papa','Quebec','Romeo','Sierra','Tango','Uniform','Victor','Whiskey','Xray','Yankee','Zulu'];
 
-                const shardRanges = {
-                    'Shard A (A-G)': { x: 100, y: 300, color: '#4a5568' },
-                    'Shard B (H-P)': { x: 300, y: 300, color: '#4a5568' },
-                    'Shard C (Q-Z)': { x: 500, y: 300, color: '#4a5568' },
-                };
-
-                const getShardForCountry = (country) => {
-                    const firstLetter = country.toUpperCase().charAt(0);
-                    if (firstLetter >= 'A' && firstLetter <= 'G') return shardRanges['Shard A (A-G)'];
-                    if (firstLetter >= 'H' && firstLetter <= 'P') return shardRanges['Shard B (H-P)'];
-                    return shardRanges['Shard C (Q-Z)'];
-                };
-
-                const renderShardingDiagram = (highlightedPath = null) => {
-                    let svgContent = `
-                        <defs>
-                            <marker id="arrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#666" /></marker>
-                        </defs>
-                        <text x="300" y="20" font-size="15" fill="#a0aec0" text-anchor="middle">Click a User Document to Route</text>
-                        <!-- Data Points -->
-                        ${dataPoints.map((d, i) => `<g class="diagram-component" onclick="renderShardingDiagram('${d.id}')"><rect x="${75 + i * 120}" y="50" width="100" height="40" rx="5" fill="${d.color}" /><text x="${125 + i * 120}" y="75" text-anchor="middle" fill="black" font-weight="bold">${d.country}</text></g>`).join('')}
-                        <!-- Mongos Router -->
-                        <rect x="250" y="150" width="100" height="50" rx="5" fill="#2d3748" stroke="#4a5568" /><text x="300" y="180" text-anchor="middle" fill="#a0aec0">mongos</text>
-                        <!-- Shards -->
-                        ${Object.entries(shardRanges).map(([key, val]) => `<g><rect x="${val.x - 50}" y="${val.y - 25}" width="100" height="50" rx="5" fill="${val.color}" stroke="#63b3ed" /><text x="${val.x}" y="${val.y}" text-anchor="middle" fill="#e2e8f0"  font-size="13">${key}</text></g>`).join('')}
-                    `;
-
-                    if (highlightedPath) {
-                        const data = dataPoints.find(d => d.id === highlightedPath);
-                        const startX = 125 + dataPoints.indexOf(data) * 120;
-                        const shard = getShardForCountry(data.country);
-                        svgContent += `<path class="shard-path highlight-path" d="M ${startX} 90 Q ${startX} 175, 300 175 T ${shard.x} ${shard.y - 25}" stroke="${data.color}" stroke-width="3" fill="none" marker-end="url(#arrow)" />`;
-                    }
-                    shardingSVG.innerHTML = svgContent;
-                };
-                renderShardingDiagram();
-                // Attach render function to window to be accessible from inline onclick
-                window.renderShardingDiagram = renderShardingDiagram;
+            function getShardForKey(word) {
+                const c = word.charAt(0).toUpperCase();
+                if (c >= 'A' && c <= 'I') return 'a';
+                if (c >= 'J' && c <= 'R') return 'b';
+                return 'c';
             }
+            function updateShardUI() {
+                const total = Math.max(shardCounts.a + shardCounts.b + shardCounts.c, 1);
+                ['a','b','c'].forEach(s => {
+                    const pct = Math.round((shardCounts[s] / total) * 100);
+                    const bar = document.querySelector('#shard-' + s + '-bar div');
+                    const count = document.getElementById('shard-' + s + '-count');
+                    if (bar) bar.style.width = pct + '%';
+                    if (count) count.textContent = shardCounts[s] + ' docs';
+                });
+            }
+            function flashElement(el, color) {
+                el.style.boxShadow = '0 0 20px ' + color;
+                setTimeout(() => { el.style.boxShadow = ''; }, 500);
+            }
+            window.shardInsertDoc = function() {
+                const word = words[Math.floor(Math.random() * words.length)];
+                const shard = getShardForKey(word);
+                shardCounts[shard]++;
+                const mongosEl = document.getElementById('shard-mongos');
+                const shardEl = document.getElementById('shard-' + shard);
+                const statusEl = document.getElementById('shard-insert-status');
+                const mongosStatus = document.getElementById('mongos-status');
+
+                mongosStatus.textContent = 'Routing "' + word + '" → Shard ' + shard.toUpperCase();
+                flashElement(mongosEl, 'rgba(99,102,241,0.5)');
+                setTimeout(() => {
+                    flashElement(shardEl, 'rgba(0,237,100,0.4)');
+                    mongosStatus.textContent = '';
+                    statusEl.textContent = '✅ { name: "' + word + '" } → Shard ' + shard.toUpperCase() + ' (range ' + (shard === 'a' ? 'A–I' : shard === 'b' ? 'J–R' : 'S–Z') + ')';
+                    updateShardUI();
+                    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+                }, 400);
+            };
+            window.shardBulkInsert = function() {
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i >= 20) { clearInterval(interval); return; }
+                    shardInsertDoc();
+                    i++;
+                }, 150);
+            };
+            window.shardReset = function() {
+                shardCounts.a = 0; shardCounts.b = 0; shardCounts.c = 0;
+                updateShardUI();
+                document.getElementById('shard-insert-status').textContent = '';
+            };
+
+            // --- Shard Key Tab Selector ---
+            window.selectSkTab = function(tab) {
+                document.querySelectorAll('.sk-panel').forEach(p => p.style.display = 'none');
+                document.querySelectorAll('.sk-tab-btn').forEach(b => { b.classList.remove('bg-green-600','text-white'); b.classList.add('bg-gray-700','text-gray-300'); });
+                const panel = document.getElementById('sk-' + tab);
+                if (panel) panel.style.display = '';
+                event.target.classList.remove('bg-gray-700','text-gray-300');
+                event.target.classList.add('bg-green-600','text-white');
+            };
+
+            // --- Zone Sharding Simulation ---
+            const zoneCounts = { us: 0, eu: 0, apac: 0 };
+            const zoneColors = { us: '#ff9900', eu: '#4285f4', apac: '#0078d4' };
+            const zoneNames = { us: 'US', eu: 'EU', apac: 'APAC' };
+            const zoneShards = { us: 'Shard 1', eu: 'Shard 2', apac: 'Shard 3' };
+            const zoneDotCoords = { us: {cx:160,cy:120}, eu: {cx:410,cy:85}, apac: {cx:650,cy:120} };
+            const zoneLatencies = { us: '~2ms', eu: '~3ms', apac: '~2ms' };
+            let zoneWriteRunning = false;
+
+            window.simulateZoneWrite = function(zone) {
+                if (zoneWriteRunning) return;
+                zoneWriteRunning = true;
+                zoneCounts[zone]++;
+
+                const statusEl = document.getElementById('zone-write-status');
+                const dot = document.getElementById('zone-' + zone + '-dot');
+                const latLabel = document.getElementById('zone-' + zone + '-latency');
+                const countLabel = document.getElementById('zone-' + zone + '-count');
+                const pulse = document.getElementById('zone-pulse');
+                const coords = zoneDotCoords[zone];
+
+                // Animate pulse
+                pulse.setAttribute('cx', coords.cx);
+                pulse.setAttribute('cy', coords.cy);
+                pulse.setAttribute('r', '6');
+                pulse.setAttribute('stroke', zoneColors[zone]);
+                pulse.setAttribute('opacity', '1');
+                pulse.style.transition = 'none';
+                requestAnimationFrame(() => {
+                    pulse.style.transition = 'all 0.6s ease-out';
+                    pulse.setAttribute('r', '50');
+                    pulse.setAttribute('opacity', '0');
+                });
+
+                // Animate dot scale
+                dot.setAttribute('r', '10');
+                setTimeout(() => dot.setAttribute('r', '6'), 300);
+
+                latLabel.textContent = zoneLatencies[zone] + ' local';
+                statusEl.textContent = '🔀 mongos routes { location: "' + zoneNames[zone] + '" } → ' + zoneShards[zone];
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Write acknowledged on ' + zoneShards[zone] + ' in ' + zoneLatencies[zone] + ' — data stays in ' + zoneNames[zone] + ' zone';
+                    countLabel.textContent = zoneCounts[zone] + ' writes';
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                        latLabel.textContent = '';
+                        zoneWriteRunning = false;
+                    }, 2500);
+                }, 800);
+            };
 
             // --- Schema Diagram Logic ---
             const schemaSVG = document.getElementById('schema-svg');
@@ -1479,7 +1718,7 @@
 
                 const renderSchemaDiagram = (highlightedPart = null) => {
                     let svgContent = `
-                        <text x="110" y="20" font-size="16" fill="#a0aec0" text-anchor="middle">Relational Schema (4NF)</text>
+                        <text x="110" y="20" font-size="14" fill="#a0aec0" text-anchor="middle">Relational Schema (3NF)</text>
                         <text x="460" y="20" font-size="16" fill="#a0aec0" text-anchor="middle">Document Model</text>
                     `;
 
@@ -1527,43 +1766,7 @@
 
         });
 
-        // --- Global Write Simulation ---
-        let globalWriteRunning = false;
-        function simulateGlobalWrite(region) {
-            if (globalWriteRunning) return;
-            globalWriteRunning = true;
-
-            const regions = ['aws', 'gcp', 'azure'];
-            const zones = { aws: 'US', gcp: 'EU', azure: 'APAC' };
-            const names = { aws: 'AWS us-east-1', gcp: 'GCP europe-west1', azure: 'Azure japaneast' };
-            const shards = { aws: 'Shard 1', gcp: 'Shard 2', azure: 'Shard 3' };
-            const latencies = { aws: '~2ms', gcp: '~3ms', azure: '~2ms' };
-            const statusEl = document.getElementById('global-write-status');
-
-            const activeRegion = document.getElementById('region-' + region);
-            activeRegion.classList.add('region-active');
-
-            const latBadge = document.getElementById('latency-' + region);
-            latBadge.textContent = latencies[region] + ' local write';
-            latBadge.classList.add('visible');
-
-            statusEl.textContent = '🔀 mongos routes { location: "' + zones[region] + '" } → ' + shards[region] + ' at ' + names[region];
-
-            setTimeout(() => {
-                statusEl.textContent = '✍ Write acknowledged locally on ' + shards[region] + ' in ' + latencies[region] + ' — data stays in ' + zones[region] + ' zone';
-
-                setTimeout(() => {
-                    statusEl.textContent = '✅ Done. No cross-region hop. ' + shards[region] + ' replica set handles HA within ' + zones[region] + '.';
-                    activeRegion.classList.remove('region-active');
-                    setTimeout(() => {
-                        latBadge.classList.remove('visible');
-                        statusEl.textContent = '';
-                        globalWriteRunning = false;
-                    }, 2500);
-                }, 1200);
-            }, 800);
-        }
-        window.simulateGlobalWrite = simulateGlobalWrite;
+        
     </script>
     <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
     <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
