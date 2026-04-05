@@ -168,8 +168,13 @@
       if (inp.type === 'email') emailInp = inp;
     });
 
+    function isHp(inp) {
+      return !!(inp.closest && inp.closest('.emailoctopus-form-row-hp'));
+    }
+
     function pick(needles) {
       for (var i = 0; i < candidates.length; i++) {
+        if (isHp(candidates[i])) continue;
         var b = normBlob(candidates[i]);
         for (var j = 0; j < needles.length; j++) {
           if (b.indexOf(needles[j].replace(/[\s_-]/g, '')) !== -1) return candidates[i];
@@ -178,12 +183,27 @@
       return null;
     }
 
+    function pickSkipEmail(needles) {
+      for (var i = 0; i < candidates.length; i++) {
+        var inp = candidates[i];
+        if (isHp(inp)) continue;
+        if ((inp.type || '').toLowerCase() === 'email') continue;
+        var b = normBlob(inp);
+        for (var j = 0; j < needles.length; j++) {
+          if (b.indexOf(needles[j].replace(/[\s_-]/g, '')) !== -1) return inp;
+        }
+      }
+      return null;
+    }
+
     var fn = pick(['firstname', 'first', 'given']);
     var ln = pick(['lastname', 'last', 'surname', 'family']);
-    var co = pick(['company', 'organization', 'organisation', 'org']);
-    var po = pick(['position', 'jobtitle', 'title', 'role']);
+    var co = pickSkipEmail(['company', 'organization', 'organisation', 'org', 'employer', 'business']);
+    var po = pickSkipEmail(['position', 'jobtitle', 'title', 'role']);
+    var urlInp = pickSkipEmail(['url', 'pageurl', 'page_url', 'website', 'webpage', 'landing', 'signupsource']);
 
     var texts = candidates.filter(function (inp) {
+      if (isHp(inp)) return false;
       var ty = (inp.type || 'text').toLowerCase();
       return ty !== 'email' && ty !== 'checkbox' && ty !== 'radio';
     });
@@ -196,6 +216,10 @@
     else if (texts[2]) setInputValue(texts[2], data.company);
     if (po) setInputValue(po, data.position);
     else if (texts[3]) setInputValue(texts[3], data.position);
+    if (data.url) {
+      if (urlInp) setInputValue(urlInp, data.url);
+      else if (texts[4]) setInputValue(texts[4], data.url);
+    }
 
     if (emailInp) setInputValue(emailInp, data.email);
 
@@ -644,7 +668,8 @@
         lastName: lastName,
         email: email,
         company: company,
-        position: position
+        position: position,
+        url: location.href
       };
 
       oBtn.disabled = true;
