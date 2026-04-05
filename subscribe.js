@@ -10,6 +10,8 @@
 //   field_4 Position    → {{Position}}    |  field_5 URL       → {{URL}}
 // Reordering fields in the EO form editor changes field_* indices; we resolve Company/URL by placeholder
 // and patch FormData before fetch so Vue empty model does not wipe them.
+// Email gate: HTML5 checkValidity + structure + DNS MX/A (Cloudflare DoH). connect-src must allow
+// https://cloudflare-dns.com or DNS step fails open (submit still allowed).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
@@ -602,21 +604,107 @@
     });
   }
 
+  /** After signup, EO merge tag {{URL}} should reflect the page they are on (each navigation). */
+  function trySyncEoLastPageUrl() {
+    if (localStorage.getItem('leadGateSyncPending') === '1') return;
+    if (localStorage.getItem('leadGateComplete') !== '1') return;
+    var raw = localStorage.getItem('leadGateProfile');
+    var profile = null;
+    try {
+      profile = raw ? JSON.parse(raw) : null;
+    } catch (eProf) {}
+    if (!profile || !profile.email) return;
+    var lead = {
+      firstName: profile.firstName || '',
+      lastName: profile.lastName || '',
+      email: profile.email,
+      company: profile.company || '',
+      position: profile.position || '',
+      url: location.href
+    };
+    ensureEoHiddenWithScript(function () {
+      startChromeGuard();
+      eoSubmit(
+        lead,
+        function () {
+          stopChromeGuard();
+        },
+        function () {
+          stopChromeGuard();
+        },
+        35000
+      );
+    });
+  }
+
   if (localStorage.getItem('subscribed') === '1' && localStorage.getItem('leadGateComplete') !== '1') {
     localStorage.setItem('leadGateComplete', '1');
   }
 
   if (isNoPopupPage(path)) {
     setTimeout(tryPendingEoRetry, 0);
+    setTimeout(trySyncEoLastPageUrl, 1400);
     return;
   }
 
   if (localStorage.getItem('leadGateComplete') === '1') {
     setTimeout(tryPendingEoRetry, 0);
+    setTimeout(trySyncEoLastPageUrl, 1400);
     return;
   }
 
   var PERSONAL = /^(gmail|googlemail|yahoo|hotmail|outlook|live|msn|aol|icloud|me|mac|mail|proton|protonmail|zoho|yandex|gmx|fastmail|tutanota|hey|pm|cock|airmail|inbox|rocketmail|rediffmail|mailinator|guerrillamail|tempmail|throwaway|10minutemail|sharklasers|guerrillamailblock|grr|dispostable)\./i;
+
+  function validateEmailStructure(emailRaw) {
+    var email = emailRaw.trim();
+    if (!email) return { ok: false, msg: 'Enter your work email.' };
+    var at = email.indexOf('@');
+    if (at < 1) return { ok: false, msg: 'Enter the name and @ before your domain (e.g. you@company.com).' };
+    if (email.lastIndexOf('@') !== at) return { ok: false, msg: 'Use exactly one @ in your email address.' };
+    var local = email.slice(0, at);
+    var domain = email.slice(at + 1).trim().toLowerCase();
+    if (!domain) return { ok: false, msg: 'Add the domain after @ (e.g. mongodb.com).' };
+    if (local.length > 64) return { ok: false, msg: 'The part before @ is too long (max 64 characters).' };
+    if (domain.length > 253) return { ok: false, msg: 'The domain part is too long.' };
+    if (/\s/.test(email)) return { ok: false, msg: 'Remove spaces from your email address.' };
+    if (domain.indexOf('..') !== -1 || domain.startsWith('.') || domain.endsWith('.')) {
+      return { ok: false, msg: 'That domain looks invalid (check dots).' };
+    }
+    if (domain.indexOf('.') === -1) return { ok: false, msg: 'Use a full domain with a suffix (e.g. company.com).' };
+    var labels = domain.split('.');
+    for (var li = 0; li < labels.length; li++) {
+      if (!labels[li] || labels[li].length > 63) return { ok: false, msg: 'That domain looks invalid.' };
+    }
+    return { ok: true, email: email, domain: domain };
+  }
+
+  function verifyDomainAcceptsMail(domain) {
+    function doh(name, type) {
+      return fetch('https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(name) + '&type=' + type, {
+        headers: { Accept: 'application/dns-json' },
+        cache: 'no-store',
+        credentials: 'omit'
+      }).then(function (r) {
+        if (!r.ok) throw new Error('skip');
+        return r.json();
+      });
+    }
+    return doh(domain, 'MX')
+      .then(function (j) {
+        if (j.Status === 3) return { ok: false, msg: 'We could not find that domain. Check the spelling after @.' };
+        if (j.Status !== 0) return { ok: true, skip: true };
+        if (j.Answer && j.Answer.length > 0) return { ok: true };
+        return doh(domain, 'A').then(function (ja) {
+          if (ja.Status === 3) return { ok: false, msg: 'We could not find that domain. Check the spelling after @.' };
+          if (ja.Status !== 0) return { ok: true, skip: true };
+          if (ja.Answer && ja.Answer.length > 0) return { ok: true };
+          return { ok: false, msg: 'That domain does not appear set up to receive email. Check the domain after @.' };
+        });
+      })
+      .catch(function () {
+        return { ok: true, skip: true };
+      });
+  }
 
   function lockScroll() {
     document.documentElement.style.overflow = 'hidden';
@@ -759,9 +847,16 @@
         showErr('Please fill in every field.');
         return;
       }
-      var dom = email.split('@')[1];
-      if (!dom || PERSONAL.test(dom)) {
-        elEmail.setCustomValidity('Use your work email (e.g. you@company.com)');
+
+      var struct = validateEmailStructure(email);
+      if (!struct.ok) {
+        showErr(struct.msg);
+        return;
+      }
+      email = struct.email;
+
+      elEmail.setCustomValidity('');
+      if (!elEmail.checkValidity()) {
         elEmail.reportValidity();
         elEmail.addEventListener(
           'input',
@@ -773,17 +868,21 @@
         return;
       }
 
-      var lead = {
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        company: company,
-        position: position,
-        url: location.href
-      };
+      if (PERSONAL.test(struct.domain)) {
+        elEmail.setCustomValidity('Use your work email (e.g. you@company.com)');
+        elEmail.reportValidity();
+        elEmail.addEventListener(
+          'input',
+          function once2() {
+            elEmail.setCustomValidity('');
+            elEmail.removeEventListener('input', once2);
+          }
+        );
+        return;
+      }
 
       oBtn.disabled = true;
-      oBtn.textContent = 'Submitting…';
+      oBtn.textContent = 'Checking email…';
 
       function showSuccessAndExit() {
         var oTitle = document.getElementById('sfabGateTitle');
@@ -807,41 +906,62 @@
         showErr(msg || 'Could not complete signup. Please try again.');
       }
 
-      waitForEoForm(
-        function () {
-          eoSubmit(
-            lead,
-            function () {
-              localStorage.setItem(
-                'leadGateProfile',
-                JSON.stringify({
-                  firstName: firstName,
-                  lastName: lastName,
-                  email: email,
-                  company: company,
-                  position: position
-                })
-              );
-              localStorage.setItem('leadGateComplete', '1');
-              localStorage.setItem('subscribed', '1');
-              clearSyncPending();
-              stopChromeGuard();
-              showSuccessAndExit();
-            },
-            function () {
-              markSyncPending(lead);
-              onEoFailure(
-                'Email Octopus did not confirm this signup (timeout or error). Check your connection and use Submit and continue to retry.'
-              );
-            },
-            45000
-          );
-        },
-        function () {
-          onEoFailure('The signup form is still loading. Wait a few seconds and try again.');
-        },
-        45000
-      );
+      verifyDomainAcceptsMail(struct.domain).then(function (dns) {
+        if (!dns.ok) {
+          oBtn.disabled = false;
+          oBtn.textContent = 'Submit and continue';
+          showErr(dns.msg);
+          return;
+        }
+
+        var lead = {
+          firstName: firstName,
+          lastName: lastName,
+          email: email,
+          company: company,
+          position: position,
+          url: location.href
+        };
+
+        oBtn.textContent = 'Submitting…';
+
+        waitForEoForm(
+          function () {
+            eoSubmit(
+              lead,
+              function () {
+                localStorage.setItem(
+                  'leadGateProfile',
+                  JSON.stringify({
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email,
+                    company: company,
+                    position: position,
+                    url: location.href
+                  })
+                );
+                localStorage.setItem('leadGateComplete', '1');
+                localStorage.setItem('subscribed', '1');
+                clearSyncPending();
+                stopChromeGuard();
+                showSuccessAndExit();
+              },
+              function () {
+                markSyncPending(lead);
+                onEoFailure(
+                  'Email Octopus did not confirm this signup (timeout or error). Check your connection and use Submit and continue to retry.'
+                );
+              },
+              45000
+            );
+          },
+          function () {
+            onEoFailure('The signup form is still loading. Wait a few seconds and try again.');
+          },
+          45000
+        );
+      });
     });
 
     setTimeout(function () {
