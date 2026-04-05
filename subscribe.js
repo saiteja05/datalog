@@ -14,6 +14,9 @@
 // https://cloudflare-dns.com or DNS step fails open (submit still allowed).
 // Background: DNS outcomes cached (session, 5m); {{URL}} sync deduped per URL per tab session; bfcache
 // pageshow clears dedupe; pending-EO retry on success triggers URL sync; chrome hide debounced (0ms).
+// PostHog: only for users who passed the gate (leadGateComplete + leadGateProfile). SDK loads lazily — no
+// PostHog on first visit before signup. distinct_id = visitorId (UUID in localStorage). Autocapture off;
+// we send $pageview after identify. phc_… token; CSP: us-assets.i.posthog.com + us.i.posthog.com.
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
@@ -21,6 +24,10 @@
   var SESSION_EO_URL_SENT_KEY = 'sfabEoUrlSyncedHref';
   var DNS_CACHE_PREFIX = 'sfabDnsV1:';
   var DNS_CACHE_TTL_MS = 5 * 60 * 1000;
+  /** Project API key from PostHog → Project settings (leave empty to disable). */
+  var POSTHOG_KEY = 'phc_mV7xKEsewjvwficJyjd5wcSmZzYjxFsP3KyCZv7aE6e9';
+  /** US cloud default; use https://eu.i.posthog.com for EU hosting. Dashboard: project 370438 → https://us.posthog.com/project/370438 */
+  var POSTHOG_API_HOST = 'https://us.i.posthog.com';
 
   function subscribeScriptBase() {
     var cur = typeof document !== 'undefined' && document.currentScript && document.currentScript.src;
@@ -60,6 +67,133 @@
   function markSyncPending(lead) {
     localStorage.setItem('leadGateSyncPending', '1');
     localStorage.setItem('leadGatePendingLead', JSON.stringify(lead));
+  }
+
+  function newVisitorId() {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return 'sfab_' + Math.random().toString(36).slice(2) + '_' + Date.now().toString(36);
+  }
+
+  function parseLeadGateProfile() {
+    var raw = localStorage.getItem('leadGateProfile');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function persistLeadGateProfile(profile) {
+    try {
+      localStorage.setItem('leadGateProfile', JSON.stringify(profile));
+    } catch (e) {}
+  }
+
+  /** Stable PostHog distinct_id; backfills localStorage for older profiles. */
+  function ensureProfileVisitorId(profile) {
+    if (!profile || !profile.email) return null;
+    if (!profile.visitorId) {
+      profile.visitorId = newVisitorId();
+      persistLeadGateProfile(profile);
+    }
+    return profile.visitorId;
+  }
+
+  function identifyPostHogFromLeadGate() {
+    if (!POSTHOG_KEY || typeof window.posthog === 'undefined' || !window.posthog.identify) return;
+    if (localStorage.getItem('leadGateComplete') !== '1') return;
+    var profile = parseLeadGateProfile();
+    if (!profile || !profile.email) return;
+    var vid = ensureProfileVisitorId(profile);
+    if (!vid) return;
+    try {
+      window.posthog.identify(vid, {
+        email: profile.email,
+        first_name: profile.firstName || undefined,
+        last_name: profile.lastName || undefined,
+        company: profile.company || undefined,
+        position: profile.position || undefined
+      });
+      window.posthog.capture('$pageview', {
+        $current_url: location.href,
+        $pathname: location.pathname,
+        $host: location.host,
+        $title: typeof document !== 'undefined' ? document.title : '',
+        source: 'lead_gate_profile'
+      });
+    } catch (ePh) {}
+  }
+
+  function queuePostHogIdentifyAfterSignup() {
+    var attempts = 0;
+    function tryNow() {
+      if (typeof window.posthog !== 'undefined' && window.posthog.identify) {
+        identifyPostHogFromLeadGate();
+        return;
+      }
+      if (++attempts < 80) setTimeout(tryNow, 80);
+    }
+    tryNow();
+  }
+
+  function installPostHog() {
+    if (!POSTHOG_KEY || window.__SFAB_POSTHOG_INSTALLED) return;
+    window.__SFAB_POSTHOG_INSTALLED = true;
+    // Official loader stub (see posthog.com/docs/libraries/js).
+    !(function (t, e) {
+      var o, n, p, r;
+      e.__SV ||
+        ((window.posthog = e),
+        (e._i = []),
+        (e.init = function (i, s, a) {
+          function g(t, e) {
+            var o = e.split('.');
+            2 == o.length && ((t = t[o[0]]), (e = o[1])),
+              (t[e] = function () {
+                t.push([e].concat(Array.prototype.slice.call(arguments, 0)));
+              });
+          }
+          (p = t.createElement('script')).type = 'text/javascript';
+          p.crossOrigin = 'anonymous';
+          p.async = !0;
+          p.src = s.api_host.replace('.i.posthog.com', '-assets.i.posthog.com') + '/static/array.js';
+          (r = t.getElementsByTagName('script')[0]).parentNode.insertBefore(p, r);
+          var u = e;
+          for (
+            void 0 !== a ? (u = e[a] = []) : (a = 'posthog'),
+              u.people = u.people || [],
+              u.toString = function (t) {
+                var e = 'posthog';
+                return 'posthog' !== a && (e += '.' + a), t || (e += ' (stub)'), e;
+              },
+              u.people.toString = function () {
+                return u.toString(1) + '.people (stub)';
+              },
+              o =
+                'init capture register register_once register_for_session unregister unregister_for_session getFeatureFlag getFeatureFlagPayload isFeatureEnabled reloadFeatureFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSessionId getSurveys getActiveMatchingSurveys renderSurvey canRenderSurvey getNextSurveyStep identify setPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException loadToolbar get_property getSessionProperty createPersonProfile opt_in_capturing opt_out_capturing has_opted_in_capturing has_opted_out_capturing clear_opt_in_out_capturing debug'.split(
+                  ' '
+                ),
+              n = 0;
+            n < o.length;
+            n++
+          )
+            g(u, o[n]);
+          e._i.push([i, s, a]);
+        }),
+        (e.__SV = 1));
+    })(document, window.posthog || []);
+    window.posthog.init(POSTHOG_KEY, {
+      api_host: POSTHOG_API_HOST,
+      defaults: '2026-01-30',
+      person_profiles: 'identified_only',
+      autocapture: false,
+      capture_pageview: false,
+      disable_session_recording: true,
+      loaded: function () {
+        identifyPostHogFromLeadGate();
+      }
+    });
   }
 
   function inSubscribeShell(el) {
@@ -679,11 +813,18 @@
     try {
       sessionStorage.removeItem(SESSION_EO_URL_SENT_KEY);
     } catch (eBf) {}
-    setTimeout(trySyncEoLastPageUrl, 500);
+    setTimeout(function () {
+      trySyncEoLastPageUrl();
+      identifyPostHogFromLeadGate();
+    }, 500);
   }
 
   if (localStorage.getItem('subscribed') === '1' && localStorage.getItem('leadGateComplete') !== '1') {
     localStorage.setItem('leadGateComplete', '1');
+  }
+
+  if (localStorage.getItem('leadGateComplete') === '1') {
+    installPostHog();
   }
 
   if (isNoPopupPage(path)) {
@@ -1008,13 +1149,16 @@
                     email: email,
                     company: company,
                     position: position,
-                    url: location.href
+                    url: location.href,
+                    visitorId: newVisitorId()
                   })
                 );
                 localStorage.setItem('leadGateComplete', '1');
                 localStorage.setItem('subscribed', '1');
                 clearSyncPending();
                 stopChromeGuard();
+                installPostHog();
+                queuePostHogIdentifyAfterSignup();
                 showSuccessAndExit();
               },
               function () {
