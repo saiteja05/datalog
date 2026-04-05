@@ -16,7 +16,7 @@
 // pageshow clears dedupe; pending-EO retry on success triggers URL sync; chrome hide debounced (0ms).
 // PostHog: only for users who passed the gate (leadGateComplete + leadGateProfile). SDK loads lazily — no
 // PostHog on first visit before signup. distinct_id = visitorId (UUID in localStorage). Autocapture off;
-// we send $pageview after identify. phc_… token; CSP: us-assets.i.posthog.com + us.i.posthog.com.
+// we send $pageview after identify. phc_… token; CSP script-src + connect-src: us-assets.i.posthog.com and us.i.posthog.com (maps use connect-src).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
