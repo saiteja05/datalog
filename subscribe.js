@@ -12,9 +12,15 @@
 // and patch FormData before fetch so Vue empty model does not wipe them.
 // Email gate: HTML5 checkValidity + structure + DNS MX/A (Cloudflare DoH). connect-src must allow
 // https://cloudflare-dns.com or DNS step fails open (submit still allowed).
+// Background: DNS outcomes cached (session, 5m); {{URL}} sync deduped per URL per tab session; bfcache
+// pageshow clears dedupe; pending-EO retry on success triggers URL sync; chrome hide debounced (0ms).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
+  var EO_BG_SYNC_DELAY_MS = 1650;
+  var SESSION_EO_URL_SENT_KEY = 'sfabEoUrlSyncedHref';
+  var DNS_CACHE_PREFIX = 'sfabDnsV1:';
+  var DNS_CACHE_TTL_MS = 5 * 60 * 1000;
 
   function subscribeScriptBase() {
     var cur = typeof document !== 'undefined' && document.currentScript && document.currentScript.src;
@@ -33,6 +39,7 @@
   var ivChrome = null;
   var ivChromeTick = 0;
   var moEoAria = null;
+  var debounceChromeHideTimer = null;
 
   function isNoPopupPage(p) {
     return (
@@ -122,7 +129,14 @@
 
   function runChromeHides() {
     stripEoHiddenAriaConflict();
-    hideFloatingSignupChrome();
+    if (debounceChromeHideTimer != null) {
+      clearTimeout(debounceChromeHideTimer);
+      debounceChromeHideTimer = null;
+    }
+    debounceChromeHideTimer = setTimeout(function () {
+      debounceChromeHideTimer = null;
+      hideFloatingSignupChrome();
+    }, 0);
   }
 
   function startChromeGuard() {
@@ -140,6 +154,10 @@
   }
 
   function stopChromeGuard() {
+    if (debounceChromeHideTimer != null) {
+      clearTimeout(debounceChromeHideTimer);
+      debounceChromeHideTimer = null;
+    }
     if (moChrome) {
       moChrome.disconnect();
       moChrome = null;
@@ -522,9 +540,14 @@
         function () {
           clearSyncPending();
           stopChromeGuard();
+          try {
+            sessionStorage.removeItem(SESSION_EO_URL_SENT_KEY);
+          } catch (eClr) {}
+          setTimeout(trySyncEoLastPageUrl, 900);
         },
         function () {
           if (attempt < maxAttempts) setTimeout(again, delayMs);
+          else stopChromeGuard();
         },
         40000
       );
@@ -604,10 +627,14 @@
     });
   }
 
-  /** After signup, EO merge tag {{URL}} should reflect the page they are on (each navigation). */
+  /** After signup, EO merge tag {{URL}} reflects the current page (throttled: once per URL per tab session). */
   function trySyncEoLastPageUrl() {
     if (localStorage.getItem('leadGateSyncPending') === '1') return;
     if (localStorage.getItem('leadGateComplete') !== '1') return;
+    var href = location.href;
+    try {
+      if (sessionStorage.getItem(SESSION_EO_URL_SENT_KEY) === href) return;
+    } catch (eDedupe) {}
     var raw = localStorage.getItem('leadGateProfile');
     var profile = null;
     try {
@@ -620,13 +647,16 @@
       email: profile.email,
       company: profile.company || '',
       position: profile.position || '',
-      url: location.href
+      url: href
     };
     ensureEoHiddenWithScript(function () {
       startChromeGuard();
       eoSubmit(
         lead,
         function () {
+          try {
+            sessionStorage.setItem(SESSION_EO_URL_SENT_KEY, href);
+          } catch (eOk) {}
           stopChromeGuard();
         },
         function () {
@@ -637,19 +667,34 @@
     });
   }
 
+  function scheduleBackgroundEoSync() {
+    setTimeout(tryPendingEoRetry, 0);
+    setTimeout(trySyncEoLastPageUrl, EO_BG_SYNC_DELAY_MS);
+  }
+
+  function onBfCachePageShow(ev) {
+    if (!ev || ev.persisted !== true) return;
+    if (localStorage.getItem('leadGateSyncPending') === '1') return;
+    if (localStorage.getItem('leadGateComplete') !== '1') return;
+    try {
+      sessionStorage.removeItem(SESSION_EO_URL_SENT_KEY);
+    } catch (eBf) {}
+    setTimeout(trySyncEoLastPageUrl, 500);
+  }
+
   if (localStorage.getItem('subscribed') === '1' && localStorage.getItem('leadGateComplete') !== '1') {
     localStorage.setItem('leadGateComplete', '1');
   }
 
   if (isNoPopupPage(path)) {
-    setTimeout(tryPendingEoRetry, 0);
-    setTimeout(trySyncEoLastPageUrl, 1400);
+    scheduleBackgroundEoSync();
+    window.addEventListener('pageshow', onBfCachePageShow, false);
     return;
   }
 
   if (localStorage.getItem('leadGateComplete') === '1') {
-    setTimeout(tryPendingEoRetry, 0);
-    setTimeout(trySyncEoLastPageUrl, 1400);
+    scheduleBackgroundEoSync();
+    window.addEventListener('pageshow', onBfCachePageShow, false);
     return;
   }
 
@@ -679,6 +724,31 @@
   }
 
   function verifyDomainAcceptsMail(domain) {
+    var cacheKey = DNS_CACHE_PREFIX + domain;
+    try {
+      var cachedRaw = sessionStorage.getItem(cacheKey);
+      if (cachedRaw) {
+        var cachedRow = JSON.parse(cachedRaw);
+        if (
+          cachedRow &&
+          cachedRow.v &&
+          typeof cachedRow.t === 'number' &&
+          Date.now() - cachedRow.t < DNS_CACHE_TTL_MS
+        ) {
+          return Promise.resolve(cachedRow.v);
+        }
+      }
+    } catch (eCacheRead) {}
+
+    function cacheDnsResult(out) {
+      if (out && !out.skip) {
+        try {
+          sessionStorage.setItem(cacheKey, JSON.stringify({ t: Date.now(), v: out }));
+        } catch (eCacheWrite) {}
+      }
+      return out;
+    }
+
     function doh(name, type) {
       return fetch('https://cloudflare-dns.com/dns-query?name=' + encodeURIComponent(name) + '&type=' + type, {
         headers: { Accept: 'application/dns-json' },
@@ -700,6 +770,9 @@
           if (ja.Answer && ja.Answer.length > 0) return { ok: true };
           return { ok: false, msg: 'That domain does not appear set up to receive email. Check the domain after @.' };
         });
+      })
+      .then(function (out) {
+        return Promise.resolve(out).then(cacheDnsResult);
       })
       .catch(function () {
         return { ok: true, skip: true };
