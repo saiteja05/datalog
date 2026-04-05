@@ -1,6 +1,15 @@
 // subscribe.js — Lead gate + Email Octopus (hidden embed).
 // EO v2 + invisible reCAPTCHA: their script expects input[name=g-recaptcha-response] but
 // only adds recaptcha-response — we mirror it on submit (capture). Success: emailoctopus:form.success + DOM.
+//
+// List merge tags (Email Octopus contact fields) are NOT the POST names. The embed submits field_0…field_N;
+// EO maps those to {{EmailAddress}}, {{FirstName}}, {{LastName}}, {{Company}}, {{Position}}, {{URL}}.
+// For this form (EO_FORM_ID), generated markup has typically:
+//   field_1 First name  → {{FirstName}}   |  field_2 Last name → {{LastName}}
+//   field_0 Email       → {{EmailAddress}} |  field_3 Company   → {{Company}}
+//   field_4 Position    → {{Position}}    |  field_5 URL       → {{URL}}
+// Reordering fields in the EO form editor changes field_* indices; we resolve Company/URL by placeholder
+// and patch FormData before fetch so Vue empty model does not wipe them.
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
@@ -144,15 +153,56 @@
   }
 
   function setInputValue(inp, val) {
-    var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-    s.call(inp, val);
+    if (!inp) return;
+    var v = val == null ? '' : String(val);
+    var tag = (inp.tagName || '').toUpperCase();
+    if (tag === 'SELECT') {
+      inp.value = v;
+    } else if (tag === 'TEXTAREA') {
+      var ts = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value').set;
+      ts.call(inp, v);
+    } else {
+      var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+      s.call(inp, v);
+    }
     try {
-      if (typeof InputEvent === 'function') inp.dispatchEvent(new InputEvent('input', { bubbles: true }));
-      else inp.dispatchEvent(new Event('input', { bubbles: true }));
+      if (typeof InputEvent === 'function') {
+        inp.dispatchEvent(new InputEvent('input', { bubbles: true, composed: true }));
+      } else {
+        inp.dispatchEvent(new Event('input', { bubbles: true, composed: true }));
+      }
     } catch (eIn) {
       inp.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    inp.dispatchEvent(new Event('change', { bubbles: true }));
+    try {
+      inp.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+    } catch (eCh) {
+      inp.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+
+  function findEoFieldByExactPlaceholder(formEl, exactLower) {
+    var nodes = formEl.querySelectorAll('input, textarea, select');
+    for (var i = 0; i < nodes.length; i++) {
+      var inp = nodes[i];
+      var ty = (inp.type || '').toLowerCase();
+      if (ty === 'hidden' || ty === 'submit' || ty === 'button') continue;
+      if (inp.closest && inp.closest('.emailoctopus-form-row-hp')) continue;
+      if (ty === 'email' && exactLower === 'company') continue;
+      var ph = (inp.getAttribute('placeholder') || '').trim().toLowerCase();
+      var al = (inp.getAttribute('aria-label') || '').trim().toLowerCase();
+      if (ph === exactLower || al === exactLower) return inp;
+    }
+    return null;
+  }
+
+  function setEoNamedField(formEl, num, val) {
+    if (val == null || String(val) === '') return;
+    var el =
+      formEl.querySelector('input#field_' + num + '[name="field_' + num + '"]') ||
+      formEl.querySelector('input[name="field_' + num + '"]') ||
+      formEl.querySelector('#field_' + num);
+    if (el) setInputValue(el, val);
   }
 
   function fillEoForm(f, data) {
@@ -223,8 +273,28 @@
 
     if (emailInp) setInputValue(emailInp, data.email);
 
+    var coExact = findEoFieldByExactPlaceholder(f, 'company');
+    if (coExact && data.company) setInputValue(coExact, data.company);
+    var urlExact = findEoFieldByExactPlaceholder(f, 'url');
+    if (urlExact && data.url) setInputValue(urlExact, data.url);
+
+    setEoNamedField(f, 3, data.company);
+    setEoNamedField(f, 5, data.url);
+
     var hp = f.querySelector('.emailoctopus-form-row-hp input');
     if (hp) setInputValue(hp, '');
+
+    function resyncCompanyUrl() {
+      setEoNamedField(f, 3, data.company);
+      setEoNamedField(f, 5, data.url);
+      var c2 = findEoFieldByExactPlaceholder(f, 'company');
+      if (c2 && data.company) setInputValue(c2, data.company);
+      var u2 = findEoFieldByExactPlaceholder(f, 'url');
+      if (u2 && data.url) setInputValue(u2, data.url);
+    }
+    setTimeout(resyncCompanyUrl, 0);
+    setTimeout(resyncCompanyUrl, 120);
+    requestAnimationFrame(resyncCompanyUrl);
   }
 
   function findEoForm() {
@@ -234,6 +304,44 @@
       document.querySelector('[data-form="' + EO_FORM_ID + '"] form.emailoctopus-form')
     );
   }
+
+  var sfabEoFormDataLead = null;
+
+  function installEoFetchFormDataFix() {
+    if (window.__SFAB_EO_FETCH_FIX) return;
+    window.__SFAB_EO_FETCH_FIX = true;
+    var nativeFetch = window.fetch.bind(window);
+    window.fetch = function (input, init) {
+      try {
+        var urlStr =
+          typeof input === 'string'
+            ? input
+            : input && typeof input.url === 'string'
+              ? input.url
+              : '';
+        if (
+          sfabEoFormDataLead &&
+          urlStr.indexOf('eocampaign1.com/form/') !== -1 &&
+          init &&
+          init.body instanceof FormData
+        ) {
+          var form = findEoForm();
+          var lead = sfabEoFormDataLead;
+          if (form && lead) {
+            var coEl = findEoFieldByExactPlaceholder(form, 'company');
+            var coName = coEl && coEl.getAttribute('name') ? coEl.getAttribute('name') : 'field_3';
+            if (lead.company != null && String(lead.company) !== '') init.body.set(coName, String(lead.company));
+            var urlEl = findEoFieldByExactPlaceholder(form, 'url');
+            var urlName = urlEl && urlEl.getAttribute('name') ? urlEl.getAttribute('name') : 'field_5';
+            if (lead.url != null && String(lead.url) !== '') init.body.set(urlName, String(lead.url));
+          }
+        }
+      } catch (eFd) {}
+      return nativeFetch(input, init);
+    };
+  }
+
+  installEoFetchFormDataFix();
 
   function waitForEoForm(onReady, onGiveUp, maxWaitMs) {
     var t0 = Date.now();
@@ -294,6 +402,7 @@
     var settled = false;
 
     function cleanup() {
+      sfabEoFormDataLead = null;
       restoreEoHiddenSubMount();
       if (obs) {
         obs.disconnect();
@@ -341,6 +450,7 @@
       document.addEventListener('submit', onEoSubmitCapture, true);
 
       fillEoForm(f, data);
+      sfabEoFormDataLead = data;
       f.noValidate = true;
       f.querySelectorAll('[required]').forEach(function (inp) {
         inp.removeAttribute('required');
