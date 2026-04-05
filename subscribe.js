@@ -813,8 +813,6 @@
     '.sfab-ovl-success{text-align:center;padding:2rem 1.5rem}' +
     '.sfab-ovl-success p{color:#0f172a}' +
     '.sfab-ovl-success .sfab-ovl-sub{color:#64748b!important}' +
-    '.sfab-ovl-powered{display:block;text-align:center;margin-top:auto;padding-top:1rem;font-size:.6875rem;color:#94a3b8;text-decoration:none}' +
-    '.sfab-ovl-powered:hover{color:#64748b}' +
     '@media(max-width:640px){.sfab-eo-inner{grid-template-columns:1fr;min-height:auto}.sfab-eo-art{border-radius:0;min-height:160px;order:-1}.sfab-overlay-card{border-radius:12px}.sfab-overlay-fields{grid-template-columns:1fr}}' +
     '#subscribeFab,.subscribe-fab,button.subscribe-fab,[data-sfab-eo-launcher-hide]{display:none!important;visibility:hidden!important;pointer-events:none!important;clip:rect(0,0,0,0)!important;position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;opacity:0!important}';
   document.head.appendChild(css);
@@ -848,7 +846,6 @@
               '<p style="margin-top:.5rem;font-weight:600;font-size:1rem">You\'re in</p>' +
               '<p class="sfab-ovl-sub" style="font-size:.8125rem;margin-top:.35rem">Finishing signup in the background…</p>' +
             '</div>' +
-            '<a href="https://emailoctopus.com" target="_blank" rel="noopener noreferrer" class="sfab-ovl-powered">Powered by EmailOctopus</a>' +
           '</div>' +
           '<div class="sfab-eo-art">' +
             '<img class="sfab-eo-art-img" src="' +
