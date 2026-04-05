@@ -3,7 +3,7 @@
 
 <head>
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at https://eocampaign1.com https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://gallery.eo.page; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://emailoctopus.com https://eocampaign1.com https://www.google.com; frame-src https://www.google.com;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://eocampaign1.com https://gc.zgo.at https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://gallery.eo.page; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://emailoctopus.com https://eocampaign1.com https://www.google.com; frame-src https://www.google.com;">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -917,367 +917,6 @@
             font-weight: 600;
         }
 
-        /* Subscribe FAB + Modal */
-        .subscribe-fab {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            z-index: 900;
-            display: flex;
-            align-items: center;
-            gap: .5rem;
-            padding: .65rem 1.1rem;
-            border-radius: 99px;
-            background: var(--accent);
-            color: #001E2B;
-            border: none;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            font-size: .82rem;
-            cursor: pointer;
-            box-shadow: 0 4px 24px rgba(0, 237, 100, 0.25);
-            transition: all .2s;
-        }
-
-        .subscribe-fab:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 32px rgba(0, 237, 100, 0.35);
-        }
-
-        .subscribe-fab.hidden {
-            display: none;
-        }
-
-        .subscribe-modal {
-            position: fixed;
-            bottom: 5rem;
-            right: 1.5rem;
-            z-index: 901;
-            width: 340px;
-            max-width: calc(100vw - 2rem);
-            background: var(--bg-card);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            pointer-events: none;
-            transform: translateY(12px) scale(0.96);
-            transition: all .25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .subscribe-modal.open {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translateY(0) scale(1);
-        }
-
-        .subscribe-close {
-            position: absolute;
-            top: .75rem;
-            right: .75rem;
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 1.4rem;
-            cursor: pointer;
-            line-height: 1;
-            padding: .25rem;
-        }
-
-        .subscribe-close:hover {
-            color: var(--text-primary);
-        }
-
-        .subscribe-title {
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: .3rem;
-        }
-
-        .subscribe-desc {
-            font-size: .78rem;
-            color: var(--text-muted);
-            line-height: 1.45;
-            margin-bottom: .85rem;
-        }
-
-        .subscribe-form {
-            display: flex;
-            flex-direction: column;
-            gap: .5rem;
-        }
-
-        .subscribe-form input[type="email"],
-        .subscribe-form input[type="text"] {
-            width: 100%;
-            padding: .55rem .75rem;
-            border-radius: 8px;
-            border: 1px solid var(--border-subtle);
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-            font-size: .82rem;
-            outline: none;
-            transition: border-color .2s;
-        }
-
-        .subscribe-form input:focus {
-            border-color: var(--accent);
-        }
-
-        .subscribe-interests {
-            margin: .25rem 0;
-        }
-
-        .subscribe-interests-label {
-            font-size: .68rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: .06em;
-            display: block;
-            margin-bottom: .35rem;
-        }
-
-        .sub-check {
-            display: inline-flex;
-            align-items: center;
-            gap: .3rem;
-            font-size: .74rem;
-            color: var(--text-secondary);
-            margin-right: .6rem;
-            cursor: pointer;
-            margin-bottom: .2rem;
-        }
-
-        .sub-check input[type="checkbox"] {
-            accent-color: var(--accent);
-            width: 14px;
-            height: 14px;
-            cursor: pointer;
-        }
-
-        .subscribe-btn {
-            width: 100%;
-            padding: .6rem;
-            border: none;
-            border-radius: 8px;
-            background: var(--accent);
-            color: #001E2B;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            font-size: .85rem;
-            cursor: pointer;
-            transition: all .2s;
-            margin-top: .15rem;
-        }
-
-        .subscribe-btn:hover {
-            background: var(--accent-dim);
-        }
-
-        .subscribe-btn:disabled {
-            opacity: .5;
-            cursor: not-allowed;
-        }
-
-        .subscribe-success {
-            text-align: center;
-            padding: 1rem 0;
-        }
-
-        @media (max-width: 500px) {
-            .subscribe-modal {
-                bottom: 4.5rem;
-                right: .75rem;
-                left: .75rem;
-                width: auto;
-            }
-
-            .subscribe-fab {
-                bottom: 1rem;
-                right: 1rem;
-            }
-        }
-
-        /* ── Popup Overlay ── */
-        .subscribe-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(0, 10, 20, 0.75);
-            backdrop-filter: blur(6px);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity .35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .subscribe-overlay.open {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .subscribe-overlay-card {
-            position: relative;
-            width: 420px;
-            max-width: calc(100vw - 2rem);
-            background: var(--bg-card);
-            border: 1px solid var(--border-accent);
-            border-radius: 20px;
-            padding: 2rem 1.75rem;
-            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(0, 237, 100, 0.08);
-            transform: translateY(20px) scale(0.95);
-            transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .subscribe-overlay.open .subscribe-overlay-card {
-            transform: translateY(0) scale(1);
-        }
-
-        .overlay-badge {
-            display: inline-block;
-            padding: .25rem .7rem;
-            border-radius: 99px;
-            background: rgba(0, 237, 100, 0.12);
-            color: var(--accent);
-            font-size: .65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: .08em;
-            margin-bottom: .75rem;
-        }
-
-        .overlay-title {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: .4rem;
-            line-height: 1.3;
-        }
-
-        .overlay-desc {
-            font-size: .82rem;
-            color: var(--text-muted);
-            line-height: 1.55;
-            margin-bottom: 1rem;
-        }
-
-        .overlay-close {
-            position: absolute;
-            top: .85rem;
-            right: .85rem;
-            background: rgba(255, 255, 255, 0.06);
-            border: none;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all .15s;
-        }
-
-        .overlay-close:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: var(--text-primary);
-        }
-
-        .overlay-form {
-            display: flex;
-            gap: .5rem;
-        }
-
-        .overlay-form input[type="email"] {
-            flex: 1;
-            padding: .6rem .85rem;
-            border-radius: 10px;
-            border: 1px solid var(--border-subtle);
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-            font-family: 'Outfit', sans-serif;
-            font-size: .85rem;
-            outline: none;
-            transition: border-color .2s;
-        }
-
-        .overlay-form input[type="email"]:focus {
-            border-color: var(--accent);
-        }
-
-        .overlay-form button {
-            padding: .6rem 1.2rem;
-            border: none;
-            border-radius: 10px;
-            background: var(--accent);
-            color: #001E2B;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 600;
-            font-size: .85rem;
-            cursor: pointer;
-            transition: all .2s;
-            white-space: nowrap;
-        }
-
-        .overlay-form button:hover {
-            background: var(--accent-dim);
-        }
-
-        .overlay-form button:disabled {
-            opacity: .5;
-            cursor: not-allowed;
-        }
-
-        .overlay-skip {
-            display: block;
-            margin-top: .6rem;
-            text-align: center;
-            font-size: .72rem;
-            color: var(--text-muted);
-            opacity: .6;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-family: 'Outfit', sans-serif;
-            text-decoration: none;
-        }
-
-        .overlay-skip:hover {
-            opacity: 1;
-        }
-
-        .overlay-success {
-            text-align: center;
-            padding: .5rem 0;
-            display: none;
-        }
-
-        .overlay-powered {
-            display: block;
-            text-align: center;
-            margin-top: .75rem;
-            font-size: .6rem;
-            color: var(--text-muted);
-            opacity: .4;
-            text-decoration: none;
-        }
-
-        @media (max-width: 600px) {
-            .subscribe-overlay-card {
-                padding: 1.5rem 1.25rem;
-            }
-
-            .overlay-form {
-                flex-direction: column;
-            }
-        }
     </style>
 </head>
 
@@ -1425,7 +1064,7 @@
                                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                             </a>
-                            <a href="https://saiteja05.github.io/datalog/readme.html?file=README-ddp.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-ddp.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                                 README
@@ -1437,7 +1076,7 @@
                                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
                             </a>
-                            <a href="https://saiteja05.github.io/datalog/readme.html?file=README-atlas.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-atlas.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                                 <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                                 README
@@ -1453,7 +1092,7 @@
                     <h3 class="card-title">How to Choose a Database?</h3>
                     <p class="card-description">Decision framework to help your teams choose the right database technology for your application needs.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-matrix.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-matrix.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1495,7 +1134,7 @@
                     <h3 class="card-title">Running MongoDB at Scale</h3>
                     <p class="card-description">Discover how MongoDB handles massive workloads with horizontal scaling, sharding, and high availability.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-mongoatscalev2.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-mongoatscalev2.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1515,7 +1154,7 @@
                     <h3 class="card-title">High Availability Demo</h3>
                     <p class="card-description">Interactive demonstration of MongoDB's replica set failover, elections, and multi-region high availability.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-ha-demo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-ha-demo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1535,7 +1174,7 @@
                     <h3 class="card-title">Multi-Tenancy Strategies</h3>
                     <p class="card-description">Explore different architectural patterns for building multi-tenant applications with MongoDB.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-multitenancy.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-multitenancy.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1562,7 +1201,7 @@
                     <h3 class="card-title">CRUD Operations</h3>
                     <p class="card-description">Master MongoDB's intuitive and powerful API for creating, reading, updating, and deleting documents.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-crud.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-crud.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1582,7 +1221,7 @@
                     <h3 class="card-title">Aggregation Pipeline</h3>
                     <p class="card-description">Visualize and understand MongoDB's powerful aggregation framework for data transformation and analytics.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-aggregations.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-aggregations.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1602,7 +1241,7 @@
                     <h3 class="card-title">State of AI with MongoDB</h3>
                     <p class="card-description">Discover how Atlas Search plays a critical role in building intelligent AI agents and modern applications.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-aimongo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-aimongo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1622,7 +1261,7 @@
                     <h3 class="card-title">Agentic Memory on MongoDB</h3>
                     <p class="card-description">Explore how MongoDB Atlas powers all 8 layers of AI agent memory — working, episodic, semantic, procedural, long-term, taxonomic, entity, and shared — in a single unified platform.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-agenticmemory.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-agenticmemory.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1642,7 +1281,7 @@
                     <h3 class="card-title">Time Series Collections</h3>
                     <p class="card-description">Deep dive into MongoDB's optimized time series collections for IoT, metrics, and event data workloads.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-timeseries.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-timeseries.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1662,7 +1301,7 @@
                     <h3 class="card-title">Security</h3>
                     <p class="card-description">Defense in depth — five security layers from network isolation to field-level encryption to auditing, with code examples, compliance certifications, and the shared responsibility model.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-security.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-security.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1689,7 +1328,7 @@
                     <h3 class="card-title">Specialty Data Stores</h3>
                     <p class="card-description">Explore MongoDB's optimized solutions for search and comparisons with Pinecone, Qdrant, and Elasticsearch.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-speciality.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-speciality.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1724,7 +1363,7 @@
                     <h3 class="card-title">Transactional Database</h3>
                     <p class="card-description">Understand multi-document ACID transactions and comparisons with CockroachDB, ScyllaDB, Postgres, and DynamoDB.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-transactional_db.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-transactional_db.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1744,7 +1383,7 @@
                     <h3 class="card-title">Elasticsearch vs MongoDB</h3>
                     <p class="card-description">Competitive intelligence briefing — Elastic ecosystem, search feature parity, vector search head-to-head, and where MongoDB has the right to win.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-elastic_mongo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-elastic_mongo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1764,7 +1403,7 @@
                     <h3 class="card-title">Cosmos DB &amp; DocumentDB</h3>
                     <p class="card-description">MongoDB Atlas vs Azure Cosmos DB (vCore &amp; RU) and Amazon DocumentDB — architecture, compatibility gaps, and real limitations.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=README-cosmosdb_documentdb.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-cosmosdb_documentdb.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1791,7 +1430,7 @@
                     <h3 class="card-title">Vector Search Benchmark (Read)</h3>
                     <p class="card-description">Multi-threaded benchmarking framework for MongoDB vector search. Test aggregation pipelines with configurable RPMs, thread counts, and get P50/P70/P95/P99 latency metrics.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?url=https://raw.githubusercontent.com/saiteja05/CodeandLearn/main/python/Vector_search_read_benchmark/readme.md&name=README-vector-search-benchmark.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?url=https://raw.githubusercontent.com/saiteja05/CodeandLearn/main/python/Vector_search_read_benchmark/readme.md&name=README-vector-search-benchmark.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1811,7 +1450,7 @@
                     <h3 class="card-title">Write Benchmark Tool</h3>
                     <p class="card-description">Batch write benchmarking using MongoDB's insert_many with multiprocessing. Auto-generates test data, configurable document sizes, and reports TPS throughput metrics.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?url=https://raw.githubusercontent.com/saiteja05/CodeandLearn/main/python/Write_benchmarker/readme.md&name=README-write-benchmark.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?url=https://raw.githubusercontent.com/saiteja05/CodeandLearn/main/python/Write_benchmarker/readme.md&name=README-write-benchmark.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1831,7 +1470,7 @@
                     <h3 class="card-title">Atlas Health Check</h3>
                     <p class="card-description">Health check across — cluster config, replication, storage, memory, connections, indexing, query performance, security, backups, alerts, sharding, schema, and network. Fill status, assign owners, and export CSV.</p>
                     <div class="card-footer">
-                        <a href="https://saiteja05.github.io/datalog/readme.html?file=healthcheck-README.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=healthcheck-README.md" target="_blank" rel="noopener noreferrer" class="readme-link">
                             <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
                             README
@@ -1871,54 +1510,6 @@
                 <a href="https://saiteja05.github.io/datalog/changelog.html" style="color:var(--text-muted);text-decoration:none;font-size:.85rem;" target="_blank" rel="noopener noreferrer">Changelog</a>
             </p>
         </footer>
-    </div>
-
-    <!-- Subscribe Popup Overlay (scroll/time triggered) -->
-    <div class="subscribe-overlay" id="subscribeOverlay">
-        <div class="subscribe-overlay-card">
-            <button class="overlay-close" id="overlayClose">&times;</button>
-            <span class="overlay-badge">Free updates</span>
-            <h3 class="overlay-title">Get notified when we publish new content</h3>
-            <p class="overlay-desc">Competitive intel, architecture guides, migration tooling, and more — delivered only when there's something worth reading.</p>
-            <form class="overlay-form" id="overlayForm">
-                <input type="email" id="overlayEmail" placeholder="you@company.com" required autocomplete="email">
-                <button type="submit" id="overlayBtn">Subscribe</button>
-            </form>
-            <button class="overlay-skip" id="overlaySkip">No thanks, I'll just browse</button>
-            <div class="overlay-success" id="overlaySuccess">
-                <svg width="28" height="28" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <p style="margin-top:.4rem;font-weight:600;font-size:.9rem;color:var(--text-primary);">You're in!</p>
-                <p style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem;">Check your inbox for the welcome email.</p>
-            </div>
-            <a href="https://emailoctopus.com" target="_blank" rel="noopener noreferrer" class="overlay-powered">Powered by EmailOctopus</a>
-        </div>
-    </div>
-
-    <!-- Subscribe FAB + Side Modal -->
-    <button class="subscribe-fab" id="subscribeFab" title="Subscribe for updates">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-        <span>Subscribe</span>
-    </button>
-    <div class="subscribe-modal" id="subscribeModal">
-        <div class="subscribe-modal-inner">
-            <button class="subscribe-close" id="subscribeClose">&times;</button>
-            <h3 class="subscribe-title">Stay in the loop</h3>
-            <p class="subscribe-desc">Get notified when we add new pages or major updates. No spam — just content drops.</p>
-            <form id="subscribeForm" class="subscribe-form">
-                <input type="email" id="subEmail" placeholder="you@company.com" required autocomplete="email">
-                <input type="text" id="subName" placeholder="Name (optional)" autocomplete="name">
-                <button type="submit" class="subscribe-btn" id="subBtn">Subscribe</button>
-                <a href="https://emailoctopus.com" target="_blank" rel="noopener noreferrer" style="display:block;text-align:center;margin-top:.5rem;font-size:.65rem;color:var(--text-muted);opacity:.5;text-decoration:none;">Powered by EmailOctopus</a>
-            </form>
-            <div class="subscribe-success" id="subscribeSuccess" style="display:none;">
-                <svg width="32" height="32" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <p style="margin-top:.5rem;font-weight:600;color:var(--text-primary);">You're subscribed!</p>
-                <p style="font-size:.78rem;color:var(--text-muted);margin-top:.25rem;">Check your inbox — we just sent a welcome email with the full site catalog.<br>After that, we'll only email when there's something new.</p>
-            </div>
-        </div>
     </div>
 
     <script>
@@ -2054,207 +1645,13 @@
         window.addEventListener('scroll', updateActiveSection);
         window.addEventListener('load', updateActiveSection);
     </script>
-    <!-- Hidden EmailOctopus embed — our custom forms bridge to this -->
-    <div id="eoHidden" style="position:absolute;left:-9999px;height:0;overflow:hidden;pointer-events:none;" aria-hidden="true">
-        <script async src="https://eocampaign1.com/form/a1be7298-21da-11f1-91f4-271ecaf1fe8d.js" data-form="a1be7298-21da-11f1-91f4-271ecaf1fe8d"></script>
-    </div>
-
-    <script>
-        // Block personal email domains — corporate/work emails only
-        var PERSONAL_DOMAINS = /^(gmail|googlemail|yahoo|hotmail|outlook|live|msn|aol|icloud|me|mac|mail|proton|protonmail|zoho|yandex|gmx|fastmail|tutanota|hey|pm|cock|airmail|inbox|rocketmail|rediffmail|mailinator|guerrillamail|tempmail|throwaway|10minutemail|sharklasers|guerrillamailblock|grr|dispostable)\./i;
-
-        function isPersonalEmail(email) {
-            var domain = email.split('@')[1];
-            if (!domain) return true;
-            return PERSONAL_DOMAINS.test(domain);
-        }
-
-        // Bridge: submit email through the hidden EmailOctopus form
-        function eoSubmit(email, onSuccess, onError) {
-            var tries = 0;
-
-            function attempt() {
-                var eoForm = document.querySelector('#eoHidden form.emailoctopus-form');
-                var eoInput = eoForm && eoForm.querySelector('input[type="email"]');
-                if (!eoForm || !eoInput) {
-                    if (++tries < 20) return setTimeout(attempt, 300);
-                    return onError();
-                }
-                // Fill the hidden form's email field
-                var nativeSetter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
-                nativeSetter.call(eoInput, email);
-                eoInput.dispatchEvent(new Event('input', {
-                    bubbles: true
-                }));
-
-                // Watch for success/error message in the hidden form
-                var observer = new MutationObserver(function(mutations) {
-                    var success = eoForm.closest('[data-form]').querySelector('.emailoctopus-success-message');
-                    var error = eoForm.closest('[data-form]').querySelector('.emailoctopus-error-message');
-                    if (success && success.textContent.trim()) {
-                        observer.disconnect();
-                        onSuccess();
-                    } else if (error && error.textContent.trim()) {
-                        observer.disconnect();
-                        onError();
-                    }
-                });
-                observer.observe(eoForm.closest('[data-form]'), {
-                    childList: true,
-                    subtree: true,
-                    characterData: true
-                });
-
-                // Submit
-                eoForm.querySelector('[type="submit"]').click();
-
-                // Timeout fallback
-                setTimeout(function() {
-                    observer.disconnect();
-                    onError();
-                }, 8000);
-            }
-            attempt();
-        }
-    </script>
-    <script>
-        // Subscribe Modal (FAB)
-        (function() {
-            const fab = document.getElementById('subscribeFab');
-            const modal = document.getElementById('subscribeModal');
-            const closeBtn = document.getElementById('subscribeClose');
-            const form = document.getElementById('subscribeForm');
-            const successEl = document.getElementById('subscribeSuccess');
-            const subBtn = document.getElementById('subBtn');
-
-            if (localStorage.getItem('subscribed') === '1') fab.classList.add('hidden');
-
-            fab.addEventListener('click', () => modal.classList.toggle('open'));
-            closeBtn.addEventListener('click', () => modal.classList.remove('open'));
-            document.addEventListener('click', (e) => {
-                if (!modal.contains(e.target) && !fab.contains(e.target)) modal.classList.remove('open');
-            });
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('subEmail').value.trim();
-                if (!email) return;
-
-                if (isPersonalEmail(email)) {
-                    var inp = document.getElementById('subEmail');
-                    inp.setCustomValidity('Please use your work email (e.g. you@company.com)');
-                    inp.reportValidity();
-                    inp.addEventListener('input', function once() {
-                        inp.setCustomValidity('');
-                        inp.removeEventListener('input', once);
-                    });
-                    return;
-                }
-
-                subBtn.disabled = true;
-                subBtn.textContent = 'Subscribing...';
-
-                eoSubmit(email, function() {
-                    form.style.display = 'none';
-                    successEl.style.display = 'block';
-                    localStorage.setItem('subscribed', '1');
-                    setTimeout(() => {
-                        modal.classList.remove('open');
-                        fab.classList.add('hidden');
-                    }, 3000);
-                }, function() {
-                    subBtn.disabled = false;
-                    subBtn.textContent = 'Try again';
-                });
-            });
-        })();
-    </script>
-    <script>
-        // Subscribe Popup Overlay — triggers on 35% scroll OR 10s, once per session
-        (function() {
-            const overlay = document.getElementById('subscribeOverlay');
-            const closeBtn = document.getElementById('overlayClose');
-            const skipBtn = document.getElementById('overlaySkip');
-            const form = document.getElementById('overlayForm');
-            const btn = document.getElementById('overlayBtn');
-            const successEl = document.getElementById('overlaySuccess');
-
-            const isSubscribed = localStorage.getItem('subscribed') === '1';
-            const wasDismissed = sessionStorage.getItem('popup_dismissed') === '1';
-            const isMobile = window.innerWidth < 640;
-
-            if (isSubscribed || wasDismissed || isMobile) return;
-
-            let shown = false;
-
-            function showPopup() {
-                if (shown) return;
-                shown = true;
-                overlay.classList.add('open');
-            }
-
-            function dismiss() {
-                overlay.classList.remove('open');
-                sessionStorage.setItem('popup_dismissed', '1');
-            }
-
-            const timer = setTimeout(showPopup, 10000);
-
-            window.addEventListener('scroll', function onScroll() {
-                const scrollPct = window.scrollY / (document.documentElement.scrollHeight - window.innerHeight);
-                if (scrollPct >= 0.35) {
-                    clearTimeout(timer);
-                    showPopup();
-                    window.removeEventListener('scroll', onScroll);
-                }
-            });
-
-            closeBtn.addEventListener('click', dismiss);
-            skipBtn.addEventListener('click', dismiss);
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) dismiss();
-            });
-
-            form.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('overlayEmail').value.trim();
-                if (!email) return;
-
-                if (isPersonalEmail(email)) {
-                    var inp = document.getElementById('overlayEmail');
-                    inp.setCustomValidity('Please use your work email (e.g. you@company.com)');
-                    inp.reportValidity();
-                    inp.addEventListener('input', function once() {
-                        inp.setCustomValidity('');
-                        inp.removeEventListener('input', once);
-                    });
-                    return;
-                }
-
-                btn.disabled = true;
-                btn.textContent = 'Subscribing...';
-
-                eoSubmit(email, function() {
-                    form.style.display = 'none';
-                    document.querySelector('.overlay-skip').style.display = 'none';
-                    successEl.style.display = 'block';
-                    localStorage.setItem('subscribed', '1');
-                    sessionStorage.setItem('popup_dismissed', '1');
-                    document.getElementById('subscribeFab').classList.add('hidden');
-                    setTimeout(dismiss, 3000);
-                }, function() {
-                    btn.disabled = false;
-                    btn.textContent = 'Try again';
-                });
-            });
-        })();
-    </script>
     <script>
         if (window.top !== window.self) {
             window.top.location = window.self.location;
         }
     </script>
     <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script src="subscribe.js?v=eo-urlhidden"></script>
 </body>
 
 </html>

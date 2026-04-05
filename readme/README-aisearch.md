@@ -15,7 +15,7 @@ This comparison helps explain:
 
 ## 🚀 Quick Start
 
-1. Open `aisearch.html` in a web browser
+1. Open `misc/aisearch.html` in a web browser
 2. Expand sections to explore each topic
 3. Compare features across platforms
 4. Review pricing tables and use cases

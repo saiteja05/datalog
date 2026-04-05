@@ -4,9 +4,10 @@ on:
   push:
     branches: [main]
     paths:
-      - '*.html'
-      - '!welcome-email.html'
-      - '!readme.html'
+      - '**/*.html'
+      - '!misc/welcome-email.html'
+      - '!readme/readme.html'
+      - '!misc/my-weather-app/**'
 
 jobs:
   draft-campaign:
@@ -19,8 +20,8 @@ jobs:
       - name: Detect changed content files
         id: changes
         run: |
-          CHANGED=$(git diff --name-only HEAD~1 HEAD -- '*.html' \
-            ':!welcome-email.html' ':!readme.html' ':!my-weather-app/*' \
+          CHANGED=$(git diff --name-only HEAD~1 HEAD -- '**/*.html' \
+            ':!misc/welcome-email.html' ':!readme/readme.html' ':!misc/my-weather-app/**' \
             | grep -v '^$' || true)
 
           if [ -z "$CHANGED" ]; then

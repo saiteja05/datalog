@@ -125,28 +125,6 @@
             max-width: 560px
         }
 
-        .hero-cta {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            margin-top: .75rem;
-            padding: .45rem .9rem;
-            border-radius: 99px;
-            background: var(--mg);
-            color: #0a0e17;
-            font-weight: 600;
-            font-size: .78rem;
-            text-decoration: none;
-            transition: all .2s;
-            border: none;
-            cursor: pointer
-        }
-
-        .hero-cta:hover {
-            box-shadow: 0 4px 16px rgba(0, 237, 100, 0.25);
-            transform: translateY(-1px)
-        }
-
         .timeline {
             padding: 2rem 0 3rem
         }
@@ -295,15 +273,26 @@
 
         <div class="hero">
             <h1>Changelog</h1>
-            <p>What's new, what changed, and what got rebuilt. Subscribe to get email updates when we ship new content.</p>
-            <button class="hero-cta" id="heroSubscribeBtn">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>
-                Subscribe for updates
-            </button>
+            <p>What's new, what changed, and what got rebuilt.</p>
         </div>
 
         <div class="timeline">
+
+            <div class="year-label">April 2026</div>
+
+            <div class="entry">
+                <div class="entry-date">Apr 2</div>
+                <div class="entry-body">
+                    <div class="entry-meta">
+                        <span class="entry-badge badge-update">Update</span>
+                        <span class="entry-author"><svg width="10" height="10" fill="currentColor" viewBox="0 0 16 16">
+                                <circle cx="8" cy="5" r="3.5" />
+                                <path d="M1 14.5C1 11.5 4 9.5 8 9.5s7 2 7 5" /></svg> Sai Teja Boddapati</span>
+                    </div>
+                    <div class="entry-title">Removed site-wide subscribe / “get notified” UI</div>
+                    <div class="entry-desc">Dropped the EmailOctopus-backed subscribe script and floating launcher from all HTML pages, and tightened Content-Security-Policy entries that existed only for that integration.</div>
+                </div>
+            </div>
 
             <div class="year-label">March 2026</div>
 
@@ -320,7 +309,7 @@
                     <div class="entry-desc">A comprehensive 93-point health check across 13 sections: cluster configuration, replication, storage, memory, connections, indexing, query performance, security, backups, alerts, sharding, schema design, and networking. Includes an interactive checklist tool with status tracking, owner assignment, and CSV export.</div>
                     <div class="entry-links">
                         <a href="clusterreview.html">Interactive Checklist →</a>
-                        <a href="readme.html?file=healthcheck-README.md">Full Reference Guide →</a>
+                        <a href="readme/readme.html?file=healthcheck-README.md">Full Reference Guide →</a>
                     </div>
                 </div>
             </div>
@@ -352,7 +341,7 @@
                                 <path d="M1 14.5C1 11.5 4 9.5 8 9.5s7 2 7 5" /></svg> Sai Teja</span>
                     </div>
                     <div class="entry-title">Email Collection & Changelog</div>
-                    <div class="entry-desc">Added subscribe-for-updates modal on the home page and this changelog page to track all content additions and updates.</div>
+                    <div class="entry-desc">Subscribe-for-updates popup (EmailOctopus) on the home page and content pages for new releases.</div>
                     <div class="entry-links">
                         <a href="https://saiteja05.github.io/datalog/changelog.html">changelog.html →</a>
                         <a href="https://saiteja05.github.io/datalog/home.html">home.html →</a>
@@ -692,19 +681,8 @@
         </div><!-- /timeline -->
     </div><!-- /wrap -->
 
-    <script src="subscribe.js"></script>
-    <script>
-        document.getElementById('heroSubscribeBtn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            var fab = document.getElementById('subscribeFab');
-            var modal = document.getElementById('sfabModal');
-            if (fab && modal) {
-                fab.classList.remove('hidden');
-                modal.classList.add('open');
-            }
-        });
-    </script>
     <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script src="subscribe.js?v=eo-urlhidden"></script>
 </body>
 
 </html>
