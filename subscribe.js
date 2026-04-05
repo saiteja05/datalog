@@ -244,6 +244,24 @@
     formEl.appendChild(g);
   }
 
+  function stashAndRevealEoMountForCaptcha() {
+    var b = document.getElementById('eoHiddenSub');
+    if (!b || b.dataset.sfabEoStyleOrig != null) return;
+    b.dataset.sfabEoStyleOrig = b.getAttribute('style') || '';
+    b.style.cssText =
+      'position:fixed!important;left:0!important;top:0!important;width:4px!important;height:4px!important;' +
+      'opacity:0.03!important;overflow:hidden!important;pointer-events:auto!important;z-index:2147483645!important;clip:auto!important;';
+  }
+
+  function restoreEoHiddenSubMount() {
+    var b = document.getElementById('eoHiddenSub');
+    if (!b || b.dataset.sfabEoStyleOrig == null) return;
+    var prev = b.dataset.sfabEoStyleOrig;
+    delete b.dataset.sfabEoStyleOrig;
+    if (prev === '') b.removeAttribute('style');
+    else b.setAttribute('style', prev);
+  }
+
   function eoSubmit(data, onOk, onErr, timeoutMs) {
     var maxMs = timeoutMs != null ? timeoutMs : 45000;
     var tries = 0;
@@ -252,6 +270,7 @@
     var settled = false;
 
     function cleanup() {
+      restoreEoHiddenSubMount();
       if (obs) {
         obs.disconnect();
         obs = null;
@@ -298,12 +317,27 @@
       document.addEventListener('submit', onEoSubmitCapture, true);
 
       fillEoForm(f, data);
+      f.noValidate = true;
+      f.querySelectorAll('[required]').forEach(function (inp) {
+        inp.removeAttribute('required');
+      });
+      f.querySelectorAll('input,select,textarea').forEach(function (inp) {
+        try {
+          inp.setCustomValidity('');
+        } catch (eCv) {}
+      });
+
+      stashAndRevealEoMountForCaptcha();
+
       var eoBox = document.getElementById('eoHiddenSub');
       var ae = document.activeElement;
       if (eoBox && ae && typeof ae.blur === 'function' && eoBox.contains(ae)) ae.blur();
 
       var host = f.closest('[data-form]') || f.parentElement;
-      if (!host) return finish(false);
+      if (!host) {
+        restoreEoHiddenSubMount();
+        return finish(false);
+      }
 
       obs = new MutationObserver(function () {
         var sm = host.querySelector('.emailoctopus-success-message');
@@ -322,9 +356,13 @@
         f.querySelector('button.emailoctopus-submit') ||
         f.querySelector('button');
       try {
-        if (typeof f.requestSubmit === 'function' && sub) f.requestSubmit(sub);
-        else if (sub && sub.click) sub.click();
-        else f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        if (typeof f.requestSubmit === 'function' && sub) {
+          f.requestSubmit(sub);
+        } else if (sub && sub.click) {
+          sub.click();
+        } else {
+          f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
       } catch (eSubmit) {
         try {
           if (sub && sub.click) sub.click();
@@ -661,13 +699,13 @@
                 'Email Octopus did not confirm this signup (timeout or error). Check your connection and use Submit and continue to retry.'
               );
             },
-            55000
+            45000
           );
         },
         function () {
           onEoFailure('The signup form is still loading. Wait a few seconds and try again.');
         },
-        60000
+        45000
       );
     });
 
