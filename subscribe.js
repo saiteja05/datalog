@@ -21,6 +21,7 @@
   var moChrome = null;
   var ivChrome = null;
   var ivChromeTick = 0;
+  var moEoAria = null;
 
   function isNoPopupPage(p) {
     return (
@@ -93,7 +94,23 @@
     });
   }
 
+  function stripEoHiddenAriaConflict() {
+    var box = document.getElementById('eoHiddenSub');
+    if (!box) return;
+    if (box.hasAttribute('aria-hidden')) box.removeAttribute('aria-hidden');
+    if (box.hasAttribute('inert')) box.removeAttribute('inert');
+    var ae = document.activeElement;
+    if (ae && typeof ae.blur === 'function' && box.contains(ae)) ae.blur();
+    if (!moEoAria) {
+      moEoAria = new MutationObserver(function () {
+        stripEoHiddenAriaConflict();
+      });
+      moEoAria.observe(box, { attributes: true, attributeFilter: ['aria-hidden'] });
+    }
+  }
+
   function runChromeHides() {
+    stripEoHiddenAriaConflict();
     hideFloatingSignupChrome();
   }
 
@@ -176,66 +193,89 @@
     else if (texts[3]) setInputValue(texts[3], data.position);
 
     if (emailInp) setInputValue(emailInp, data.email);
-
-    // EO form: one hidden field = page URL (not in `candidates` above).
-    if (data.url) {
-      var hiddens = f.querySelectorAll('input[type="hidden"]');
-      if (hiddens.length === 1) {
-        setInputValue(hiddens[0], data.url);
-      } else if (hiddens.length > 1) {
-        var urlNeedles = ['url', 'pageurl', 'page_url', 'landing', 'source', 'signupsource', 'website', 'webpage', 'page'];
-        for (var hi = 0; hi < hiddens.length; hi++) {
-          var inp = hiddens[hi];
-          var b = normBlob(inp);
-          for (var u = 0; u < urlNeedles.length; u++) {
-            if (b.indexOf(urlNeedles[u].replace(/[\s_-]/g, '')) !== -1) {
-              setInputValue(inp, data.url);
-              return;
-            }
-          }
-        }
-      }
-    }
   }
 
-  function eoSubmit(data, onOk, onErr) {
+  function waitForEoForm(onReady, onGiveUp, maxWaitMs) {
+    var t0 = Date.now();
+    var limit = maxWaitMs != null ? maxWaitMs : 50000;
+    function poll() {
+      var f = document.querySelector('#eoHiddenSub form.emailoctopus-form');
+      if (f && f.querySelector('input,button,select,textarea')) return onReady();
+      if (Date.now() - t0 > limit) return onGiveUp();
+      setTimeout(poll, 100);
+    }
+    poll();
+  }
+
+  function eoSubmit(data, onOk, onErr, timeoutMs) {
+    var maxMs = timeoutMs != null ? timeoutMs : 30000;
     var tries = 0;
+    var obs = null;
+    var failTimer = null;
+    var settled = false;
+    function cleanup() {
+      if (obs) {
+        obs.disconnect();
+        obs = null;
+      }
+      if (failTimer) {
+        clearTimeout(failTimer);
+        failTimer = null;
+      }
+    }
+    function finish(ok) {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      if (ok) onOk();
+      else onErr();
+    }
     function go() {
       var f = document.querySelector('#eoHiddenSub form.emailoctopus-form');
       if (!f) {
-        if (++tries < 36) return setTimeout(go, 250);
-        return onErr();
+        if (++tries < 200) return setTimeout(go, 150);
+        return finish(false);
       }
       fillEoForm(f, data);
+      var eoBox = document.getElementById('eoHiddenSub');
+      var ae = document.activeElement;
+      if (eoBox && ae && typeof ae.blur === 'function' && eoBox.contains(ae)) ae.blur();
       var host = f.closest('[data-form]');
-      if (!host) return onErr();
-      var obs = new MutationObserver(function () {
+      if (!host) return finish(false);
+      obs = new MutationObserver(function () {
         var sm = host.querySelector('.emailoctopus-success-message');
         var em = host.querySelector('.emailoctopus-error-message');
-        if (sm && sm.textContent.trim()) {
-          obs.disconnect();
-          onOk();
-        } else if (em && em.textContent.trim()) {
-          obs.disconnect();
-          onErr();
-        }
+        if (sm && sm.textContent.trim()) finish(true);
+        else if (em && em.textContent.trim()) finish(false);
       });
       obs.observe(host, { childList: true, subtree: true, characterData: true });
-      var sub = f.querySelector('[type="submit"]');
-      if (sub) sub.click();
-      else f.dispatchEvent(new Event('submit', { bubbles: true }));
-      setTimeout(function () {
-        obs.disconnect();
-        onErr();
-      }, 12000);
+      failTimer = setTimeout(function () {
+        finish(false);
+      }, maxMs);
+      var sub =
+        f.querySelector('button[type="submit"],input[type="submit"]') ||
+        f.querySelector('button.emailoctopus-submit') ||
+        f.querySelector('button');
+      try {
+        if (typeof f.requestSubmit === 'function' && sub) f.requestSubmit(sub);
+        else if (sub && sub.click) sub.click();
+        else f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+      } catch (eSubmit) {
+        try {
+          if (sub && sub.click) sub.click();
+          else f.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        } catch (e2) {
+          finish(false);
+        }
+      }
     }
     go();
   }
 
   function eoSubmitWithRetries(lead) {
     var attempt = 0;
-    var maxAttempts = 30;
-    var delayMs = 4000;
+    var maxAttempts = 5;
+    var delayMs = 3000;
     function again() {
       attempt++;
       eoSubmit(
@@ -246,7 +286,8 @@
         },
         function () {
           if (attempt < maxAttempts) setTimeout(again, delayMs);
-        }
+        },
+        25000
       );
     }
     again();
@@ -255,6 +296,7 @@
   function ensureEoHiddenWithScript(done) {
     var mount = document.getElementById('eoHiddenSub');
     if (mount) {
+      stripEoHiddenAriaConflict();
       if (mount.querySelector('form.emailoctopus-form')) {
         if (done) setTimeout(done, 200);
         return;
@@ -274,7 +316,7 @@
         return;
       }
       var s2 = document.createElement('script');
-      s2.async = true;
+      s2.async = false;
       s2.src = 'https://eocampaign1.com/form/a1be7298-21da-11f1-91f4-271ecaf1fe8d.js';
       s2.setAttribute('data-form', EO_FORM_ID);
       s2.addEventListener('load', function () {
@@ -289,10 +331,11 @@
     }
     var wrap = document.createElement('div');
     wrap.innerHTML =
-      '<div id="eoHiddenSub" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0" aria-hidden="true"></div>';
+      '<div id="eoHiddenSub" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0" tabindex="-1"></div>';
     document.body.appendChild(wrap.firstChild);
+    stripEoHiddenAriaConflict();
     var s = document.createElement('script');
-    s.async = true;
+    s.async = false;
     s.src = 'https://eocampaign1.com/form/a1be7298-21da-11f1-91f4-271ecaf1fe8d.js';
     s.setAttribute('data-form', EO_FORM_ID);
     s.addEventListener('load', function () {
@@ -382,7 +425,7 @@
 
   var wrapper = document.createElement('div');
   wrapper.innerHTML =
-    '<div id="eoHiddenSub" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0" aria-hidden="true"></div>' +
+    '<div id="eoHiddenSub" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;opacity:0" tabindex="-1"></div>' +
     '<div class="sfab-overlay" id="sfabOverlay" role="dialog" aria-modal="true" aria-labelledby="sfabGateTitle">' +
       '<div class="sfab-overlay-card">' +
         '<div class="sfab-eo-inner">' +
@@ -421,7 +464,7 @@
   while (wrapper.firstChild) document.body.appendChild(wrapper.firstChild);
 
   var eoScript = document.createElement('script');
-  eoScript.async = true;
+  eoScript.async = false;
   eoScript.src = 'https://eocampaign1.com/form/a1be7298-21da-11f1-91f4-271ecaf1fe8d.js';
   eoScript.setAttribute('data-form', EO_FORM_ID);
   document.getElementById('eoHiddenSub').appendChild(eoScript);
@@ -498,42 +541,69 @@
         lastName: lastName,
         email: email,
         company: company,
-        position: position,
-        url: location.href
+        position: position
       };
-
-      localStorage.setItem(
-        'leadGateProfile',
-        JSON.stringify({
-          firstName: firstName,
-          lastName: lastName,
-          email: email,
-          company: company,
-          position: position
-        })
-      );
-      localStorage.setItem('leadGateComplete', '1');
-      localStorage.setItem('subscribed', '1');
-      markSyncPending(lead);
 
       oBtn.disabled = true;
       oBtn.textContent = 'Submitting…';
-      var oTitle = document.getElementById('sfabGateTitle');
-      var oDesc = overlay.querySelector('.sfab-ovl-desc');
-      var oArt = overlay.querySelector('.sfab-eo-art');
-      if (oTitle) oTitle.style.display = 'none';
-      if (oDesc) oDesc.style.display = 'none';
-      if (oArt) oArt.style.display = 'none';
-      oForm.style.display = 'none';
-      oSuccess.style.display = 'block';
 
-      eoSubmitWithRetries(lead);
+      function showSuccessAndExit() {
+        var oTitle = document.getElementById('sfabGateTitle');
+        var oDesc = overlay.querySelector('.sfab-ovl-desc');
+        var oArt = overlay.querySelector('.sfab-eo-art');
+        if (oTitle) oTitle.style.display = 'none';
+        if (oDesc) oDesc.style.display = 'none';
+        if (oArt) oArt.style.display = 'none';
+        oForm.style.display = 'none';
+        oSuccess.style.display = 'block';
+        setTimeout(function () {
+          overlay.remove();
+          unlockScroll();
+          document.documentElement.classList.remove('sfab-gate-active');
+        }, 900);
+      }
 
-      setTimeout(function () {
-        overlay.remove();
-        unlockScroll();
-        document.documentElement.classList.remove('sfab-gate-active');
-      }, 500);
+      function onEoFailure(msg) {
+        oBtn.disabled = false;
+        oBtn.textContent = 'Submit and continue';
+        showErr(msg || 'Could not complete signup. Please try again.');
+      }
+
+      waitForEoForm(
+        function () {
+          eoSubmit(
+            lead,
+            function () {
+              localStorage.setItem(
+                'leadGateProfile',
+                JSON.stringify({
+                  firstName: firstName,
+                  lastName: lastName,
+                  email: email,
+                  company: company,
+                  position: position
+                })
+              );
+              localStorage.setItem('leadGateComplete', '1');
+              localStorage.setItem('subscribed', '1');
+              clearSyncPending();
+              stopChromeGuard();
+              showSuccessAndExit();
+            },
+            function () {
+              markSyncPending(lead);
+              onEoFailure(
+                'Email Octopus did not confirm this signup (timeout or error). Check your connection and use Submit and continue to retry.'
+              );
+            },
+            35000
+          );
+        },
+        function () {
+          onEoFailure('The signup form is still loading. Wait a few seconds and try again.');
+        },
+        55000
+      );
     });
 
     setTimeout(function () {
