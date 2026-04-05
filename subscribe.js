@@ -1,6 +1,6 @@
-// subscribe.js — Lead gate + Email Octopus (hidden embed only).
-// Submit is optimistic: local save, dismiss UI; EO sync retries in background.
-// leadGateSyncPending / leadGatePendingLead drive retries on later page loads.
+// subscribe.js — Lead gate + Email Octopus (hidden embed).
+// EO v2 + invisible reCAPTCHA: their script expects input[name=g-recaptcha-response] but
+// only adds recaptcha-response — we mirror it on submit (capture). Success: emailoctopus:form.success + DOM.
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
@@ -146,7 +146,12 @@
   function setInputValue(inp, val) {
     var s = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
     s.call(inp, val);
-    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    try {
+      if (typeof InputEvent === 'function') inp.dispatchEvent(new InputEvent('input', { bubbles: true }));
+      else inp.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (eIn) {
+      inp.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     inp.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
@@ -193,26 +198,59 @@
     else if (texts[3]) setInputValue(texts[3], data.position);
 
     if (emailInp) setInputValue(emailInp, data.email);
+
+    var hp = f.querySelector('.emailoctopus-form-row-hp input');
+    if (hp) setInputValue(hp, '');
+  }
+
+  function findEoForm() {
+    return (
+      document.querySelector('#eoHiddenSub [data-form="' + EO_FORM_ID + '"] form.emailoctopus-form') ||
+      document.querySelector('#eoHiddenSub form.emailoctopus-form') ||
+      document.querySelector('[data-form="' + EO_FORM_ID + '"] form.emailoctopus-form')
+    );
   }
 
   function waitForEoForm(onReady, onGiveUp, maxWaitMs) {
     var t0 = Date.now();
-    var limit = maxWaitMs != null ? maxWaitMs : 50000;
+    var limit = maxWaitMs != null ? maxWaitMs : 55000;
     function poll() {
-      var f = document.querySelector('#eoHiddenSub form.emailoctopus-form');
-      if (f && f.querySelector('input,button,select,textarea')) return onReady();
-      if (Date.now() - t0 > limit) return onGiveUp();
-      setTimeout(poll, 100);
+      var f = findEoForm();
+      if (!f || !f.querySelector('input,button,select,textarea')) {
+        if (Date.now() - t0 > limit) return onGiveUp();
+        return setTimeout(poll, 100);
+      }
+      if (f.querySelector('[data-column-index]')) {
+        if (typeof window.initComponents !== 'function' && Date.now() - t0 < limit) {
+          return setTimeout(poll, 120);
+        }
+        return setTimeout(function () {
+          onReady();
+        }, 500);
+      }
+      onReady();
     }
     poll();
   }
 
+  function eoMirrorRecaptchaForSubmit(formEl) {
+    var r = formEl.querySelector('[name="recaptcha-response"],[name=recaptcha-response]');
+    if (!r || !r.value) return;
+    if (formEl.querySelector('[name="g-recaptcha-response"],[name=g-recaptcha-response]')) return;
+    var g = document.createElement('input');
+    g.setAttribute('type', 'hidden');
+    g.setAttribute('name', 'g-recaptcha-response');
+    g.setAttribute('value', r.value);
+    formEl.appendChild(g);
+  }
+
   function eoSubmit(data, onOk, onErr, timeoutMs) {
-    var maxMs = timeoutMs != null ? timeoutMs : 30000;
+    var maxMs = timeoutMs != null ? timeoutMs : 45000;
     var tries = 0;
     var obs = null;
     var failTimer = null;
     var settled = false;
+
     function cleanup() {
       if (obs) {
         obs.disconnect();
@@ -222,7 +260,10 @@
         clearTimeout(failTimer);
         failTimer = null;
       }
+      document.removeEventListener('emailoctopus:form.success', onEoSuccessDoc, false);
+      document.removeEventListener('submit', onEoSubmitCapture, true);
     }
+
     function finish(ok) {
       if (settled) return;
       settled = true;
@@ -230,18 +271,40 @@
       if (ok) onOk();
       else onErr();
     }
+
+    function onEoSuccessDoc(ev) {
+      try {
+        var d = ev && ev.detail;
+        if (d && String(d.form_id || '') === EO_FORM_ID) finish(true);
+      } catch (eSe) {}
+    }
+
+    function onEoSubmitCapture(ev) {
+      if (!ev || !ev.target || ev.target.tagName !== 'FORM') return;
+      if (ev.target !== f) return;
+      eoMirrorRecaptchaForSubmit(f);
+    }
+
+    var f = null;
+
     function go() {
-      var f = document.querySelector('#eoHiddenSub form.emailoctopus-form');
+      f = findEoForm();
       if (!f) {
-        if (++tries < 200) return setTimeout(go, 150);
+        if (++tries < 220) return setTimeout(go, 150);
         return finish(false);
       }
+
+      document.addEventListener('emailoctopus:form.success', onEoSuccessDoc, false);
+      document.addEventListener('submit', onEoSubmitCapture, true);
+
       fillEoForm(f, data);
       var eoBox = document.getElementById('eoHiddenSub');
       var ae = document.activeElement;
       if (eoBox && ae && typeof ae.blur === 'function' && eoBox.contains(ae)) ae.blur();
-      var host = f.closest('[data-form]');
+
+      var host = f.closest('[data-form]') || f.parentElement;
       if (!host) return finish(false);
+
       obs = new MutationObserver(function () {
         var sm = host.querySelector('.emailoctopus-success-message');
         var em = host.querySelector('.emailoctopus-error-message');
@@ -249,9 +312,11 @@
         else if (em && em.textContent.trim()) finish(false);
       });
       obs.observe(host, { childList: true, subtree: true, characterData: true });
+
       failTimer = setTimeout(function () {
         finish(false);
       }, maxMs);
+
       var sub =
         f.querySelector('button[type="submit"],input[type="submit"]') ||
         f.querySelector('button.emailoctopus-submit') ||
@@ -287,7 +352,7 @@
         function () {
           if (attempt < maxAttempts) setTimeout(again, delayMs);
         },
-        25000
+        40000
       );
     }
     again();
@@ -596,13 +661,13 @@
                 'Email Octopus did not confirm this signup (timeout or error). Check your connection and use Submit and continue to retry.'
               );
             },
-            35000
+            55000
           );
         },
         function () {
           onEoFailure('The signup form is still loading. Wait a few seconds and try again.');
         },
-        55000
+        60000
       );
     });
 
