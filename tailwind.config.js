@@ -3,6 +3,7 @@ module.exports = {
   content: [
     './*.html',
     './misc/*.html',
+    '!./misc/my-weather-app/**',
     './readme/*.html',
   ],
   theme: {

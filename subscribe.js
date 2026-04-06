@@ -18,6 +18,7 @@
 // identify so the SDK never starts as an anonymous UUID). visitorId is aliased into that id when present.
 // Auto capture off: web vitals / pageleave / dead clicks / rageclicks / heatmaps (they fired before identify).
 // Person props: $email only. Events: $pageview with $current_url only. phc_… + CSP as below.
+// Local preview: file:// or localhost / 127.0.0.1 skips the lead gate and PostHog (no overlay when opening HTML directly).
 // Lead storage: bump LEAD_STORAGE_VERSION to wipe leadGate* / subscribed once globally (everyone re-sees gate).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
@@ -85,6 +86,18 @@
       p.endsWith('performance_visualization.html') ||
       p.endsWith('performance_visualizer.html')
     );
+  }
+
+  /** Opened as file:// or served from loopback — skip gate and analytics for local HTML preview. */
+  function isLocalDevBypass() {
+    try {
+      if (typeof location === 'undefined') return false;
+      if (location.protocol === 'file:') return true;
+      var h = (location.hostname || '').toLowerCase();
+      return h === 'localhost' || h === '127.0.0.1' || h === '::1';
+    } catch (e) {
+      return false;
+    }
   }
 
   function clearSyncPending() {
@@ -821,6 +834,12 @@
       identifyPostHogFromLeadGate();
       schedulePostHogIdentifyUntilSent();
     }, 500);
+  }
+
+  if (isLocalDevBypass()) {
+    schedulePendingEoRetryOnly();
+    window.addEventListener('pageshow', onBfCachePageShow, false);
+    return;
   }
 
   if (localStorage.getItem('subscribed') === '1' && localStorage.getItem('leadGateComplete') !== '1') {
