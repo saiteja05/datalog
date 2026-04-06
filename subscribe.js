@@ -12,16 +12,13 @@
 // and patch FormData before fetch so Vue empty model does not wipe them.
 // Email gate: HTML5 checkValidity + structure + DNS MX/A (Cloudflare DoH). connect-src must allow
 // https://cloudflare-dns.com or DNS step fails open (submit still allowed).
-// Background: DNS outcomes cached (session, 5m); {{URL}} sync deduped per URL per tab session; bfcache
-// pageshow clears dedupe; pending-EO retry on success triggers URL sync; chrome hide debounced (0ms).
-// PostHog: only for users who passed the gate (leadGateComplete + leadGateProfile). SDK loads lazily — no
-// PostHog on first visit before signup. distinct_id = visitorId (UUID in localStorage). Autocapture off;
-// we send $pageview after identify. phc_… token; CSP script-src + connect-src: us-assets.i.posthog.com and us.i.posthog.com (maps use connect-src).
+// Background: DNS outcomes cached (session, 5m); EO only on signup / pending-retry (not per-page URL updates —
+// PostHog carries page activity). Chrome hide debounced (0ms).
+// PostHog: only for users who passed the gate. SDK loads lazily. distinct_id = visitorId (UUID, not sent as
+// a person property). Person: $email only. Events: $pageview with $current_url only. phc_… + CSP as below.
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
-  var EO_BG_SYNC_DELAY_MS = 1650;
-  var SESSION_EO_URL_SENT_KEY = 'sfabEoUrlSyncedHref';
   var DNS_CACHE_PREFIX = 'sfabDnsV1:';
   var DNS_CACHE_TTL_MS = 5 * 60 * 1000;
   /** Project API key from PostHog → Project settings (leave empty to disable). */
@@ -108,20 +105,8 @@
     var vid = ensureProfileVisitorId(profile);
     if (!vid) return;
     try {
-      window.posthog.identify(vid, {
-        email: profile.email,
-        first_name: profile.firstName || undefined,
-        last_name: profile.lastName || undefined,
-        company: profile.company || undefined,
-        position: profile.position || undefined
-      });
-      window.posthog.capture('$pageview', {
-        $current_url: location.href,
-        $pathname: location.pathname,
-        $host: location.host,
-        $title: typeof document !== 'undefined' ? document.title : '',
-        source: 'lead_gate_profile'
-      });
+      window.posthog.identify(vid, { $email: profile.email });
+      window.posthog.capture('$pageview', { $current_url: location.href });
     } catch (ePh) {}
   }
 
@@ -674,10 +659,6 @@
         function () {
           clearSyncPending();
           stopChromeGuard();
-          try {
-            sessionStorage.removeItem(SESSION_EO_URL_SENT_KEY);
-          } catch (eClr) {}
-          setTimeout(trySyncEoLastPageUrl, 900);
         },
         function () {
           if (attempt < maxAttempts) setTimeout(again, delayMs);
@@ -761,62 +742,15 @@
     });
   }
 
-  /** After signup, EO merge tag {{URL}} reflects the current page (throttled: once per URL per tab session). */
-  function trySyncEoLastPageUrl() {
-    if (localStorage.getItem('leadGateSyncPending') === '1') return;
-    if (localStorage.getItem('leadGateComplete') !== '1') return;
-    var href = location.href;
-    try {
-      if (sessionStorage.getItem(SESSION_EO_URL_SENT_KEY) === href) return;
-    } catch (eDedupe) {}
-    var raw = localStorage.getItem('leadGateProfile');
-    var profile = null;
-    try {
-      profile = raw ? JSON.parse(raw) : null;
-    } catch (eProf) {}
-    if (!profile || !profile.email) return;
-    var lead = {
-      firstName: profile.firstName || '',
-      lastName: profile.lastName || '',
-      email: profile.email,
-      company: profile.company || '',
-      position: profile.position || '',
-      url: href
-    };
-    ensureEoHiddenWithScript(function () {
-      startChromeGuard();
-      eoSubmit(
-        lead,
-        function () {
-          try {
-            sessionStorage.setItem(SESSION_EO_URL_SENT_KEY, href);
-          } catch (eOk) {}
-          stopChromeGuard();
-        },
-        function () {
-          stopChromeGuard();
-        },
-        35000
-      );
-    });
-  }
-
-  function scheduleBackgroundEoSync() {
+  function schedulePendingEoRetryOnly() {
     setTimeout(tryPendingEoRetry, 0);
-    setTimeout(trySyncEoLastPageUrl, EO_BG_SYNC_DELAY_MS);
   }
 
   function onBfCachePageShow(ev) {
     if (!ev || ev.persisted !== true) return;
     if (localStorage.getItem('leadGateSyncPending') === '1') return;
     if (localStorage.getItem('leadGateComplete') !== '1') return;
-    try {
-      sessionStorage.removeItem(SESSION_EO_URL_SENT_KEY);
-    } catch (eBf) {}
-    setTimeout(function () {
-      trySyncEoLastPageUrl();
-      identifyPostHogFromLeadGate();
-    }, 500);
+    setTimeout(identifyPostHogFromLeadGate, 500);
   }
 
   if (localStorage.getItem('subscribed') === '1' && localStorage.getItem('leadGateComplete') !== '1') {
@@ -828,13 +762,13 @@
   }
 
   if (isNoPopupPage(path)) {
-    scheduleBackgroundEoSync();
+    schedulePendingEoRetryOnly();
     window.addEventListener('pageshow', onBfCachePageShow, false);
     return;
   }
 
   if (localStorage.getItem('leadGateComplete') === '1') {
-    scheduleBackgroundEoSync();
+    schedulePendingEoRetryOnly();
     window.addEventListener('pageshow', onBfCachePageShow, false);
     return;
   }
