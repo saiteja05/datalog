@@ -14,8 +14,9 @@
 // https://cloudflare-dns.com or DNS step fails open (submit still allowed).
 // Background: DNS outcomes cached (session, 5m); EO only on signup / pending-retry (not per-page URL updates —
 // PostHog carries page activity). Chrome hide debounced (0ms).
-// PostHog: only for users who passed the gate. SDK loads lazily. distinct_id = visitorId (UUID, not sent as
-// a person property). Person: $email only. Events: $pageview with $current_url only. phc_… + CSP as below.
+// PostHog: only for users who passed the gate. SDK loads lazily. distinct_id = normalized email (so Activity
+// / Persons show email, not a UUID). visitorId is aliased into that id when present. Person props: $email only.
+// Events: $pageview with $current_url only. phc_… + CSP as below.
 // Lead storage: bump LEAD_STORAGE_VERSION to wipe leadGate* / subscribed once globally (everyone re-sees gate).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
@@ -134,10 +135,15 @@
     if (localStorage.getItem('leadGateComplete') !== '1') return false;
     var profile = parseLeadGateProfile();
     if (!profile || !profile.email) return false;
+    var emailTrim = String(profile.email).trim();
+    var distinctId = emailTrim.toLowerCase();
+    if (!distinctId) return false;
     var vid = ensureProfileVisitorId(profile);
-    if (!vid) return false;
     try {
-      window.posthog.identify(vid, { $email: profile.email });
+      if (vid && vid !== distinctId && typeof window.posthog.alias === 'function') {
+        window.posthog.alias(distinctId, vid);
+      }
+      window.posthog.identify(distinctId, { $email: emailTrim });
       window.posthog.capture('$pageview', { $current_url: location.href });
       sfabPostHogCaptureSentThisPage = true;
       return true;
