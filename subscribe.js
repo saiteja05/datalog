@@ -14,9 +14,10 @@
 // https://cloudflare-dns.com or DNS step fails open (submit still allowed).
 // Background: DNS outcomes cached (session, 5m); EO only on signup / pending-retry (not per-page URL updates —
 // PostHog carries page activity). Chrome hide debounced (0ms).
-// PostHog: only for users who passed the gate. SDK loads lazily. distinct_id = normalized email (so Activity
-// / Persons show email, not a UUID). visitorId is aliased into that id when present. Person props: $email only.
-// Events: $pageview with $current_url only. phc_… + CSP as below.
+// PostHog: only for users who passed the gate. SDK loads lazily. distinct_id = normalized email (bootstrap +
+// identify so the SDK never starts as an anonymous UUID). visitorId is aliased into that id when present.
+// Auto capture off: web vitals / pageleave / dead clicks / rageclicks / heatmaps (they fired before identify).
+// Person props: $email only. Events: $pageview with $current_url only. phc_… + CSP as below.
 // Lead storage: bump LEAD_STORAGE_VERSION to wipe leadGate* / subscribed once globally (everyone re-sees gate).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
@@ -168,6 +169,17 @@
   function installPostHog() {
     if (!POSTHOG_KEY || window.__SFAB_POSTHOG_INSTALLED) return;
     window.__SFAB_POSTHOG_INSTALLED = true;
+    var phBootstrap = {};
+    if (localStorage.getItem('leadGateComplete') === '1') {
+      var bootProf = parseLeadGateProfile();
+      if (bootProf && bootProf.email) {
+        var bootId = String(bootProf.email).trim().toLowerCase();
+        if (bootId) {
+          phBootstrap.distinctID = bootId;
+          phBootstrap.isIdentifiedID = true;
+        }
+      }
+    }
     // Official loader stub (see posthog.com/docs/libraries/js).
     !(function (t, e) {
       var o, n, p, r;
@@ -211,18 +223,27 @@
         }),
         (e.__SV = 1));
     })(document, window.posthog || []);
-    window.posthog.init(POSTHOG_KEY, {
+    var phInit = {
       api_host: POSTHOG_API_HOST,
       defaults: '2026-01-30',
       person_profiles: 'identified_only',
       autocapture: false,
       capture_pageview: false,
+      capture_pageleave: false,
+      capture_performance: false,
+      capture_dead_clicks: false,
+      rageclick: false,
+      enable_heatmaps: false,
       disable_session_recording: true,
       loaded: function () {
         identifyPostHogFromLeadGate();
         schedulePostHogIdentifyUntilSent();
       }
-    });
+    };
+    if (phBootstrap.distinctID) {
+      phInit.bootstrap = phBootstrap;
+    }
+    window.posthog.init(POSTHOG_KEY, phInit);
     schedulePostHogIdentifyUntilSent();
   }
 
