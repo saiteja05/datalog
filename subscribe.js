@@ -24,7 +24,10 @@
   var LEAD_STORAGE_VERSION = '2';
   var LEAD_STORAGE_VERSION_KEY = 'sfabLeadStorageVersion';
   try {
-    if (localStorage.getItem(LEAD_STORAGE_VERSION_KEY) !== LEAD_STORAGE_VERSION) {
+    var leadVerOk =
+      localStorage.getItem(LEAD_STORAGE_VERSION_KEY) === LEAD_STORAGE_VERSION ||
+      sessionStorage.getItem('sfabLeadStorageVersionShadow') === LEAD_STORAGE_VERSION;
+    if (!leadVerOk) {
       [
         'leadGateComplete',
         'leadGateProfile',
@@ -34,7 +37,14 @@
       ].forEach(function (key) {
         localStorage.removeItem(key);
       });
-      localStorage.setItem(LEAD_STORAGE_VERSION_KEY, LEAD_STORAGE_VERSION);
+      try {
+        localStorage.setItem(LEAD_STORAGE_VERSION_KEY, LEAD_STORAGE_VERSION);
+        sessionStorage.removeItem('sfabLeadStorageVersionShadow');
+      } catch (eVer) {
+        try {
+          sessionStorage.setItem('sfabLeadStorageVersionShadow', LEAD_STORAGE_VERSION);
+        } catch (eS) {}
+      }
     }
   } catch (eMigrate) {}
 
@@ -116,29 +126,37 @@
     return profile.visitorId;
   }
 
+  var sfabPostHogCaptureSentThisPage = false;
+
   function identifyPostHogFromLeadGate() {
-    if (!POSTHOG_KEY || typeof window.posthog === 'undefined' || !window.posthog.identify) return;
-    if (localStorage.getItem('leadGateComplete') !== '1') return;
+    if (sfabPostHogCaptureSentThisPage) return true;
+    if (!POSTHOG_KEY || typeof window.posthog === 'undefined' || !window.posthog.identify) return false;
+    if (localStorage.getItem('leadGateComplete') !== '1') return false;
     var profile = parseLeadGateProfile();
-    if (!profile || !profile.email) return;
+    if (!profile || !profile.email) return false;
     var vid = ensureProfileVisitorId(profile);
-    if (!vid) return;
+    if (!vid) return false;
     try {
       window.posthog.identify(vid, { $email: profile.email });
       window.posthog.capture('$pageview', { $current_url: location.href });
-    } catch (ePh) {}
+      sfabPostHogCaptureSentThisPage = true;
+      return true;
+    } catch (ePh) {
+      return false;
+    }
+  }
+
+  function schedulePostHogIdentifyUntilSent() {
+    var n = 0;
+    function tick() {
+      if (identifyPostHogFromLeadGate() || n++ > 50) return;
+      setTimeout(tick, 120);
+    }
+    setTimeout(tick, 0);
   }
 
   function queuePostHogIdentifyAfterSignup() {
-    var attempts = 0;
-    function tryNow() {
-      if (typeof window.posthog !== 'undefined' && window.posthog.identify) {
-        identifyPostHogFromLeadGate();
-        return;
-      }
-      if (++attempts < 80) setTimeout(tryNow, 80);
-    }
-    tryNow();
+    schedulePostHogIdentifyUntilSent();
   }
 
   function installPostHog() {
@@ -196,8 +214,10 @@
       disable_session_recording: true,
       loaded: function () {
         identifyPostHogFromLeadGate();
+        schedulePostHogIdentifyUntilSent();
       }
     });
+    schedulePostHogIdentifyUntilSent();
   }
 
   function inSubscribeShell(el) {
@@ -769,7 +789,11 @@
     if (!ev || ev.persisted !== true) return;
     if (localStorage.getItem('leadGateSyncPending') === '1') return;
     if (localStorage.getItem('leadGateComplete') !== '1') return;
-    setTimeout(identifyPostHogFromLeadGate, 500);
+    setTimeout(function () {
+      sfabPostHogCaptureSentThisPage = false;
+      identifyPostHogFromLeadGate();
+      schedulePostHogIdentifyUntilSent();
+    }, 500);
   }
 
   if (localStorage.getItem('subscribed') === '1' && localStorage.getItem('leadGateComplete') !== '1') {
