@@ -16,9 +16,28 @@
 // PostHog carries page activity). Chrome hide debounced (0ms).
 // PostHog: only for users who passed the gate. SDK loads lazily. distinct_id = visitorId (UUID, not sent as
 // a person property). Person: $email only. Events: $pageview with $current_url only. phc_… + CSP as below.
+// Lead storage: bump LEAD_STORAGE_VERSION to wipe leadGate* / subscribed once globally (everyone re-sees gate).
 (function () {
   var EO_FORM_ID = 'a1be7298-21da-11f1-91f4-271ecaf1fe8d';
   var path = (location.pathname || '').replace(/\\/g, '/').toLowerCase();
+  /** Increment to force one-time clear of gate state on all clients (new journey). */
+  var LEAD_STORAGE_VERSION = '2';
+  var LEAD_STORAGE_VERSION_KEY = 'sfabLeadStorageVersion';
+  try {
+    if (localStorage.getItem(LEAD_STORAGE_VERSION_KEY) !== LEAD_STORAGE_VERSION) {
+      [
+        'leadGateComplete',
+        'leadGateProfile',
+        'subscribed',
+        'leadGateSyncPending',
+        'leadGatePendingLead'
+      ].forEach(function (key) {
+        localStorage.removeItem(key);
+      });
+      localStorage.setItem(LEAD_STORAGE_VERSION_KEY, LEAD_STORAGE_VERSION);
+    }
+  } catch (eMigrate) {}
+
   var DNS_CACHE_PREFIX = 'sfabDnsV1:';
   var DNS_CACHE_TTL_MS = 5 * 60 * 1000;
   /** Project API key from PostHog → Project settings (leave empty to disable). */
