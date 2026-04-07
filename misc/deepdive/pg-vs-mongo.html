@@ -1075,6 +1075,41 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 .wa-src{font-size:.68rem;color:var(--tx3);text-align:center;margin:1rem auto 0;max-width:860px}
 @media(max-width:640px){.wa-bars{grid-template-columns:1fr}}
 
+/* Write amplification — schematic (heap/COLL + index row) */
+.wa-ill-wrap{
+  margin:1.15rem auto 0;padding:.75rem .5rem 1rem;max-width:920px;
+  background:rgba(0,0,0,.22);border-radius:14px;border:1px solid rgba(255,255,255,.06)
+}
+.wa-ill-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:.65rem;align-items:start
+}
+@media(max-width:720px){.wa-ill-grid{grid-template-columns:1fr}}
+.wa-ill-panel-title{
+  font-size:.62rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;
+  text-align:center;margin:0 0 .4rem;color:var(--tx3)
+}
+.wa-ill-panel-pg .wa-ill-panel-title{color:#7dd3fc}
+.wa-ill-panel-mg .wa-ill-panel-title{color:#4ade80}
+.wa-ill-svg{width:100%;height:auto;display:block;overflow:visible}
+.wa-ill-legend{
+  margin:.75rem .35rem 0;font-size:.68rem;line-height:1.5;color:var(--tx2);text-align:center;max-width:52rem;margin-left:auto;margin-right:auto
+}
+.wa-link{fill:none;stroke-width:1.25;stroke-linecap:round;transition:stroke .25s ease,opacity .25s ease,stroke-dasharray .25s ease}
+.wa-link-dim{stroke:#475569;opacity:.22}
+.wa-link-act-pg{stroke:#60a5fa;opacity:.55}
+.wa-link-act-mg{stroke:#00ed64;opacity:.5}
+.wa-link-defer{stroke:#94a3b8;opacity:.35;stroke-dasharray:5 4}
+.wa-shape{transition:fill .28s ease,stroke .28s ease,opacity .28s ease}
+.wa-shape-off{fill:rgba(51,65,85,.35);stroke:#475569;opacity:.45}
+.wa-shape-on-pg{fill:rgba(96,165,250,.22);stroke:#60a5fa;opacity:1}
+.wa-shape-dbl-pg{fill:rgba(251,191,36,.18);stroke:#fbbf24;opacity:1;stroke-width:2}
+.wa-shape-on-mg{fill:rgba(0,237,100,.14);stroke:#00ed64;opacity:1}
+.wa-shape-dbl-mg{fill:rgba(251,191,36,.14);stroke:#fbbf24;opacity:1;stroke-width:2}
+.wa-shape-defer{fill:rgba(71,85,105,.2);stroke:#64748b;opacity:.65;stroke-dasharray:5 4}
+@media(prefers-reduced-motion:reduce){
+  .wa-shape,.wa-link{transition:none!important}
+}
+
 /* Connections diagrams — animated client→server lines */
 #connections .conn-flow-dash-pg path,#connections .conn-flow-dash-mg path{
   stroke-dasharray:8 5;animation:repl-dash-flow 3.1s linear infinite
@@ -1277,7 +1312,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 <section id="write-amp">
   <div class="int-hdr">
     <h2>Write amplification</h2>
-    <p class="sec-depth" style="max-width:800px">Every <strong>index multiplies write cost</strong>. PostgreSQL&rsquo;s heap + <strong>TID</strong> model means a non-<strong>HOT</strong> <code>UPDATE</code> often rewrites <strong>every</strong> index entry when the row gets a new tuple; MongoDB&rsquo;s stable <strong>RecordId</strong> lets many updates touch <strong>only the collection B-tree</strong> when indexed fields don&rsquo;t change (<a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md&name=mongodb_deepdive" class="deepdive-src"><code>mongodb_deepdive</code></a> §4). Numbers below are <strong>logical btree/WAL-ish touches</strong> for teaching—see <a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md&name=postgres_deepdive" class="deepdive-src"><code>postgres_deepdive</code></a> §8–9, §12.1.</p>
+    <p class="sec-depth" style="max-width:800px">Every <strong>index multiplies write cost</strong>. On PostgreSQL, a non-<strong>HOT</strong> <code>UPDATE</code> still produces a <strong>new heap tuple</strong> and <strong>new TID</strong>. Only indexes whose <strong>search keys</strong> actually change need a full <strong>remove old key + add new key</strong>; the rest still do at least a <strong>TID repoint</strong> (teaching counts: <code>1+K</code> vs <code>1+K+1</code> when <code>a=1</code> index tree sees a key change). The pessimistic <code>1+2K</code> shape applies on <strong>both</strong> sides when <code>a=K</code> (every index needs remove+insert)—do not pair that worst case on Postgres with an <code>a=1</code> story on Mongo. <strong>HOT</strong> avoids new index work when rules allow. MongoDB&rsquo;s stable <strong>RecordId</strong> is why <code>a=1</code> updates often look cheaper than Postgres <code>1+K+1</code> (<a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md&name=mongodb_deepdive" class="deepdive-src"><code>mongodb_deepdive</code></a> §4). Numbers are <strong>logical btree/WAL-ish touches</strong> for teaching—see <a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md&name=postgres_deepdive" class="deepdive-src"><code>postgres_deepdive</code></a> §8–9, §12.1.</p>
   </div>
 
   <div class="wa-stage">
@@ -1295,6 +1330,20 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
         <button type="button" class="wa-op wa-op-hot" data-op="upd-hot" role="tab" aria-selected="false">UPDATE · Postgres HOT</button>
         <button type="button" class="wa-op" data-op="upd-1ix" role="tab" aria-selected="false">UPDATE · 1 indexed field</button>
       </div>
+    </div>
+
+    <div class="wa-ill-wrap" id="waIllWrap">
+      <div class="wa-ill-grid">
+        <div class="wa-ill-panel wa-ill-panel-pg">
+          <div class="wa-ill-panel-title">PostgreSQL · heap + B-tree indexes</div>
+          <div id="waIllPg"></div>
+        </div>
+        <div class="wa-ill-panel wa-ill-panel-mg">
+          <div class="wa-ill-panel-title">MongoDB · collection + indexes</div>
+          <div id="waIllMg"></div>
+        </div>
+      </div>
+      <p class="wa-ill-legend" id="waIllLegend"></p>
     </div>
 
     <div class="wa-bars">
@@ -5308,10 +5357,198 @@ var intViz=(function(){
       var cap=document.getElementById('waCap');
       var replay=document.getElementById('waReplay');
       var opBtns=document.querySelectorAll('.wa-op');
+      var illPg=document.getElementById('waIllPg');
+      var illMg=document.getElementById('waIllMg');
+      var illLeg=document.getElementById('waIllLegend');
       if(!idxEl||!barPg||!barMg)return;
 
       var op='insert';
       function K(){return Math.max(3,Math.min(10,parseInt(idxEl.value,10)||5));}
+
+      /** Postgres UPDATE·1 indexed field (toy): two heap versions; index 1 = key change (−/+); others = TID repoint (1×) ⇒ 1+K+1. */
+      function buildPgUpd1ixSvg(k){
+        var W=360,H=278,ixR=12,ixY=198;
+        var pos=[],j;
+        if(k<=1)pos.push(180);
+        else for(j=0;j<k;j++)pos.push(28+j*(304/Math.max(k-1,1)));
+        var heapW=78,heapH=40,heapTop=36;
+        var oldX=22,newX=W-22-heapW;
+        var oldCx=oldX+heapW/2,newCx=newX+heapW/2;
+        var oldBot=heapTop+heapH;
+        var out=[];
+        out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" class="wa-ill-svg">');
+        out.push('<text x="180" y="16" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600" font-family="DM Sans,system-ui,sans-serif">Non-HOT UPDATE · indexed field changed · two row versions in the heap</text>');
+        out.push('<rect x="'+oldX+'" y="'+heapTop+'" width="'+heapW+'" height="'+heapH+'" rx="8" class="wa-shape wa-shape-defer"/>');
+        out.push('<text x="'+oldCx+'" y="'+(heapTop+heapH/2+3)+'" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">v₁ · TID₁</text>');
+        out.push('<rect x="'+newX+'" y="'+heapTop+'" width="'+heapW+'" height="'+heapH+'" rx="8" class="wa-shape wa-shape-on-pg"/>');
+        out.push('<text x="'+newCx+'" y="'+(heapTop+heapH/2+3)+'" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">v₂ · TID₂</text>');
+        out.push('<path d="M '+(oldX+heapW+8)+' '+(heapTop+heapH/2)+' L '+(newX-8)+' '+(heapTop+heapH/2)+'" class="wa-link wa-link-act-pg" stroke-width="1.8"/>');
+        out.push('<polygon points="'+(newX-14)+','+(heapTop+heapH/2)+' '+(newX-8)+','+(heapTop+heapH/2-4)+' '+(newX-8)+','+(heapTop+heapH/2+4)+'" fill="#60a5fa"/>');
+        out.push('<text x="180" y="88" text-anchor="middle" fill="#fbbf24" font-size="8" font-weight="700" font-family="DM Sans,system-ui,sans-serif">Index 1 (example): search key changed ⇒ remove old entry + add new (− / +).</text>');
+        out.push('<text x="180" y="102" text-anchor="middle" fill="#7dd3fc" font-size="8" font-weight="600" font-family="DM Sans,system-ui,sans-serif">'+(k>1?('Indexes 2–'+k+': same key values ⇒ repoint to new TID (1× each).'):'Single index only: full −/+ on that tree.')+'</text>');
+        out.push('<text x="180" y="118" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="800" font-family="JetBrains Mono,monospace">'+(k>1?('1 + ('+(k-1)+'×1) + 2 = 1 + '+k+' + 1'):('1 heap + 1 index × 2 = 3'))+'</text>');
+        for(j=0;j<k;j++){
+          out.push('<line x1="'+oldCx+'" y1="'+oldBot+'" x2="'+pos[j]+'" y2="'+(ixY-ixR)+'" class="wa-link wa-link-defer"/>');
+          out.push('<line x1="'+newCx+'" y1="'+oldBot+'" x2="'+pos[j]+'" y2="'+(ixY-ixR)+'" class="wa-link wa-link-act-pg"/>');
+        }
+        for(j=0;j<k;j++){
+          var keyCh=j===0;
+          out.push('<circle cx="'+pos[j]+'" cy="'+ixY+'" r="'+ixR+'" class="wa-shape '+(keyCh?'wa-shape-dbl-pg':'wa-shape-on-pg')+'"/>');
+          out.push('<text x="'+pos[j]+'" y="'+(ixY+3)+'" text-anchor="middle" fill="'+(keyCh?'#fef3c7':'#e2e8f0')+'" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">'+(j+1)+'</text>');
+          out.push('<text x="'+pos[j]+'" y="'+(ixY+ixR+14)+'" text-anchor="middle" fill="'+(keyCh?'#fbbf24':'#7dd3fc')+'" font-size="7" font-weight="600" font-family="DM Sans,system-ui,sans-serif">'+(keyCh?'− / +':'1×')+'</text>');
+        }
+        out.push('<text x="180" y="'+(H-8)+'" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="DM Sans,system-ui,sans-serif">If a=K on both engines, Mongo matches this toy bound too: 1 + 2K (collection + K indexes × remove/insert). mongodb_deepdive 4.3 “all idx×2”.</text>');
+        out.push('</svg>');
+        return out.join('');
+      }
+
+      /** Postgres UPDATE non-indexed columns, non-HOT: same v₁/v₂ heap story; 1+K counts one repointer/index (vs 1+2K when keys change). */
+      function buildPgUpdNiSvg(k){
+        var W=360,H=278,ixR=12,ixY=198;
+        var pos=[],j;
+        if(k<=1)pos.push(180);
+        else for(j=0;j<k;j++)pos.push(28+j*(304/Math.max(k-1,1)));
+        var heapW=78,heapH=40,heapTop=36;
+        var oldX=22,newX=W-22-heapW;
+        var oldCx=oldX+heapW/2,newCx=newX+heapW/2;
+        var oldBot=heapTop+heapH;
+        var out=[];
+        out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" class="wa-ill-svg">');
+        out.push('<text x="180" y="16" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600" font-family="DM Sans,system-ui,sans-serif">Non-HOT · no indexed columns changed · still two heap tuples</text>');
+        out.push('<rect x="'+oldX+'" y="'+heapTop+'" width="'+heapW+'" height="'+heapH+'" rx="8" class="wa-shape wa-shape-defer"/>');
+        out.push('<text x="'+oldCx+'" y="'+(heapTop+heapH/2+3)+'" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">v₁ · TID₁</text>');
+        out.push('<rect x="'+newX+'" y="'+heapTop+'" width="'+heapW+'" height="'+heapH+'" rx="8" class="wa-shape wa-shape-on-pg"/>');
+        out.push('<text x="'+newCx+'" y="'+(heapTop+heapH/2+3)+'" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">v₂ · TID₂</text>');
+        out.push('<path d="M '+(oldX+heapW+8)+' '+(heapTop+heapH/2)+' L '+(newX-8)+' '+(heapTop+heapH/2)+'" class="wa-link wa-link-act-pg" stroke-width="1.8"/>');
+        out.push('<polygon points="'+(newX-14)+','+(heapTop+heapH/2)+' '+(newX-8)+','+(heapTop+heapH/2-4)+' '+(newX-8)+','+(heapTop+heapH/2+4)+'" fill="#60a5fa"/>');
+        out.push('<text x="180" y="92" text-anchor="middle" fill="#7dd3fc" font-size="8.5" font-weight="700" font-family="DM Sans,system-ui,sans-serif">Same-key indexes: repoint to new TID (teaching count = 1 btree touch / index)</text>');
+        out.push('<text x="180" y="108" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="800" font-family="JetBrains Mono,monospace">1 new heap + K indexes × 1 touch = 1 + '+k+'</text>');
+        for(j=0;j<k;j++){
+          out.push('<line x1="'+oldCx+'" y1="'+oldBot+'" x2="'+pos[j]+'" y2="'+(ixY-ixR)+'" class="wa-link wa-link-defer"/>');
+          out.push('<line x1="'+newCx+'" y1="'+oldBot+'" x2="'+pos[j]+'" y2="'+(ixY-ixR)+'" class="wa-link wa-link-act-pg"/>');
+        }
+        for(j=0;j<k;j++){
+          out.push('<circle cx="'+pos[j]+'" cy="'+ixY+'" r="'+ixR+'" class="wa-shape wa-shape-on-pg"/>');
+          out.push('<text x="'+pos[j]+'" y="'+(ixY+3)+'" text-anchor="middle" fill="#e2e8f0" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">'+(j+1)+'</text>');
+          out.push('<text x="'+pos[j]+'" y="'+(ixY+ixR+14)+'" text-anchor="middle" fill="#7dd3fc" font-size="7" font-weight="600" font-family="DM Sans,system-ui,sans-serif">1×</text>');
+        }
+        out.push('<text x="180" y="'+(H-8)+'" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="DM Sans,system-ui,sans-serif">For one tuple / no index work use Postgres HOT. “1 indexed field” adds one −/+ tree on top of this 1+K picture.</text>');
+        out.push('</svg>');
+        return out.join('');
+      }
+
+      /** Mongo same scenario: RecordId unchanged; only indexes whose keys moved pay ×2 (here index 1). */
+      function buildMgUpd1ixSvg(k){
+        var W=360,H=278,ixR=12,ixY=188,cx=180;
+        var pos=[],j;
+        if(k<=1)pos.push(180);
+        else for(j=0;j<k;j++)pos.push(28+j*(304/Math.max(k-1,1)));
+        var collW=152,collH=46,collTop=34,cxRect=cx-collW/2,collBot=collTop+collH;
+        var out=[];
+        out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" class="wa-ill-svg">');
+        out.push('<text x="'+cx+'" y="16" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600" font-family="DM Sans,system-ui,sans-serif">Same logical document · stable RecordId</text>');
+        out.push('<rect x="'+cxRect+'" y="'+collTop+'" width="'+collW+'" height="'+collH+'" rx="10" class="wa-shape wa-shape-on-mg"/>');
+        out.push('<text x="'+cx+'" y="'+(collTop+collH/2-4)+'" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="700" font-family="DM Sans,system-ui,sans-serif">Collection B-tree</text>');
+        out.push('<text x="'+cx+'" y="'+(collTop+collH/2+9)+'" text-anchor="middle" fill="#86efac" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">RecordId R (unchanged)</text>');
+        out.push('<text x="'+cx+'" y="98" text-anchor="middle" fill="#cbd5e1" font-size="8.5" font-weight="600" font-family="DM Sans,system-ui,sans-serif">1 physical doc version write + only affected index pays remove+insert</text>');
+        out.push('<text x="'+cx+'" y="114" text-anchor="middle" fill="#4ade80" font-size="9" font-weight="800" font-family="JetBrains Mono,monospace">1 + 2 = 3 &nbsp;(example: 1 indexed field → index 1 only)</text>');
+        for(j=0;j<k;j++){
+          var isAff=j===0;
+          var lcls=isAff?'wa-link wa-link-act-mg':'wa-link wa-link-dim';
+          out.push('<line x1="'+cx+'" y1="'+collBot+'" x2="'+pos[j]+'" y2="'+(ixY-ixR)+'" class="'+lcls+'" stroke-width="'+(isAff?2.2:1.1)+'"/>');
+          if(isAff){
+            out.push('<line x1="'+(cx-12)+'" y1="'+(collBot+10)+'" x2="'+pos[j]+'" y2="'+(ixY-ixR+6)+'" class="wa-link wa-link-act-mg" stroke-width="1.4" opacity=".55"/>');
+          }
+        }
+        for(j=0;j<k;j++){
+          var aff=j===0;
+          var cls=aff?'wa-shape wa-shape-dbl-mg':'wa-shape wa-shape-off';
+          out.push('<circle cx="'+pos[j]+'" cy="'+ixY+'" r="'+ixR+'" class="'+cls+'"/>');
+          out.push('<text x="'+pos[j]+'" y="'+(ixY+3)+'" text-anchor="middle" fill="'+(aff?'#fef9c3':'#64748b')+'" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">'+(j+1)+'</text>');
+          if(aff)out.push('<text x="'+pos[j]+'" y="'+(ixY+ixR+14)+'" text-anchor="middle" fill="#fbbf24" font-size="7" font-weight="600" font-family="DM Sans,system-ui,sans-serif">− / +</text>');
+        }
+        out.push('<text x="'+cx+'" y="'+(H-22)+'" text-anchor="middle" fill="#64748b" font-size="7" font-family="DM Sans,system-ui,sans-serif">If every index key moved (a=K), all K circles would be −/+ and the toy count becomes 1+2K — same pairing as Postgres.</text>');
+        out.push('<text x="'+cx+'" y="'+(H-8)+'" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="DM Sans,system-ui,sans-serif">'+(k>1?'This picture: indexes 2–'+k+' idle (a=1).':'K=1: single index path shown.')+'</text>');
+        out.push('</svg>');
+        return out.join('');
+      }
+
+      /** SVG schematic: central store + K index nodes; classes reflect teaching model. */
+      function buildWaPanelSvg(side,operation,k){
+        if(operation==='upd-1ix'&&side==='pg')return buildPgUpd1ixSvg(k);
+        if(operation==='upd-1ix'&&side==='mg')return buildMgUpd1ixSvg(k);
+        if(operation==='upd-ni'&&side==='pg')return buildPgUpdNiSvg(k);
+        var pg=side==='pg';
+        var W=360,H=198,cx=180;
+        var heapW=138,heapH=50,heapTop=26,hx=cx-heapW/2,heapBot=heapTop+heapH;
+        var ixY=142,ixR=13;
+        var pos=[];
+        var j;
+        if(k<=1)pos.push(cx);
+        else for(j=0;j<k;j++)pos.push(32+j*(296/Math.max(k-1,1)));
+        function pgIxState(i){
+          if(operation==='insert'||operation==='upd-ni')return'on';
+          if(operation==='upd-hot')return'off';
+          if(operation==='upd-1ix')return i===0?'dbl':'on';
+          if(operation==='delete')return'defer';
+          return'off';
+        }
+        function mgIxState(i){
+          if(operation==='insert')return'on';
+          if(operation==='delete')return'defer';
+          if(operation==='upd-ni'||operation==='upd-hot')return'off';
+          if(operation==='upd-1ix')return i===0?'dbl':'off';
+          return'off';
+        }
+        function pgLink(i){
+          var st=pgIxState(i);
+          if(st==='off')return'wa-link wa-link-dim';
+          if(operation==='delete')return'wa-link wa-link-defer';
+          return'wa-link wa-link-act-pg';
+        }
+        function mgLink(i){
+          var st=mgIxState(i);
+          if(st==='off')return'wa-link wa-link-dim';
+          if(operation==='delete')return'wa-link wa-link-defer';
+          return'wa-link wa-link-act-mg';
+        }
+        function clsForIx(st,prefix){
+          if(st==='on')return'wa-shape wa-shape-on-'+prefix;
+          if(st==='dbl')return'wa-shape wa-shape-dbl-'+prefix;
+          if(st==='defer')return'wa-shape wa-shape-defer';
+          return'wa-shape wa-shape-off';
+        }
+        var out=[];
+        out.push('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" class="wa-ill-svg">');
+        for(j=0;j<k;j++){
+          out.push('<line x1="'+cx+'" y1="'+heapBot+'" x2="'+pos[j]+'" y2="'+(ixY-ixR)+'" class="'+(pg?pgLink(j):mgLink(j))+'"/>');
+        }
+        out.push('<rect x="'+hx+'" y="'+heapTop+'" width="'+heapW+'" height="'+heapH+'" rx="10" class="wa-shape wa-shape-on-'+(pg?'pg':'mg')+'"/>');
+        out.push('<text x="'+cx+'" y="'+(heapTop+heapH/2+4)+'" text-anchor="middle" fill="#e2e8f0" font-size="11" font-weight="700" font-family="DM Sans,system-ui,sans-serif">'+(pg?'HEAP':'COLL')+'</text>');
+        for(j=0;j<k;j++){
+          var st=pg?pgIxState(j):mgIxState(j);
+          var pfx=pg?'pg':'mg';
+          out.push('<circle cx="'+pos[j]+'" cy="'+ixY+'" r="'+ixR+'" class="'+clsForIx(st,pfx)+'"/>');
+          out.push('<text x="'+pos[j]+'" y="'+(ixY+4)+'" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600" font-family="JetBrains Mono,monospace">'+(j+1)+'</text>');
+        }
+        out.push('<text x="'+cx+'" y="'+(H-6)+'" text-anchor="middle" fill="#64748b" font-size="8" font-family="DM Sans,system-ui,sans-serif">'+(pg?'each IX stores (key → TID)':'each IX stores (key → RecordId)')+'</text>');
+        out.push('</svg>');
+        return out.join('');
+      }
+
+      function renderWaIllustration(operation,k){
+        if(illPg)illPg.innerHTML=buildWaPanelSvg('pg',operation,k);
+        if(illMg)illMg.innerHTML=buildWaPanelSvg('mg',operation,k);
+        if(!illLeg)return;
+        var leg={
+          insert:'<strong>INSERT</strong> — both sides touch the main store once, then <strong>each</strong> of the <strong>'+k+'</strong> index trees (lines show “this index is updated”).',
+          delete:'<strong>DELETE</strong> — main store is marked/removed now; dashed index nodes mean cleanup is mostly <strong>deferred</strong> (Postgres <code>VACUUM</code> / WiredTiger GC), not a full instant rewrite of every index.',
+          'upd-ni':'<strong>UPDATE (non-indexed, non-HOT)</strong> — Postgres still has <strong>two heap versions</strong> (v₁→v₂, new TID). No index <strong>key</strong> values change ⇒ teaching count <code>1+K</code> (one repointer-style touch per index). Mongo: stable <strong>RecordId</strong> ⇒ <code>1</code> collection write. Use <strong>HOT</strong> when no new tuple / no index work.',
+          'upd-hot':'<strong>HOT / same idea</strong> — one in-place heap/collection write; <strong>no</strong> index leaf work when indexed columns did not change (and Postgres stays on the same heap page).',
+          'upd-1ix':'<strong>UPDATE (one indexed field)</strong> — <strong>Same assumption on both sides:</strong> only <strong>one</strong> index tree&rsquo;s key moves (<code>a=1</code>). Postgres: that tree −/+ plus <code>K−1</code> TID repoints ⇒ <code>1 + '+k+' + 1</code>. Mongo: one collection write + one index −/+ ⇒ <code>3</code> (independent of <code>K</code> here). <strong>Worst case paired:</strong> <code>a=K</code> ⇒ <code>1+2K</code> in this teaching model on <strong>both</strong> engines.'
+        };
+        illLeg.innerHTML=leg[operation]||'';
+      }
 
       function model(){
         var k=K();
@@ -5332,7 +5569,7 @@ var intViz=(function(){
           case 'upd-ni':
             pg=1+k;
             mg=1;
-            spg='Non-<strong>HOT</strong> update: new heap tuple ⇒ new <strong>TID</strong> ⇒ <strong>'+k+'</strong> new index entries (plus the heap).';
+            spg='Still <strong>v₁ + v₂</strong> on the heap (new <strong>TID</strong>) — same MVCC shape as indexed-field updates. Index <em>keys</em> unchanged ⇒ we count <strong>'+k+'</strong> repointer touches + heap (<code>1+K</code>), not <code>2×K</code>.';
             smg='<strong>RecordId</strong> stays put when indexed fields are unchanged—only the collection B-tree is touched.';
             note='This is the classic Postgres vs Mongo write-amplification split in <a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md&name=mongodb_deepdive" class="deepdive-src"><code>mongodb_deepdive</code></a> §4 / <a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md&name=postgres_deepdive" class="deepdive-src"><code>postgres_deepdive</code></a> §8.';
             break;
@@ -5343,11 +5580,11 @@ var intViz=(function(){
             note='HOT is Postgres-specific, but Mongo’s stable RecordId gives a similar “1 write” story for non-indexed mutations.';
             break;
           case 'upd-1ix':
-            pg=1+2*k;
+            pg=1+k+1;
             mg=3;
-            spg='Teaching model: new tuple + <strong>2×K</strong> btree work (old + new entries per index until <code>VACUUM</code>). Matches <a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md&name=mongodb_deepdive" class="deepdive-src"><code>mongodb_deepdive</code></a> §4.3 “all idx×2”.';
-            smg='Collection write + <strong>2</strong> ops on the one affected index (remove old key + insert new). Other indexes untouched.';
-            note='Mongo updates only the indexes whose keys moved; Postgres often revisits every index when the row version moves.';
+            spg='Preset pairs <code>a=1</code> on both sides: new heap tuple + <strong>'+(k>1?String(k-1):'0')+'</strong> same-key repoint(s) + <strong>1</strong> full key delete/insert ⇒ <code>1+'+k+'+1</code>. If instead <code>a=K</code>, Postgres teaching count is also <code>1+2K</code>—same pessimism as Mongo below.';
+            smg='Paired <code>a=1</code>: <strong>1</strong> collection write + <strong>2</strong> on the single affected index. Paired <code>a=K</code>: <code>1+2K</code> here too (each index remove+insert). See <a target="_blank" rel="noopener noreferrer" href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md&name=mongodb_deepdive" class="deepdive-src"><code>mongodb_deepdive</code></a> §4.3.';
+            note='Bar chart uses the <strong>same</strong> <code>a=1</code> scenario on both sides; Postgres is higher mainly because every secondary still repoints the new TID. Compare <code>1+2K</code> only against <code>1+2K</code>.';
             break;
           default:
             pg=mg=1;spg='';smg='';note='';
@@ -5364,6 +5601,8 @@ var intViz=(function(){
         if(subPg)subPg.innerHTML=m.spg;
         if(subMg)subMg.innerHTML=m.smg;
         if(cap)cap.innerHTML=m.note;
+
+        renderWaIllustration(op,m.k);
 
         var mx=Math.max(m.pg,m.mg,1);
         var pgPct=(m.pg/mx)*100;
