@@ -20,10 +20,19 @@
   --cl-pg:#336791;--cl-mongo:#00ed64;
   --c-perf:#60a5fa;--c-avail:#34d399;--c-both:#fbbf24;
 }
-html{scroll-behavior:smooth;font-size:16px}
-body{background:var(--bg);color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+html{scroll-behavior:smooth;font-size:16px;overflow-x:hidden}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;padding-top:56px}
 
-nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+/* Pinned top bar (fixed to viewport). !important + trailing body <style> beats any cascade oddities. */
+nav.site-nav{
+  position:fixed!important;top:0!important;left:0!important;right:0!important;
+  width:100%!important;max-width:100%;box-sizing:border-box!important;
+  z-index:99999!important;
+  background:rgba(10,14,23,0.94);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  -webkit-transform:translateZ(0);transform:translateZ(0)
+}
+section[id],.hero,.notes-section{scroll-margin-top:72px}
 .nav-in{max-width:1720px;margin:0 auto;padding:0 2rem;height:56px;display:flex;align-items:center;justify-content:space-between}
 .nav-brand{font-weight:700;font-size:1rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);display:flex;align-items:center;gap:.6rem}
 .nav-brand svg{flex-shrink:0}
@@ -704,11 +713,37 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
   .opg-bottom>.opg-health{grid-template-columns:1fr}
 }
 
-/* ── Index Internals Section ───────────────────────────── */
+/* ── Indexing and storage section ───────────────────────────── */
 #internals{padding:3rem 0 3.5rem;border-bottom:1px solid var(--border)}
 .int-hdr{text-align:center;margin-bottom:1.5rem}
 .int-hdr h2{font-size:1.8rem;margin-bottom:.4rem}
 .int-hdr p{color:var(--tx2);font-size:1rem;max-width:720px;margin:.4rem auto 0;line-height:1.5}
+/* Concise deep-dive blurbs per section / subsection */
+.sec-depth{color:var(--tx2);font-size:.84rem;max-width:920px;margin:.35rem auto 0;line-height:1.45;text-align:center}
+.sec-depth code{font-family:'JetBrains Mono',monospace;font-size:.78em;color:var(--cy);background:rgba(255,255,255,.05);padding:.08rem .28rem;border-radius:3px}
+.hero .sec-depth{max-width:900px;margin:.85rem auto 0}
+.int-hdr .sec-depth,.opg-hdr .sec-depth{max-width:960px}
+.int-panel>.sec-depth{
+  text-align:left;margin:0 0 .65rem;font-size:.72rem;line-height:1.42;color:var(--tx3);max-width:none
+}
+.opg-hdr .sec-depth{margin-top:.5rem}
+.opg-toggle-depth{
+  margin:0;padding:.4rem 1.15rem .65rem;font-size:.68rem;line-height:1.42;color:var(--tx3);
+  border-bottom:1px solid rgba(30,42,61,.5);text-align:left;max-width:none
+}
+.opg-bottom-depth{margin:.45rem auto .65rem;padding:0 1.5rem;max-width:1200px;font-size:.72rem;line-height:1.42;color:var(--tx3);text-align:center}
+.notes-section>.sec-depth{margin:.35rem 0 1rem;max-width:900px;text-align:left;font-size:.82rem}
+.int-mvcc-behavior-block{
+  max-width:920px;margin:0 auto 1.15rem;padding:.9rem 1.15rem 1rem;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:10px
+}
+.int-mvcc-behavior-h{
+  font-size:1rem;font-weight:700;color:var(--tx);letter-spacing:.05em;text-transform:uppercase;
+  margin:0 0 .55rem;text-align:center
+}
+#intMvccBehaviorBody .sec-depth{margin:.25rem 0 0;text-align:left;font-size:.83rem}
+#internals [data-int-engine]{display:none}
+#internals [data-int-engine].int-engine-on{display:block}
 .int-controls{display:flex;align-items:center;gap:1rem;justify-content:center;margin-bottom:1.2rem;flex-wrap:wrap}
 .int-btn{
   font-size:.82rem;font-weight:700;padding:.45rem 1.2rem;border-radius:6px;cursor:pointer;
@@ -735,14 +770,19 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 .int-explainer strong{color:var(--tx)}
 .int-explainer code{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--cy);background:rgba(255,255,255,.05);padding:.1rem .3rem;border-radius:3px}
 .int-panels{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1rem}
+.int-panels>.int-panel{min-width:0}
 .int-panel{
   background:var(--bg-card);border:1px solid var(--border);border-radius:10px;
-  padding:1rem;min-height:300px;position:relative;overflow:hidden
+  padding:1rem;min-height:300px;position:relative;overflow-x:auto;overflow-y:visible
 }
 .int-panel-title{font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:.8rem;text-align:center}
-.int-panel-title span:not(.int-data-badge):not(.int-hop-label){color:var(--cy);font-size:.7rem;font-weight:500;display:block;margin-top:2px;letter-spacing:0;text-transform:none}
+.int-panel-title span:not(.int-data-badge):not(.int-hop-label):not(.int-recid-hint){color:var(--cy);font-size:.7rem;font-weight:500;display:block;margin-top:2px;letter-spacing:0;text-transform:none}
 .int-panel-title .int-data-badge{display:inline-block;margin-left:.3rem;text-transform:none;vertical-align:middle}
-.int-panel svg{width:100%;display:block}
+.int-recid-hint{
+  display:block;margin-top:6px;font-size:.68rem;font-weight:400;color:var(--tx2);line-height:1.4;
+  max-width:100%;text-wrap:balance
+}
+.int-panel svg{width:auto;max-width:none;min-width:0;display:block}
 .int-data-badge{
   display:inline-block;font-size:.6rem;font-weight:700;letter-spacing:.08em;
   padding:.2rem .5rem;border-radius:4px;margin-left:.5rem;vertical-align:middle;
@@ -780,6 +820,35 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 .int-log.mongo-log{border-color:rgba(0,237,100,.2)}
 .int-log.mysql-log{border-color:rgba(251,191,36,.2)}
 .int-log strong{color:var(--tx)}
+.int-mvcc-wrap{
+  margin:0 auto 1.25rem;max-width:1000px;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:12px;
+  padding:1rem 1.1rem 1.1rem;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch
+}
+.int-mvcc-hdr{margin-bottom:.75rem;text-align:center}
+.int-mvcc-title{
+  font-size:1rem;font-weight:700;color:var(--tx);letter-spacing:.04em;
+  text-transform:uppercase;margin-bottom:.35rem
+}
+.int-mvcc-sub{
+  font-size:.8rem;color:var(--tx3);line-height:1.45;max-width:820px;margin:0 auto
+}
+.int-mvcc-sub code{font-family:'JetBrains Mono',monospace;font-size:.74rem;color:var(--cy);background:rgba(255,255,255,.06);padding:.08rem .28rem;border-radius:3px}
+.int-mvcc-detail{display:block;margin-top:.45rem;color:var(--tx2);font-size:.76rem;line-height:1.5}
+.int-mvcc-bloat,.int-mvcc-vac{
+  display:block;margin-top:.5rem;padding:.45rem .65rem;border-radius:8px;font-size:.76rem;line-height:1.5;text-align:left
+}
+.int-mvcc-bloat{
+  background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.22);color:#e7d4a0
+}
+.int-mvcc-vac{
+  background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.2);color:#fecaca
+}
+.int-mvcc-ref{display:block;margin-top:.35rem;font-size:.72rem;color:var(--tx3)}
+.int-mvcc-ref a{color:#60a5fa;text-decoration:none;border-bottom:1px solid rgba(96,165,250,.35)}
+.int-mvcc-ref a:hover{color:#93c5fd}
+.int-mvcc-viz{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.int-mvcc-viz svg{display:block;margin:0 auto;max-width:none;height:auto}
 .int-dead-count{
   display:inline-block;font-size:.7rem;padding:.15rem .4rem;border-radius:4px;margin-left:.5rem;
   background:rgba(248,113,113,.1);color:#f87171;font-weight:700;vertical-align:middle
@@ -788,18 +857,340 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 @keyframes int-flash{0%{opacity:1}50%{opacity:.3}100%{opacity:1}}
 @keyframes int-dead{0%{opacity:1}100%{opacity:.4}}
 @media(max-width:900px){.int-panels{grid-template-columns:1fr}}
+
+/* ── Replication + maintenance sections ─────────────────── */
+#replication,#maint,#connections{padding:3rem 0 3.5rem;border-bottom:1px solid var(--border)}
+.repl-table-wrap{
+  overflow-x:auto;margin:0 auto 1rem;max-width:1120px;
+  -webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--border);background:var(--bg-card)
+}
+#replication table.repl-table,#maint table.repl-table{
+  width:100%;min-width:680px;border-collapse:collapse;font-size:.8rem;line-height:1.45
+}
+#connections table.repl-table{
+  width:100%;min-width:520px;border-collapse:collapse;font-size:.8rem;line-height:1.45
+}
+#replication .repl-table th,#replication .repl-table td,#maint .repl-table th,#maint .repl-table td,#connections .repl-table th,#connections .repl-table td{
+  padding:.55rem .75rem;border-bottom:1px solid rgba(30,42,61,.55);vertical-align:top;text-align:left
+}
+#replication .repl-table thead th,#maint .repl-table thead th,#connections .repl-table thead th{
+  font-weight:700;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);
+  border-bottom:2px solid var(--border);background:var(--bg2)
+}
+#replication .repl-table tbody th[scope="row"],#maint .repl-table tbody th[scope="row"],#connections .repl-table tbody th[scope="row"]{
+  font-weight:700;color:var(--tx);font-size:.74rem;text-transform:uppercase;letter-spacing:.04em;
+  background:rgba(255,255,255,.02);white-space:nowrap;width:1%
+}
+#replication .repl-table td,#maint .repl-table td,#connections .repl-table td{color:var(--tx2)}
+#replication .repl-table td strong,#maint .repl-table td strong,#connections .repl-table td strong{color:var(--tx)}
+#replication .repl-table tbody tr:last-child td,#replication .repl-table tbody tr:last-child th,
+#maint .repl-table tbody tr:last-child td,#maint .repl-table tbody tr:last-child th,
+#connections .repl-table tbody tr:last-child td,#connections .repl-table tbody tr:last-child th{border-bottom:none}
+#replication .repl-th-pg,#maint .repl-th-pg,#connections .repl-th-pg{color:#93c5fd;background:rgba(96,165,250,.1)!important;border-left:3px solid #60a5fa}
+#replication .repl-th-mg,#maint .repl-th-mg,#connections .repl-th-mg{color:#4ade80;background:rgba(0,237,100,.1)!important;border-left:3px solid #00ed64}
+#replication .repl-th-my,#maint .repl-th-my,#connections .repl-th-my{color:#fcd34d;background:rgba(251,191,36,.12)!important;border-left:3px solid #fbbf24}
+#replication .repl-table code,#maint .repl-table code,#connections .repl-table code{font-family:'JetBrains Mono',monospace;font-size:.75em;color:var(--cy);background:rgba(255,255,255,.06);padding:.06rem .25rem;border-radius:3px}
+
+/* VACUUM vs compaction narrative blocks */
+.maint-subh{
+  font-size:1rem;font-weight:700;color:var(--tx);letter-spacing:.05em;text-transform:uppercase;
+  margin:1.65rem auto .55rem;text-align:center;max-width:900px
+}
+.maint-prose{
+  color:var(--tx2);font-size:.84rem;max-width:900px;margin:0 auto .65rem;line-height:1.55;text-align:left
+}
+.maint-prose strong{color:var(--tx)}
+.maint-prose code{font-family:'JetBrains Mono',monospace;font-size:.82em;color:var(--cy);background:rgba(255,255,255,.06);padding:.06rem .25rem;border-radius:3px}
+.maint-bloat{
+  max-width:920px;margin:1rem auto 0;padding:1rem 1.15rem;border-radius:12px;
+  background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3);border-left:4px solid #f87171
+}
+.maint-bloat h4{margin:0 0 .5rem;font-size:.88rem;color:#fecaca}
+.maint-bloat p{margin:0;font-size:.8rem;line-height:1.5;color:var(--tx2)}
+.maint-bloat ul{margin:.55rem 0 0;padding-left:1.2rem;font-size:.78rem;line-height:1.5;color:var(--tx2)}
+.maint-bloat li{margin:.25rem 0}
+.maint-src{font-size:.7rem;color:var(--tx3);text-align:center;margin:1.25rem auto 0;max-width:920px;line-height:1.5}
+
+/* VACUUM vs compaction — visual layout */
+.maint-stage{
+  max-width:1160px;margin:1rem auto 0;padding:1.25rem 1.2rem 1.4rem;
+  background:linear-gradient(160deg,rgba(96,165,250,.07) 0%,var(--bg-card) 45%,rgba(0,237,100,.06) 100%);
+  border:1px solid var(--border);border-radius:16px;
+  box-shadow:0 8px 32px rgba(0,0,0,.2)
+}
+.maint-strip{
+  display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.15rem
+}
+.maint-strip-cell{
+  padding:.7rem .9rem;border-radius:10px;text-align:center;line-height:1.35
+}
+.maint-strip-pg{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.32);border-left:4px solid #f87171}
+.maint-strip-mg{background:rgba(0,237,100,.09);border:1px solid rgba(0,237,100,.32);border-left:4px solid #00ed64}
+.maint-strip-cell .maint-pill{
+  display:inline-block;font-size:.62rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  padding:.2rem .5rem;border-radius:999px;margin-bottom:.35rem
+}
+.maint-strip-pg .maint-pill{background:rgba(248,113,113,.25);color:#fecaca}
+.maint-strip-mg .maint-pill{background:rgba(0,237,100,.22);color:#bbf7d0}
+.maint-strip-cell strong{display:block;font-size:.92rem;color:var(--tx);margin-bottom:.15rem}
+.maint-strip-cell span{font-size:.76rem;color:var(--tx2)}
+.maint-flow-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.1rem
+}
+.maint-flow-panel{
+  background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:.65rem .6rem .75rem;min-width:0
+}
+.maint-flow-panel-h{
+  font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.07em;text-align:center;margin:0 0 .45rem
+}
+.maint-flow-pg .maint-flow-panel-h{color:#93c5fd}
+.maint-flow-mg .maint-flow-panel-h{color:#4ade80}
+.maint-flow-panel svg{display:block;width:100%;height:auto;min-height:180px;max-height:240px}
+.maint-chips{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin-top:.5rem}
+.maint-chip{
+  font-size:.65rem;line-height:1.3;color:var(--tx2);background:rgba(255,255,255,.04);
+  border:1px solid var(--border);border-radius:6px;padding:.25rem .45rem;max-width:100%;text-align:center
+}
+.maint-chip b{color:var(--tx);font-weight:600}
+.maint-hazard-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:.65rem;margin-bottom:1rem
+}
+.maint-hazard-card{
+  background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.25);border-radius:10px;
+  padding:.65rem .7rem;text-align:center
+}
+.maint-hazard-card .mh-ico{font-size:1.35rem;line-height:1;margin-bottom:.25rem;display:block}
+.maint-hazard-card h5{margin:0 0 .25rem;font-size:.72rem;font-weight:700;color:#fecaca;text-transform:uppercase;letter-spacing:.04em}
+.maint-hazard-card p{margin:0;font-size:.72rem;line-height:1.45;color:var(--tx2)}
+.maint-table-mini td,.maint-table-mini th{font-size:.76rem!important;line-height:1.4!important}
+@media(max-width:900px){
+  .maint-strip,.maint-flow-grid,.maint-hazard-grid{grid-template-columns:1fr}
+}
+
+/* Maintenance viz — dynamic phases */
+.maint-ctrl{
+  display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.65rem 1.25rem;
+  margin:.35rem 0 1rem;padding:.65rem 1rem;background:rgba(0,0,0,.28);border-radius:12px;border:1px solid var(--border)
+}
+.maint-btn{
+  font:inherit;font-size:.78rem;font-weight:700;padding:.42rem 1.1rem;border-radius:8px;cursor:pointer;
+  border:1px solid rgba(96,165,250,.45);background:rgba(96,165,250,.12);color:#93c5fd;transition:background .15s
+}
+.maint-btn:hover{background:rgba(96,165,250,.22)}
+.maint-btn[aria-pressed="false"]{opacity:.75;border-color:var(--border);color:var(--tx2);background:rgba(255,255,255,.04)}
+.maint-btn:disabled{opacity:.4;cursor:not-allowed}
+.maint-cap-wrap{display:flex;flex-wrap:wrap;gap:.75rem 1.5rem;justify-content:center;flex:1;min-width:200px}
+.maint-cap{font-size:.72rem;line-height:1.4;margin:0;max-width:260px}
+.maint-cap-pg{color:#93c5fd}
+.maint-cap-mg{color:#86efac}
+.maint-pg-svg,.maint-mg-svg{display:block;width:100%;height:auto;min-height:180px;max-height:240px}
+.maint-pg-svg .maint-pg-static,.maint-mg-svg .maint-mg-static{opacity:1!important;animation:none!important;filter:none!important}
+.maint-pg-svg .maint-pg-node,.maint-mg-svg .maint-mg-node{transition:filter .35s ease,opacity .35s ease,stroke-width .35s ease}
+@keyframes maint-glow-pg{0%,100%{filter:drop-shadow(0 0 2px transparent)}50%{filter:drop-shadow(0 0 12px rgba(96,165,250,.65))}}
+@keyframes maint-glow-amber{0%,100%{filter:drop-shadow(0 0 2px transparent)}50%{filter:drop-shadow(0 0 14px rgba(251,191,36,.55))}}
+@keyframes maint-glow-red{0%,100%{filter:drop-shadow(0 0 2px transparent)}50%{filter:drop-shadow(0 0 12px rgba(248,113,113,.55))}}
+@keyframes maint-glow-green{0%,100%{filter:drop-shadow(0 0 2px transparent)}50%{filter:drop-shadow(0 0 12px rgba(52,211,153,.5))}}
+@keyframes maint-glow-mg{0%,100%{filter:drop-shadow(0 0 2px transparent)}50%{filter:drop-shadow(0 0 12px rgba(0,237,100,.5))}}
+@keyframes maint-dash{to{stroke-dashoffset:-24}}
+.maint-pg-svg.maint-phase-0 .maint-pg-n0{animation:maint-glow-pg 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-1 .maint-pg-n1{animation:maint-glow-amber 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-1 #maint_pg_l_hv{stroke-width:3;stroke-dasharray:7 5;animation:maint-dash .9s linear infinite}
+.maint-pg-svg.maint-phase-2 .maint-pg-n2{animation:maint-glow-pg 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-2 #maint_pg_l_i1{stroke-width:2.5;stroke-dasharray:6 4;animation:maint-dash .85s linear infinite}
+.maint-pg-svg.maint-phase-3 .maint-pg-n3{animation:maint-glow-pg 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-3 #maint_pg_l_i2{stroke-width:2.5;stroke-dasharray:6 4;animation:maint-dash .85s linear infinite}
+.maint-pg-svg.maint-phase-4 .maint-pg-n4{animation:maint-glow-pg 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-4 #maint_pg_l_i3{stroke-width:2.5;stroke-dasharray:6 4;animation:maint-dash .85s linear infinite}
+.maint-pg-svg.maint-phase-5 .maint-pg-n5{animation:maint-glow-pg 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-6 .maint-pg-n6{animation:maint-glow-red 1.35s ease-in-out infinite}
+.maint-pg-svg.maint-phase-7 .maint-pg-n7{animation:maint-glow-green 1.35s ease-in-out infinite}
+.maint-mg-svg.maint-phase-0 .maint-mg-n0{animation:maint-glow-mg 1.35s ease-in-out infinite}
+.maint-mg-svg.maint-phase-1 .maint-mg-n1{animation:maint-glow-mg 1.35s ease-in-out infinite}
+.maint-mg-svg.maint-phase-1 #maint_mg_path{stroke-dasharray:6 5;animation:maint-dash 1.1s linear infinite;stroke-width:2.2}
+.maint-mg-svg.maint-phase-2 .maint-mg-n2{animation:maint-glow-amber 1.35s ease-in-out infinite}
+.maint-mg-svg.maint-phase-2 #maint_mg_l_down{stroke-dasharray:5 4;animation:maint-dash .8s linear infinite;stroke-width:2}
+.maint-mg-svg.maint-phase-3 .maint-mg-n3{animation:maint-glow-mg 1.35s ease-in-out infinite}
+.maint-mg-svg.maint-phase-3 #maint_mg_l_sc{stroke-width:2.8;stroke-dasharray:8 5;animation:maint-dash .75s linear infinite}
+.maint-mg-svg.maint-phase-4 .maint-mg-n4{animation:maint-glow-green 1.5s ease-in-out infinite}
+@media(prefers-reduced-motion:reduce){
+  .maint-pg-svg .maint-pg-node,.maint-mg-svg .maint-mg-node{animation:none!important}
+  .maint-pg-svg [id^="maint_pg_l"],.maint-mg-svg #maint_mg_path,.maint-mg-svg #maint_mg_l_down,.maint-mg-svg #maint_mg_l_sc{animation:none!important;stroke-dasharray:none!important}
+}
+
+/* Write amplification (#write-amp) */
+#write-amp{padding:3rem 0 3.5rem;border-bottom:1px solid var(--border)}
+.wa-stage{
+  max-width:920px;margin:1rem auto 0;padding:1.2rem 1.25rem 1.35rem;
+  background:var(--bg-card);border:1px solid var(--border);border-radius:16px
+}
+.wa-controls{margin-bottom:1.1rem}
+.wa-idx-row{
+  display:flex;align-items:center;justify-content:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;
+  font-size:.82rem;color:var(--tx2)
+}
+.wa-idx-row input[type="range"]{width:min(220px,50vw);accent-color:#60a5fa}
+.wa-idx-row #waIdxVal{font-family:'JetBrains Mono',monospace;color:var(--cy);font-weight:600}
+.wa-op-grid{
+  display:flex;flex-wrap:wrap;gap:.45rem;justify-content:center
+}
+.wa-op{
+  font:inherit;font-size:.72rem;font-weight:700;padding:.4rem .75rem;border-radius:8px;cursor:pointer;
+  border:1px solid var(--border);background:rgba(255,255,255,.04);color:var(--tx2);transition:all .15s
+}
+.wa-op:hover{border-color:rgba(96,165,250,.4);color:var(--tx)}
+.wa-op.active{border-color:rgba(96,165,250,.55);background:rgba(96,165,250,.12);color:#93c5fd}
+.wa-op.wa-op-hot.active{border-color:rgba(251,191,36,.5);background:rgba(251,191,36,.1);color:#fcd34d}
+.wa-bars{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-top:.5rem}
+.wa-col{text-align:center}
+.wa-col-h{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:.5rem}
+.wa-col-pg .wa-col-h{color:#93c5fd}
+.wa-col-mg .wa-col-h{color:#4ade80}
+.wa-bar-track{
+  height:28px;border-radius:8px;background:rgba(0,0,0,.35);border:1px solid var(--border);overflow:hidden;
+  margin-bottom:.35rem
+}
+.wa-bar-fill{height:100%;width:0%;border-radius:7px;transition:width .45s cubic-bezier(.22,1,.36,1)}
+.wa-bar-pg{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+.wa-bar-mg{background:linear-gradient(90deg,#00a84c,#00ed64)}
+.wa-count{font-size:1.35rem;font-weight:800;font-family:'JetBrains Mono',monospace;margin-bottom:.25rem}
+.wa-col-pg .wa-count{color:#93c5fd}
+.wa-col-mg .wa-count{color:#4ade80}
+.wa-sub{font-size:.68rem;color:var(--tx3);line-height:1.45;min-height:2.8em}
+.wa-cap{
+  margin-top:1rem;padding:.65rem .85rem;border-radius:10px;font-size:.74rem;line-height:1.5;color:var(--tx2);
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);text-align:center
+}
+.wa-cap code{font-size:.85em;color:var(--cy)}
+.wa-replay{
+  display:block;margin:.75rem auto 0;font:inherit;font-size:.72rem;font-weight:600;padding:.35rem .9rem;
+  border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--tx3);cursor:pointer
+}
+.wa-replay:hover{color:var(--tx);border-color:rgba(0,237,100,.35)}
+.wa-src{font-size:.68rem;color:var(--tx3);text-align:center;margin:1rem auto 0;max-width:860px}
+@media(max-width:640px){.wa-bars{grid-template-columns:1fr}}
+
+/* Connections diagrams — animated client→server lines */
+#connections .conn-flow-dash-pg path,#connections .conn-flow-dash-mg path{
+  stroke-dasharray:8 5;animation:repl-dash-flow 3.1s linear infinite
+}
+@media(prefers-reduced-motion:reduce){
+  #connections .conn-flow-dash-pg path,#connections .conn-flow-dash-mg path{
+    animation:none!important;stroke-dasharray:none!important
+  }
+}
+
+/* Replication flow diagram (PG physical push vs Mongo logical pull/chain) */
+.repl-flow-section-h{
+  font-size:1rem;font-weight:700;color:var(--tx);letter-spacing:.06em;text-transform:uppercase;
+  margin:1.85rem 0 .5rem;text-align:center
+}
+.repl-flow-lead{max-width:920px!important}
+.repl-flow-stage{
+  max-width:1160px;margin:1rem auto 1.25rem;padding:1.35rem 1.25rem 1.5rem;
+  background:linear-gradient(165deg,rgba(96,165,250,.06) 0%,var(--bg-card) 38%,rgba(0,237,100,.05) 100%);
+  border:1px solid rgba(96,165,250,.22);border-radius:16px;
+  box-shadow:0 0 0 1px rgba(0,0,0,.2),0 12px 40px rgba(0,0,0,.25)
+}
+.repl-flow-compare-strip{
+  display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin-bottom:1.25rem
+}
+.repl-strip-cell{
+  padding:.75rem 1rem;border-radius:10px;text-align:left;line-height:1.45
+}
+.repl-strip-pg{
+  background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.35);
+  border-left:4px solid #f87171
+}
+.repl-strip-mg{
+  background:rgba(0,237,100,.09);border:1px solid rgba(0,237,100,.35);
+  border-left:4px solid #00ed64
+}
+.repl-strip-label{
+  display:block;font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);margin-bottom:.25rem
+}
+.repl-strip-cell strong{display:block;font-size:.95rem;color:var(--tx);margin-bottom:.2rem}
+.repl-strip-detail{font-size:.78rem;color:var(--tx2)}
+.repl-strip-detail code{font-family:'JetBrains Mono',monospace;font-size:.85em;color:var(--cy);background:rgba(0,0,0,.2);padding:.06rem .22rem;border-radius:3px}
+.repl-flow-viz{
+  display:grid;grid-template-columns:1fr 1fr;gap:1.15rem;align-items:stretch
+}
+.repl-flow-panel{
+  background:rgba(10,14,23,.55);border:1px solid var(--border);border-radius:14px;padding:1.1rem 1.1rem 1.2rem;min-width:0;
+  display:flex;flex-direction:column
+}
+.repl-flow-pg{border-top:3px solid #60a5fa}
+.repl-flow-mg{border-top:3px solid #00ed64}
+.repl-flow-h{
+  font-size:.82rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;text-align:center;margin:0 0 .35rem;line-height:1.3
+}
+.repl-flow-pg .repl-flow-h{color:#93c5fd}
+.repl-flow-mg .repl-flow-h{color:#4ade80}
+.repl-flow-tagline{
+  text-align:center;font-size:.72rem;color:var(--tx3);line-height:1.4;margin:0 0 .85rem
+}
+.repl-flow-tagline code{font-family:'JetBrains Mono',monospace;font-size:.9em;color:var(--cy)}
+.repl-flow-panel .repl-flow-svg-wrap{
+  flex:1;min-height:280px;display:flex;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.2);border-radius:12px;padding:.5rem;border:1px solid rgba(255,255,255,.06)
+}
+.repl-flow-panel svg{display:block;width:100%;height:auto;min-height:260px;max-height:none}
+.repl-wal-stream path{stroke-dasharray:10 7;animation:repl-dash-flow 2.8s linear infinite}
+.repl-oplog-stream path:not([stroke-dasharray]){stroke-dasharray:9 6;animation:repl-dash-flow 3.2s linear infinite}
+.repl-chain-stream path{animation:repl-dash-flow 4s linear infinite}
+@keyframes repl-dash-flow{to{stroke-dashoffset:-34}}
+@keyframes repl-nic-glow{0%,100%{opacity:.45}50%{opacity:.95}}
+.repl-flow-pg .repl-flow-svg-wrap .repl-pg-glow-rect{animation:repl-nic-glow 2.2s ease-in-out infinite}
+.repl-flow-legend{
+  display:flex;flex-wrap:wrap;gap:.45rem .75rem;margin-top:.65rem;font-size:.68rem;color:var(--tx3);line-height:1.35
+}
+.repl-flow-legend span{display:inline-flex;align-items:center;gap:.35rem}
+.repl-flow-legend i{
+  display:inline-block;width:22px;height:3px;border-radius:2px;flex-shrink:0
+}
+.repl-flow-legend i.solid-pg{background:linear-gradient(90deg,#60a5fa,#93c5fd);height:4px}
+.repl-flow-legend i.solid-mg{background:linear-gradient(90deg,#00ed64,#4ade80);height:4px}
+.repl-flow-legend i.dash-mg{background:repeating-linear-gradient(90deg,#34d399 0,#34d399 5px,transparent 5px,transparent 9px);height:3px}
+.repl-flow-cap{
+  font-size:.76rem;line-height:1.5;color:var(--tx2);margin:.85rem 0 0;text-align:left
+}
+.repl-flow-cap strong{color:var(--tx)}
+.repl-flow-cap code{font-family:'JetBrains Mono',monospace;font-size:.78em;color:var(--cy);background:rgba(255,255,255,.06);padding:.06rem .22rem;border-radius:3px}
+.repl-flow-math{
+  margin-top:.6rem;padding:.55rem .7rem;border-radius:10px;font-size:.72rem;font-family:'JetBrains Mono',monospace;line-height:1.5
+}
+.repl-flow-pg .repl-flow-math{background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.35);color:#fecaca}
+.repl-flow-mg .repl-flow-math{background:rgba(0,237,100,.1);border:1px solid rgba(0,237,100,.3);color:#bbf7d0}
+.repl-flow-srcnote{
+  font-size:.7rem;color:var(--tx3);text-align:center;margin:0 auto 1.5rem;max-width:920px;line-height:1.5
+}
+.repl-table-section-h{
+  font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);
+  text-align:center;margin:0 0 .65rem
+}
+@media(max-width:900px){
+  .repl-flow-compare-strip{grid-template-columns:1fr}
+  .repl-flow-viz{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){
+  .repl-wal-stream path,.repl-oplog-stream path,.repl-chain-stream path{animation:none;stroke-dasharray:none}
+  .repl-flow-pg .repl-flow-svg-wrap .repl-pg-glow-rect{animation:none;opacity:.7}
+}
 </style>
 </head>
 <body>
 
-<nav>
+<nav class="site-nav">
   <div class="nav-in">
     <div class="nav-brand">
       <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg>
       Postgres & MongoDB at Humongous Scale
     </div>
     <div class="nav-links">
-      <a href="#internals">Index Internals</a>
+      <a href="#internals">Indexing and storage</a>
+      <a href="#write-amp">Write amplification</a>
+      <a href="#maint">VACUUM &amp; compaction</a>
+      <a href="#replication">Replication</a>
+      <a href="#connections">Connections</a>
       <a href="#openai-pg">OpenAI + PostgreSQL</a>
       <a href="#notesSection" id="navNotes" style="display:none">Notes</a>
     </div>
@@ -815,8 +1206,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 
 <section id="internals">
   <div class="int-hdr">
-    <h2>Understand Internals</h2>
-    <p>How PostgreSQL, MySQL/InnoDB, and MongoDB store data and build indexes on disk. Insert, update, and delete rows to see dead tuples (PG), in-place updates (MongoDB/MySQL), MVCC bloat, and how VACUUM / compact works.</p>
+    <h2>Indexing and storage</h2>
   </div>
 
   <div class="int-controls">
@@ -832,32 +1222,617 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
       <button onclick="intViz.switchMode('mongo')">MongoDB</button>
     </div>
   </div>
-  <div class="int-log" id="intLog">Click <strong>Insert Row</strong> to start. Then try Update and Delete to see how each engine handles mutations.</div>
 
-  <div class="int-explainer" id="intExplainer">
-    <strong>PostgreSQL:</strong> Data stored in an unordered <strong>heap</strong>. Both primary and secondary indexes are regular B-Trees pointing to <code>ctid (page, offset)</code>.<br><span class="int-hop-label one">Primary lookup = 1 hop &nbsp;|&nbsp; Secondary lookup = 1 hop</span>
+  <div class="int-mvcc-behavior-block">
+    <h3 class="int-mvcc-behavior-h">MVCC behavior</h3>
+    <div id="intMvccBehaviorBody">
+      <p class="sec-depth int-engine-on" data-int-engine="pg"><strong>PostgreSQL</strong> uses <strong>heap MVCC</strong>: new row versions are appended as heap tuples; old ones stay as <em>dead</em> until <code>VACUUM</code> (often <code>autovacuum</code>) reclaims line pointers and walks <strong>every nbtree</strong> to drop stale <strong>TIDs</strong>. That <strong>lazy VACUUM</strong> marks pages reusable via the <strong>FSM</strong> but <strong>does not shrink</strong> the relation on disk—file size stays; only a <strong>rewrite</strong> (<code>VACUUM FULL</code>, <code>pg_repack</code>, cluster, etc.) returns space to the OS. Durability is <strong>8KB page-level WAL</strong> across heap and touched index pages—commonly <strong>full-page images</strong> (FPW) after checkpoint. Visibility is <strong>per-backend</strong> snapshots (<code>xmin</code>/<code>xmax</code>, <code>clog</code>). <strong>Version chain:</strong> heap/HOT tuple versions chain <strong>older → newer</strong> via <code>t_ctid</code> toward the live row (undo-based engines usually walk the opposite way). Typical pain: <strong>FPW volume</strong>, <strong>autovacuum lag</strong>, <strong>index bloat</strong>. <strong>UPDATE/DELETE</strong> here: new live tuple + chain, or dead marker, until vacuum. Planner uses <strong>Index</strong>/<strong>Bitmap</strong>/<strong>Index Only</strong> scan; this viz fixes on <strong>secondary→TID→heap</strong>.</p>
+      <p class="sec-depth" data-int-engine="mongo"><strong>MongoDB / WiredTiger</strong> stores data in <strong>per-tree B-trees</strong>; a stable <strong>RecordId</strong> is the engine&rsquo;s internal document slot in the <strong>collection</strong> file while each index is its own tree (<strong>key→RecordId</strong>). <strong>UPDATE</strong> often rewrites the current document <strong>without</strong> leaving old BSON versions on disk like Postgres heap tuples—but if the document <strong>grows</strong>, WiredTiger may <strong>move</strong> it to another page, leaving a <strong>hole</strong>; <strong>DELETE</strong>s free space inside pages. That space is <strong>reused for new writes</strong>, yet the <strong>data file can stay large and fragmented</strong> (sparse pages, tail unused). <code>compact</code> / <code>autoCompact</code> is <strong>defragmentation</strong>: pack live data, optionally shrink the file so the <strong>OS</strong> gets space back—not a substitute for MVCC vacuum. <strong>Version walk:</strong> multi-version state on a record is usually reconciled <strong>newest → older</strong> (timestamps / update list)—the mirror image of Postgres&rsquo;s heap <code>ctid</code> chain <strong>old → new</strong>. Replication is <strong>logical oplog</strong>. Stress: <strong>cache / eviction</strong>, checkpoints, <strong>oplog window</strong>. Lookup: secondary → <strong>RecordId</strong> → collection BSON.</p>
+      <p class="sec-depth" data-int-engine="mysql"><strong>InnoDB</strong> keeps the live row in the <strong>clustered PK</strong> leaf and, for many <strong>UPDATE</strong>s, <strong>mutates that leaf in place</strong> (fixed-size columns especially). MVCC readers that need an older image follow <code>DB_ROLL_PTR</code> into <strong>undo</strong> in <strong>rollback segments</strong>—walking <strong>from the current row backward</strong> (<strong>new → old</strong>), unlike PostgreSQL heap/HOT chains that link tuple versions <strong>old → new</strong> via <code>t_ctid</code>. The <strong>purge</strong> thread deletes undo records once no transaction can see them—cleanup is <strong>undo-driven</strong>, not a Postgres-style scan of the whole heap for dead line pointers. That <strong>purge</strong> is <strong>automatic</strong>; <code>OPTIMIZE TABLE</code> is <strong>separate</strong>—an optional rebuild to defragment and reclaim file space, not required for MVCC/undo correctness. Because <strong>secondary indexes</strong> store the <strong>PK key</strong>, not a physical row address, only secondaries whose indexed columns changed need rewriting when a row updates (the clustered entry still anchors the row). Lookups: secondary→PK→row (<strong>two B-tree hops</strong>). <a href="https://www.uber.com/us/en/blog/postgres-to-mysql-migration/" target="_blank" rel="noopener noreferrer">Uber&rsquo;s Postgres vs InnoDB write-up</a> walks through this indirection and update path.</p>
+    </div>
+  </div>
+
+  <div class="int-log" id="intLog"></div>
+
+  <div class="int-mvcc-wrap" id="intMvccWrap">
+    <div class="int-mvcc-viz" id="intMvccViz"></div>
   </div>
 
   <div class="int-panels">
     <div class="int-panel" id="intStorage" style="border-color:rgba(0,237,100,.3)">
-      <div class="int-panel-title">Storage <span class="int-data-badge here">&#x1F4BE; DATA LIVES HERE</span><span id="intStorageSub">Heap — rows in insertion order</span></div>
+      <div class="int-panel-title">Storage <span class="int-data-badge here">&#x1F4BE;</span><span id="intStorageSub"></span></div>
+      <p class="sec-depth int-engine-on" data-int-engine="pg">Authoritative tuples live in <strong>heap</strong> pages (default 8KB): <strong>line pointers</strong> (<code>ItemId</code>) address row versions; indexes only hold <strong>TIDs</strong> into that heap.</p>
+      <p class="sec-depth" data-int-engine="mongo">Authoritative documents live in the WiredTiger <strong>collection B-tree</strong> (<strong>RecordId</strong>→BSON). What you see here is a table-shaped sketch; on disk it&rsquo;s still a WT tree, not SQL heap pages.</p>
+      <p class="sec-depth" data-int-engine="mysql">No separate heap: the <strong>clustered PK</strong> leaf is the table file. Prior row versions for MVCC are not extra tuples in that tree—they live in <strong>undo</strong> until <strong>purge</strong> drops them.</p>
       <div id="intStorageViz"></div>
     </div>
     <div class="int-panel" id="intPrimary">
-      <div class="int-panel-title">Primary Index <span class="int-data-badge pointer">POINTER → HEAP</span><span>B-Tree on id</span></div>
+      <div class="int-panel-title">Primary index</div>
+      <p class="sec-depth int-engine-on" data-int-engine="pg">The PK uses the same <strong>nbtree</strong> access method as any other index: leaf tuples are <strong>(index key → heap TID)</strong>. Postgres does not store the full row in the index.</p>
+      <p class="sec-depth" data-int-engine="mongo">The <code>_id</code> index is its own WiredTiger file: leaves map <strong>_id→RecordId</strong>. The document body is fetched from the <strong>collection</strong> tree using that RecordId.</p>
+      <p class="sec-depth" data-int-engine="mysql">The clustered leaf stores the <strong>full row</strong> plus <code>DB_TRX_ID</code> / <code>DB_ROLL_PTR</code>: the roll pointer chains older versions in <strong>undo</strong>. Only the clustered record carries the true on-page row location; secondaries reference <strong>PK values</strong> instead.</p>
       <div id="intPrimaryViz"></div>
     </div>
     <div class="int-panel" id="intSecondary">
-      <div class="int-panel-title">Secondary Index <span class="int-data-badge pointer">1 HOP → HEAP</span><span>B-Tree on name</span></div>
+      <div class="int-panel-title">Secondary index</div>
+      <p class="sec-depth int-engine-on" data-int-engine="pg">Secondary nbtree leaves store <strong>(indexed key → heap TID)</strong>. One index hop reaches the heap slot; <strong>HOT</strong> updates can skip new index entries only when no indexed column changes and the row stays on the same heap page.</p>
+      <p class="sec-depth" data-int-engine="mongo">Secondary leaves store <strong>(indexed field → RecordId)</strong>—the same internal pointer type the collection uses, <em>not</em> a copy of <code>_id</code>. Fetch always continues into the collection tree for the document.</p>
+      <p class="sec-depth" data-int-engine="mysql">Leaves are <strong>(secondary key → PK columns)</strong>, not <strong>ctid</strong>-style physical pointers—so a row move within the clustered tree does not force every secondary to change unless indexed columns change. You always <strong>seek the PK index second</strong> to reach the row.</p>
       <div id="intSecondaryViz"></div>
     </div>
   </div>
+</section>
+
+<section id="write-amp">
+  <div class="int-hdr">
+    <h2>Write amplification</h2>
+    <p class="sec-depth" style="max-width:800px">Every <strong>index multiplies write cost</strong>. PostgreSQL&rsquo;s heap + <strong>TID</strong> model means a non-<strong>HOT</strong> <code>UPDATE</code> often rewrites <strong>every</strong> index entry when the row gets a new tuple; MongoDB&rsquo;s stable <strong>RecordId</strong> lets many updates touch <strong>only the collection B-tree</strong> when indexed fields don&rsquo;t change (<code>mong_deep.md</code> §4). Numbers below are <strong>logical btree/WAL-ish touches</strong> for teaching—see <code>pgdeep.md</code> §8–9, §12.1.</p>
+  </div>
+
+  <div class="wa-stage">
+    <div class="wa-controls">
+      <div class="wa-idx-row">
+        <label for="waIdx">B-tree indexes on the table</label>
+        <input type="range" id="waIdx" min="3" max="10" value="5" aria-valuemin="3" aria-valuemax="10" aria-valuenow="5"/>
+        <span id="waIdxVal">5</span>
+        <span style="font-size:.68rem;opacity:.85">(PK / <code>_id</code> + secondaries)</span>
+      </div>
+      <div class="wa-op-grid" role="tablist" aria-label="Operation type">
+        <button type="button" class="wa-op active" data-op="insert" role="tab" aria-selected="true">INSERT</button>
+        <button type="button" class="wa-op" data-op="delete" role="tab" aria-selected="false">DELETE</button>
+        <button type="button" class="wa-op" data-op="upd-ni" role="tab" aria-selected="false">UPDATE · non-indexed column</button>
+        <button type="button" class="wa-op wa-op-hot" data-op="upd-hot" role="tab" aria-selected="false">UPDATE · Postgres HOT</button>
+        <button type="button" class="wa-op" data-op="upd-1ix" role="tab" aria-selected="false">UPDATE · 1 indexed field</button>
+      </div>
+    </div>
+
+    <div class="wa-bars">
+      <div class="wa-col wa-col-pg">
+        <div class="wa-col-h">PostgreSQL</div>
+        <div class="wa-bar-track" aria-hidden="true"><div class="wa-bar-fill wa-bar-pg" id="waBarPg"></div></div>
+        <div class="wa-count" id="waCountPg">0</div>
+        <p class="wa-sub" id="waSubPg">—</p>
+      </div>
+      <div class="wa-col wa-col-mg">
+        <div class="wa-col-h">MongoDB / WiredTiger</div>
+        <div class="wa-bar-track" aria-hidden="true"><div class="wa-bar-fill wa-bar-mg" id="waBarMg"></div></div>
+        <div class="wa-count" id="waCountMg">0</div>
+        <p class="wa-sub" id="waSubMg">—</p>
+      </div>
+    </div>
+
+    <p class="wa-cap" id="waCap">Pick an operation. Bars scale to the larger side so you can see the gap.</p>
+    <button type="button" class="wa-replay" id="waReplay">Replay bar animation</button>
+  </div>
+
+  <p class="wa-src">Modeled on <strong>misc/pg_deepdive/pgdeep.md</strong> (heap insert, index_insert×N, non-HOT update, HOT, delete) and <strong>misc/pg_deepdive/mong_deep.md</strong> §4 (RecordId, per-index updates). Real counts depend on page splits, partial indexes, and whether Postgres stays on-page for HOT.</p>
+</section>
+
+<section id="maint">
+  <div class="int-hdr">
+    <h2>VACUUM vs compaction</h2>
+    <p class="sec-depth" style="max-width:720px"><strong>Not the same tool.</strong> Postgres <code>VACUUM</code> = <em>MVCC hygiene</em> (heap + every index). Mongo <code>compact</code> = <em>disk layout</em>; WiredTiger drops old versions during normal eviction/checkpoints.</p>
+  </div>
+
+  <div class="maint-stage">
+    <div class="maint-strip" role="presentation">
+      <div class="maint-strip-cell maint-strip-pg">
+        <span class="maint-pill">Required</span>
+        <strong>PostgreSQL <code>VACUUM</code></strong>
+        <span>Dead tuples &amp; stale index TIDs pile up · must scan heap <em>and</em> each index · freezing prevents XID disaster</span>
+      </div>
+      <div class="maint-strip-cell maint-strip-mg">
+        <span class="maint-pill">Optional file pass</span>
+        <strong>Mongo <code>compact</code></strong>
+        <span>MVCC cleanup is continuous · compact only packs/truncates when the <em>file</em> is sparse after big deletes</span>
+      </div>
+    </div>
+
+    <div class="maint-ctrl" role="toolbar" aria-label="Animate VACUUM vs compaction diagrams">
+      <button type="button" class="maint-btn" id="maintToggle" aria-pressed="true">Pause</button>
+      <div class="maint-cap-wrap">
+        <p class="maint-cap maint-cap-pg" aria-live="polite"><strong>Postgres:</strong> <span id="maintCapPgText">Dead tuples pile in the heap…</span></p>
+        <p class="maint-cap maint-cap-mg" aria-live="polite"><strong>WiredTiger:</strong> <span id="maintCapMgText">Live data on disk…</span></p>
+      </div>
+    </div>
+
+    <div class="maint-flow-grid">
+      <div class="maint-flow-panel maint-flow-pg">
+        <div class="maint-flow-panel-h">Postgres · what lazy VACUUM does</div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 228" class="maint-pg-svg maint-phase-0" id="maintPgSvg" aria-label="PostgreSQL VACUUM scans heap then each index">
+          <defs>
+            <marker id="maint-a" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#60a5fa"/></marker>
+          </defs>
+          <text class="maint-pg-static" x="260" y="16" text-anchor="middle" fill="#64748b" font-size="9" font-family="DM Sans,sans-serif">Cost grows as heap + (index₁ + index₂ + …) per cycle — <tspan fill="#93c5fd">pgdeep.md</tspan> §10–11</text>
+          <rect class="maint-pg-node maint-pg-n0 maint-pg-n1" x="18" y="38" width="102" height="72" rx="8" fill="rgba(96,165,250,.12)" stroke="#60a5fa" stroke-width="1.5"/>
+          <text class="maint-pg-static" x="69" y="58" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="700" font-family="DM Sans,sans-serif">HEAP</text>
+          <rect class="maint-pg-node maint-pg-n0" x="28" y="66" width="22" height="14" rx="2" fill="rgba(148,163,184,.45)"/><rect class="maint-pg-node maint-pg-n0" x="54" y="66" width="22" height="14" rx="2" fill="rgba(148,163,184,.45)"/>
+          <rect class="maint-pg-node maint-pg-n0" x="80" y="66" width="22" height="14" rx="2" fill="rgba(148,163,184,.35)"/>
+          <rect class="maint-pg-node maint-pg-n0" x="41" y="86" width="56" height="16" rx="2" fill="rgba(34,197,94,.35)"/>
+          <text class="maint-pg-static" x="69" y="97" text-anchor="middle" fill="#86efac" font-size="7" font-family="JetBrains Mono,monospace">live</text>
+          <text class="maint-pg-node maint-pg-n0" x="69" y="112" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">dead tuples wait…</text>
+          <line id="maint_pg_l_hv" class="maint-pg-node maint-pg-n1" x1="120" y1="74" x2="152" y2="74" stroke="#60a5fa" stroke-width="2" marker-end="url(#maint-a)"/>
+          <rect class="maint-pg-node maint-pg-n1 maint-pg-n2 maint-pg-n3 maint-pg-n4" x="158" y="52" width="78" height="44" rx="6" fill="rgba(251,191,36,.15)" stroke="#fbbf24" stroke-width="1.3"/>
+          <text class="maint-pg-static" x="197" y="72" text-anchor="middle" fill="#fcd34d" font-size="9" font-weight="700" font-family="JetBrains Mono,monospace">VACUUM</text>
+          <text class="maint-pg-static" x="197" y="88" text-anchor="middle" fill="#94a3b8" font-size="6.5" font-family="DM Sans,sans-serif">lazy</text>
+          <line id="maint_pg_l_i1" class="maint-pg-node maint-pg-n2" x1="236" y1="62" x2="268" y2="48" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#maint-a)"/>
+          <line id="maint_pg_l_i2" class="maint-pg-node maint-pg-n3" x1="236" y1="74" x2="276" y2="74" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#maint-a)"/>
+          <line id="maint_pg_l_i3" class="maint-pg-node maint-pg-n4" x1="236" y1="86" x2="268" y2="100" stroke="#60a5fa" stroke-width="1.5" marker-end="url(#maint-a)"/>
+          <rect class="maint-pg-node maint-pg-n2" x="278" y="36" width="52" height="40" rx="5" fill="rgba(96,165,250,.1)" stroke="rgba(96,165,250,.5)"/>
+          <text class="maint-pg-static" x="304" y="58" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Index</text>
+          <text class="maint-pg-static" x="304" y="70" text-anchor="middle" fill="#64748b" font-size="6.5" font-family="JetBrains Mono,monospace">ambulkdelete</text>
+          <rect class="maint-pg-node maint-pg-n3" x="338" y="36" width="52" height="40" rx="5" fill="rgba(96,165,250,.1)" stroke="rgba(96,165,250,.5)"/>
+          <text class="maint-pg-static" x="364" y="62" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Index</text>
+          <rect class="maint-pg-node maint-pg-n4" x="398" y="36" width="52" height="40" rx="5" fill="rgba(96,165,250,.1)" stroke="rgba(96,165,250,.5)"/>
+          <text class="maint-pg-static" x="424" y="62" text-anchor="middle" fill="#94a3b8" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Index</text>
+          <rect class="maint-pg-node maint-pg-n4" x="458" y="36" width="48" height="40" rx="5" fill="rgba(96,165,250,.06)" stroke="rgba(96,165,250,.35)" stroke-dasharray="4 3"/>
+          <text class="maint-pg-static" x="482" y="62" text-anchor="middle" fill="#64748b" font-size="8" font-family="DM Sans,sans-serif">…</text>
+          <rect class="maint-pg-node maint-pg-n5" x="158" y="118" width="348" height="36" rx="8" fill="rgba(255,255,255,.03)" stroke="rgba(255,255,255,.1)"/>
+          <text class="maint-pg-static" x="332" y="136" text-anchor="middle" fill="#a5b4fc" font-size="8.5" font-family="DM Sans,sans-serif">FSM updated · <tspan font-weight="700">freeze</tspan> old XIDs → avoid wraparound shutdown</text>
+          <text class="maint-pg-static" x="332" y="150" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="DM Sans,sans-serif">Lazy pass usually does <tspan fill="#fbbf24">not</tspan> shrink file on disk</text>
+          <rect class="maint-pg-node maint-pg-n6" x="18" y="168" width="240" height="44" rx="8" fill="rgba(248,113,113,.1)" stroke="rgba(248,113,113,.3)"/>
+          <text class="maint-pg-static" x="138" y="188" text-anchor="middle" fill="#fecaca" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Bloat hurts reads</text>
+          <text class="maint-pg-static" x="138" y="202" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">indexes point at dead TIDs → extra heap hops (<tspan fill="#93c5fd">pgdeep.md</tspan> §12)</text>
+          <rect class="maint-pg-node maint-pg-n7" x="272" y="168" width="234" height="44" rx="8" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.28)"/>
+          <text class="maint-pg-static" x="389" y="188" text-anchor="middle" fill="#86efac" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Need smaller OS file?</text>
+          <text class="maint-pg-static" x="389" y="202" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="JetBrains Mono,monospace">VACUUM FULL · pg_repack · CLUSTER</text>
+        </svg>
+        <div class="maint-chips">
+          <span class="maint-chip"><b>500 GB + 8 indexes</b> → vacuum can read ~TB-class I/O</span>
+          <span class="maint-chip"><b>Visibility-blind indexes</b> → scan noise until pruned</span>
+          <span class="maint-chip"><b>No vacuum</b> → wraparound can halt writes</span>
+        </div>
+      </div>
+
+      <div class="maint-flow-panel maint-flow-mg">
+        <div class="maint-flow-panel-h">WiredTiger · continuous GC + optional compact</div>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 228" class="maint-mg-svg maint-phase-0" id="maintMgSvg" aria-label="WiredTiger eviction and checkpoint drop versions; compact defragments file">
+          <text class="maint-mg-static" x="260" y="16" text-anchor="middle" fill="#64748b" font-size="9" font-family="DM Sans,sans-serif">No user <tspan fill="#f87171">VACUUM</tspan> command — <tspan fill="#4ade80">mong_deep.md</tspan> GC path</text>
+          <rect class="maint-mg-node maint-mg-n0" x="40" y="40" width="200" height="70" rx="10" fill="rgba(0,237,100,.1)" stroke="#00ed64" stroke-width="1.5"/>
+          <text class="maint-mg-static" x="140" y="62" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="700" font-family="DM Sans,sans-serif">Collection on disk</text>
+          <rect class="maint-mg-node maint-mg-n0" x="55" y="72" width="36" height="28" rx="3" fill="rgba(52,211,153,.25)"/><rect class="maint-mg-node maint-mg-n0" x="98" y="72" width="36" height="28" rx="3" fill="rgba(52,211,153,.2)"/>
+          <rect class="maint-mg-node maint-mg-n0" x="141" y="72" width="36" height="28" rx="3" fill="rgba(52,211,153,.15)"/>
+          <rect class="maint-mg-node maint-mg-n0" x="184" y="72" width="36" height="28" rx="3" fill="rgba(148,163,184,.2)"/>
+          <text class="maint-mg-static" x="140" y="108" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">pages + version chain (simplified)</text>
+          <path id="maint_mg_path" class="maint-mg-node maint-mg-n1" d="M270,55 C320,35 380,35 420,55" fill="none" stroke="#4ade80" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text class="maint-mg-static" x="345" y="32" text-anchor="middle" fill="#4ade80" font-size="7.5" font-weight="600" font-family="DM Sans,sans-serif">eviction / reconcile</text>
+          <polygon class="maint-mg-node maint-mg-n1" points="418,52 428,55 418,58" fill="#4ade80"/>
+          <rect class="maint-mg-node maint-mg-n1" x="280" y="48" width="200" height="58" rx="8" fill="rgba(0,0,0,.25)" stroke="rgba(0,237,100,.35)"/>
+          <text class="maint-mg-static" x="380" y="72" text-anchor="middle" fill="#86efac" font-size="9" font-weight="700" font-family="DM Sans,sans-serif">Drop invisible versions</text>
+          <text class="maint-mg-static" x="380" y="90" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-family="DM Sans,sans-serif">~60s checkpoint flushes + reconciles globally</text>
+          <line id="maint_mg_l_down" class="maint-mg-node maint-mg-n2" x1="140" y1="118" x2="140" y2="138" stroke="#64748b" stroke-width="1.5" stroke-dasharray="4 3"/>
+          <text class="maint-mg-static" x="155" y="150" text-anchor="start" fill="#fbbf24" font-size="8" font-family="DM Sans,sans-serif">Big deletes → file can stay “long” with holes</text>
+          <rect class="maint-mg-node maint-mg-n2" x="40" y="158" width="170" height="22" rx="4" fill="rgba(251,191,36,.12)" stroke="rgba(251,191,36,.35)"/>
+          <rect class="maint-mg-node maint-mg-n2" x="48" y="162" width="12" height="14" fill="rgba(52,211,153,.4)"/><rect class="maint-mg-node maint-mg-n2" x="65" y="162" width="8" height="14" fill="rgba(148,163,184,.25)"/>
+          <rect class="maint-mg-node maint-mg-n2" x="78" y="162" width="12" height="14" fill="rgba(52,211,153,.35)"/><rect class="maint-mg-node maint-mg-n2" x="95" y="162" width="40" height="14" fill="rgba(148,163,184,.15)"/>
+          <text class="maint-mg-static" x="125" y="188" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">sparse / fragmented</text>
+          <line id="maint_mg_l_sc" class="maint-mg-node maint-mg-n3" x1="220" y1="169" x2="268" y2="169" stroke="#00ed64" stroke-width="2"/>
+          <polygon class="maint-mg-node maint-mg-n3" points="266,165 276,169 266,173" fill="#00ed64"/>
+          <rect class="maint-mg-node maint-mg-n3" x="276" y="150" width="204" height="38" rx="8" fill="rgba(0,237,100,.14)" stroke="#00ed64" stroke-width="1.3"/>
+          <text class="maint-mg-static" x="378" y="170" text-anchor="middle" fill="#bbf7d0" font-size="9" font-weight="700" font-family="JetBrains Mono,monospace">compact</text>
+          <text class="maint-mg-static" x="378" y="184" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">pack live pages · trim tail → OS frees space</text>
+          <rect class="maint-mg-node maint-mg-n4" x="40" y="198" width="440" height="22" rx="6" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.25)"/>
+          <text class="maint-mg-static" x="260" y="213" text-anchor="middle" fill="#86efac" font-size="8" font-family="DM Sans,sans-serif">Correctness does <tspan font-weight="700">not</tspan> depend on compact — only disk aesthetics &amp; capacity</text>
+        </svg>
+        <div class="maint-chips">
+          <span class="maint-chip"><b>MVCC</b> cleaned in the cache engine path</span>
+          <span class="maint-chip"><b>compact</b> = I/O + blocking, plan ops</span>
+          <span class="maint-chip"><b>autoCompact</b> automates some of that</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="maint-hazard-grid" aria-label="Why Postgres bloat is dangerous">
+      <div class="maint-hazard-card">
+        <span class="mh-ico" aria-hidden="true">🎯</span>
+        <h5>Reads</h5>
+        <p>Index returns many TIDs; most point at <strong>dead</strong> heap rows → wasted I/O on every scan.</p>
+      </div>
+      <div class="maint-hazard-card">
+        <span class="mh-ico" aria-hidden="true">🔄</span>
+        <h5>Vacuum load</h5>
+        <p>Each index is a full pass; heavy tables + many indexes = huge periodic jobs.</p>
+      </div>
+      <div class="maint-hazard-card">
+        <span class="mh-ico" aria-hidden="true">⛔</span>
+        <h5>Wraparound</h5>
+        <p>Freezing is mandatory; without timely vacuum the cluster can hit <strong>stop-the-world</strong> failure modes.</p>
+      </div>
+    </div>
+
+    <p class="repl-table-section-h">At a glance</p>
+    <div class="repl-table-wrap">
+      <table class="repl-table maint-table-mini">
+        <thead>
+          <tr>
+            <th></th>
+            <th class="repl-th-pg">PostgreSQL</th>
+            <th class="repl-th-mg">Mongo / WiredTiger</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <th scope="row">Job</th>
+            <td>Recycle <strong>dead tuples</strong> + <strong>index TIDs</strong>; <strong>freeze</strong> XIDs.</td>
+            <td><strong>compact</strong> = defrag file. Versions = eviction + checkpoint.</td>
+          </tr>
+          <tr>
+            <th scope="row">Must run?</th>
+            <td><strong>Yes</strong> — autovacuum is non-optional for healthy clusters.</td>
+            <td><strong>No</strong> for MVCC. Compact when disk shape hurts you.</td>
+          </tr>
+          <tr>
+            <th scope="row">File on disk</th>
+            <td>Lazy: reuse inside file. <code>VACUUM FULL</code> / rewrite: shrink.</td>
+            <td><code>compact</code> can shrink tail after sparse deletes.</td>
+          </tr>
+          <tr>
+            <th scope="row">Read more</th>
+            <td><code>pgdeep.md</code> §10, §12</td>
+            <td><code>mong_deep.md</code> GC + checkpoints + compact</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <p class="maint-src">Diagrams <strong>cycle automatically</strong> while this section is on screen (Pause/Play). <code>prefers-reduced-motion</code> keeps them static. Based on <strong>misc/pg_deepdive/pgdeep.md</strong> and <strong>misc/pg_deepdive/mong_deep.md</strong>.</p>
+</section>
+
+<section id="replication">
+  <div class="int-hdr">
+    <h2>Replication</h2>
+    <p class="sec-depth" style="max-width:820px">After <strong>durability on the primary</strong>, replicas consume a <strong>separate replication stream</strong>. The shape of that stream—physical pages vs logical operations vs binlog events—drives failover behavior, lag, and how you build CDC. This is orthogonal to <a href="#internals">indexing and storage</a> layout, but it is the pipe every standby or analytics follower reads.</p>
+  </div>
+
+  <h3 class="repl-flow-section-h">Replication flow &amp; primary bandwidth</h3>
+  <p class="sec-depth repl-flow-lead">Physical streaming replication ships <strong>the same WAL byte stream</strong> from the primary to <em>every</em> direct standby—so write amplification on the primary (indexes, FPW-heavy checkpoints—<code>pgdeep.md</code> §12) becomes <strong>network amplification</strong> at the NIC. MongoDB&rsquo;s <strong>logical oplog</strong> uses small operation documents (often ~10² B for typical updates—<code>mong_deep.md</code>); secondaries <strong>pull</strong> and <strong>chain</strong>, so the primary usually sustains only a few oplog tails. <strong>Read the compare strip, then the two diagrams, then the table.</strong></p>
+
+  <div class="repl-flow-stage">
+    <div class="repl-flow-compare-strip" role="note" aria-label="Primary bandwidth contrast">
+      <div class="repl-strip-cell repl-strip-pg">
+        <span class="repl-strip-label">PostgreSQL · physical WAL</span>
+        <strong>Primary is the fan-out hub</strong>
+        <span class="repl-strip-detail">Each standby = one <code>wal_sender</code> pushing a <strong>full copy</strong> of page-level WAL. Egress scales as <strong>N × WAL_rate</strong> (plus CPU to read &amp; frame each stream).</span>
+      </div>
+      <div class="repl-strip-cell repl-strip-mg">
+        <span class="repl-strip-label">MongoDB · logical oplog</span>
+        <strong>Split read load across the replica set</strong>
+        <span class="repl-strip-detail">Secondaries <strong>tail</strong> compact BSON ops; more nodes can sync from peers (<code>chainingAllowed</code>) so the primary is not multiplying megabyte-class page streams for every host.</span>
+      </div>
+    </div>
+
+    <div class="repl-flow-viz">
+    <div class="repl-flow-panel repl-flow-pg">
+      <div class="repl-flow-h">PostgreSQL</div>
+      <p class="repl-flow-tagline">Physical WAL · <strong>primary push</strong> · same bytes on every arrow · after checkpoint, <strong>FPW</strong> can bloat each stream further</p>
+      <div class="repl-flow-svg-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 312" aria-labelledby="replFlowPgTitle">
+          <title id="replFlowPgTitle">Primary fans out one full WAL stream per standby; aggregate egress is N times the WAL rate</title>
+          <defs>
+            <marker id="replFlow-arr-pg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#60a5fa"/></marker>
+            <linearGradient id="replFlow-pg-hot" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="rgba(248,113,113,.45)"/><stop offset="100%" stop-color="rgba(248,113,113,0)"/></linearGradient>
+            <filter id="replFlow-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          </defs>
+          <rect class="repl-pg-glow-rect" x="0" y="0" width="500" height="86" fill="url(#replFlow-pg-hot)"/>
+          <rect x="160" y="14" width="180" height="58" rx="10" fill="rgba(96,165,250,.18)" stroke="#60a5fa" stroke-width="2" filter="url(#replFlow-glow)"/>
+          <text x="250" y="40" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700" font-family="DM Sans,system-ui,sans-serif">PRIMARY</text>
+          <text x="250" y="58" text-anchor="middle" fill="#93c5fd" font-size="10" font-family="JetBrains Mono,monospace">wal_sender process × N</text>
+          <text x="250" y="78" text-anchor="middle" fill="#fcd34d" font-size="9" font-family="JetBrains Mono,monospace">per-stream WAL ~200 MB/s (illustrative)</text>
+          <g class="repl-wal-stream" stroke="#60a5fa" stroke-width="2.4" fill="none" stroke-linecap="round" marker-end="url(#replFlow-arr-pg)">
+            <path d="M220,72 C200,120 52,150 40,208"/>
+            <path d="M235,72 C228,128 118,158 104,212"/>
+            <path d="M250,72 L250,208"/>
+            <path d="M265,72 C272,128 382,158 396,212"/>
+            <path d="M280,72 C300,120 448,150 460,208"/>
+            <path d="M245,72 C210,130 168,175 156,212"/>
+          </g>
+          <text x="62" y="168" text-anchor="middle" fill="#93c5fd" font-size="8" font-family="JetBrains Mono,monospace" opacity=".9">~200 MB/s</text>
+          <text x="438" y="168" text-anchor="middle" fill="#93c5fd" font-size="8" font-family="JetBrains Mono,monospace" opacity=".9">~200 MB/s</text>
+          <text x="250" y="128" text-anchor="middle" fill="#64748b" font-size="8" font-family="DM Sans,sans-serif">each link ≈ duplicate of full WAL</text>
+          <g font-family="DM Sans,system-ui,sans-serif">
+            <rect x="14" y="212" width="54" height="38" rx="7" fill="rgba(96,165,250,.12)" stroke="rgba(96,165,250,.55)" stroke-width="1.3"/><text x="41" y="236" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">S1</text>
+            <rect x="77" y="216" width="54" height="38" rx="7" fill="rgba(96,165,250,.12)" stroke="rgba(96,165,250,.55)" stroke-width="1.3"/><text x="104" y="240" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">S2</text>
+            <rect x="140" y="212" width="54" height="38" rx="7" fill="rgba(96,165,250,.12)" stroke="rgba(96,165,250,.55)" stroke-width="1.3"/><text x="167" y="236" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">S3</text>
+            <rect x="223" y="212" width="54" height="38" rx="7" fill="rgba(96,165,250,.12)" stroke="rgba(96,165,250,.55)" stroke-width="1.3"/><text x="250" y="236" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">S4</text>
+            <rect x="306" y="212" width="54" height="38" rx="7" fill="rgba(96,165,250,.12)" stroke="rgba(96,165,250,.55)" stroke-width="1.3"/><text x="333" y="236" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">S5</text>
+            <rect x="369" y="216" width="54" height="38" rx="7" fill="rgba(96,165,250,.12)" stroke="rgba(96,165,250,.55)" stroke-width="1.3"/><text x="396" y="240" text-anchor="middle" fill="#cbd5e1" font-size="9" font-weight="600">S6</text>
+          </g>
+          <rect x="8" y="258" width="484" height="48" rx="8" fill="rgba(248,113,113,.12)" stroke="rgba(248,113,113,.35)"/>
+          <text x="250" y="278" text-anchor="middle" fill="#fecaca" font-size="9" font-weight="600" font-family="DM Sans,sans-serif">Aggregate primary egress ≈ <tspan font-family="JetBrains Mono,monospace">N ×</tspan> per-stream WAL</text>
+          <text x="250" y="294" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="JetBrains Mono,monospace">e.g. 6× ~200 MB/s ≈ 1.2 GB/s · 50× ≈ 10 GB/s (order-of-magnitude)</text>
+        </svg>
+      </div>
+      <div class="repl-flow-legend">
+        <span><i class="solid-pg" aria-hidden="true"></i>Animated dashes = bytes in flight (schematic)</span>
+        <span><i class="solid-pg" style="opacity:.5" aria-hidden="true"></i>Mitigation: cascade so primary feeds fewer direct standbys (PG 9.2+)</span>
+      </div>
+      <p class="repl-flow-cap">Every direct replica adds work on the <strong>writer</strong>: another process reading <code>pg_wal</code>, another TCP stream, another copy of the same payload. That is why high replica counts show up as <strong>NIC saturation</strong> and <strong>sender CPU</strong> long before standbys are &ldquo;full.&rdquo;</p>
+      <div class="repl-flow-math">N × 200 MB/s &asymp; <strong>10 GB/s</strong> at N = 50 (teaching curve from <code>pgdeep.md</code> / notes)</div>
+    </div>
+
+    <div class="repl-flow-panel repl-flow-mg">
+      <div class="repl-flow-h">MongoDB</div>
+      <p class="repl-flow-tagline">Logical oplog · <strong>secondaries pull</strong> · <strong>chain</strong> spreads load · index replay happens on each node (<code>mong_deep.md</code> §7.3)</p>
+      <div class="repl-flow-svg-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 318" aria-labelledby="replFlowMgTitle">
+          <title id="replFlowMgTitle">Primary serves a few oplog tails; other secondaries pull from peers</title>
+          <defs>
+            <marker id="replFlow-arr-mg" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#00ed64"/></marker>
+            <marker id="replFlow-arr-mg-d" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#4ade80"/></marker>
+          </defs>
+          <rect x="318" y="10" width="172" height="56" rx="8" fill="rgba(0,0,0,.35)" stroke="rgba(0,237,100,.4)" stroke-width="1"/>
+          <text x="404" y="30" text-anchor="middle" fill="#86efac" font-size="8" font-weight="700" font-family="DM Sans,sans-serif">LEGEND</text>
+          <line x1="330" y1="42" x2="358" y2="42" stroke="#00ed64" stroke-width="3" stroke-linecap="round"/>
+          <text x="368" y="46" fill="#94a3b8" font-size="7.5" font-family="DM Sans,sans-serif">pull from primary</text>
+          <line x1="330" y1="56" x2="358" y2="56" stroke="#4ade80" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round"/>
+          <text x="368" y="60" fill="#94a3b8" font-size="7.5" font-family="DM Sans,sans-serif">chained pull (peer)</text>
+          <rect x="160" y="82" width="180" height="56" rx="10" fill="rgba(0,237,100,.14)" stroke="#00ed64" stroke-width="2"/>
+          <text x="250" y="108" text-anchor="middle" fill="#f1f5f9" font-size="14" font-weight="700" font-family="DM Sans,sans-serif">PRIMARY</text>
+          <text x="250" y="128" text-anchor="middle" fill="#4ade80" font-size="10" font-family="JetBrains Mono,monospace">capped oplog (BSON ops)</text>
+          <text x="250" y="148" text-anchor="middle" fill="#94a3b8" font-size="8.5" font-family="DM Sans,sans-serif">Tier 1 — only a few nodes attach here at once</text>
+          <g class="repl-oplog-stream" stroke="#00ed64" stroke-width="2.4" fill="none" stroke-linecap="round" marker-end="url(#replFlow-arr-mg)">
+            <path d="M195,138 C150,168 88,188 72,218"/>
+            <path d="M250,138 L250,210"/>
+            <path d="M305,138 C350,168 412,188 428,218"/>
+          </g>
+          <text x="72" y="198" text-anchor="middle" fill="#86efac" font-size="8" font-family="JetBrains Mono,monospace">~10–20 MB/s</text>
+          <text x="428" y="198" text-anchor="middle" fill="#86efac" font-size="8" font-family="JetBrains Mono,monospace">~10–20 MB/s</text>
+          <g font-family="DM Sans,system-ui,sans-serif">
+            <rect x="34" y="218" width="92" height="44" rx="8" fill="rgba(0,237,100,.1)" stroke="rgba(0,237,100,.55)" stroke-width="1.3"/><text x="80" y="240" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">Secondary A</text><text x="80" y="254" text-anchor="middle" fill="#64748b" font-size="7.5">sync: primary</text>
+            <rect x="204" y="210" width="92" height="44" rx="8" fill="rgba(0,237,100,.1)" stroke="rgba(0,237,100,.55)" stroke-width="1.3"/><text x="250" y="232" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">Secondary B</text><text x="250" y="246" text-anchor="middle" fill="#64748b" font-size="7.5">sync: primary</text>
+            <rect x="374" y="218" width="92" height="44" rx="8" fill="rgba(0,237,100,.1)" stroke="rgba(0,237,100,.55)" stroke-width="1.3"/><text x="420" y="240" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="600">Secondary C</text><text x="420" y="254" text-anchor="middle" fill="#64748b" font-size="7.5">sync: primary</text>
+          </g>
+          <text x="250" y="272" text-anchor="middle" fill="#64748b" font-size="8" font-family="DM Sans,sans-serif">Tier 2 — <tspan fill="#4ade80">chainingAllowed</tspan> · more readers without N× primary megabyte streams</text>
+          <g class="repl-chain-stream" stroke="#4ade80" stroke-width="2" fill="none" stroke-dasharray="8 5" stroke-linecap="round" marker-end="url(#replFlow-arr-mg-d)">
+            <path d="M80,262 C80,278 52,288 40,302"/>
+            <path d="M250,254 L250,302"/>
+            <path d="M420,262 C420,278 448,288 460,302"/>
+          </g>
+          <g font-family="DM Sans,system-ui,sans-serif" font-size="8.5" font-weight="600" fill="#94a3b8">
+            <text x="22" y="308" text-anchor="start">D · from A</text>
+            <text x="236" y="308" text-anchor="middle">E · from B</text>
+            <text x="478" y="308" text-anchor="end">F · from C</text>
+          </g>
+        </svg>
+      </div>
+      <div class="repl-flow-legend">
+        <span><i class="solid-mg" aria-hidden="true"></i>Oplog tail ≈ skinny logical stream vs full page WAL</span>
+        <span><i class="dash-mg" aria-hidden="true"></i>Chaining offloads the primary; tradeoff = multi-hop lag to monitor</span>
+      </div>
+      <p class="repl-flow-cap">Heavy indexes still enlarge oplog entries and can shrink the replication window—this diagram is about <strong>transport shape</strong>, not &ldquo;Mongo ignores write cost.&rdquo;</p>
+      <div class="repl-flow-math">~3 direct tails × ~10–20 MB/s ≪ N × 200 MB/s WAL (illustrative; see <code>mong_deep.md</code> / notes)</div>
+    </div>
+    </div>
+  </div>
+
+  <p class="repl-flow-srcnote">Figures are didactic. Sources: <strong>misc/pg_deepdive/pgdeep.md</strong> (WAL volume, replication lag, write amplification) and <strong>misc/pg_deepdive/mong_deep.md</strong> (oplog pressure §7.3, chained replication). Real rates depend on workload, FPW, compression, and network.</p>
+
+  <p class="repl-table-section-h">Engine comparison</p>
+  <div class="repl-table-wrap">
+    <table class="repl-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="repl-th-pg">PostgreSQL</th>
+          <th class="repl-th-mg">MongoDB</th>
+          <th class="repl-th-my">MySQL / InnoDB</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Primary log</th>
+          <td><strong>WAL</strong> — records describe <strong>page-level</strong> changes (heap, indexes, VM, FSM). Same stream powers crash recovery and <strong>physical streaming replication</strong>.</td>
+          <td><strong>Oplog</strong> — a <strong>capped</strong>, idempotent sequence of operations on BSON namespaces. Secondaries tail it to stay in sync.</td>
+          <td><strong>Binary log</strong> — <strong>logical</strong> events (<code>STATEMENT</code>, <code>ROW</code>, or <code>MIXED</code>). Independent of InnoDB&rsquo;s redo/undo; replication and point-in-time recovery are built on it.</td>
+        </tr>
+        <tr>
+          <th scope="row">Replica apply</th>
+          <td>Standby <strong>replays WAL</strong> into its own data files (<code>wal_receiver</code> / startup process). Hot standby can serve reads while catching up.</td>
+          <td>Secondaries <strong>apply oplog</strong> entries; initial sync copies a snapshot then tails. <strong>Replica set</strong> election moves primary when needed.</td>
+          <td>Replica SQL thread (and workers) <strong>apply binlog</strong> events—often row images—into local storage. Semantics depend on <code>binlog_format</code> and engine.</td>
+        </tr>
+        <tr>
+          <th scope="row">Logical / CDC</th>
+          <td><strong>Logical replication</strong> (<code>PUBLICATION</code> / <code>SUBSCRIPTION</code>) decodes WAL into row changes for selective sync or foreign targets.</td>
+          <td><strong>Change streams</strong> read the oplog (with resume tokens) for app-level consumers; not a second physical copy of the btree.</td>
+          <td>Binlog is already logical; <strong>row format</strong> is typical for safe replicas and many CDC tools (canonical before/after images).</td>
+        </tr>
+        <tr>
+          <th scope="row">Lag &amp; retention</th>
+          <td><strong>Replication slots</strong> and long-running replicas can retain WAL on disk; monitor disk and <code>pg_wal</code>. Synchronous replicas add commit latency.</td>
+          <td>Oplog is <strong>bounded</strong>; a secondary too stale may need <strong>resync</strong> if it falls off the window.</td>
+          <td>Binlog expiration policies; large replicas or filters can diverge or require rebuilds. Semisync trades latency for durability.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="sec-depth" style="max-width:860px"><strong>Takeaway:</strong> Postgres physical WAL minimizes semantic gaps for a byte-identical standby but pushes decode work to logical replication when you need partial replication or heterogeneous sinks. Mongo&rsquo;s oplog and MySQL&rsquo;s binlog are <strong>logical operation journals</strong> first—easier to reason about for app-level followers, with different tradeoffs around window size and apply idempotency.</p>
+</section>
+
+<section id="connections">
+  <div class="int-hdr">
+    <h2>Connections</h2>
+    <p class="sec-depth" style="max-width:820px">After replication, the next choke point is usually <strong>how clients attach</strong>. PostgreSQL still uses a <strong>process per backend</strong>—each TCP session becomes an OS process with private memory and a <code>PGPROC</code> slot in shared memory, so snapshot and bookkeeping work scales with concurrent backends (<code>pgdeep.md</code> on <code>ProcArray</code> / visibility). MongoDB&rsquo;s <code>mongod</code> is a <strong>single multi-threaded process</strong>: connections are threads sharing one address space and one WiredTiger file descriptor table, which changes memory and FD economics at high fan-in.</p>
+  </div>
+
+  <div class="repl-flow-stage conn-stage">
+    <div class="repl-flow-compare-strip" role="note" aria-label="Connection architecture contrast">
+      <div class="repl-strip-cell repl-strip-pg">
+        <span class="repl-strip-label">PostgreSQL · process per connection</span>
+        <strong>Every session forks a dedicated backend</strong>
+        <span class="repl-strip-detail">Private <code>work_mem</code> peaks, catalog caches, and per-backend FDs multiply. At thousands of sessions you almost always add <strong>PgBouncer</strong> (or <strong>pgcat</strong>) to multiplex app connections onto a smaller pool of real backends.</span>
+      </div>
+      <div class="repl-strip-cell repl-strip-mg">
+        <span class="repl-strip-label">MongoDB · threads inside one server</span>
+        <strong>Many sockets, one <code>mongod</code></strong>
+        <span class="repl-strip-detail">Worker / service-executor threads share WiredTiger&rsquo;s open files; stacks are ~<strong>1&nbsp;MB</strong> class vs multi‑MB private heaps per Postgres backend. You still tune <code>maxIncomingConnections</code> and avoid unbounded client growth.</span>
+      </div>
+    </div>
+
+    <div class="repl-flow-viz">
+      <div class="repl-flow-panel repl-flow-pg">
+        <div class="repl-flow-h">PostgreSQL</div>
+        <p class="repl-flow-tagline"><strong>N</strong> TCP clients &asymp; <strong>N</strong> postmaster children · each backend participates in global visibility bookkeeping</p>
+        <div class="repl-flow-svg-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 288" aria-labelledby="connPgTitle">
+            <title id="connPgTitle">Each client maps to its own backend process; all attach to shared memory</title>
+            <defs>
+              <marker id="connArrPg" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#60a5fa"/></marker>
+            </defs>
+            <text x="240" y="22" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="DM Sans,sans-serif">Application clients (TCP)</text>
+            <g font-family="DM Sans,sans-serif">
+              <rect x="52" y="34" width="56" height="28" rx="6" fill="rgba(96,165,250,.15)" stroke="#60a5fa" stroke-width="1.2"/><text x="80" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">C1</text>
+              <rect x="132" y="34" width="56" height="28" rx="6" fill="rgba(96,165,250,.15)" stroke="#60a5fa" stroke-width="1.2"/><text x="160" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">C2</text>
+              <rect x="212" y="34" width="56" height="28" rx="6" fill="rgba(96,165,250,.15)" stroke="#60a5fa" stroke-width="1.2"/><text x="240" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">C3</text>
+              <rect x="292" y="34" width="56" height="28" rx="6" fill="rgba(96,165,250,.15)" stroke="#60a5fa" stroke-width="1.2"/><text x="320" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">…</text>
+              <rect x="372" y="34" width="56" height="28" rx="6" fill="rgba(96,165,250,.15)" stroke="#60a5fa" stroke-width="1.2"/><text x="400" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">CN</text>
+            </g>
+            <g class="conn-flow-dash-pg" stroke="#60a5fa" stroke-width="1.8" fill="none" stroke-linecap="round" marker-end="url(#connArrPg)">
+              <path d="M80,62 L80,88"/>
+              <path d="M160,62 L160,88"/>
+              <path d="M240,62 L240,88"/>
+              <path d="M320,62 L320,88"/>
+              <path d="M400,62 L400,88"/>
+            </g>
+            <text x="240" y="82" text-anchor="middle" fill="#64748b" font-size="8" font-family="JetBrains Mono,monospace">1:1 session → backend</text>
+            <g font-family="DM Sans,sans-serif">
+              <rect x="28" y="96" width="88" height="36" rx="7" fill="rgba(96,165,250,.2)" stroke="#93c5fd" stroke-width="1.3"/><text x="72" y="114" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="700">backend</text><text x="72" y="126" text-anchor="middle" fill="#93c5fd" font-size="7.5" font-family="JetBrains Mono,monospace">PID·1</text>
+              <rect x="132" y="96" width="88" height="36" rx="7" fill="rgba(96,165,250,.2)" stroke="#93c5fd" stroke-width="1.3"/><text x="176" y="114" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="700">backend</text><text x="176" y="126" text-anchor="middle" fill="#93c5fd" font-size="7.5" font-family="JetBrains Mono,monospace">PID·2</text>
+              <rect x="236" y="96" width="88" height="36" rx="7" fill="rgba(96,165,250,.2)" stroke="#93c5fd" stroke-width="1.3"/><text x="280" y="114" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="700">backend</text><text x="280" y="126" text-anchor="middle" fill="#93c5fd" font-size="7.5" font-family="JetBrains Mono,monospace">PID·3</text>
+              <rect x="340" y="96" width="88" height="36" rx="7" fill="rgba(96,165,250,.2)" stroke="#93c5fd" stroke-width="1.3"/><text x="384" y="114" text-anchor="middle" fill="#f1f5f9" font-size="9" font-weight="700">backend</text><text x="384" y="126" text-anchor="middle" fill="#93c5fd" font-size="7.5" font-family="JetBrains Mono,monospace">…</text>
+            </g>
+            <rect x="48" y="148" width="384" height="56" rx="10" fill="rgba(30,41,59,.85)" stroke="rgba(96,165,250,.45)" stroke-width="1.5"/>
+            <text x="240" y="172" text-anchor="middle" fill="#93c5fd" font-size="10" font-weight="700" font-family="DM Sans,sans-serif">Shared memory (one per cluster)</text>
+            <text x="240" y="190" text-anchor="middle" fill="#94a3b8" font-size="8" font-family="JetBrains Mono,monospace">shared_buffers · ProcArray / PGPROC · WAL buffers · lock tables</text>
+            <text x="240" y="206" text-anchor="middle" fill="#fcd34d" font-size="7.5" font-family="DM Sans,sans-serif">Snapshot work touches the global proc list — cost grows with concurrent backends</text>
+            <rect x="64" y="218" width="352" height="58" rx="8" fill="rgba(248,113,113,.1)" stroke="rgba(248,113,113,.4)" stroke-width="1"/>
+            <text x="240" y="238" text-anchor="middle" fill="#fecaca" font-size="8.5" font-weight="600" font-family="DM Sans,sans-serif">Scale-out pattern: pooler in front → fewer real backends</text>
+            <text x="240" y="256" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-family="JetBrains Mono,monospace">PgBouncer · transaction or session pool · max_client_conn ≫ default max_connections</text>
+          </svg>
+        </div>
+        <p class="repl-flow-cap">This is why <strong>connection storms</strong> hurt Postgres before query text even arrives: the server must admit or reject OS processes, not just socket accepts.</p>
+      </div>
+
+      <div class="repl-flow-panel repl-flow-mg">
+        <div class="repl-flow-h">MongoDB</div>
+        <p class="repl-flow-tagline">One <strong>mongod</strong> process · many listener / worker threads · WiredTiger shared cache &amp; files</p>
+        <div class="repl-flow-svg-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 288" aria-labelledby="connMgTitle">
+            <title id="connMgTitle">Many clients connect to a single mongod; threads share the process and file descriptors</title>
+            <defs>
+              <marker id="connArrMg" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#00ed64"/></marker>
+            </defs>
+            <text x="240" y="22" text-anchor="middle" fill="#94a3b8" font-size="10" font-family="DM Sans,sans-serif">Application clients (TCP)</text>
+            <g font-family="DM Sans,sans-serif">
+              <rect x="52" y="34" width="56" height="28" rx="6" fill="rgba(0,237,100,.12)" stroke="#00ed64" stroke-width="1.2"/><text x="80" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">C1</text>
+              <rect x="132" y="34" width="56" height="28" rx="6" fill="rgba(0,237,100,.12)" stroke="#00ed64" stroke-width="1.2"/><text x="160" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">C2</text>
+              <rect x="212" y="34" width="56" height="28" rx="6" fill="rgba(0,237,100,.12)" stroke="#00ed64" stroke-width="1.2"/><text x="240" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">C3</text>
+              <rect x="292" y="34" width="56" height="28" rx="6" fill="rgba(0,237,100,.12)" stroke="#00ed64" stroke-width="1.2"/><text x="320" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">…</text>
+              <rect x="372" y="34" width="56" height="28" rx="6" fill="rgba(0,237,100,.12)" stroke="#00ed64" stroke-width="1.2"/><text x="400" y="52" text-anchor="middle" fill="#e2e8f0" font-size="9" font-weight="600">CN</text>
+            </g>
+            <g class="conn-flow-dash-mg" stroke="#00ed64" stroke-width="1.8" fill="none" stroke-linecap="round" marker-end="url(#connArrMg)">
+              <path d="M80,62 L240,102"/>
+              <path d="M160,62 L240,102"/>
+              <path d="M240,62 L240,102"/>
+              <path d="M320,62 L240,102"/>
+              <path d="M400,62 L240,102"/>
+            </g>
+            <rect x="72" y="96" width="336" height="132" rx="12" fill="rgba(0,237,100,.1)" stroke="#00ed64" stroke-width="2"/>
+            <text x="240" y="118" text-anchor="middle" fill="#f1f5f9" font-size="12" font-weight="800" font-family="DM Sans,sans-serif">mongod — single OS process</text>
+            <text x="240" y="136" text-anchor="middle" fill="#86efac" font-size="8" font-family="JetBrains Mono,monospace">listener + conn threads + service executor (4.4+)</text>
+            <g stroke="#4ade80" stroke-width="1.2" opacity=".85">
+              <line x1="100" y1="152" x2="380" y2="152"/>
+              <line x1="100" y1="168" x2="380" y2="168"/>
+              <line x1="100" y1="184" x2="380" y2="184"/>
+              <line x1="100" y1="200" x2="380" y2="200"/>
+            </g>
+            <text x="240" y="148" text-anchor="middle" fill="#64748b" font-size="7" font-family="DM Sans,sans-serif">threads share virtual address space — no per-connection OS process</text>
+            <rect x="100" y="208" width="280" height="22" rx="5" fill="rgba(0,0,0,.35)" stroke="rgba(74,222,128,.4)"/>
+            <text x="240" y="223" text-anchor="middle" fill="#a7f3d0" font-size="8" font-family="JetBrains Mono,monospace">WiredTiger cache · data files opened once · pread/pwrite from many threads</text>
+            <rect x="48" y="238" width="384" height="42" rx="8" fill="rgba(34,197,94,.08)" stroke="rgba(34,197,94,.35)"/>
+            <text x="240" y="258" text-anchor="middle" fill="#86efac" font-size="8.5" font-weight="600" font-family="DM Sans,sans-serif">FD table is per process, not per connection — avoids per-backend FD explosions</text>
+            <text x="240" y="272" text-anchor="middle" fill="#94a3b8" font-size="7.5" font-family="DM Sans,sans-serif">Still cap clients; overload shows up as CPU, cache pressure, and ticket contention — not 5k fork()s</text>
+          </svg>
+        </div>
+        <p class="repl-flow-cap">MongoDB is <strong>not</strong> “free connections”: huge fan-in still contends on mutexes and the storage engine cache. The architectural difference is <strong>what multiplies</strong> (processes vs threads).</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="wa-stage" style="margin-top:1.35rem">
+    <div class="wa-idx-row">
+      <label for="connN">Concurrent client connections (illustrative)</label>
+      <input type="range" id="connN" min="100" max="8000" step="100" value="2000" aria-valuemin="100" aria-valuemax="8000" aria-valuenow="2000"/>
+      <span id="connNVal">2000</span>
+    </div>
+    <p class="wa-cap" id="connMemCap">Private RAM only (order-of-magnitude). Postgres assumes ~10&nbsp;MB per backend; Mongo ~1&nbsp;MB thread stack class. Neither bar includes WiredTiger cache or <code>shared_buffers</code>.</p>
+    <div class="wa-bars">
+      <div class="wa-col wa-col-pg">
+        <div class="wa-col-h">Postgres backends</div>
+        <div class="wa-bar-track"><div class="wa-bar-fill wa-bar-pg" id="connBarPg"></div></div>
+        <div class="wa-count" id="connGbPg">0</div>
+        <p class="wa-sub">~10&nbsp;MB × <span id="connNLabelPg">2000</span> sessions (teaching default)</p>
+      </div>
+      <div class="wa-col wa-col-mg">
+        <div class="wa-col-h">MongoDB threads</div>
+        <div class="wa-bar-track"><div class="wa-bar-fill wa-bar-mg" id="connBarMg"></div></div>
+        <div class="wa-count" id="connGbMg">0</div>
+        <p class="wa-sub">~1&nbsp;MB × <span id="connNLabelMg">2000</span> connections (stack-scale)</p>
+      </div>
+    </div>
+    <button type="button" class="wa-replay" id="connReplay">Replay bars</button>
+  </div>
+
+  <p class="repl-table-section-h">Connections at a glance</p>
+  <div class="repl-table-wrap">
+    <table class="repl-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="repl-th-pg">PostgreSQL</th>
+          <th class="repl-th-mg">MongoDB</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Attach model</th>
+          <td><strong>Process per connection</strong> — <code>postmaster</code> forks a dedicated backend for each authenticated session.</td>
+          <td><strong>Threads in one server</strong> — connections are accepted into <code>mongod</code>; work runs on thread pools inside the same process.</td>
+        </tr>
+        <tr>
+          <th scope="row">Typical RAM / conn</th>
+          <td>Often <strong>multi‑MB to tens of MB</strong> private heap per backend (catalog cache, session state, sort/hash peaks beyond <code>work_mem</code> defaults).</td>
+          <td>Thread stacks and per-conn state are usually <strong>~1&nbsp;MB order</strong> — far smaller per attachment than a full OS process.</td>
+        </tr>
+        <tr>
+          <th scope="row">Pooler</th>
+          <td><strong>Expected at scale</strong> — PgBouncer, pgcat, or proxy pooling to keep real <code>max_connections</code> in the hundreds while apps open thousands of handles.</td>
+          <td>Often <strong>optional</strong> — the server already multiplexes inside one process; you still use app pools for latency and fairness.</td>
+        </tr>
+        <tr>
+          <th scope="row">Visibility / snapshots</th>
+          <td>Global structures (e.g. <code>ProcArray</code>) reason about <strong>all running backends</strong> — high session counts raise coordination cost (<code>pgdeep.md</code>).</td>
+          <td>Storage-engine timestamps and WiredTiger MVCC — different bookkeeping; high concurrency stress shows up mainly as engine/cache contention.</td>
+        </tr>
+        <tr>
+          <th scope="row">File descriptors</th>
+          <td>Each backend may cache its own FDs; large <code>N</code> × per-process caching can explode <strong>total</strong> FD use — tune OS limits and pooling.</td>
+          <td>Data files opened <strong>once per mongod</strong>; threads share them — FD count stays in a much smaller band for the same client count.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p class="wa-src" style="margin-top:1rem">Expanded ops context (PgBouncer sidecars, FD math, four-layer rate limits) lives in this page&rsquo;s <a href="#notesSection" onclick="document.getElementById('notesSection').classList.add('visible');document.getElementById('navNotes').style.display='';return true;">Notes</a> · <code>mong_deep.md</code> focuses on btree/MVCC; connection threading follows from the single-process storage engine layout described there.</p>
 </section>
 
 <section id="openai-pg">
   <div class="opg-hdr">
     <h2>How OpenAI Scaled <span>PostgreSQL</span></h2>
     <p>PostgreSQL was never built to serve 800M ChatGPT users on a single primary. OpenAI had to engineer 8 defense layers around it — without them, it collapses. Toggle each to see what breaks.</p>
+    <p class="sec-depth">One <strong>primary</strong> holds the <strong>commit sequence</strong>; every durable change emits <strong>WAL records</strong> (heap/index/FSM/VM pages, often <strong>full-page images</strong> after checkpoint) and each replica consumes them via <strong><code>wal_sender</code></strong>—so edge layers exist to cut <strong>connection fan-in</strong>, <strong>duplicate SQL</strong>, <strong>unsafe DDL</strong>, and <strong>retry amplification</strong> before they become <strong>ProcArray</strong>, <strong>buffer pin</strong>, and <strong>checkpoint IO</strong> contention.</p>
     <div class="opg-counter">
       <span class="opg-counter-num" id="opgCount">0</span><span>/8 layers active</span>
     </div>
@@ -872,11 +1847,14 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
     <button class="opg-btn opg-btn-on" onclick="opgEnableAll()">🛡 Deploy All Layers</button>
   </div>
 
+  <p class="sec-depth">Center view: <strong>Native</strong> shows a single exposed primary and failure triggers; <strong>Solar</strong> maps the same eight controls as orbital layers—both are metaphors for <strong>defense in depth</strong> around one write-primary <strong>Postgres</strong> topology.</p>
+
   <div class="opg-panels">
 
     <!-- Left: Outer Defenses -->
     <div class="opg-toggles">
       <div class="opg-tgroup">Outer Defenses</div>
+      <p class="sec-depth opg-toggle-depth">Shed or shape traffic <em>before</em> it spawns <strong>backend processes</strong> (<code>fork</code> per connection), grabs <strong>snapshots</strong> (<code>GetSnapshotData</code> walks <code>ProcArray</code>), or duplicates the same read across every replica—reducing <strong>LWLock</strong> / <strong>buffer</strong> contention at the core.</p>
 
       <div class="opg-layer" data-layer="rateLimit" onclick="opgToggle('rateLimit')">
         <div class="opg-sw"><span class="opg-sw-sl"></span></div>
@@ -1200,6 +2178,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
     <!-- Right: Core Operations -->
     <div class="opg-toggles">
       <div class="opg-tgroup">Core Operations</div>
+      <p class="sec-depth opg-toggle-depth">Constrain <strong>SQL surface area</strong>, isolate <strong>SLO classes</strong> onto different instances (separate <code>shared_buffers</code> / lock domains), throttle what becomes <strong>WAL + MVCC</strong>, bound <strong>ACCESS EXCLUSIVE</strong> DDL, and keep <strong>promotable standbys</strong>—each maps to real limits: executor CPU, rewrite locks, and <strong>RTO</strong> when the primary fails.</p>
 
       <div class="opg-layer" data-layer="queryOpt" onclick="opgToggle('queryOpt')">
         <div class="opg-sw"><span class="opg-sw-sl"></span></div>
@@ -1307,6 +2286,8 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 
   </div>
 
+  <p class="sec-depth opg-bottom-depth">The meters sketch <strong>saturation</strong>: connection ceiling hits <strong>FDs + ProcArray</strong>; CPU tracks <strong>executor</strong> and <strong>bgwriter/checkpointer</strong> load; latency rises with <strong>buffer eviction</strong>, <strong>replication lag</strong>, and <strong>checkpoint</strong> spikes; availability reflects single-primary <strong>blast radius</strong> without failover.</p>
+
   <!-- Bottom: Left Log | Health Metrics | Right Log -->
   <div class="opg-bottom">
     <div class="opg-log">
@@ -1359,6 +2340,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 <!-- ── Notes Section (visible only with ?notes=true) ── -->
 <section class="notes-section" id="notesSection">
   <h2>Deep-Dive Notes</h2>
+  <p class="sec-depth">Offline reference: <strong>XLogRecord</strong> / FPW, <strong>VisibilityMap</strong> &amp; <strong>FSM</strong>, <strong>WiredTiger</strong> dhandles &amp; checkpoints, <strong>InnoDB</strong> <code>DB_ROLL_PTR</code> / undo / <strong>purge</strong> vs heap <code>VACUUM</code>—organized by engine; open with <code>?notes=true</code>. The TOC below jumps to long-form notes (not a substitute for reading <code>src/backend/access/</code> or vendor docs). InnoDB vs heap MVCC tradeoffs: <a href="https://www.uber.com/us/en/blog/postgres-to-mysql-migration/" target="_blank" rel="noopener noreferrer">Uber (2016) — Postgres to MySQL migration</a>.</p>
   <p style="color:var(--tx3);margin-bottom:.5rem">Technical reference organized by database engine. Click to jump.</p>
 
   <!-- ═══ TABLE OF CONTENTS ═══ -->
@@ -1640,7 +2622,7 @@ JOIN <b>payments</b> p ON p.order_id = o.id;</div>
     </div>
     <div>
       <h3>MySQL / InnoDB</h3>
-      <div class="ndb-sub">Clustered index architecture &middot; Automatic FK indexes &middot; 2-hop secondary lookups</div>
+      <div class="ndb-sub">Clustered PK = table &middot; Undo + purge MVCC &middot; Secondaries → PK (not physical ctid) &middot; Auto FK indexes</div>
     </div>
   </div>
 
@@ -1653,11 +2635,18 @@ JOIN <b>payments</b> p ON p.order_id = o.id;</div>
   </div>
 
   <div class="notes-topic">
+    <h4>MVCC, Undo, and Purge (vs PostgreSQL Heap Versions)</h4>
+    <p>InnoDB does <strong>not</strong> append a new on-table tuple for every UPDATE the way PostgreSQL appends a new heap row with a new <code>ctid</code>. The <strong>current</strong> row lives in the <strong>clustered PK leaf</strong>; many UPDATEs <strong>modify that leaf in place</strong> (especially fixed-width columns). When a transaction still needs an older snapshot, InnoDB follows <code>DB_ROLL_PTR</code> to <strong>undo records</strong> in <strong>rollback segments</strong> (undo tablespace)—each hop is <strong>newer → older</strong>, whereas PostgreSQL&rsquo;s heap/HOT <code>t_ctid</code> chain runs <strong>older → newer</strong> toward the current tuple. The <strong>purge</strong> thread removes undo history once no open transaction can read those versions—work is <strong>undo-driven</strong>, not a full scan of the base table for dead line pointers.</p>
+    <p>Because <strong>secondary index</strong> entries store the <strong>primary key columns</strong>, not a physical disk offset, an UPDATE that changes only non-indexed columns (or only one secondary&rsquo;s fields) avoids rewriting <em>every</em> index—unlike PostgreSQL, where a new heap tuple forces new TID entries in <strong>all</strong> indexes that reference the row. The tradeoff is the ubiquitous <strong>secondary → clustered</strong> two-hop read.</p>
+    <p>Replication uses MySQL&rsquo;s <strong>logical</strong> binlog (statement or row format), not PostgreSQL-style physical WAL page streams—another architectural fork described in <a href="https://www.uber.com/us/en/blog/postgres-to-mysql-migration/" target="_blank" rel="noopener noreferrer">Uber Engineering&rsquo;s comparison of on-disk and replication models</a> (July 2016; InnoDB details still broadly accurate for understanding indirection and MVCC placement).</p>
+  </div>
+
+  <div class="notes-topic">
     <h4>Secondary Indexes — The 2-Hop Tax</h4>
-    <p>Secondary indexes in InnoDB store <code>(key → primary key value)</code>, not a physical address. Every secondary index lookup requires <strong>2 hops</strong>:</p>
+    <p>Secondary indexes in InnoDB store <code>(key → primary key value)</code>, not a physical row address. Every secondary index lookup requires <strong>2 hops</strong>:</p>
     <p>1. Secondary index B-Tree → find the primary key value<br>
        2. Clustered index B-Tree → find the actual row data</p>
-    <p>Contrast with PostgreSQL/MongoDB where secondary indexes point to a physical address (<code>ctid</code> / <code>RecordId</code>) — always 1 hop.</p>
+    <p>Contrast: PostgreSQL secondaries point at <strong>heap TIDs</strong> (<code>ctid</code>)—one hop to the tuple. MongoDB secondaries point at <strong>RecordId</strong>—one hop to the collection B-tree (RecordId is a stable engine id, not the BSON <code>_id</code> value).</p>
     <p>The 2-hop tax matters at scale: covering indexes (that include all queried columns in the index itself) can avoid the second hop, but they increase index size and write amplification.</p>
   </div>
 
@@ -1678,6 +2667,11 @@ JOIN <b>payments</b> p ON p.order_id = o.id;</div>
       <h3>Cross-Engine Comparisons</h3>
       <div class="ndb-sub">Side-by-side tables for replication, connections, maintenance, indexes, and foreign keys</div>
     </div>
+  </div>
+
+  <div class="notes-topic">
+    <h4>MVCC version chain direction</h4>
+    <p><strong>PostgreSQL (heap / HOT):</strong> tuple versions on a page chain <strong>older → newer</strong> using <code>t_ctid</code> until you reach the live row—the forward pointer matches how new versions are appended. <strong>InnoDB:</strong> the clustered leaf holds the current image; older snapshots are reconstructed by following <code>DB_ROLL_PTR</code> through undo <strong>newer → older</strong>. <strong>WiredTiger (MongoDB):</strong> visibility and updates are reconciled from the <strong>newest</strong> state toward older timestamps / update entries on the value, not by walking a heap chain from the oldest tuple forward. Same MVCC goal; different default traversal when you trace versions by hand.</p>
   </div>
 
   <div class="notes-topic">
@@ -1777,11 +2771,11 @@ JOIN <b>payments</b> p ON p.order_id = o.id;</div>
     <p><strong>PostgreSQL is the only engine that stores dead row versions in the table itself.</strong> Everyone else (MongoDB, MySQL, Oracle) keeps old versions elsewhere or cleans them up internally.</p>
 
     <h4>MySQL / InnoDB — Purge Thread + OPTIMIZE TABLE</h4>
-    <p>InnoDB avoids the dead-tuple-in-the-table problem entirely:</p>
-    <p>&bull; <strong>Undo log + purge thread:</strong> When you UPDATE or DELETE, the old row version goes into the <strong>undo tablespace</strong> (not the table). A background <strong>purge thread</strong> asynchronously cleans up undo records once no active transaction needs them. Fully automatic.</p>
-    <p>&bull; <strong><code>OPTIMIZE TABLE</code>:</strong> The closest equivalent to VACUUM FULL. Rebuilds the clustered index by creating a new copy, then swaps. Used when you have significant fragmentation from bulk deletes.</p>
+    <p>InnoDB avoids PostgreSQL&rsquo;s <strong>dead-tuple-in-the-heap</strong> pattern: old versions for MVCC live in <strong>undo</strong>, and the clustered leaf holds the <strong>current</strong> version (often updated in place).</p>
+    <p>&bull; <strong>Undo log + purge (automatic):</strong> UPDATE/DELETE may copy the before-image to <strong>rollback segments</strong>; <strong>purge</strong> discards undo when no snapshot needs it—this runs <strong>continuously</strong> in the background; it is not optional &ldquo;maintenance&rdquo; you turn on.</p>
+    <p>&bull; <strong><code>OPTIMIZE TABLE</code> (optional):</strong> Separate from purge—closest analogue to <code>VACUUM FULL</code>: rebuilds the clustered index (and secondaries as implemented) to <strong>defragment</strong> and can <strong>return unused file space</strong> after large deletes or churn. You do not need it for MVCC correctness; purge already handles old row versions in undo. Online DDL behavior varies by MySQL version.</p>
+    <p>&bull; <strong>Page reuse:</strong> Free space within InnoDB pages is reused by subsequent inserts; table files can still grow or retain slack; <code>OPTIMIZE TABLE</code> / rebuild compacts.</p>
     <p>&bull; <strong><code>ALTER TABLE ... ENGINE=InnoDB</code>:</strong> A common trick — does the same thing as OPTIMIZE TABLE but works more reliably with online DDL in MySQL 5.6+.</p>
-    <p>&bull; <strong>Page-level reuse:</strong> InnoDB pages with deleted rows have free space that gets reused by future inserts. The file doesn't grow without bound the way PG's heap does.</p>
 
     <h4>Oracle — Automatic Undo Management</h4>
     <p>&bull; <strong>Undo tablespace:</strong> Like InnoDB, old row versions go to a separate undo tablespace. Automatic Undo Management (AUM) handles cleanup.</p>
@@ -1806,6 +2800,7 @@ JOIN <b>payments</b> p ON p.order_id = o.id;</div>
 
     <h4>Why MongoDB Doesn't Have the Dead Tuple Problem</h4>
     <p>WiredTiger has <strong>zero dead tuple accumulation</strong>. Old document versions are cleaned up by internal cache eviction and 60-second checkpointing. No equivalent of MVCC bloat.</p>
+    <p><strong>Why <code>compact</code> if updates are &ldquo;in-place&rdquo;?</strong> In-place means the engine does not keep superseded document copies in the collection the way Postgres keeps dead heap rows; it does <strong>not</strong> mean the on-disk file never fragments. Growing documents relocate to new pages; bulk deletes leave sparse files; free space is reused <em>internally</em> but the <strong>file length</strong> often stays high until compaction reorganizes and truncates.</p>
     <p>But the <strong>physical file</strong> on disk can become fragmented after extreme events. Example: a 100GB collection where you delete 80% of documents. WiredTiger immediately reuses freed space within pages (future inserts fill gaps), but the <strong>file stays 100GB on disk</strong>. The OS doesn't get the space back.</p>
     <p>This is a <strong>file system</strong> problem, not a data structure problem. The B-tree and storage pages are clean — there are no dead documents lingering. Pages just have free space WiredTiger can reuse internally. <code>compact</code> calls <code>WT_SESSION::compact()</code> to reorganize pages, move data toward the beginning, and truncate the file tail.</p>
 
@@ -1893,7 +2888,7 @@ JOIN <b>payments</b> p ON p.order_id = o.id;</div>
 
 <script>
 /* ══════════════════════════════════════════════════════════
-   Index Internals Visualization
+   Indexing and storage visualization
    ══════════════════════════════════════════════════════════ */
 var intViz=(function(){
   'use strict';
@@ -1927,7 +2922,7 @@ var intViz=(function(){
      These stay in the B-tree panels until VACUUM.
   */
   var heapSlots=[], staleIdx=[], insertIdx=0, mode='pg', deadCount=0;
-  var lastAction={type:null,id:-1};
+  var lastAction={type:null,id:-1,vacuumMeta:null};
 
   function el(id){return document.getElementById(id);}
   function liveRows(){return heapSlots.filter(function(r){return !r._dead;});}
@@ -1949,7 +2944,251 @@ var intViz=(function(){
     el('intCounter').textContent=live.length+' live'+(deadCount>0?' \u00b7 '+deadCount+' dead':'')+(staleIdx.length>0?' \u00b7 '+staleIdx.length+' stale idx':'');
   }
 
-  function render(){renderStorage();renderPrimary();renderSecondary();refreshButtons();updateBadges();}
+  function refreshIntEngineText(){
+    var root=document.getElementById('internals');
+    if(!root)return;
+    root.querySelectorAll('[data-int-engine]').forEach(function(n){
+      if(n.getAttribute('data-int-engine')===mode)n.classList.add('int-engine-on');
+      else n.classList.remove('int-engine-on');
+    });
+  }
+
+  function render(){refreshIntEngineText();renderStorage();renderPrimary();renderSecondary();renderMvccIllustration();refreshButtons();updateBadges();}
+
+  function escXml(s){
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  /* B-tree panels used a fixed 308px viewBox while n leaves need more width — content past x=308 was clipped. */
+  function btreePanelWidth(nL,gap,sidePad,minLW,maxLW){
+    if(nL<1)nL=1;
+    var W=Math.max(308,sidePad*2+nL*minLW+(nL-1)*gap);
+    var LW=Math.min(maxLW,Math.max(minLW,(W-sidePad*2-(nL-1)*gap)/nL));
+    W=Math.ceil(sidePad*2+nL*LW+(nL-1)*gap);
+    return{W:W,LW:LW};
+  }
+
+  var MONGO_RECID_HINT='<span class="int-recid-hint">Index leaves store <strong>RecordId</strong>: WiredTiger\u2019s internal address of the document in the collection store (not your <code>_id</code> value). Lookups follow that pointer to the BSON; in-place updates usually keep the same RecordId, so indexes stay valid without Postgres-style heap TID churn.</span>';
+  var MONGO_SEC_RECID_HINT='<span class="int-recid-hint">Same <strong>RecordId</strong> type as the _id index and collection row — a secondary leaf does not embed <code>_id</code>; it jumps to the row via RecordId.</span>';
+
+  /* ═══ Combined MVCC illustration (PostgreSQL: index → heap) ═══ */
+  function renderMvccIllustration(){
+    var viz=el('intMvccViz');
+    if(!viz)return;
+    if(mode==='pg'){
+      if(heapSlots.length===0){
+        viz.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 220" aria-label="PostgreSQL MVCC empty">'+
+          '<rect x="200" y="6" width="480" height="34" rx="6" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)"/>'+
+          '<text x="440" y="27" text-anchor="middle" fill="#7e8da4" font-size="9.5" font-family="JetBrains Mono,monospace">SELECT * FROM rows WHERE name = …</text>'+
+          '<rect x="28" y="58" width="208" height="140" rx="8" fill="none" stroke="rgba(255,255,255,.14)" stroke-dasharray="5 4"/>'+
+          '<text x="132" y="120" text-anchor="middle" fill="#7e8da4" font-size="9" font-weight="700">idx_name</text>'+
+          '<rect x="268" y="58" width="250" height="88" rx="8" fill="none" stroke="rgba(255,255,255,.14)" stroke-dasharray="5 4"/>'+
+          '<text x="393" y="100" text-anchor="middle" fill="#7e8da4" font-size="9" font-weight="700">Heap page</text>'+
+          '<rect x="540" y="58" width="250" height="88" rx="8" fill="none" stroke="rgba(255,255,255,.14)" stroke-dasharray="5 4"/>'+
+          '<text x="665" y="100" text-anchor="middle" fill="#7e8da4" font-size="9" font-weight="700">Heap page</text>'+
+          '</svg>';
+        return;
+      }
+
+      var PW=258,RH=20,TOP=56,TITLE=20,HEADGAP=12;
+      var numPages=Math.ceil(heapSlots.length/PS)||1;
+      var pageInner=TITLE+HEADGAP+PS*RH+6;
+      var pageH=8+pageInner;
+      var heapLeft=250;
+      /* svgW must fit all heap pages — capping width clipped tuples outside the viewBox ("lost" rows). */
+      var svgW=Math.max(880,heapLeft+numPages*(PW+12)+24);
+
+      function slotGeom(si){
+        var pi=Math.floor(si/PS),rj=si%PS;
+        var x0=heapLeft+pi*(PW+12);
+        var y0=TOP+8+TITLE+HEADGAP+rj*RH;
+        return{x0:x0,y0:y0,pi:pi,rj:rj};
+      }
+
+      function entrySlotIdx(e){
+        if(e.dead)return e.slotIdx;
+        for(var i=0;i<heapSlots.length;i++){
+          if(heapSlots[i]._dead)continue;
+          if(heapSlots[i].id!==e.id)continue;
+          if(heapSlots[i].name===e.name)return i;
+        }
+        return -1;
+      }
+
+      var entries=liveRows().map(function(r){return{id:r.id,name:r.name,dead:false};});
+      staleIdx.filter(function(s){return s.type==='sec'||s.type==='both';}).forEach(function(s){
+        entries.push({id:s.id,name:s.name,dead:true,slotIdx:s.slotIdx});
+      });
+      entries.sort(function(a,b){return a.name<b.name?-1:a.name>b.name?1:0});
+
+      var secLeaves=[];
+      for(var sj=0;sj<entries.length;sj+=PS)secLeaves.push(entries.slice(sj,sj+PS));
+      var nSecL=secLeaves.length;
+      var idxInternalH=nSecL>1?32:0;
+
+      var lr=liveRows();
+      var qn='…';
+      if(lastAction.id>=0){
+        for(var qi=0;qi<heapSlots.length;qi++){
+          if(heapSlots[qi].id===lastAction.id){qn=heapSlots[qi].name;break;}
+        }
+      } else if(lr.length)qn=lr[0].name;
+
+      var leafY=TOP+48+idxInternalH,maxIx=Math.min(entries.length,10);
+      var idxColBot=leafY+(entries.length?maxIx*17+(entries.length>maxIx?22:10):0);
+      var heapBot=TOP+pageH;
+      var showBloatStrip=deadCount>0;
+      var showVacStrip=(lastAction.type==='vacuum'&&lastAction.vacuumMeta);
+      var capY=Math.max(heapBot,idxColBot)+14;
+      var footAfterCap=18+(showBloatStrip?20:0)+(showVacStrip?38:0)+12;
+      var svgH=capY+footAfterCap;
+      var leftColH=Math.max(pageH+6+idxInternalH,idxColBot-(TOP-6)+12);
+
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+svgW+' '+svgH+'" width="'+svgW+'" height="'+svgH+'" preserveAspectRatio="xMinYMin meet" aria-label="PostgreSQL MVCC diagram">';
+      svg+='<defs>'+
+        '<marker id="mvcc-ar1" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 Z" fill="#f87171"/></marker>'+
+        '<marker id="mvcc-ar2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#60a5fa"/></marker>'+
+        '</defs>';
+
+      svg+='<rect x="'+(heapLeft*0.08)+'" y="6" width="'+(svgW-heapLeft*0.16)+'" height="32" rx="6" fill="rgba(255,255,255,.04)" stroke="rgba(255,255,255,.1)"/>';
+      svg+='<text x="'+(svgW/2)+'" y="26" text-anchor="middle" fill="#dfe5f0" font-size="10" font-weight="600" font-family="JetBrains Mono,monospace">SELECT * FROM rows WHERE name = \''+escXml(qn)+'\'</text>';
+
+      svg+='<rect x="18" y="'+(TOP-6)+'" width="210" height="'+leftColH+'" rx="8" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.14)" stroke-dasharray="4 3"/>';
+      svg+='<text x="123" y="'+(TOP+8)+'" text-anchor="middle" fill="#7e8da4" font-size="8.5" font-weight="700">idx_name · nbtree</text>';
+      if(nSecL>1){
+        var pvNm=secLeaves[1][0].name;
+        svg+='<rect x="28" y="'+(TOP+16)+'" width="182" height="28" rx="4" fill="rgba(96,165,250,.08)" stroke="rgba(96,165,250,.32)"/>';
+        svg+='<text x="123" y="'+(TOP+28)+'" text-anchor="middle" fill="#60a5fa" font-size="6.5" font-weight="700">INTERNAL · pivot \u2265 \''+escXml(pvNm)+'\'</text>';
+        svg+='<text x="123" y="'+(TOP+39)+'" text-anchor="middle" fill="#4d5d74" font-size="5.5">Internal row: pointer targets a <tspan fill="#60a5fa">child page</tspan>, not the heap</text>';
+      } else {
+        svg+='<text x="123" y="'+(TOP+26)+'" text-anchor="middle" fill="#4d5d74" font-size="6">single leaf page · BTP_LEAF</text>';
+      }
+      for(var ix=0;ix<maxIx;ix++){
+        var e=entries[ix];
+        var si=entrySlotIdx(e);
+        var ptr=si>=0?slotCTID(si):'?';
+        var isHL=lastAction.id===e.id;
+        var fy=leafY+ix*17;
+        svg+='<rect x="32" y="'+(fy-2)+'" width="182" height="15" rx="3" fill="'+(e.dead?'rgba(248,113,113,.07)':isHL?'rgba(251,191,36,.1)':'rgba(255,255,255,.03)')+'" stroke="'+(e.dead?'rgba(248,113,113,.35)':'rgba(0,237,100,.2)')+'"/>';
+        svg+='<text x="40" y="'+(fy+9)+'" fill="'+(e.dead?'rgba(248,113,113,.75)':'#dfe5f0')+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+
+          '<tspan font-weight="700" fill="'+(e.dead?'#f87171':'#00ed64')+'">'+escXml(e.name)+'</tspan>'+
+          ' <tspan fill="#4d5d74">→</tspan> <tspan fill="#7e8da4">'+ptr+'</tspan>'+
+          (e.dead?' <tspan fill="#f87171" font-weight="700">stale</tspan>':'')+
+          '</text>';
+        if(si>=0){
+          var g=slotGeom(si);
+          var tx=g.x0+PW-4,ty=g.y0+RH/2+2;
+          var sx=210,sy=fy+5;
+          svg+='<path d="M'+sx+','+sy+' C'+(sx+80)+','+sy+' '+(tx-70)+','+ty+' '+tx+','+ty+'" fill="none" stroke="'+(e.dead?'rgba(248,113,113,.45)':'rgba(96,165,250,.5)')+'" stroke-width="1" marker-end="url(#mvcc-ar2)"/>';
+        }
+      }
+      if(entries.length>maxIx)svg+='<text x="123" y="'+(leafY+maxIx*17+10)+'" text-anchor="middle" fill="#4d5d74" font-size="7">+'+(entries.length-maxIx)+' more…</text>';
+
+      for(var pi=0;pi<numPages;pi++){
+        var x0=heapLeft+pi*(PW+12);
+        svg+='<rect x="'+x0+'" y="'+TOP+'" width="'+PW+'" height="'+pageH+'" rx="7" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.12)"/>';
+        svg+='<text x="'+(x0+PW/2)+'" y="'+(TOP+TITLE-2)+'" text-anchor="middle" fill="#7e8da4" font-size="9" font-weight="700">Table page #'+pi+'</text>';
+        var hy=TOP+TITLE+6;
+        svg+='<text x="'+(x0+8)+'" y="'+hy+'" fill="#f87171" font-size="7" font-weight="700" font-family="JetBrains Mono,monospace">next→</text>';
+        svg+='<text x="'+(x0+58)+'" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">id</text>';
+        svg+='<text x="'+(x0+82)+'" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">name</text>';
+        svg+='<text x="'+(x0+168)+'" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">age</text>';
+      }
+
+      heapSlots.forEach(function(row,si){
+        var g=slotGeom(si);
+        var isDead=row._dead;
+        var hl=lastAction.id===row.id&&!isDead;
+        var fill=isDead?'rgba(248,113,113,.1)':hl?'rgba(192,132,252,.14)':'rgba(255,255,255,.03)';
+        var stroke=isDead?'rgba(248,113,113,.4)':hl?'rgba(192,132,252,.45)':'rgba(255,255,255,.08)';
+        svg+='<rect x="'+(g.x0+4)+'" y="'+(g.y0-1)+'" width="'+(PW-8)+'" height="'+(RH-2)+'" rx="3" fill="'+fill+'" stroke="'+stroke+'"/>';
+        var nxt='—';
+        if(isDead&&row.chainTo!=null&&row.chainTo>=0&&row.chainTo<heapSlots.length)nxt='→ '+slotCTID(row.chainTo);
+        svg+='<text x="'+(g.x0+8)+'" y="'+(g.y0+12)+'" fill="'+(isDead?'rgba(248,113,113,.85)':'#dfe5f0')+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+escXml(nxt)+'</text>';
+        svg+='<text x="'+(g.x0+58)+'" y="'+(g.y0+12)+'" fill="'+(isDead?'rgba(248,113,113,.55)':'#60a5fa')+'" font-size="7.5" font-weight="700" font-family="JetBrains Mono,monospace">'+row.id+'</text>';
+        svg+='<text x="'+(g.x0+82)+'" y="'+(g.y0+12)+'" fill="'+(isDead?'rgba(248,113,113,.55)':'#dfe5f0')+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+escXml(row.name)+'</text>';
+        svg+='<text x="'+(g.x0+168)+'" y="'+(g.y0+12)+'" fill="'+(isDead?'rgba(248,113,113,.5)':'#7e8da4')+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+row.age+'</text>';
+        if(isDead){
+          svg+='<line x1="'+(g.x0+6)+'" y1="'+(g.y0+7)+'" x2="'+(g.x0+PW-6)+'" y2="'+(g.y0+7)+'" stroke="rgba(248,113,113,.35)" stroke-width="1"/>';
+        }
+      });
+
+      heapSlots.forEach(function(row,si){
+        if(!row._dead||row.chainTo==null)return;
+        var t=row.chainTo;
+        if(t<0||t>=heapSlots.length)return;
+        var a=slotGeom(si),b=slotGeom(t);
+        var x1=a.x0+PW-16,y1=a.y0+RH/2,x2=b.x0+28,y2=b.y0+RH/2;
+        var mx=(x1+x2)/2,my=Math.min(y1,y2)-28;
+        svg+='<path d="M'+x1+','+y1+' Q'+mx+','+my+' '+x2+','+y2+'" fill="none" stroke="#f87171" stroke-width="1.35" marker-end="url(#mvcc-ar1)"/>';
+      });
+      svg+='<text x="'+(svgW/2)+'" y="'+capY+'" text-anchor="middle" fill="#4d5d74" font-size="7.5" font-weight="600">Version chain · <tspan fill="#60a5fa">ctid</tspan> in indexes</text>';
+      var fy=capY+14;
+      if(showBloatStrip){
+        svg+='<rect x="12" y="'+fy+'" width="'+(svgW-24)+'" height="18" rx="5" fill="rgba(251,191,36,.09)" stroke="rgba(251,191,36,.3)"/>';
+        svg+='<text x="'+(svgW/2)+'" y="'+(fy+12)+'" text-anchor="middle" fill="#fbbf24" font-size="7" font-weight="600">Bloat: '+deadCount+' dead</text>';
+        fy+=20;
+      }
+      if(showVacStrip){
+        var vm3=lastAction.vacuumMeta;
+        svg+='<rect x="12" y="'+fy+'" width="'+(svgW-24)+'" height="34" rx="5" fill="rgba(248,113,113,.07)" stroke="rgba(248,113,113,.25)"/>';
+        svg+='<text x="'+(svgW/2)+'" y="'+(fy+12)+'" text-anchor="middle" fill="#fca5a5" font-size="6.8" font-weight="700">VACUUM (lazy) · −'+vm3.reclaimed+' dead, −'+vm3.nStale+' stale idx</text>';
+        svg+='<text x="'+(svgW/2)+'" y="'+(fy+22)+'" text-anchor="middle" fill="#fecaca" font-size="5.9">FSM updated · file size unchanged on disk (need VACUUM FULL / rewrite to shrink)</text>';
+      }
+      svg+='</svg>';
+      viz.innerHTML=svg;
+      return;
+    }
+
+    if(mode==='mongo'){
+      if(heapSlots.length===0){
+        viz.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 180"><text x="430" y="22" text-anchor="middle" fill="#00ed64" font-size="9.5" font-weight="700">MongoDB / WiredTiger</text>'+
+          '<rect x="40" y="44" width="280" height="110" rx="8" fill="none" stroke="rgba(0,237,100,.25)" stroke-dasharray="4 3"/>'+
+          '<text x="180" y="100" text-anchor="middle" fill="#7e8da4" font-size="8">Collection · RecordId → doc</text>'+
+          '<rect x="360" y="44" width="460" height="56" rx="8" fill="none" stroke="rgba(0,237,100,.2)" stroke-dasharray="4 3"/>'+
+          '<text x="590" y="76" text-anchor="middle" fill="#7e8da4" font-size="8">Indexes · key → RecordId</text></svg>';
+        return;
+      }
+      var nShow=Math.min(heapSlots.length,6),cardW=142,mw=Math.max(860,120+nShow*cardW+48),mc=mw/2;
+      var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+mw+' 160" width="'+mw+'" height="160" preserveAspectRatio="xMinYMin meet"><text x="'+mc+'" y="18" text-anchor="middle" fill="#00ed64" font-size="9.5" font-weight="700">WiredTiger</text>';
+      var cx=120;
+      heapSlots.forEach(function(r,i){
+        if(i>5)return;
+        var hl=lastAction.id===r.id;
+        svg+='<rect x="'+cx+'" y="44" width="130" height="52" rx="6" fill="'+(hl?'rgba(251,191,36,.12)':'rgba(0,237,100,.06)')+'" stroke="rgba(0,237,100,.35)"/>';
+        svg+='<text x="'+(cx+8)+'" y="64" fill="#dfe5f0" font-size="7.5" font-family="JetBrains Mono,monospace">_id:'+r.id+'</text>';
+        svg+='<text x="'+(cx+8)+'" y="82" fill="#7e8da4" font-size="7.5" font-family="JetBrains Mono,monospace">'+escXml(r.name)+' · '+r.age+'</text>';
+        cx+=cardW;
+      });
+      svg+='<text x="'+mc+'" y="132" text-anchor="middle" fill="#4d5d74" font-size="7.5">Secondary → same RecordId</text></svg>';
+      viz.innerHTML=svg;
+      return;
+    }
+
+    if(heapSlots.length===0){
+      viz.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 190"><text x="430" y="22" text-anchor="middle" fill="#fbbf24" font-size="9.5" font-weight="700">MySQL / InnoDB</text>'+
+        '<rect x="60" y="44" width="320" height="100" rx="8" fill="none" stroke="rgba(251,191,36,.3)" stroke-dasharray="4 3"/>'+
+        '<text x="220" y="96" text-anchor="middle" fill="#7e8da4" font-size="8">Clustered PK · row in leaf</text>'+
+        '<rect x="420" y="44" width="380" height="56" rx="8" fill="none" stroke="rgba(251,191,36,.22)" stroke-dasharray="4 3"/>'+
+        '<text x="610" y="76" text-anchor="middle" fill="#7e8da4" font-size="8">Secondary · key → PK</text></svg>';
+      return;
+    }
+    var nLive=liveRows().length,nCard=Math.min(nLive,7),bw=112,iw=Math.max(860,80+nCard*bw+40),ic=iw/2;
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+iw+' 160" width="'+iw+'" height="160" preserveAspectRatio="xMinYMin meet"><text x="'+ic+'" y="18" text-anchor="middle" fill="#fbbf24" font-size="9.5" font-weight="700">InnoDB</text>';
+    var px=80;
+    liveRows().forEach(function(r,i){
+      if(i>6)return;
+      var hl=lastAction.id===r.id;
+      svg+='<rect x="'+px+'" y="40" width="100" height="100" rx="6" fill="'+(hl?'rgba(251,191,36,.12)':'rgba(96,165,250,.06)')+'" stroke="rgba(251,191,36,.35)"/>';
+      svg+='<text x="'+(px+8)+'" y="62" fill="#60a5fa" font-size="8" font-weight="700" font-family="JetBrains Mono,monospace">'+r.id+'</text>';
+      svg+='<text x="'+(px+8)+'" y="82" fill="#dfe5f0" font-size="7.5" font-family="JetBrains Mono,monospace">'+escXml(r.name)+'</text>';
+      svg+='<text x="'+(px+8)+'" y="100" fill="#7e8da4" font-size="7.5">age '+r.age+'</text>';
+      svg+='<text x="'+(px+8)+'" y="124" fill="#4d5d74" font-size="6.5">in PK leaf</text>';
+      px+=bw;
+    });
+    svg+='<text x="'+ic+'" y="148" text-anchor="middle" fill="#4d5d74" font-size="7.5">Row in PK leaf · secondary → PK</text></svg>';
+    viz.innerHTML=svg;
+  }
 
   function updateBadges(){
     var sp=el('intStorage'),pp=el('intPrimary'),sec=el('intSecondary');if(!sp)return;
@@ -1978,29 +3217,44 @@ var intViz=(function(){
     if(mode==='mysql'){
       titleEl.innerHTML='Storage<span>No separate heap exists</span>';
       if(heapSlots.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">No rows yet</div>';return;}
-      c.innerHTML='<div class="int-no-storage"><div class="int-ns-icon">\u274C</div><div class="int-ns-title">No Separate Storage</div><div class="int-ns-desc">In InnoDB the clustered index leaf pages <strong>ARE</strong> the table.</div><div class="int-hop-label two">look at Primary Index \u2192</div></div>';
+      c.innerHTML='<div class="int-no-storage"><div class="int-ns-icon">\u274C</div><div class="int-ns-title">No heap</div><div class="int-ns-desc">Table is the clustered PK.</div></div>';
       return;
     }
 
     var deadBadge=deadCount>0?' <span class="int-dead-count">'+deadCount+' dead tuple'+(deadCount>1?'s':'')+'</span>':'';
-    var subLabel=mode==='mongo'?'WiredTiger \u2014 documents in insertion order':'Heap \u2014 rows in insertion order';
-    titleEl.innerHTML='Storage <span class="int-data-badge here">\u{1F4BE} DATA LIVES HERE</span>'+deadBadge+'<span id="intStorageSub">'+subLabel+'</span>';
+    var subLabel=mode==='mongo'?'RecordId \u2192 doc':'Heap · 8KB pages';
+    titleEl.innerHTML='Storage <span class="int-data-badge here">\u{1F4BE}</span>'+deadBadge+'<span id="intStorageSub">'+subLabel+'</span>';
 
     if(heapSlots.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">No rows yet</div>';return;}
 
     var pages=[];for(var i=0;i<heapSlots.length;i+=PS)pages.push(heapSlots.slice(i,i+PS));
 
-    var RH=22,PAD=8,GAP=12,HDR=18,W=280;
-    var totalH=0;pages.forEach(function(p){totalH+=HDR+p.length*RH+PAD*2+GAP;});totalH-=GAP;
+    var RH=22,PAD=8,GAP=12,HDR=18,W=(mode==='pg'||mode==='mongo')?300:280;
+    var headExtra=(mode==='pg'||mode==='mongo')?14:0;
+    var totalH=0;pages.forEach(function(p){totalH+=HDR+headExtra+p.length*RH+PAD*2+GAP;});totalH-=GAP;
 
     var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'">';
     var y=0;
     pages.forEach(function(page,pi){
-      var pH=HDR+page.length*RH+PAD*2;
+      var pH=HDR+headExtra+page.length*RH+PAD*2;
       svg+='<rect x="0" y="'+y+'" width="'+W+'" height="'+pH+'" rx="5" fill="rgba(255,255,255,.02)" stroke="rgba(255,255,255,.12)" stroke-width="1"/>';
-      svg+='<text x="8" y="'+(y+13)+'" fill="var(--tx3)" font-size="9" font-weight="700">'+(mode==='mongo'?'Block':'Page')+' '+pi+'</text>';
+      svg+='<text x="8" y="'+(y+13)+'" fill="var(--tx3)" font-size="9" font-weight="700">'+(mode==='mongo'?'Collection leaf':'Heap page')+' #'+pi+'</text>';
+      if(mode==='mongo'){
+        var hyM=y+HDR+PAD+10;
+        svg+='<text x="6" y="'+hyM+'" fill="#00ed64" font-size="7" font-weight="700" font-family="JetBrains Mono,monospace">RecordId</text>';
+        svg+='<text x="78" y="'+hyM+'" fill="#4d5d74" font-size="7" font-weight="700">_id</text>';
+        svg+='<text x="118" y="'+hyM+'" fill="#4d5d74" font-size="7" font-weight="700">BSON</text>';
+      }
+      if(mode==='pg'){
+        var hy=y+HDR+PAD+10;
+        svg+='<text x="6" y="'+hy+'" fill="#f87171" font-size="7" font-weight="700" font-family="JetBrains Mono,monospace">next→</text>';
+        svg+='<text x="54" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">id</text>';
+        svg+='<text x="78" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">name</text>';
+        svg+='<text x="168" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">age</text>';
+        svg+='<text x="248" y="'+hy+'" fill="#4d5d74" font-size="7" font-weight="700">ctid</text>';
+      }
       page.forEach(function(row,ri){
-        var ry=y+HDR+PAD+ri*RH, sIdx=pi*PS+ri;
+        var ry=y+HDR+PAD+headExtra+ri*RH, sIdx=pi*PS+ri;
         var isDead=row._dead, isHL=lastAction.id===row.id&&!isDead;
         var fill,stroke;
         if(isDead){fill='rgba(248,113,113,.08)';stroke='rgba(248,113,113,.25)';}
@@ -2008,19 +3262,31 @@ var intViz=(function(){
         else{fill='rgba(255,255,255,.03)';stroke='rgba(255,255,255,.08)';}
         svg+='<rect x="4" y="'+ry+'" width="'+(W-8)+'" height="'+(RH-2)+'" rx="3" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1"';
         if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='/>';
-        if(isDead){
+        if(mode==='pg'){
+          var nxt='—';
+          if(isDead&&row.chainTo!=null&&row.chainTo>=0&&row.chainTo<heapSlots.length)nxt='\u2192 '+slotCTID(row.chainTo);
+          var fg=isDead?'rgba(248,113,113,.55)':isHL?'#fbbf24':'var(--tx2)';
+          var idFg=isDead?'rgba(248,113,113,.45)':isHL?'#fbbf24':'#60a5fa';
+          svg+='<text x="6" y="'+(ry+14)+'" fill="'+(isDead?'#f87171':'#7e8da4')+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+nxt+'</text>';
+          svg+='<text x="54" y="'+(ry+14)+'" fill="'+idFg+'" font-size="7.5" font-weight="700" font-family="JetBrains Mono,monospace">'+row.id+'</text>';
+          svg+='<text x="78" y="'+(ry+14)+'" fill="'+fg+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+row.name+'</text>';
+          svg+='<text x="168" y="'+(ry+14)+'" fill="'+fg+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+row.age+'</text>';
+          svg+='<text x="248" y="'+(ry+14)+'" fill="var(--tx3)" font-size="7" font-family="JetBrains Mono,monospace">'+slotCTID(sIdx)+'</text>';
+          if(isDead){
+            svg+='<line x1="6" y1="'+(ry+RH/2-1)+'" x2="'+(W-6)+'" y2="'+(ry+RH/2-1)+'" stroke="rgba(248,113,113,.35)" stroke-width="1"/>';
+            svg+='<text x="'+(W-10)+'" y="'+(ry+14)+'" text-anchor="end" fill="#f87171" font-size="6.5" font-weight="700">DEAD</text>';
+          }
+        } else if(isDead){
           svg+='<line x1="6" y1="'+(ry+RH/2-1)+'" x2="'+(W-6)+'" y2="'+(ry+RH/2-1)+'" stroke="rgba(248,113,113,.4)" stroke-width="1"/>';
           svg+='<text x="10" y="'+(ry+14)+'" fill="rgba(248,113,113,.5)" font-size="8" font-family="\'JetBrains Mono\',monospace">';
           svg+='<tspan font-weight="700">'+row.id+'</tspan> '+row.name+' age:'+row.age;
           svg+=' <tspan font-size="6.5">('+slotCTID(sIdx)+')</tspan></text>';
           svg+='<text x="'+(W-8)+'" y="'+(ry+14)+'" text-anchor="end" fill="#f87171" font-size="6.5" font-weight="700">DEAD</text>';
-        } else {
-          var addr=mode==='pg'?' <tspan fill="var(--tx3)" font-size="7">('+slotCTID(sIdx)+')</tspan>':mode==='mongo'?' <tspan fill="var(--tx3)" font-size="7">RecId:'+slotRecId(sIdx)+'</tspan>':'';
-          var idC=isHL?'#fbbf24':mode==='mongo'?'#00ed64':'#60a5fa';
-          var idL=mode==='mongo'?'_id:'+row.id:String(row.id);
-          svg+='<text x="10" y="'+(ry+14)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="8.5" font-family="\'JetBrains Mono\',monospace">';
-          svg+='<tspan fill="'+idC+'" font-weight="700">'+idL+'</tspan>';
-          svg+=' '+row.name+' <tspan fill="var(--tx3)">age:'+row.age+'</tspan>'+addr+'</text>';
+        } else if(mode==='mongo'){
+          var idC=isHL?'#fbbf24':'#00ed64';
+          svg+='<text x="6" y="'+(ry+14)+'" fill="#7e8da4" font-size="7.5" font-family="JetBrains Mono,monospace">'+slotRecId(sIdx)+'</text>';
+          svg+='<text x="78" y="'+(ry+14)+'" fill="'+idC+'" font-size="7.5" font-weight="700" font-family="JetBrains Mono,monospace">'+row.id+'</text>';
+          svg+='<text x="118" y="'+(ry+14)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7.5" font-family="JetBrains Mono,monospace">'+row.name+', '+row.age+'</text>';
         }
       });
       y+=pH+GAP;
@@ -2028,90 +3294,120 @@ var intViz=(function(){
     svg+='</svg>';c.innerHTML=svg;
   }
 
-  /* ═══ PRIMARY INDEX ═══════════════════════════════════ */
+  /* ═══ PRIMARY INDEX ═══════════════════════════════════
+     Postgres: btree internal pages = pivots + child pointers; leaves = key → heap TID. PK and secondary share the same structure.
+     Mongo: _id index is its own WiredTiger btree; leaves map _id → RecordId.
+     InnoDB: clustered PK leaf holds the full row. */
   function renderPrimary(){
     var c=el('intPrimaryViz');if(!c)return;
     var titleEl=el('intPrimary').querySelector('.int-panel-title');
     var isMg=mode==='mongo',isMy=mode==='mysql';
     var priC=isMg?'#00ed64':'#60a5fa',priR=isMg?'0,237,100':'96,165,250';
     var live=liveRows();
-
-    /* In PG mode: stale primary index entries still visible (point to dead tuple) */
     var stalePri=mode==='pg'?staleIdx.filter(function(s){return s.type==='pri'||s.type==='both';}):[];
     var bloatBadge=stalePri.length>0?' <span class="int-dead-count">'+stalePri.length+' stale</span>':'';
 
-    if(isMy)titleEl.innerHTML='Primary Index <span class="int-data-badge here">\u{1F4BE} DATA LIVES HERE</span>'+bloatBadge+'<span>Clustered B-Tree on id \u2014 leaf = full row</span>';
-    else if(isMg)titleEl.innerHTML='_id Index <span class="int-data-badge pointer">POINTER \u2192 STORAGE</span>'+bloatBadge+'<span>B-Tree on _id \u2192 RecordId</span>';
-    else titleEl.innerHTML='Primary Index <span class="int-data-badge pointer">POINTER \u2192 HEAP</span>'+bloatBadge+'<span>B-Tree on id \u2192 ctid</span>';
+    if(isMy)titleEl.innerHTML='Primary (clustered) <span class="int-data-badge here">\u{1F4BE}</span>'+bloatBadge+'<span>PK leaf = row</span>';
+    else if(isMg)titleEl.innerHTML='_id index <span class="int-data-badge pointer">B-tree</span>'+bloatBadge+'<span>Leaf: indexed key \u2192 RecordId</span>'+MONGO_RECID_HINT;
+    else titleEl.innerHTML='Primary <span class="int-data-badge pointer">\u2192 TID</span>'+bloatBadge+'<span>Leaf \u2192 heap</span>';
 
-    /* Build combined entries: live rows + stale ghost entries (PG) */
     var entries=live.map(function(r){return{id:r.id,name:r.name,age:r.age,dead:false};});
     stalePri.forEach(function(s){entries.push({id:s.id,name:s.name,age:s.age,dead:true,deadCTID:slotCTID(s.slotIdx)});});
     entries.sort(function(a,b){return a.id-b.id;});
 
     if(entries.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">Empty</div>';return;}
 
-    var leaves=[];for(var i=0;i<entries.length;i+=PS)leaves.push(entries.slice(i,i+PS));
+    var leaves=[];
+    for(var i=0;i<entries.length;i+=PS)leaves.push(entries.slice(i,i+PS));
+    var nL=leaves.length;
+    var gap=10,sidePad=14;
+    var fit=btreePanelWidth(nL,gap,sidePad,84,148);
+    var W=fit.W,LW=fit.LW;
+    var EH=isMy?28:21;
+    var legendH=13;
+    var internalH=nL>1?36:0;
+    var lY=legendH+internalH+8;
+    var leafBoxH=0;
+    leaves.forEach(function(lf){leafBoxH=Math.max(leafBoxH,lf.length*EH+(isMy?22:26));});
+    var totalH=lY+leafBoxH+20;
+    var mid=W/2;
+    var sX=(W-(nL*LW+(nL-1)*gap))/2;if(sX<4)sX=4;
 
-    var W=280,EH=isMy?28:18;
-    var LW=isMy?Math.min(180,Math.max(80,(W-16)/leaves.length-6)):Math.min(140,Math.max(60,(W-20)/leaves.length-6));
-    var rH=24,rY=10,lY=60;
-    var totalH=lY+10;leaves.forEach(function(lf){var h=lf.length*EH+12;if(lY+h>totalH)totalH=lY+h;});totalH+=10;
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'" width="'+W+'" height="'+totalH+'" preserveAspectRatio="xMinYMin meet">';
+    svg+='<defs><marker id="int-arr-pri" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="rgba('+priR+',.55)"/></marker></defs>';
 
-    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'">';
-    svg+='<defs><marker id="int-arr" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="rgba('+priR+',.5)"/></marker></defs>';
+    if(isMy)svg+='<text x="'+mid+'" y="10" text-anchor="middle" fill="#fbbf24" font-size="6.5">Clustered PK</text>';
+    else if(isMg)svg+='<text x="'+mid+'" y="10" text-anchor="middle" fill="#4d5d74" font-size="6.5">Index file (not collection)</text>';
+    else svg+='<text x="'+mid+'" y="10" text-anchor="middle" fill="#4d5d74" font-size="6.5">nbtree · internal vs leaf</text>';
 
-    var rKeys=[];for(var li=1;li<leaves.length;li++){var k=leaves[li][0].id;rKeys.push(isMg?'_id:'+k:k);}
-    var rW=Math.max(40,rKeys.length*(isMg?42:28)+16),rX=(W-rW)/2;
-    svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="4" fill="rgba('+priR+',.08)" stroke="rgba('+priR+',.3)" stroke-width="1.5"/>';
-    svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+16)+'" text-anchor="middle" fill="'+priC+'" font-size="9" font-weight="700" font-family="\'JetBrains Mono\',monospace">'+(rKeys.length?rKeys.join(' | '):'root')+'</text>';
-
-    var tLW=leaves.length*LW+(leaves.length-1)*8,sX=(W-tLW)/2;if(sX<2)sX=2;
+    if(internalH>0){
+      var piv=leaves[1][0].id;
+      svg+='<rect x="6" y="'+(legendH+1)+'" width="'+(W-12)+'" height="'+(internalH-2)+'" rx="4" fill="rgba('+priR+',.08)" stroke="rgba('+priR+',.35)"/>';
+      svg+='<text x="'+mid+'" y="'+(legendH+12)+'" text-anchor="middle" fill="'+priC+'" font-size="7" font-weight="700">INTERNAL · btpo_level &gt; 0</text>';
+      svg+='<text x="'+mid+'" y="'+(legendH+24)+'" text-anchor="middle" fill="#7e8da4" font-size="6.5" font-family="JetBrains Mono,monospace">'+
+        (isMg?'pivot _id \u2265 '+piv+' · branch to child page':(isMy?'pivot PK \u2265 '+piv+' · InnoDB internal downlink':'pivot id \u2265 '+piv+' · IndexTuple.t_tid = child blk#'))+'</text>';
+      for(var li=0;li<nL;li++){
+        var lx=sX+li*(LW+gap);
+        svg+='<line x1="'+mid+'" y1="'+(legendH+internalH-1)+'" x2="'+(lx+LW/2)+'" y2="'+lY+'" stroke="rgba('+priR+',.35)" stroke-width="1" marker-end="url(#int-arr-pri)"/>';
+      }
+    } else if(!isMy){
+      svg+='<text x="'+mid+'" y="'+(legendH+11)+'" text-anchor="middle" fill="#4d5d74" font-size="6.5">Single leaf (small tree)</text>';
+    }
 
     leaves.forEach(function(leaf,li){
-      var lx=sX+li*(LW+8),lh=leaf.length*EH+10;
-      svg+='<line x1="'+(rX+rW/2)+'" y1="'+(rY+rH)+'" x2="'+(lx+LW/2)+'" y2="'+lY+'" stroke="rgba('+priR+',.25)" stroke-width="1" marker-end="url(#int-arr)"/>';
-      var lFill=isMy?'rgba(0,237,100,.03)':'rgba(255,255,255,.02)',lStroke=isMy?'rgba(0,237,100,.25)':'rgba('+priR+',.2)';
+      var lx=sX+li*(LW+gap),lh=leaf.length*EH+(isMy?22:26);
+      var lFill=isMy?'rgba(0,237,100,.04)':'rgba(255,255,255,.025)',lStroke=isMy?'rgba(0,237,100,.3)':'rgba('+priR+',.28)';
       svg+='<rect x="'+lx+'" y="'+lY+'" width="'+LW+'" height="'+lh+'" rx="4" fill="'+lFill+'" stroke="'+lStroke+'" stroke-width="'+(isMy?'1.5':'1')+'"/>';
-
+      var hdr=isMy?'LEAF · PK + full row':(isMg?'LEAF · _id \u2192 RecordId':'LEAF · BTP_LEAF · key\u2192TID');
+      svg+='<text x="'+(lx+LW/2)+'" y="'+(lY+11)+'" text-anchor="middle" fill="'+priC+'" font-size="6.5" font-weight="700">'+hdr+'</text>';
+      if(!isMy && !isMg)svg+='<text x="'+(lx+LW/2)+'" y="'+(lY+19)+'" text-anchor="middle" fill="#4d5d74" font-size="5">btpo_prev \u2194 btpo_next</text>';
+      var row0=lY+(isMy?16:(isMg?16:24));
       leaf.forEach(function(e,ri){
-        var ey=lY+6+ri*EH,isHL=lastAction.id===e.id&&!e.dead;
+        var ey=row0+ri*EH,isHL=lastAction.id===e.id&&!e.dead;
         if(e.dead){
-          /* Stale entry: red, points to dead ctid */
-          svg+='<line x1="'+(lx+2)+'" y1="'+(ey+6)+'" x2="'+(lx+LW-2)+'" y2="'+(ey+6)+'" stroke="rgba(248,113,113,.3)" stroke-width="1"/>';
-          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="rgba(248,113,113,.5)" font-size="7" font-family="\'JetBrains Mono\',monospace">';
-          svg+='<tspan font-weight="700">'+e.id+'</tspan> \u2192 '+e.deadCTID+' <tspan fill="#f87171" font-weight="700">DEAD</tspan></text>';
+          svg+='<line x1="'+(lx+2)+'" y1="'+(ey+7)+'" x2="'+(lx+LW-2)+'" y2="'+(ey+7)+'" stroke="rgba(248,113,113,.3)" stroke-width="1"/>';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+14)+'" fill="rgba(248,113,113,.55)" font-size="6.8" font-family="JetBrains Mono,monospace">';
+          svg+='<tspan font-weight="700">'+e.id+'</tspan> \u2192 '+e.deadCTID+' <tspan fill="#f87171">stale TID</tspan></text>';
         } else if(isMy){
-          svg+='<text x="'+(lx+4)+'" y="'+(ey+10)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="\'JetBrains Mono\',monospace"';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+11)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="JetBrains Mono,monospace"';
           if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
           svg+='<tspan font-weight="700" fill="'+(isHL?'#fbbf24':'#60a5fa')+'">'+e.id+'</tspan> '+e.name+' age:'+e.age+'</text>';
-          svg+='<text x="'+(lx+4)+'" y="'+(ey+21)+'" fill="#00ed64" font-size="5.5" opacity=".6">\u2714 full row in leaf</text>';
-        } else {
-          var ptr=isMg?getRecordId(e.id):getCTID(e.id);
-          var pL=isMg?'_id:'+e.id:String(e.id);
-          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7.5" font-family="\'JetBrains Mono\',monospace"';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+22)+'" fill="#00ed64" font-size="5.5" opacity=".65">row bytes in clustered leaf</text>';
+        } else if(isMg){
+          var rec=getRecordId(e.id);
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+13)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="JetBrains Mono,monospace"';
           if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
-          svg+='<tspan font-weight="700" fill="'+(isHL?'#fbbf24':priC)+'">'+pL+'</tspan>';
-          svg+=' <tspan fill="var(--tx3)">\u2192 '+ptr+'</tspan></text>';
+          svg+='<tspan fill="'+priC+'" font-weight="700">_id:'+e.id+'</tspan> <tspan fill="#4d5d74">\u2192</tspan> <tspan fill="#7e8da4">'+rec+'</tspan></text>';
+        } else {
+          var ptr=getCTID(e.id);
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+13)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="JetBrains Mono,monospace"';
+          if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
+          svg+='<tspan font-weight="700" fill="'+priC+'">'+e.id+'</tspan> <tspan fill="#4d5d74">\u2192</tspan> <tspan fill="#7e8da4">('+ptr+')</tspan> <tspan fill="#4d5d74" font-size="6">ItemPointer</tspan></text>';
         }
       });
     });
+
+    if(!isMy && !isMg)svg+='<text x="'+mid+'" y="'+(lY+leafBoxH+12)+'" text-anchor="middle" fill="#4d5d74" font-size="5.8">PK uses same nbtree as other indexes</text>';
+    else if(isMg)svg+='<text x="'+mid+'" y="'+(lY+leafBoxH+12)+'" text-anchor="middle" fill="#4d5d74" font-size="5.8">Then collection tree for BSON</text>';
+
     svg+='</svg>';c.innerHTML=svg;
   }
 
-  /* ═══ SECONDARY INDEX ═════════════════════════════════ */
+  /* ═══ SECONDARY INDEX ═════════════════════════════════
+     Postgres: same nbtree as PK — leaf (name → heap TID). Non-HOT UPDATE can duplicate keys.
+     Mongo: one WiredTiger btree per secondary index — leaf maps key → RecordId.
+     InnoDB: secondary leaf stores PK columns; then lookup clustered PK. */
   function renderSecondary(){
     var c=el('intSecondaryViz');if(!c)return;
     var titleEl=el('intSecondary').querySelector('.int-panel-title');
-    var isMy=mode==='mysql';
+    var isMy=mode==='mysql',isMg=mode==='mongo';
     var live=liveRows();
-
     var staleSec=mode==='pg'?staleIdx.filter(function(s){return s.type==='sec'||s.type==='both';}):[];
     var bloatBadge=staleSec.length>0?' <span class="int-dead-count">'+staleSec.length+' stale</span>':'';
 
-    if(isMy)titleEl.innerHTML='Secondary Index <span class="int-data-badge pointer-mysql">2 HOPS \u2192 PK \u2192 DATA</span>'+bloatBadge+'<span>B-Tree on name \u2192 PK value</span>';
-    else if(mode==='mongo')titleEl.innerHTML='Secondary Index <span class="int-data-badge pointer">1 HOP \u2192 STORAGE</span>'+bloatBadge+'<span>B-Tree on name \u2192 RecordId</span>';
-    else titleEl.innerHTML='Secondary Index <span class="int-data-badge pointer">1 HOP \u2192 HEAP</span>'+bloatBadge+'<span>B-Tree on name \u2192 ctid</span>';
+    if(isMy)titleEl.innerHTML='Secondary <span class="int-data-badge pointer-mysql">2 hops</span>'+bloatBadge+'<span>name \u2192 PK</span>';
+    else if(isMg)titleEl.innerHTML='Secondary <span class="int-data-badge pointer">B-tree</span>'+bloatBadge+'<span>Leaf: indexed field \u2192 RecordId</span>'+MONGO_SEC_RECID_HINT;
+    else titleEl.innerHTML='Secondary <span class="int-data-badge pointer">\u2192 TID</span>'+bloatBadge+'<span>name \u2192 heap</span>';
 
     var entries=live.map(function(r){return{id:r.id,name:r.name,dead:false};});
     staleSec.forEach(function(s){entries.push({id:s.id,name:s.name,dead:true,deadCTID:slotCTID(s.slotIdx)});});
@@ -2119,43 +3415,79 @@ var intViz=(function(){
 
     if(entries.length===0){c.innerHTML='<div style="color:var(--tx3);text-align:center;padding:2rem;font-size:.85rem">Empty</div>';return;}
 
-    var leaves=[];for(var i=0;i<entries.length;i+=PS)leaves.push(entries.slice(i,i+PS));
-    var W=280,LW=isMy?Math.min(160,Math.max(80,(W-16)/leaves.length-6)):Math.min(140,Math.max(70,(W-20)/leaves.length-6));
-    var EH=isMy?28:18,rH=24,rY=10,lY=60;
-    var totalH=lY+10;leaves.forEach(function(lf){var h=lf.length*EH+12;if(lY+h>totalH)totalH=lY+h;});totalH+=10;
+    var leaves=[];
+    for(var i=0;i<entries.length;i+=PS)leaves.push(entries.slice(i,i+PS));
+    var nL=leaves.length;
+    var gap=10,sidePad=14;
+    var fit=btreePanelWidth(nL,gap,sidePad,82,148);
+    var W=fit.W,LW=fit.LW;
+    var EH=isMy?28:21;
+    var legendH=13;
+    var internalH=nL>1?36:0;
+    var lY=legendH+internalH+8;
+    var leafBoxH=0;
+    leaves.forEach(function(lf){leafBoxH=Math.max(leafBoxH,lf.length*EH+(isMy?22:26));});
+    var totalH=lY+leafBoxH+18;
+    var mid=W/2;
+    var sX=(W-(nL*LW+(nL-1)*gap))/2;if(sX<4)sX=4;
 
-    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'">';
-    svg+='<defs><marker id="int-arr2" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="rgba(0,237,100,.5)"/></marker></defs>';
+    var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+totalH+'" width="'+W+'" height="'+totalH+'" preserveAspectRatio="xMinYMin meet">';
+    svg+='<defs><marker id="int-arr-sec" markerWidth="5" markerHeight="5" refX="4" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5" fill="rgba(0,237,100,.55)"/></marker></defs>';
 
-    var rKeys=[];for(var li=1;li<leaves.length;li++)rKeys.push(leaves[li][0].name);
-    var rW=Math.max(40,rKeys.length*48+16);if(rW>W-10)rW=W-10;var rX=(W-rW)/2;
-    svg+='<rect x="'+rX+'" y="'+rY+'" width="'+rW+'" height="'+rH+'" rx="4" fill="rgba(0,237,100,.06)" stroke="rgba(0,237,100,.25)" stroke-width="1.5"/>';
-    svg+='<text x="'+(rX+rW/2)+'" y="'+(rY+16)+'" text-anchor="middle" fill="#00ed64" font-size="8.5" font-weight="700" font-family="\'JetBrains Mono\',monospace">'+(rKeys.length?rKeys.join(' | '):'root')+'</text>';
+    if(isMy)svg+='<text x="'+mid+'" y="10" text-anchor="middle" fill="#fbbf24" font-size="6.5">Non-clustered</text>';
+    else if(isMg)svg+='<text x="'+mid+'" y="10" text-anchor="middle" fill="#4d5d74" font-size="6.5">Per-index file</text>';
+    else svg+='<text x="'+mid+'" y="10" text-anchor="middle" fill="#4d5d74" font-size="6.5">idx_name</text>';
 
-    var tLW=leaves.length*LW+(leaves.length-1)*8,sX=(W-tLW)/2;if(sX<0)sX=2;
+    if(internalH>0){
+      var pivN=leaves[1][0].name;
+      svg+='<rect x="6" y="'+(legendH+1)+'" width="'+(W-12)+'" height="'+(internalH-2)+'" rx="4" fill="rgba(0,237,100,.07)" stroke="rgba(0,237,100,.35)"/>';
+      svg+='<text x="'+mid+'" y="'+(legendH+12)+'" text-anchor="middle" fill="#00ed64" font-size="7" font-weight="700">INTERNAL · btpo_level &gt; 0</text>';
+      svg+='<text x="'+mid+'" y="'+(legendH+24)+'" text-anchor="middle" fill="#7e8da4" font-size="6.5" font-family="JetBrains Mono,monospace">'+
+        (isMg?'pivot key \u2265 \''+pivN+'\' · child downlink':(isMy?'pivot name \u2265 \''+pivN+'\' · InnoDB child ptr':'pivot name \u2265 \''+pivN+'\' · downlink blk#'))+'</text>';
+      for(var li=0;li<nL;li++){
+        var lx=sX+li*(LW+gap);
+        svg+='<line x1="'+mid+'" y1="'+(legendH+internalH-1)+'" x2="'+(lx+LW/2)+'" y2="'+lY+'" stroke="rgba(0,237,100,.35)" stroke-width="1" marker-end="url(#int-arr-sec)"/>';
+      }
+    } else if(!isMy){
+      svg+='<text x="'+mid+'" y="'+(legendH+11)+'" text-anchor="middle" fill="#4d5d74" font-size="6.5">Single leaf</text>';
+    }
 
     leaves.forEach(function(leaf,li){
-      var lx=sX+li*(LW+8),lh=leaf.length*EH+10;
-      svg+='<line x1="'+(rX+rW/2)+'" y1="'+(rY+rH)+'" x2="'+(lx+LW/2)+'" y2="'+lY+'" stroke="rgba(0,237,100,.2)" stroke-width="1" marker-end="url(#int-arr2)"/>';
-      svg+='<rect x="'+lx+'" y="'+lY+'" width="'+LW+'" height="'+lh+'" rx="4" fill="rgba(255,255,255,.02)" stroke="rgba(0,237,100,.18)" stroke-width="1"/>';
-
+      var lx=sX+li*(LW+gap),lh=leaf.length*EH+(isMy?22:26);
+      var lFill=isMy?'rgba(251,191,36,.06)':'rgba(255,255,255,.025)',lStroke=isMy?'rgba(251,191,36,.35)':'rgba(0,237,100,.28)';
+      svg+='<rect x="'+lx+'" y="'+lY+'" width="'+LW+'" height="'+lh+'" rx="4" fill="'+lFill+'" stroke="'+lStroke+'" stroke-width="1"/>';
+      var hdr=isMy?'LEAF · name\u2192PK':(isMg?'LEAF · key\u2192RecId':'LEAF · name\u2192TID');
+      svg+='<text x="'+(lx+LW/2)+'" y="'+(lY+11)+'" text-anchor="middle" fill="#00ed64" font-size="6.5" font-weight="700">'+hdr+'</text>';
+      if(!isMy && !isMg)svg+='<text x="'+(lx+LW/2)+'" y="'+(lY+19)+'" text-anchor="middle" fill="#4d5d74" font-size="5">btpo_prev \u2194 btpo_next</text>';
+      var row0=lY+(isMy?16:(isMg?16:24));
       leaf.forEach(function(e,ri){
-        var ey=lY+6+ri*EH,isHL=lastAction.id===e.id&&!e.dead;
+        var ey=row0+ri*EH,isHL=lastAction.id===e.id&&!e.dead;
         if(e.dead){
-          svg+='<line x1="'+(lx+2)+'" y1="'+(ey+6)+'" x2="'+(lx+LW-2)+'" y2="'+(ey+6)+'" stroke="rgba(248,113,113,.3)" stroke-width="1"/>';
-          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="rgba(248,113,113,.5)" font-size="7" font-family="\'JetBrains Mono\',monospace">';
-          svg+='<tspan font-weight="700">'+e.name+'</tspan> \u2192 '+e.deadCTID+' <tspan fill="#f87171" font-weight="700">DEAD</tspan></text>';
-        } else {
-          var ptr;
-          if(mode==='pg')ptr=getCTID(e.id);else if(mode==='mongo')ptr=getRecordId(e.id);else ptr='pk:'+e.id;
-          svg+='<text x="'+(lx+4)+'" y="'+(ey+12)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7.5" font-family="\'JetBrains Mono\',monospace"';
+          svg+='<line x1="'+(lx+2)+'" y1="'+(ey+7)+'" x2="'+(lx+LW-2)+'" y2="'+(ey+7)+'" stroke="rgba(248,113,113,.3)" stroke-width="1"/>';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+14)+'" fill="rgba(248,113,113,.55)" font-size="6.8" font-family="JetBrains Mono,monospace">';
+          svg+='<tspan font-weight="700">'+e.name+'</tspan> \u2192 '+e.deadCTID+' <tspan fill="#f87171">stale</tspan></text>';
+        } else if(isMy){
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+11)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="JetBrains Mono,monospace"';
           if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
-          svg+='<tspan font-weight="700" fill="'+(isHL?'#fbbf24':'#00ed64')+'">'+e.name+'</tspan>';
-          svg+=' <tspan fill="var(--tx3)">\u2192 '+ptr+'</tspan></text>';
-          if(isMy)svg+='<text x="'+(lx+4)+'" y="'+(ey+23)+'" fill="#fbbf24" font-size="5.5" opacity=".6">\u26A0 must look up PK in clustered index</text>';
+          svg+='<tspan font-weight="700" fill="#00ed64">'+e.name+'</tspan> <tspan fill="#4d5d74">\u2192</tspan> <tspan fill="#fbbf24">PK '+e.id+'</tspan></text>';
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+22)+'" fill="#fbbf24" font-size="5.5" opacity=".7">then clustered index</text>';
+        } else if(isMg){
+          var rec=getRecordId(e.id);
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+13)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="JetBrains Mono,monospace"';
+          if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
+          svg+='<tspan font-weight="700" fill="#00ed64">'+e.name+'</tspan> <tspan fill="#4d5d74">\u2192</tspan> <tspan fill="#7e8da4">'+rec+'</tspan></text>';
+        } else {
+          var ptr=getCTID(e.id);
+          svg+='<text x="'+(lx+4)+'" y="'+(ey+13)+'" fill="'+(isHL?'#fbbf24':'var(--tx2)')+'" font-size="7" font-family="JetBrains Mono,monospace"';
+          if(isHL)svg+=' style="animation:int-flash .8s ease 2"';svg+='>';
+          svg+='<tspan font-weight="700" fill="#00ed64">'+e.name+'</tspan> <tspan fill="#4d5d74">\u2192</tspan> <tspan fill="#7e8da4">('+ptr+')</tspan> <tspan fill="#4d5d74" font-size="6">TID</tspan></text>';
         }
       });
     });
+
+    svg+='<text x="'+mid+'" y="'+(lY+leafBoxH+12)+'" text-anchor="middle" fill="#4d5d74" font-size="5.8">'+
+      (isMy?'Secondary then PK':(isMg?'Then collection lookup':'Same nbtree as PK'))+'</text>';
+
     svg+='</svg>';c.innerHTML=svg;
   }
 
@@ -2163,11 +3495,11 @@ var intViz=(function(){
   function insertNext(){
     if(insertIdx>=ROWS.length)return;
     var r=ROWS[insertIdx];insertIdx++;
-    heapSlots.push({id:r.id,name:r.name,age:r.age,_dead:false});
-    lastAction={type:'insert',id:r.id};
-    log('<strong>INSERT</strong> id='+r.id+' name='+r.name+' \u2192 appended to slot '+(heapSlots.length-1)+'. Primary + secondary index entries added.');
+    heapSlots.push({id:r.id,name:r.name,age:r.age,_dead:false,chainTo:null});
+    lastAction={type:'insert',id:r.id,vacuumMeta:null};
+    log('<strong>INSERT</strong> '+r.id+' '+r.name);
     render();
-    setTimeout(function(){lastAction={type:null,id:-1};render();},2000);
+    setTimeout(function(){lastAction={type:null,id:-1,vacuumMeta:null};render();},2000);
   }
 
   /* ═══ UPDATE ══════════════════════════════════════════ */
@@ -2181,41 +3513,36 @@ var intViz=(function(){
     if(mode==='pg'){
       var oldSlot=-1;
       for(var i=0;i<heapSlots.length;i++){
-        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){oldSlot=i;heapSlots[i]._dead=true;deadCount++;break;}
+        if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){
+          oldSlot=i;
+          heapSlots[i]._dead=true;
+          heapSlots[i].chainTo=heapSlots.length;
+          deadCount++;
+          break;
+        }
       }
-      heapSlots.push({id:pick.id,name:newName,age:newAge,_dead:false});
+      heapSlots.push({id:pick.id,name:newName,age:newAge,_dead:false,chainTo:null});
       /* Stale index entries: PK index entry for this id now has TWO versions — old pointing to dead slot, new pointing to live.
          For unique PK, PG uses the HOT chain internally. We show the old entry as stale.
          Secondary index: old "name" entry stale, new "name*" entry added. */
       staleIdx.push({id:pick.id,name:oldName,age:oldAge,slotIdx:oldSlot,type:'sec'});
-      lastAction={type:'update',id:pick.id};
-      log('<strong>UPDATE</strong> id='+pick.id+': '+oldName+' \u2192 '+newName+', age '+oldAge+' \u2192 '+newAge+
-        '<br><span style="color:#f87171">\u2718 Old tuple at ('+slotCTID(oldSlot)+') marked <strong>DEAD</strong> — stays in heap, wastes space</span>'+
-        '<br><span style="color:#c084fc">\u2714 New tuple appended at slot '+(heapSlots.length-1)+' ('+slotCTID(heapSlots.length-1)+')</span>'+
-        '<br><span style="color:#f87171">\u2718 Secondary index: old entry "<strong>'+oldName+' \u2192 '+slotCTID(oldSlot)+'</strong>" still in B-tree — now points to DEAD tuple</span>'+
-        '<br><span style="color:#c084fc">\u2714 Secondary index: new entry "<strong>'+newName+' \u2192 '+slotCTID(heapSlots.length-1)+'</strong>" added</span>'+
-        '<br><span style="color:var(--tx3)">\u23F3 Both dead heap tuple and stale index entries persist until VACUUM</span>');
+      lastAction={type:'update',id:pick.id,vacuumMeta:null};
+      log('<strong>UPDATE</strong> '+pick.id+' '+oldName+'\u2192'+newName+' · dead '+slotCTID(oldSlot)+' · live '+slotCTID(heapSlots.length-1)+' · stale idx until VACUUM');
     } else if(mode==='mongo'){
       for(var i=0;i<heapSlots.length;i++){
         if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots[i].name=newName;heapSlots[i].age=newAge;break;}
       }
-      lastAction={type:'update',id:pick.id};
-      log('<strong>UPDATE</strong> _id:'+pick.id+': '+oldName+' \u2192 '+newName+', age '+oldAge+' \u2192 '+newAge+
-        '<br><span style="color:#00ed64">\u2714 Document updated <strong>in-place</strong> in WiredTiger page — no dead version created</span>'+
-        '<br><span style="color:#00ed64">\u2714 _id index unchanged (same RecordId)</span>'+
-        '<br><span style="color:#c084fc">\u2714 Secondary index: old "'+oldName+'" entry removed, new "'+newName+'" entry added — <strong>no stale entries</strong></span>');
+      lastAction={type:'update',id:pick.id,vacuumMeta:null};
+      log('<strong>UPDATE</strong> '+pick.id+' in-place · secondary key swap');
     } else {
       for(var i=0;i<heapSlots.length;i++){
         if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots[i].name=newName;heapSlots[i].age=newAge;break;}
       }
-      lastAction={type:'update',id:pick.id};
-      log('<strong>UPDATE</strong> id='+pick.id+': '+oldName+' \u2192 '+newName+', age '+oldAge+' \u2192 '+newAge+
-        '<br><span style="color:#f59e0b">\u2714 Row updated in-place in clustered index leaf page</span>'+
-        '<br><span style="color:#c084fc">\u2714 Secondary index: old "'+oldName+'" removed, new "'+newName+'" added</span>'+
-        '<br><span style="color:var(--tx3)">\u2022 Old version saved in undo log (not visible in table)</span>');
+      lastAction={type:'update',id:pick.id,vacuumMeta:null};
+      log('<strong>UPDATE</strong> '+pick.id+' PK leaf + secondary');
     }
     render();
-    setTimeout(function(){lastAction={type:null,id:-1};render();},3000);
+    setTimeout(function(){lastAction={type:null,id:-1,vacuumMeta:null};render();},3000);
   }
 
   /* ═══ DELETE ══════════════════════════════════════════ */
@@ -2230,34 +3557,23 @@ var intViz=(function(){
       }
       /* Both primary and secondary index entries become stale */
       staleIdx.push({id:pick.id,name:pick.name,age:pick.age,slotIdx:oldSlot,type:'both'});
-      lastAction={type:'delete',id:pick.id};
-      log('<strong>DELETE</strong> id='+pick.id+' ('+pick.name+') at ('+slotCTID(oldSlot)+')'+
-        '<br><span style="color:#f87171">\u2718 Tuple marked <strong>DEAD</strong> in heap — not removed, still occupies '+( mode==='pg'?'8KB page space':'disk space')+'</span>'+
-        '<br><span style="color:#f87171">\u2718 Primary index: entry "<strong>'+pick.id+' \u2192 '+slotCTID(oldSlot)+'</strong>" still in B-tree — points to DEAD tuple</span>'+
-        '<br><span style="color:#f87171">\u2718 Secondary index: entry "<strong>'+pick.name+' \u2192 '+slotCTID(oldSlot)+'</strong>" still in B-tree — points to DEAD tuple</span>'+
-        '<br><span style="color:var(--tx3)">\u23F3 All three (heap + 2 index entries) persist as bloat until VACUUM</span>');
+      lastAction={type:'delete',id:pick.id,vacuumMeta:null};
+      log('<strong>DELETE</strong> '+pick.id+' @'+slotCTID(oldSlot)+' · dead heap + stale idx until VACUUM');
     } else if(mode==='mongo'){
       for(var i=0;i<heapSlots.length;i++){
         if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots.splice(i,1);break;}
       }
-      lastAction={type:'delete',id:pick.id};
-      log('<strong>DELETE</strong> _id:'+pick.id+' ('+pick.name+')'+
-        '<br><span style="color:#00ed64">\u2714 Document removed from WiredTiger page <strong>immediately</strong></span>'+
-        '<br><span style="color:#00ed64">\u2714 _id index entry removed immediately</span>'+
-        '<br><span style="color:#00ed64">\u2714 Secondary index entry removed immediately</span>'+
-        '<br><span style="color:var(--tx3)">\u2022 Freed space reused by block manager — no bloat accumulation</span>');
+      lastAction={type:'delete',id:pick.id,vacuumMeta:null};
+      log('<strong>DELETE</strong> '+pick.id);
     } else {
       for(var i=0;i<heapSlots.length;i++){
         if(heapSlots[i].id===pick.id&&!heapSlots[i]._dead){heapSlots.splice(i,1);break;}
       }
-      lastAction={type:'delete',id:pick.id};
-      log('<strong>DELETE</strong> id='+pick.id+' ('+pick.name+')'+
-        '<br><span style="color:#f59e0b">\u2714 Row removed from clustered index leaf page</span>'+
-        '<br><span style="color:#c084fc">\u2714 Secondary index entry removed</span>'+
-        '<br><span style="color:var(--tx3)">\u2022 Old version in undo log (purge thread cleans async)</span>');
+      lastAction={type:'delete',id:pick.id,vacuumMeta:null};
+      log('<strong>DELETE</strong> '+pick.id);
     }
     render();
-    setTimeout(function(){lastAction={type:null,id:-1};render();},3000);
+    setTimeout(function(){lastAction={type:null,id:-1,vacuumMeta:null};render();},3000);
   }
 
   /* ═══ VACUUM / COMPACT ════════════════════════════════ */
@@ -2267,19 +3583,18 @@ var intViz=(function(){
     heapSlots=heapSlots.filter(function(r){return !r._dead;});
     var reclaimed=before-heapSlots.length;
     staleIdx=[];deadCount=0;
-    lastAction={type:null,id:-1};
-    log('<strong>VACUUM</strong> completed'+
-      '<br><span style="color:#fbbf24">\u2714 '+reclaimed+' dead heap tuple'+(reclaimed!==1?'s':'')+' removed — space marked reusable</span>'+
-      '<br><span style="color:#fbbf24">\u2714 '+stBefore+' stale index entr'+(stBefore!==1?'ies':'y')+' cleaned from B-trees</span>'+
-      '<br><span style="color:var(--tx3)">\u2022 Regular VACUUM marks space reusable but <strong>heap file doesn\'t shrink on disk</strong></span>'+
-      '<br><span style="color:var(--tx3)">\u2022 Only VACUUM FULL (ACCESS EXCLUSIVE lock, hours of downtime) shrinks the file</span>');
+    lastAction={type:'vacuum',id:-1,vacuumMeta:{reclaimed:reclaimed,nStale:stBefore}};
+    log('<strong>VACUUM</strong> (lazy) — '+reclaimed+' dead removed, '+stBefore+' stale index entr'+(stBefore!==1?'ies':'y')+' dropped. File size on disk unchanged; <code>VACUUM FULL</code> or rewrite reclaims OS space.');
     render();
+    setTimeout(function(){
+      if(lastAction.type==='vacuum'){lastAction={type:null,id:-1,vacuumMeta:null};render();}
+    },10000);
   }
 
   /* ═══ RESET ═══════════════════════════════════════════ */
   function reset(){
-    heapSlots=[];staleIdx=[];insertIdx=0;lastAction={type:null,id:-1};deadCount=0;
-    log('Click <strong>Insert Row</strong> to start. Then try Update and Delete to see how each engine handles mutations.');
+    heapSlots=[];staleIdx=[];insertIdx=0;lastAction={type:null,id:-1,vacuumMeta:null};deadCount=0;
+    log('');
     render();
   }
 
@@ -2290,12 +3605,8 @@ var intViz=(function(){
     btns[0].className=m==='pg'?'active':'';
     btns[1].className=m==='mysql'?'active':'';
     btns[2].className=m==='mongo'?'active':'';
-    var exp=el('intExplainer');
-    if(m==='pg')exp.innerHTML='<strong>PostgreSQL:</strong> Heap storage + B-Tree indexes pointing to <code>ctid</code>. UPDATE = mark old tuple DEAD + append new tuple + stale index entries. DELETE = mark DEAD + stale index entries. VACUUM cleans all.<br><span class="int-hop-label one">Primary = 1 hop &nbsp;|&nbsp; Secondary = 1 hop</span>';
-    else if(m==='mysql')exp.innerHTML='<strong>MySQL / InnoDB:</strong> Clustered index (PK = table). UPDATE = in-place modify + undo log. DELETE = remove from leaf + undo log. No dead tuples in the table.<br><span class="int-hop-label two">Primary = direct &nbsp;|&nbsp; Secondary = 2 hops</span>';
-    else exp.innerHTML='<strong>MongoDB (WiredTiger):</strong> UPDATE = in-place modify, no dead tuples. DELETE = immediate removal. Block manager reuses freed space. No VACUUM needed.<br><span class="int-hop-label one">Primary = 1 hop &nbsp;|&nbsp; Secondary = 1 hop</span>';
-    heapSlots=[];staleIdx=[];insertIdx=0;lastAction={type:null,id:-1};deadCount=0;
-    log('Switched to <strong>'+({pg:'PostgreSQL',mysql:'MySQL / InnoDB',mongo:'MongoDB'}[m])+'</strong>. Insert rows, then try Update and Delete.');
+    heapSlots=[];staleIdx=[];insertIdx=0;lastAction={type:null,id:-1,vacuumMeta:null};deadCount=0;
+    log('Mode: '+({pg:'PostgreSQL',mysql:'MySQL / InnoDB',mongo:'MongoDB'}[m])+'.');
     render();
   }
 
@@ -3908,6 +5219,241 @@ var intViz=(function(){
     document.getElementById('openai-pg').classList.add('native-mode');
     updateUI();
 
+    (function maintViz(){
+      var pg=0,mg=0,tmr=null,playing=true,inView=false;
+      var PG_MAX=8,MG_MAX=5;
+      var PG_CAP=['Dead tuples pile in the heap…','Heap → VACUUM: read pages, collect dead TIDs','Pruning index #1 (ambulkdelete pass)','Pruning index #2 — each index = full scan','Index 3+ … cost adds up fast','FSM updated · freeze old XIDs (no wraparound shutdown)','Bloat tax: stale index TIDs → extra heap hops','Need a smaller file? FULL / pg_repack / CLUSTER'];
+      var MG_CAP=['Collection file: pages + in-tree versions','Eviction + reconcile → drop invisible versions','Sparse tail after huge deletes (checkpoints ~60s)','compact: pack pages · trim file → OS space','Correctness: compact optional — only disk layout'];
+      var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      var pgSvg=document.getElementById('maintPgSvg');
+      var mgSvg=document.getElementById('maintMgSvg');
+      var capPg=document.getElementById('maintCapPgText');
+      var capMg=document.getElementById('maintCapMgText');
+      var btn=document.getElementById('maintToggle');
+      var section=document.getElementById('maint');
+      function setPhase(svg,max,idx){
+        if(!svg)return;
+        for(var i=0;i<max;i++) svg.classList.remove('maint-phase-'+i);
+        svg.classList.add('maint-phase-'+idx);
+      }
+      function applyCaps(){
+        if(capPg)capPg.textContent=PG_CAP[pg];
+        if(capMg)capMg.textContent=MG_CAP[mg];
+      }
+      function paint(){
+        setPhase(pgSvg,PG_MAX,pg);
+        setPhase(mgSvg,MG_MAX,mg);
+        applyCaps();
+      }
+      function step(){
+        pg=(pg+1)%PG_MAX;
+        mg=(mg+1)%MG_MAX;
+        paint();
+      }
+      function start(){
+        if(reduced||!playing||!inView)return;
+        stop();
+        tmr=setInterval(step,2200);
+      }
+      function stop(){if(tmr){clearInterval(tmr);tmr=null;}}
+      function syncBtn(){
+        if(!btn)return;
+        btn.setAttribute('aria-pressed',playing?'true':'false');
+        btn.textContent=playing?'Pause':'Play';
+      }
+      if(btn)btn.addEventListener('click',function(){
+        playing=!playing;
+        syncBtn();
+        if(playing&&inView)start();else stop();
+      });
+      paint();
+      syncBtn();
+      if(reduced){
+        if(btn){btn.disabled=true;btn.textContent='Motion off';}
+        return;
+      }
+      if(section&&'IntersectionObserver'in window){
+        var io=new IntersectionObserver(function(ents){
+          var e=ents[0];
+          inView=e&&e.isIntersecting;
+          if(inView&&playing)start();else stop();
+        },{threshold:0.1,rootMargin:'60px'});
+        io.observe(section);
+      } else {
+        inView=true;
+        start();
+      }
+    })();
+
+    (function waViz(){
+      var idxEl=document.getElementById('waIdx');
+      var idxValEl=document.getElementById('waIdxVal');
+      var barPg=document.getElementById('waBarPg');
+      var barMg=document.getElementById('waBarMg');
+      var countPg=document.getElementById('waCountPg');
+      var countMg=document.getElementById('waCountMg');
+      var subPg=document.getElementById('waSubPg');
+      var subMg=document.getElementById('waSubMg');
+      var cap=document.getElementById('waCap');
+      var replay=document.getElementById('waReplay');
+      var opBtns=document.querySelectorAll('.wa-op');
+      if(!idxEl||!barPg||!barMg)return;
+
+      var op='insert';
+      function K(){return Math.max(3,Math.min(10,parseInt(idxEl.value,10)||5));}
+
+      function model(){
+        var k=K();
+        var pg,mg,spg,smg,note;
+        switch(op){
+          case 'insert':
+            pg=mg=1+k;
+            spg='1 heap row + <strong>'+k+'</strong> btree indexes (one leaf path each).';
+            smg='1 collection doc + <strong>'+k+'</strong> index trees (<code>_id</code> counts as one of the <strong>'+k+'</strong>).';
+            note='INSERT is structurally similar: both pay <code>1 + K</code> index-sized writes. Divergence shows up on updates.';
+            break;
+          case 'delete':
+            pg=mg=1;
+            spg='1 heap tuple marked dead. <strong>0</strong> immediate index deletes—stale TIDs cleaned during VACUUM / index scans.';
+            smg='1 collection delete path. Index keys often age out with the doc; no full-table index rewrite at delete time.';
+            note='DELETE is cheap on both for the “obvious” write; the amplification tax is deferred (PG VACUUM vs WT eviction / compact).';
+            break;
+          case 'upd-ni':
+            pg=1+k;
+            mg=1;
+            spg='Non-<strong>HOT</strong> update: new heap tuple ⇒ new <strong>TID</strong> ⇒ <strong>'+k+'</strong> new index entries (plus the heap).';
+            smg='<strong>RecordId</strong> stays put when indexed fields are unchanged—only the collection B-tree is touched.';
+            note='This is the classic Postgres vs Mongo write-amplification split in <code>mong_deep.md</code> §4 / <code>pgdeep.md</code> §8.';
+            break;
+          case 'upd-hot':
+            pg=mg=1;
+            spg='<strong>HOT</strong> (same page, no indexed column change): one heap update, indexes unchanged.';
+            smg='Same workload shape: one physical document update when no index key changes.';
+            note='HOT is Postgres-specific, but Mongo’s stable RecordId gives a similar “1 write” story for non-indexed mutations.';
+            break;
+          case 'upd-1ix':
+            pg=1+2*k;
+            mg=3;
+            spg='Teaching model: new tuple + <strong>2×K</strong> btree work (old + new entries per index until <code>VACUUM</code>). Matches §4.3 “all idx×2”.';
+            smg='Collection write + <strong>2</strong> ops on the one affected index (remove old key + insert new). Other indexes untouched.';
+            note='Mongo updates only the indexes whose keys moved; Postgres often revisits every index when the row version moves.';
+            break;
+          default:
+            pg=mg=1;spg='';smg='';note='';
+        }
+        return{pg:pg,mg:mg,spg:spg,smg:smg,note:note,k:k};
+      }
+
+      function paint(animate){
+        var m=model();
+        if(idxValEl)idxValEl.textContent=String(m.k);
+        idxEl.setAttribute('aria-valuenow',String(m.k));
+        if(countPg)countPg.textContent=String(m.pg);
+        if(countMg)countMg.textContent=String(m.mg);
+        if(subPg)subPg.innerHTML=m.spg;
+        if(subMg)subMg.innerHTML=m.smg;
+        if(cap)cap.innerHTML=m.note;
+
+        var mx=Math.max(m.pg,m.mg,1);
+        var pgPct=(m.pg/mx)*100;
+        var mgPct=(m.mg/mx)*100;
+        var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(!animate||reduced){
+          barPg.style.width=pgPct+'%';
+          barMg.style.width=mgPct+'%';
+          return;
+        }
+        barPg.style.transition='none';
+        barMg.style.transition='none';
+        barPg.style.width='0%';
+        barMg.style.width='0%';
+        requestAnimationFrame(function(){
+          requestAnimationFrame(function(){
+            barPg.style.transition='';
+            barMg.style.transition='';
+            barPg.style.width=pgPct+'%';
+            barMg.style.width=mgPct+'%';
+          });
+        });
+      }
+
+      idxEl.addEventListener('input',function(){paint(false);});
+      opBtns.forEach(function(b){
+        b.addEventListener('click',function(){
+          op=b.getAttribute('data-op')||'insert';
+          opBtns.forEach(function(x){
+            var on=x===b;
+            x.classList.toggle('active',on);
+            x.setAttribute('aria-selected',on?'true':'false');
+          });
+          paint(true);
+        });
+      });
+      if(replay)replay.addEventListener('click',function(){paint(true);});
+      paint(true);
+    })();
+
+    (function connViz(){
+      var nEl=document.getElementById('connN');
+      var nVal=document.getElementById('connNVal');
+      var barPg=document.getElementById('connBarPg');
+      var barMg=document.getElementById('connBarMg');
+      var gbPg=document.getElementById('connGbPg');
+      var gbMg=document.getElementById('connGbMg');
+      var labPg=document.getElementById('connNLabelPg');
+      var labMg=document.getElementById('connNLabelMg');
+      var cap=document.getElementById('connMemCap');
+      var replay=document.getElementById('connReplay');
+      if(!nEl||!barPg||!barMg)return;
+      var MB_PG=10,MB_MG=1;
+      function N(){return Math.max(100,Math.min(8000,parseInt(nEl.value,10)||2000));}
+      function fmtGb(mb){
+        var g=mb/1024;
+        if(g>=10)return g.toFixed(1)+' GB';
+        if(g>=1)return g.toFixed(2)+' GB';
+        return Math.round(mb)+' MB';
+      }
+      function paint(animate){
+        var n=N();
+        if(nVal)nVal.textContent=String(n);
+        nEl.setAttribute('aria-valuenow',String(n));
+        if(labPg)labPg.textContent=String(n);
+        if(labMg)labMg.textContent=String(n);
+        var mbPg=n*MB_PG;
+        var mbMg=n*MB_MG;
+        if(gbPg)gbPg.textContent=fmtGb(mbPg);
+        if(gbMg)gbMg.textContent=fmtGb(mbMg);
+        var mx=Math.max(mbPg,mbMg,1);
+        var pctPg=(mbPg/mx)*100;
+        var pctMg=(mbMg/mx)*100;
+        var reduced=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if(!animate||reduced){
+          barPg.style.width=pctPg+'%';
+          barMg.style.width=pctMg+'%';
+        }else{
+          barPg.style.transition='none';
+          barMg.style.transition='none';
+          barPg.style.width='0%';
+          barMg.style.width='0%';
+          requestAnimationFrame(function(){
+            requestAnimationFrame(function(){
+              barPg.style.transition='';
+              barMg.style.transition='';
+              barPg.style.width=pctPg+'%';
+              barMg.style.width=pctMg+'%';
+            });
+          });
+        }
+        if(cap){
+          var ratio=(mbPg/Math.max(mbMg,1)).toFixed(0);
+          cap.innerHTML='At <strong>'+n+'</strong> sessions (naive model: ~'+MB_PG+'&nbsp;MB Postgres vs ~'+MB_MG+'&nbsp;MB Mongo per attachment), private RAM line items differ by ~<strong>'+ratio+'×</strong>. Add <code>shared_buffers</code> and WiredTiger cache on top — not included in these bars.';
+        }
+      }
+      nEl.addEventListener('input',function(){paint(false);});
+      if(replay)replay.addEventListener('click',function(){paint(true);});
+      paint(true);
+    })();
+
     if(new URLSearchParams(window.location.search).get('notes')==='true'){
       var ns=document.getElementById('notesSection');
       if(ns)ns.classList.add('visible');
@@ -3921,5 +5467,6 @@ var intViz=(function(){
 <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
     <script src="../subscribe.js?v=eo-ph-localdev"></script>
+<style>nav.site-nav{position:fixed!important;top:0!important;left:0!important;right:0!important;width:100%!important;z-index:99999!important}</style>
 </body>
 </html>
