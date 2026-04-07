@@ -20,6 +20,7 @@ page layouts, and the mechanics of MVCC, TOAST, and vacuum.
 11. [TOAST and Indexes](#11-toast-and-indexes)
 12. [Bottlenecks and Pathologies](#12-bottlenecks-and-pathologies)
 13. [Expert-Level Mechanics](#13-expert-level-mechanics)
+14. [Transaction ID Rollover After VACUUM and Compaction](#14-transaction-id-rollover-after-vacuum-and-compaction)
 
 ---
 
@@ -1050,7 +1051,7 @@ Phase 1: Heap Scan
   - Scan all heap pages
   - Identify dead tuples (LP_DEAD line pointers)
   - Collect their TIDs into dead_items array
-  - Freeze old tuples (prevent XID wraparound)
+  - Freeze old tuples (prevent XID wraparound — see [section 14](#14-transaction-id-rollover-after-vacuum-and-compaction))
 
 Phase 2: Index Vacuum (ambulkdelete)
   - For each index: scan the entire index
@@ -1423,47 +1424,12 @@ which allows concurrent reads and writes with minimal locking:
 
 This means index scans almost never block writes, and writes rarely block reads.
 
-### XID Wraparound and Tuple Freezing
+### XID wraparound and freezing (pointer)
 
-Transaction IDs are unsigned 32-bit integers — they wrap around after ~4.2
-billion transactions. PostgreSQL uses modular arithmetic: XID `A` is "before"
-XID `B` if the signed difference `A - B` is negative. This means at any point,
-roughly 2 billion XIDs are "in the past" and 2 billion are "in the future."
-
-The danger: if a tuple's `xmin` is so old that it wraps into the "future" half,
-the tuple becomes invisible — **catastrophic silent data loss**.
-
-PostgreSQL prevents this with **freezing**. VACUUM replaces old XIDs with
-the special `FrozenTransactionId` (value 2):
-
-```c
-#define InvalidTransactionId      ((TransactionId) 0)
-#define BootstrapTransactionId    ((TransactionId) 1)
-#define FrozenTransactionId       ((TransactionId) 2)
-#define FirstNormalTransactionId  ((TransactionId) 3)
-```
-
-A frozen tuple has `HEAP_XMIN_FROZEN` set in `t_infomask` (which is
-`HEAP_XMIN_COMMITTED | HEAP_XMIN_INVALID` = 0x0300). It is unconditionally
-visible — no snapshot comparison needed.
-
-**How this affects indexes:** Freezing operates on the heap only. Index entries
-are oblivious to whether their target heap tuple is frozen or not. But
-freezing enables the **all-frozen** VM bit to be set, which is what makes
-index-only scans maximally efficient (no heap fetch, not even for visibility).
-
-The wraparound protection thresholds:
-
-```
-xidVacLimit   = oldest_datfrozenxid + autovacuum_freeze_max_age
-xidWarnLimit  = xidWrapLimit - 40,000,000
-xidWrapLimit  = oldest_datfrozenxid + 2,000,000,000
-```
-
-When `xidVacLimit` is reached, autovacuum is forced to run aggressive freezing
-VACUUMs. When `xidWarnLimit` is reached, warnings appear in logs. When
-`xidWrapLimit` is reached, the system **shuts down** — no new transactions
-until manual VACUUM.
+Tuple **freezing** and **32-bit transaction ID rollover** are what force
+ongoing **VACUUM** work even when you do not care about space reclamation.
+They are easy to confuse with **compaction** (`VACUUM FULL`, `CLUSTER`,
+`pg_repack`). Full treatment: [section 14 — Transaction ID Rollover After VACUUM and Compaction](#14-transaction-id-rollover-after-vacuum-and-compaction).
 
 ### MVCC's Cost to Index Scans: A Worked Example
 
@@ -1564,6 +1530,148 @@ can safely return results without heap corruption.
 
 ---
 
+## 14. Transaction ID Rollover After VACUUM and Compaction
+
+PostgreSQL assigns every tuple **transaction IDs** (`xmin` for insert, `xmax`
+for delete/update-in-progress). Those IDs live in a **32-bit circular space**:
+there is no global “monotonic time” that grows forever in the datatype itself —
+only **rules** that interpret “older vs newer” using signed differences. When
+those rules break down, you get **wraparound**: old tuples can be misclassified
+as belonging to the wrong half of the circle and become **invisible** even
+though they should still be visible — **silent logical corruption**.
+
+**This section separates three ideas people often conflate:**
+
+1. **Lazy `VACUUM`** — reclaims dead row versions, walks indexes, updates FSM/VM,
+   and **freezes** old `xmin`/`xmax` so the table’s oldest unfrozen XID advances.
+2. **Compaction-style rewrites** — `VACUUM FULL`, `CLUSTER`, extensions like
+   `pg_repack` — **physically** rebuild the heap (and sometimes indexes), shrink
+   files, and can **jump** `relfrozenxid` because every surviving row is rewritten.
+3. **Rollover safety** — a **global** property of the cluster: every table must
+   keep `relfrozenxid` (and multixacts) young enough; **one** neglected table can
+   still trigger **emergency shutdown** even if another table was just compacted.
+
+### 14.1 The XID circle and why rollover is dangerous
+
+Transaction IDs are unsigned 32-bit integers — they wrap after ~4.2 billion
+allocations. PostgreSQL treats “`A` is before `B`” as: the **signed**
+difference `(int32)(A - B) < 0`. At any instant, roughly **2 billion** XIDs are
+considered “past” and **2 billion** “future.”
+
+If a heap tuple still carries a **normal** `xmin` from long ago, eventually the
+numeric XID can fall into the wrong semicircle: comparisons think the row was
+created “in the future” and **no snapshot can see it**.
+
+PostgreSQL prevents that with **freezing**: eligible tuples stop carrying a
+real insert XID and instead use the sentinel **`FrozenTransactionId`** (value 2):
+
+```c
+#define InvalidTransactionId      ((TransactionId) 0)
+#define BootstrapTransactionId    ((TransactionId) 1)
+#define FrozenTransactionId       ((TransactionId) 2)
+#define FirstNormalTransactionId  ((TransactionId) 3)
+```
+
+A frozen tuple has `HEAP_XMIN_FROZEN` set in `t_infomask` (`0x0300`). It is
+**unconditionally visible** for ordinary MVCC — no snapshot comparison against
+`xmin` is needed.
+
+**Indexes:** freezing is a **heap** operation. Index tuples still store keys + TID;
+they do not embed `xmin`. What freezing buys indexes indirectly is the ability
+to set the visibility map’s **all-frozen** bit, which helps **index-only scans**
+avoid heap visits for visibility.
+
+### 14.2 Lazy VACUUM: freezing is not the same as compaction
+
+**Lazy `VACUUM`** (what autovacuum runs by default) does **not** return space to
+the OS for the main table file. It marks line pointers reusable, updates the
+**FSM**, prunes indexes, and — critically — **advances freezing** so
+`pg_class.relfrozenxid` moves forward.
+
+So even if bloat is acceptable, **you still need freeze progress**. Skipping
+VACUUM entirely is not “just wasted disk” — it is **eventually fatal** to write
+traffic cluster-wide.
+
+### 14.3 Compaction rewrites: what changes after `VACUUM FULL` / `CLUSTER` / repack
+
+**`VACUUM FULL`**, **`CLUSTER`**, and **`pg_repack`**-style operations **rewrite**
+the table (new relfilenode, new pages). Surviving rows are copied out and back
+in with fresh metadata. Practical effects:
+
+- **Bloat** in the heap (and sometimes indexes) can drop sharply — that is the
+  **compaction** story.
+- **`relfrozenxid` often jumps** to a much newer value for that relation,
+  because rewritten tuples no longer carry ancient raw `xmin` values.
+- **They do not replace autovacuum for the whole cluster.** Other tables,
+  including tiny catalog tables, still age. **Global** wraparound limits are
+  checked against the **oldest** `datfrozenxid` / `relfrozenxid` in the database.
+
+So: **after** a big compaction you may have bought **headroom on that table**,
+but **transaction ID consumption keeps going**; long‑lived transactions and
+tables that never freeze still push you toward the same shutdown thresholds.
+
+### 14.4 Autovacuum thresholds (when the database panics)
+
+Postgres tracks how far the **current** XID has moved past the **oldest**
+still-relevant unfrozen XID for each table (exposed as `relfrozenxid` age).
+
+Teaching-style limits (exact formulas evolve slightly by version; check
+`postgresql.conf` comments for your release):
+
+```
+xidVacLimit   = oldest_datfrozenxid + autovacuum_freeze_max_age
+xidWarnLimit  = xidWrapLimit - 40,000,000
+xidWrapLimit  = oldest_datfrozenxid + 2,000,000,000
+```
+
+- Past **`xidVacLimit`**: autovacuum is driven toward **anti-wraparound** vacuum.
+- Past **`xidWarnLimit`**: loud warnings — **act before shutdown**.
+- Past **`xidWrapLimit`**: the system **refuses new transactions** until **VACUUM**
+  advances freezing (manual intervention if autovacuum could not keep up).
+
+**Operational implication:** compaction fixes **space** and can refresh **one**
+relation’s freeze horizon; it does **not** turn off the **global** XID clock.
+
+### 14.5 Multixact rollover (same family, different counter)
+
+`xmax` for row-level locks and certain multi-row updates uses **multixact**
+IDs, which also wrap. Parameters such as **`vacuum_multixact_freeze_max_age`**
+and **`autovacuum_multixact_freeze_max_age`** exist for the same reason as
+`freeze_max_age`: **vacuum** must **freeze** multixacts, not only delete dead
+heap versions. A full DBA runbook treats **XID** and **multixact** ages together
+(`pg_stat_all_tables`, `pg_database`).
+
+### 14.6 What to monitor
+
+- **`pg_database.datfrozenxid`** / **`age(datfrozenxid)`** — database-wide danger.
+- **`pg_stat_all_tables.relfrozenxid`**, **`n_dead_tup`**, **`last_autovacuum`**
+  — find stragglers.
+- **Long transactions** (`pg_stat_activity`, `xact_start`) — they block
+  cleanup and can stall freezing indirectly by pinning visibility.
+
+### 14.7 Downtime and “reclaiming” XIDs
+
+**Does XID rollover require downtime?**  
+**No**, for normal operation. **Lazy `VACUUM`** (including autovacuum-driven
+anti-wraparound passes) **freezes** tuples **online**. The global XID counter
+keeps incrementing modulo 2³²; the cluster does **not** need a restart when the
+counter wraps.
+
+**When it feels like an outage:** if ages cross the **shutdown** threshold,
+PostgreSQL **refuses new transactions** until `VACUUM` advances freezing — reads
+may still work, but **writes stop** until the problem is fixed. That is an
+**operational emergency**, not a scheduled “rollover window,” and it is avoided
+by keeping autovacuum healthy and ages low.
+
+**How does Postgres “reclaim” XIDs?**  
+It **does not** put old transaction IDs back into a free pool. The counter is
+effectively **infinite** in use (32-bit ring). What gets “reclaimed” is **safe
+use of the ring**: **freezing** rewrites old heap `xmin` values to
+`FrozenTransactionId` so those rows no longer need to participate in circular
+comparisons. So the fix is **row metadata**, not recycling XID integers.
+
+---
+
 ## Quick Reference Card
 
 | Concept | Key Takeaway |
@@ -1584,7 +1692,7 @@ can safely return results without heap corruption.
 | VACUUM cost | Scans heap + every index; O(heap + sum of all indexes) |
 | Deduplication | Posting lists merge same-key entries since PG 13 |
 | Bloat | Dead versions from MVCC accumulate in indexes until VACUUM |
-| XID wraparound | Freezing replaces old XIDs with FrozenTransactionId; prevents data loss |
+| XID rollover / wraparound | Lazy VACUUM **freezes** old `xmin`; compaction rewrites can refresh one table’s `relfrozenxid` but **global** age still matters — [section 14](#14-transaction-id-rollover-after-vacuum-and-compaction) |
 | Long transactions | Hold back VACUUM → index bloat → degraded scan performance |
 | Unique checks | Use HeapTupleSatisfiesUpdate, may block on in-progress transactions |
 
