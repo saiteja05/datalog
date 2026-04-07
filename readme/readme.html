@@ -293,14 +293,29 @@
             const extUrl = params.get('url');
             const displayName = params.get('name');
 
+            /** Repo-root-relative path like misc/deepdive/pgdeep.md (no .., only safe segments). */
+            function isSafeRepoMarkdownPath(p) {
+                if (typeof p !== 'string' || !p.endsWith('.md')) return false;
+                var s = p.replace(/^\/+/, '');
+                if (s.includes('..') || /[^\w./-]/.test(s)) return false;
+                var parts = s.split('/');
+                for (var i = 0; i < parts.length; i++) {
+                    if (!parts[i] || parts[i] === '.' || parts[i] === '..') return false;
+                }
+                return true;
+            }
+
             var fetchTarget, label;
 
             if (extUrl && /^https:\/\/raw\.githubusercontent\.com\/.+\.md$/i.test(extUrl)) {
                 fetchTarget = extUrl;
                 label = displayName || extUrl.split('/').pop();
-            } else if (file && /^[\w-]*README[\w-]*\.md$/i.test(file)) {
-                fetchTarget = file;
-                label = file;
+            } else if (file && /^[\w-]*README[\w-]*\.md$/i.test(file) && file.indexOf('/') === -1) {
+                fetchTarget = new URL(file, window.location.href).href;
+                label = displayName || file;
+            } else if (file && file.indexOf('/') !== -1 && isSafeRepoMarkdownPath(file)) {
+                fetchTarget = new URL('../' + file.replace(/^\/+/, ''), window.location.href).href;
+                label = displayName || file.split('/').pop();
             } else {
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('error').style.display = 'block';
@@ -325,7 +340,8 @@
                 .catch(function() {
                     document.getElementById('loading').style.display = 'none';
                     document.getElementById('error').style.display = 'block';
-                    document.getElementById('error-file').textContent = label;
+                    document.getElementById('error-file').textContent =
+                        file && file.indexOf('/') !== -1 && isSafeRepoMarkdownPath(file) ? file : label;
                 });
         })();
     </script>

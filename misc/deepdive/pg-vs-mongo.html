@@ -39,6 +39,12 @@ section[id],.hero,.notes-section{scroll-margin-top:72px}
 .nav-links{display:flex;gap:.2rem;flex-wrap:wrap}
 .nav-links a{color:var(--tx2);text-decoration:none;font-size:.95rem;font-weight:500;padding:.35rem .7rem;border-radius:6px;transition:all .15s;white-space:nowrap}
 .nav-links a:hover{color:var(--tx);background:var(--bg-card)}
+/* Deep-dive links open readme/readme.html on GitHub Pages (?file= repo-relative path to .md) */
+a.deepdive-src{color:var(--cy);text-decoration:underline;text-underline-offset:2px}
+a.deepdive-src:hover{color:#7dd3fc}
+a.deepdive-src code{color:inherit;font-family:'JetBrains Mono',monospace;font-size:.9em}
+svg a.deepdive-svg{cursor:pointer}
+svg a.deepdive-svg:hover tspan{fill:#7dd3fc!important}
 
 .wrap{max-width:1720px;margin:0 auto;padding:0 2rem}
 h1{font-size:2.4rem;font-weight:800;line-height:1.15;margin-bottom:.4rem}
@@ -1163,6 +1169,11 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 .repl-flow-srcnote{
   font-size:.7rem;color:var(--tx3);text-align:center;margin:0 auto 1.5rem;max-width:920px;line-height:1.5
 }
+.repl-flow-srcnote a.deepdive-src{
+  color:var(--cy)!important;text-decoration:underline!important;text-underline-offset:2px;font-weight:600
+}
+.repl-flow-srcnote a.deepdive-src:hover{color:#7dd3fc!important}
+.repl-flow-srcnote a.deepdive-src strong{color:inherit;font-weight:700}
 .repl-table-section-h{
   font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);
   text-align:center;margin:0 0 .65rem
@@ -1266,7 +1277,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 <section id="write-amp">
   <div class="int-hdr">
     <h2>Write amplification</h2>
-    <p class="sec-depth" style="max-width:800px">Every <strong>index multiplies write cost</strong>. PostgreSQL&rsquo;s heap + <strong>TID</strong> model means a non-<strong>HOT</strong> <code>UPDATE</code> often rewrites <strong>every</strong> index entry when the row gets a new tuple; MongoDB&rsquo;s stable <strong>RecordId</strong> lets many updates touch <strong>only the collection B-tree</strong> when indexed fields don&rsquo;t change (<code>mong_deep.md</code> §4). Numbers below are <strong>logical btree/WAL-ish touches</strong> for teaching—see <code>pgdeep.md</code> §8–9, §12.1.</p>
+    <p class="sec-depth" style="max-width:800px">Every <strong>index multiplies write cost</strong>. PostgreSQL&rsquo;s heap + <strong>TID</strong> model means a non-<strong>HOT</strong> <code>UPDATE</code> often rewrites <strong>every</strong> index entry when the row gets a new tuple; MongoDB&rsquo;s stable <strong>RecordId</strong> lets many updates touch <strong>only the collection B-tree</strong> when indexed fields don&rsquo;t change (<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> §4). Numbers below are <strong>logical btree/WAL-ish touches</strong> for teaching—see <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a> §8–9, §12.1.</p>
   </div>
 
   <div class="wa-stage">
@@ -1305,7 +1316,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
     <button type="button" class="wa-replay" id="waReplay">Replay bar animation</button>
   </div>
 
-  <p class="wa-src">Modeled on <strong>misc/pg_deepdive/pgdeep.md</strong> (heap insert, index_insert×N, non-HOT update, HOT, delete) and <strong>misc/pg_deepdive/mong_deep.md</strong> §4 (RecordId, per-index updates). Real counts depend on page splits, partial indexes, and whether Postgres stays on-page for HOT.</p>
+  <p class="wa-src">Modeled on <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><strong>pgdeep.md</strong></a> (heap insert, index_insert×N, non-HOT update, HOT, delete) and <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><strong>mongodb_deepdive</strong></a> §4 (RecordId, per-index updates). Real counts depend on page splits, partial indexes, and whether Postgres stays on-page for HOT.</p>
 </section>
 
 <section id="maint">
@@ -1343,7 +1354,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
           <defs>
             <marker id="maint-a" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto"><path d="M0,0 L7,3.5 L0,7 z" fill="#60a5fa"/></marker>
           </defs>
-          <text class="maint-pg-static" x="260" y="16" text-anchor="middle" fill="#64748b" font-size="9" font-family="DM Sans,sans-serif">Cost grows as heap + (index₁ + index₂ + …) per cycle — <tspan fill="#93c5fd">pgdeep.md</tspan> §10–11</text>
+          <text class="maint-pg-static" x="260" y="16" text-anchor="middle" fill="#64748b" font-size="9" font-family="DM Sans,sans-serif">Cost grows as heap + (index₁ + index₂ + …) per cycle — <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-svg"><tspan fill="#93c5fd">pgdeep.md</tspan></a> §10–11</text>
           <rect class="maint-pg-node maint-pg-n0 maint-pg-n1" x="18" y="38" width="102" height="72" rx="8" fill="rgba(96,165,250,.12)" stroke="#60a5fa" stroke-width="1.5"/>
           <text class="maint-pg-static" x="69" y="58" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="700" font-family="DM Sans,sans-serif">HEAP</text>
           <rect class="maint-pg-node maint-pg-n0" x="28" y="66" width="22" height="14" rx="2" fill="rgba(148,163,184,.45)"/><rect class="maint-pg-node maint-pg-n0" x="54" y="66" width="22" height="14" rx="2" fill="rgba(148,163,184,.45)"/>
@@ -1372,7 +1383,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
           <text class="maint-pg-static" x="332" y="150" text-anchor="middle" fill="#64748b" font-size="7.5" font-family="DM Sans,sans-serif">Lazy pass usually does <tspan fill="#fbbf24">not</tspan> shrink file on disk</text>
           <rect class="maint-pg-node maint-pg-n6" x="18" y="168" width="240" height="44" rx="8" fill="rgba(248,113,113,.1)" stroke="rgba(248,113,113,.3)"/>
           <text class="maint-pg-static" x="138" y="188" text-anchor="middle" fill="#fecaca" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Bloat hurts reads</text>
-          <text class="maint-pg-static" x="138" y="202" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">indexes point at dead TIDs → extra heap hops (<tspan fill="#93c5fd">pgdeep.md</tspan> §12)</text>
+          <text class="maint-pg-static" x="138" y="202" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="DM Sans,sans-serif">indexes point at dead TIDs → extra heap hops (<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-svg"><tspan fill="#93c5fd">pgdeep.md</tspan></a> §12)</text>
           <rect class="maint-pg-node maint-pg-n7" x="272" y="168" width="234" height="44" rx="8" fill="rgba(52,211,153,.08)" stroke="rgba(52,211,153,.28)"/>
           <text class="maint-pg-static" x="389" y="188" text-anchor="middle" fill="#86efac" font-size="8" font-weight="600" font-family="DM Sans,sans-serif">Need smaller OS file?</text>
           <text class="maint-pg-static" x="389" y="202" text-anchor="middle" fill="#94a3b8" font-size="7" font-family="JetBrains Mono,monospace">VACUUM FULL · pg_repack · CLUSTER</text>
@@ -1387,7 +1398,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
       <div class="maint-flow-panel maint-flow-mg">
         <div class="maint-flow-panel-h">WiredTiger · continuous GC + optional compact</div>
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 228" class="maint-mg-svg maint-phase-0" id="maintMgSvg" aria-label="WiredTiger eviction and checkpoint drop versions; compact defragments file">
-          <text class="maint-mg-static" x="260" y="16" text-anchor="middle" fill="#64748b" font-size="9" font-family="DM Sans,sans-serif">No user <tspan fill="#f87171">VACUUM</tspan> command — <tspan fill="#4ade80">mong_deep.md</tspan> GC path</text>
+          <text class="maint-mg-static" x="260" y="16" text-anchor="middle" fill="#64748b" font-size="9" font-family="DM Sans,sans-serif">No user <tspan fill="#f87171">VACUUM</tspan> command — <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-svg"><tspan fill="#4ade80">mongodb_deepdive</tspan></a> GC path</text>
           <rect class="maint-mg-node maint-mg-n0" x="40" y="40" width="200" height="70" rx="10" fill="rgba(0,237,100,.1)" stroke="#00ed64" stroke-width="1.5"/>
           <text class="maint-mg-static" x="140" y="62" text-anchor="middle" fill="#e2e8f0" font-size="10" font-weight="700" font-family="DM Sans,sans-serif">Collection on disk</text>
           <rect class="maint-mg-node maint-mg-n0" x="55" y="72" width="36" height="28" rx="3" fill="rgba(52,211,153,.25)"/><rect class="maint-mg-node maint-mg-n0" x="98" y="72" width="36" height="28" rx="3" fill="rgba(52,211,153,.2)"/>
@@ -1468,15 +1479,15 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
           </tr>
           <tr>
             <th scope="row">Read more</th>
-            <td><code>pgdeep.md</code> §10, §12</td>
-            <td><code>mong_deep.md</code> GC + checkpoints + compact</td>
+            <td><a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a> §10, §12</td>
+            <td><a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> GC + checkpoints + compact</td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
 
-  <p class="maint-src">Diagrams <strong>cycle automatically</strong> while this section is on screen (Pause/Play). <code>prefers-reduced-motion</code> keeps them static. Based on <strong>misc/pg_deepdive/pgdeep.md</strong> and <strong>misc/pg_deepdive/mong_deep.md</strong>.</p>
+  <p class="maint-src">Diagrams <strong>cycle automatically</strong> while this section is on screen (Pause/Play). <code>prefers-reduced-motion</code> keeps them static. Based on <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><strong>pgdeep.md</strong></a> and <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><strong>mongodb_deepdive</strong></a>.</p>
 </section>
 
 <section id="replication">
@@ -1486,7 +1497,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
   </div>
 
   <h3 class="repl-flow-section-h">Replication flow &amp; primary bandwidth</h3>
-  <p class="sec-depth repl-flow-lead">Physical streaming replication ships <strong>the same WAL byte stream</strong> from the primary to <em>every</em> direct standby—so write amplification on the primary (indexes, FPW-heavy checkpoints—<code>pgdeep.md</code> §12) becomes <strong>network amplification</strong> at the NIC. MongoDB&rsquo;s <strong>logical oplog</strong> uses small operation documents (often ~10² B for typical updates—<code>mong_deep.md</code>); secondaries <strong>pull</strong> and <strong>chain</strong>, so the primary usually sustains only a few oplog tails. <strong>Read the compare strip, then the two diagrams, then the table.</strong></p>
+  <p class="sec-depth repl-flow-lead">Physical streaming replication ships <strong>the same WAL byte stream</strong> from the primary to <em>every</em> direct standby—so write amplification on the primary (indexes, FPW-heavy checkpoints—<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a> §12) becomes <strong>network amplification</strong> at the NIC. MongoDB&rsquo;s <strong>logical oplog</strong> uses small operation documents (often ~10² B for typical updates—<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a>); secondaries <strong>pull</strong> and <strong>chain</strong>, so the primary usually sustains only a few oplog tails. <strong>Read the compare strip, then the two diagrams, then the table.</strong></p>
 
   <div class="repl-flow-stage">
     <div class="repl-flow-compare-strip" role="note" aria-label="Primary bandwidth contrast">
@@ -1548,12 +1559,12 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
         <span><i class="solid-pg" style="opacity:.5" aria-hidden="true"></i>Mitigation: cascade so primary feeds fewer direct standbys (PG 9.2+)</span>
       </div>
       <p class="repl-flow-cap">Every direct replica adds work on the <strong>writer</strong>: another process reading <code>pg_wal</code>, another TCP stream, another copy of the same payload. That is why high replica counts show up as <strong>NIC saturation</strong> and <strong>sender CPU</strong> long before standbys are &ldquo;full.&rdquo;</p>
-      <div class="repl-flow-math">N × 200 MB/s &asymp; <strong>10 GB/s</strong> at N = 50 (teaching curve from <code>pgdeep.md</code> / notes)</div>
+      <div class="repl-flow-math">N × 200 MB/s &asymp; <strong>10 GB/s</strong> at N = 50 (teaching curve from <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a> / notes)</div>
     </div>
 
     <div class="repl-flow-panel repl-flow-mg">
       <div class="repl-flow-h">MongoDB</div>
-      <p class="repl-flow-tagline">Logical oplog · <strong>secondaries pull</strong> · <strong>chain</strong> spreads load · index replay happens on each node (<code>mong_deep.md</code> §7.3)</p>
+      <p class="repl-flow-tagline">Logical oplog · <strong>secondaries pull</strong> · <strong>chain</strong> spreads load · index replay happens on each node (<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> §7.3)</p>
       <div class="repl-flow-svg-wrap">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 318" aria-labelledby="replFlowMgTitle">
           <title id="replFlowMgTitle">Primary serves a few oplog tails; other secondaries pull from peers</title>
@@ -1601,12 +1612,12 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
         <span><i class="dash-mg" aria-hidden="true"></i>Chaining offloads the primary; tradeoff = multi-hop lag to monitor</span>
       </div>
       <p class="repl-flow-cap">Heavy indexes still enlarge oplog entries and can shrink the replication window—this diagram is about <strong>transport shape</strong>, not &ldquo;Mongo ignores write cost.&rdquo;</p>
-      <div class="repl-flow-math">~3 direct tails × ~10–20 MB/s ≪ N × 200 MB/s WAL (illustrative; see <code>mong_deep.md</code> / notes)</div>
+      <div class="repl-flow-math">~3 direct tails × ~10–20 MB/s ≪ N × 200 MB/s WAL (illustrative; see <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> / notes)</div>
     </div>
     </div>
   </div>
 
-  <p class="repl-flow-srcnote">Figures are didactic. Sources: <strong>misc/pg_deepdive/pgdeep.md</strong> (WAL volume, replication lag, write amplification) and <strong>misc/pg_deepdive/mong_deep.md</strong> (oplog pressure §7.3, chained replication). Real rates depend on workload, FPW, compression, and network.</p>
+  <p class="repl-flow-srcnote">Figures are didactic. Sources: <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><strong>pgdeep.md</strong></a> (WAL volume, replication lag, write amplification) and <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><strong>mongodb_deepdive</strong></a> (oplog pressure §7.3, chained replication). Real rates depend on workload, FPW, compression, and network.</p>
 
   <p class="repl-table-section-h">Engine comparison</p>
   <div class="repl-table-wrap">
@@ -1654,7 +1665,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
 <section id="connections">
   <div class="int-hdr">
     <h2>Connections</h2>
-    <p class="sec-depth" style="max-width:820px">After replication, the next choke point is usually <strong>how clients attach</strong>. PostgreSQL still uses a <strong>process per backend</strong>—each TCP session becomes an OS process with private memory and a <code>PGPROC</code> slot in shared memory, so snapshot and bookkeeping work scales with concurrent backends (<code>pgdeep.md</code> on <code>ProcArray</code> / visibility). MongoDB&rsquo;s <code>mongod</code> is a <strong>single multi-threaded process</strong>: connections are threads sharing one address space and one WiredTiger file descriptor table, which changes memory and FD economics at high fan-in.</p>
+    <p class="sec-depth" style="max-width:820px">After replication, the next choke point is usually <strong>how clients attach</strong>. PostgreSQL still uses a <strong>process per backend</strong>—each TCP session becomes an OS process with private memory and a <code>PGPROC</code> slot in shared memory, so snapshot and bookkeeping work scales with concurrent backends (<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a> on <code>ProcArray</code> / visibility). MongoDB&rsquo;s <code>mongod</code> is a <strong>single multi-threaded process</strong>: connections are threads sharing one address space and one WiredTiger file descriptor table, which changes memory and FD economics at high fan-in.</p>
   </div>
 
   <div class="repl-flow-stage conn-stage">
@@ -1813,7 +1824,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
         </tr>
         <tr>
           <th scope="row">Visibility / snapshots</th>
-          <td>Global structures (e.g. <code>ProcArray</code>) reason about <strong>all running backends</strong> — high session counts raise coordination cost (<code>pgdeep.md</code>).</td>
+          <td>Global structures (e.g. <code>ProcArray</code>) reason about <strong>all running backends</strong> — high session counts raise coordination cost (<a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a>).</td>
           <td>Storage-engine timestamps and WiredTiger MVCC — different bookkeeping; high concurrency stress shows up mainly as engine/cache contention.</td>
         </tr>
         <tr>
@@ -1825,7 +1836,7 @@ h2{font-size:1.6rem;font-weight:700;margin-bottom:.8rem;color:var(--tx)}
     </table>
   </div>
 
-  <p class="wa-src" style="margin-top:1rem">Expanded ops context (PgBouncer sidecars, FD math, four-layer rate limits) lives in this page&rsquo;s <a href="#notesSection" onclick="document.getElementById('notesSection').classList.add('visible');document.getElementById('navNotes').style.display='';return true;">Notes</a> · <code>mong_deep.md</code> focuses on btree/MVCC; connection threading follows from the single-process storage engine layout described there.</p>
+  <p class="wa-src" style="margin-top:1rem">Expanded ops context (PgBouncer sidecars, FD math, four-layer rate limits) lives in this page&rsquo;s <a href="#notesSection" onclick="document.getElementById('notesSection').classList.add('visible');document.getElementById('navNotes').style.display='';return true;">Notes</a> · <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> focuses on btree/MVCC; connection threading follows from the single-process storage engine layout described there.</p>
 </section>
 
 <section id="openai-pg">
@@ -5323,7 +5334,7 @@ var intViz=(function(){
             mg=1;
             spg='Non-<strong>HOT</strong> update: new heap tuple ⇒ new <strong>TID</strong> ⇒ <strong>'+k+'</strong> new index entries (plus the heap).';
             smg='<strong>RecordId</strong> stays put when indexed fields are unchanged—only the collection B-tree is touched.';
-            note='This is the classic Postgres vs Mongo write-amplification split in <code>mong_deep.md</code> §4 / <code>pgdeep.md</code> §8.';
+            note='This is the classic Postgres vs Mongo write-amplification split in <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> §4 / <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fpgdeep.md" class="deepdive-src"><code>pgdeep.md</code></a> §8.';
             break;
           case 'upd-hot':
             pg=mg=1;
@@ -5334,7 +5345,7 @@ var intViz=(function(){
           case 'upd-1ix':
             pg=1+2*k;
             mg=3;
-            spg='Teaching model: new tuple + <strong>2×K</strong> btree work (old + new entries per index until <code>VACUUM</code>). Matches §4.3 “all idx×2”.';
+            spg='Teaching model: new tuple + <strong>2×K</strong> btree work (old + new entries per index until <code>VACUUM</code>). Matches <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=misc%2Fdeepdive%2Fmong_deep.md" class="deepdive-src"><code>mongodb_deepdive</code></a> §4.3 “all idx×2”.';
             smg='Collection write + <strong>2</strong> ops on the one affected index (remove old key + insert new). Other indexes untouched.';
             note='Mongo updates only the indexes whose keys moved; Postgres often revisits every index when the row version moves.';
             break;
