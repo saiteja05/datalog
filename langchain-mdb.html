@@ -1,0 +1,1860 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agentic Persistence — LangChain vs LangGraph (Postgres vs MongoDB)</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: {
+            mongo: {
+              bg: '#001E2B', bg2: '#002838', card: '#003345', cardHover: '#004058',
+              accent: '#00ED64', accentDim: '#00c853', textPri: '#fafafa', textSec: '#b8d8e8', textMuted: '#7fa8bc'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    :root{
+      --bg-primary:#001E2B;
+      --bg-card:#003345;
+      --text-primary:#fafafa;
+      --text-secondary:#b8d8e8;
+      --text-muted:#7fa8bc;
+      --accent:#00ED64;
+      --accent-dim:#00c853;
+      --border-subtle:rgba(255,255,255,0.06);
+      --border-accent:rgba(0,237,100,0.25);
+
+      --danger:#ff7b72;
+      --warn:#ffbd2e;
+      --info:#a5d6ff;
+
+      --mono-bg:#0d1117;
+      --mono-border:rgba(255,255,255,0.10);
+      --mono-muted:#8b949e;
+      --mono-text:#c9d1d9;
+    }
+
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{
+      font-family:'Inter',system-ui,sans-serif;
+      background:var(--bg-primary);
+      color:var(--text-secondary);
+      min-height:100vh;
+      line-height:1.6;
+      -webkit-font-smoothing:antialiased;
+    }
+
+    /* Sticky Nav */
+    .sticky-nav{
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(0, 30, 43, 0.8);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .sticky-nav a{
+      color: var(--text-muted);
+      transition: color 0.2s ease;
+      font-size: 0.875rem;
+      font-weight: 800;
+    }
+    .sticky-nav a:hover,.sticky-nav a.active{color:var(--accent);}
+
+    /* Background */
+    .hero-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+    .hero-bg canvas{width:100%;height:100%;opacity:0.35;}
+
+    /* Fade */
+    .fade-in{opacity:0;transform:translateY(24px);transition:opacity .7s ease,transform .7s ease;}
+    .fade-in.visible{opacity:1;transform:translateY(0);}
+    .fade-in-delay-1{transition-delay:.1s;}
+    .fade-in-delay-2{transition-delay:.2s;}
+
+    /* Divider */
+    .section-divider{
+      height:1px;
+      background: linear-gradient(90deg, transparent, var(--border-accent), transparent);
+      margin:0 auto;
+      max-width:80%;
+    }
+
+    /* Badge */
+    .glow-badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 16px;
+      background:rgba(0,237,100,0.10);
+      border:1px solid var(--border-accent);
+      border-radius:24px;
+      font-size:.8rem;
+      font-weight:900;
+      color:var(--accent);
+      animation: glowPulse 3s ease-in-out infinite;
+    }
+    @keyframes glowPulse{
+      0%,100%{box-shadow:0 0 5px rgba(0,237,100,.2);}
+      50%{box-shadow:0 0 20px rgba(0,237,100,.4);}
+    }
+
+    /* Cards */
+    .use-case-card{
+      background:var(--bg-card);
+      border:1px solid var(--border-subtle);
+      border-radius:16px;
+      padding:28px;
+      transition:all .3s ease;
+    }
+    .use-case-card:hover{border-color:var(--border-accent);transform:translateY(-2px);}
+
+    /* Pills */
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:6px 12px;
+      border-radius:999px;
+      font-size:.75rem;
+      font-weight:900;
+      border:1px solid rgba(255,255,255,0.08);
+      color:var(--text-muted);
+      background:rgba(255,255,255,0.03);
+      white-space:nowrap;
+    }
+    .pill.good{border-color:rgba(0,237,100,0.25);color:var(--accent);background:rgba(0,237,100,0.08);}
+    .pill.bad{border-color:rgba(255,123,114,0.25);color:var(--danger);background:rgba(255,123,114,0.08);}
+    .pill.warn{border-color:rgba(255,189,46,0.25);color:var(--warn);background:rgba(255,189,46,0.08);}
+    .pill.info{border-color:rgba(165,214,255,0.25);color:var(--info);background:rgba(165,214,255,0.08);}
+
+    /* Tabs */
+    .tab-btn{
+      padding:10px 16px;
+      border-radius:10px;
+      font-size:.875rem;
+      font-weight:900;
+      transition:all .2s ease;
+      border:1px solid transparent;
+      cursor:pointer;
+      user-select:none;
+    }
+    .tab-btn.active{
+      background:rgba(0,237,100,0.10);
+      color:var(--accent);
+      border-color:var(--border-accent);
+    }
+    .tab-btn:not(.active){background:rgba(255,255,255,0.03);color:var(--text-muted);}
+    .tab-btn:not(.active):hover{background:rgba(255,255,255,0.06);color:var(--text-secondary);}
+
+    /* Stats */
+    .stats-bar{
+      display:flex;
+      gap:16px;
+      padding:12px 16px;
+      background:rgba(0,0,0,0.20);
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .stat-item{text-align:center;flex:1;}
+    .stat-value{font-size:1.1rem;font-weight:900;color:var(--accent);}
+    .stat-label{font-size:.65rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;}
+
+    /* Meter */
+    .meter{
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(255,255,255,0.06);
+      border-radius:999px;
+      height:10px;
+      overflow:hidden;
+    }
+    .meter>div{height:100%;border-radius:999px;}
+    .meter.bad>div{background:linear-gradient(90deg, rgba(255,123,114,0.9), rgba(255,123,114,0.25));}
+    .meter.good>div{background:linear-gradient(90deg, rgba(0,237,100,0.9), rgba(0,237,100,0.25));}
+
+    /* Flow */
+    .flow-wrap{
+      position:relative;
+      border-radius:18px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.06);
+      background:rgba(0,0,0,0.18);
+    }
+    .flow-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+    .flow-grid{
+      position:relative;
+      display:grid;
+      gap:12px;
+      padding:16px;
+      grid-template-columns:repeat(12,1fr);
+      min-height:220px;
+    }
+    .node{
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(255,255,255,0.03);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      gap:4px;
+      transition:transform .18s ease,border-color .18s ease;
+    }
+    .node .title{font-weight:900;color:var(--text-primary);font-size:.9rem;}
+    .node .sub{color:var(--text-muted);font-size:.72rem;}
+    .node.good{border-color:rgba(0,237,100,0.22);}
+    .node.warn{border-color:rgba(255,189,46,0.22);}
+    .node.bad{border-color:rgba(255,123,114,0.22);}
+
+    .pulse{animation:pulse .55s ease-in-out 1;}
+    @keyframes pulse{0%{transform:scale(1);}50%{transform:scale(1.02);}100%{transform:scale(1);}}
+    .shake{animation:shake .35s linear 1;}
+    @keyframes shake{
+      0%{transform:translateX(0);}
+      20%{transform:translateX(-3px);}
+      40%{transform:translateX(3px);}
+      60%{transform:translateX(-2px);}
+      80%{transform:translateX(2px);}
+      100%{transform:translateX(0);}
+    }
+
+    /* Terminal */
+    .demo-terminal{
+      background:var(--mono-bg);
+      border:1px solid var(--mono-border);
+      border-radius:16px;
+      overflow:hidden;
+    }
+    .demo-terminal-header{
+      background:rgba(255,255,255,0.03);
+      border-bottom:1px solid var(--mono-border);
+      padding:12px 16px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .terminal-dot{width:12px;height:12px;border-radius:50%;}
+    .terminal-dot.red{background:#ff5f56;}
+    .terminal-dot.yellow{background:#ffbd2e;}
+    .terminal-dot.green{background:#27c93f;}
+
+    /* Terminal 2-pane layout */
+    .demo-terminal-body{
+      padding:0;
+      font-family:'JetBrains Mono', monospace;
+      font-size:0.85rem;
+      line-height:1.8;
+      color:var(--mono-text);
+      min-height:420px;
+      max-height:700px;
+
+      display:grid;
+      grid-template-rows: 210px 1fr; /* TOP (PROMPT+INFO) / BODY */
+      gap:0;
+    }
+    .term-pane{
+      border-top:1px solid var(--mono-border);
+      background:rgba(255,255,255,0.01);
+      overflow:hidden;
+    }
+    .term-pane-header{
+      padding:8px 14px;
+      font-size:0.7rem;
+      font-weight:900;
+      letter-spacing:0.8px;
+      color:var(--mono-muted);
+      background:rgba(255,255,255,0.03);
+      border-bottom:1px solid var(--mono-border);
+      position:sticky;
+      top:0;
+      z-index:2;
+    }
+    .term-pane-content{
+      padding:12px 18px;
+      overflow-y:auto; /* single scroll per pane */
+      height:100%;
+      white-space:pre-wrap;
+    }
+
+    .term-prompt{color:var(--accent);font-weight:900;}
+    .term-muted{color:var(--mono-muted);}
+    .term-info{color:var(--info);}
+    .term-warn{color:var(--warn);}
+    .term-bad{color:var(--danger);}
+    .term-ok{color:var(--accent);}
+
+    /* Code blocks: NO nested scroll, wrap lines instead */
+    .term-block{
+      margin:10px 0 2px 0;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(255,255,255,0.03);
+    }
+    .term-block pre{
+      margin:0;
+      white-space:pre-wrap;     /* wrap long lines */
+      overflow:visible;         /* no inner scrollbars */
+      line-height:1.55;
+      font-size:0.82rem;
+      color:var(--mono-text);
+    }
+    .term-block code{
+      word-break:break-word;    /* prevent horizontal scroll */
+    }
+    /* 25-line scrollable code window inside comparison table cells */
+    .cmp-cell .term-block pre{
+      max-height:28rem;         /* ~25 lines @ 0.82rem × 1.55 line-height */
+      overflow-y:auto;
+      overflow-x:auto;
+      white-space:pre;          /* preserve exact code; allow horizontal scroll */
+    }
+    .cmp-cell .term-block pre::-webkit-scrollbar{ width:4px; height:4px; }
+    .cmp-cell .term-block pre::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.15); border-radius:2px; }
+
+    /* ── Compact hero ─────────────────────────────────────────── */
+    .hero-compact{
+      padding: 80px 24px 40px;   /* enough for the sticky nav */
+    }
+
+    /* ── Side-by-side comparison grid ─────────────────────────── */
+    .comparison-grid{
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    @media (max-width: 900px){
+      .comparison-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* Panel chrome */
+    .cmp-panel{
+      border-radius: 18px;
+      border: 1px solid var(--border-subtle);
+      background: rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .cmp-panel-header{
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .cmp-panel-header .panel-title{
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--text-primary);
+    }
+    .cmp-panel-header .panel-subtitle{
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .cmp-panel.panel-before .cmp-panel-header{
+      background: rgba(255,123,114,0.06);
+      border-bottom-color: rgba(255,123,114,0.15);
+    }
+    .cmp-panel.panel-after .cmp-panel-header{
+      background: rgba(0,237,100,0.06);
+      border-bottom-color: rgba(0,237,100,0.15);
+    }
+
+    /* Stats row inside panel */
+    .panel-stats{
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    .panel-stat{
+      flex: 1;
+      text-align: center;
+      padding: 10px 6px;
+      border-right: 1px solid var(--border-subtle);
+    }
+    .panel-stat:last-child{ border-right: none; }
+    .panel-stat-value{
+      font-size: 1.15rem;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .panel-stat-label{
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-muted);
+      margin-top: 3px;
+    }
+    .panel-before .panel-stat-value{ color: var(--danger); }
+    .panel-after  .panel-stat-value{ color: var(--accent); }
+
+    /* Single-pane terminal inside each panel */
+    .panel-terminal{
+      background: var(--mono-bg);
+      border-top: 1px solid var(--mono-border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.7;
+      color: var(--mono-text);
+    }
+    .panel-terminal-header{
+      background: rgba(255,255,255,0.03);
+      border-bottom: 1px solid var(--mono-border);
+      padding: 9px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .panel-terminal-dots{ display: flex; gap: 5px; }
+    .panel-terminal-title{
+      font-size: 0.7rem;
+      font-weight: 900;
+      color: var(--mono-muted);
+      margin-left: 4px;
+    }
+    .panel-step-counter{
+      margin-left: auto;
+      font-size: 0.68rem;
+      font-weight: 900;
+      color: var(--mono-muted);
+      letter-spacing: .4px;
+    }
+    .panel-terminal-body{
+      padding: 12px 16px;
+      min-height: 260px;
+      max-height: 360px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+
+    /* Panel controls */
+    .panel-controls{
+      display: flex;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--border-subtle);
+      background: rgba(255,255,255,0.01);
+    }
+    .panel-btn{
+      flex: 1;
+      padding: 8px 6px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 900;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text-muted);
+      transition: all .2s ease;
+      text-align: center;
+    }
+    .panel-btn:hover{ background: rgba(255,255,255,0.07); color: var(--text-secondary); }
+    .panel-btn.primary{
+      background: rgba(0,237,100,0.12);
+      color: var(--accent);
+      border-color: var(--border-accent);
+    }
+    .panel-btn.primary:hover{ background: rgba(0,237,100,0.2); }
+
+    /* Framework toggle bar */
+    .framework-bar{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+    .framework-bar-label{
+      font-size: 0.75rem;
+      font-weight: 900;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .8px;
+    }
+
+    /* Footer */
+    .footer{
+      border-top:1px solid rgba(255,255,255,0.05);
+      padding:28px 0;
+      color:var(--text-muted);
+      font-size:0.85rem;
+    }
+
+    /* Takeaways list */
+    .take-list li{
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+      margin: 10px 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    .take-dot{
+      width: 22px;
+      height: 22px;
+      border-radius: 7px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:900;
+      flex: 0 0 auto;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .take-dot.good{
+      border-color: rgba(0,237,100,0.22);
+      background: rgba(0,237,100,0.08);
+      color: var(--accent);
+    }
+    .take-dot.warn{
+      border-color: rgba(255,189,46,0.22);
+      background: rgba(255,189,46,0.08);
+      color: var(--warn);
+    }
+
+    /* ── Comparison table ─────────────────────────────────────── */
+    .cmp-table-wrap{
+      border-radius:18px;border:1px solid var(--border-subtle);
+      overflow-y:auto;overflow-x:hidden;
+      background:rgba(0,0,0,0.15);margin-top:20px;
+      max-height:36rem;             /* scrollable window — ~2 full rows visible */
+    }
+    .cmp-table-wrap::-webkit-scrollbar{ width:4px; }
+    .cmp-table-wrap::-webkit-scrollbar-thumb{ background:rgba(255,255,255,0.15);border-radius:2px; }
+    .cmp-table-head{
+      display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);
+      background:rgba(0,0,0,0.28);border-bottom:1px solid var(--border-subtle);
+    }
+    .cmp-th{padding:11px 16px;font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.7px;min-width:0;}
+    .cmp-th.step-th{color:var(--text-muted);border-right:1px solid var(--border-subtle);}
+    .cmp-th.before-th{color:var(--danger);border-right:1px solid var(--border-subtle);background:rgba(255,123,114,0.04);}
+    .cmp-th.after-th{color:var(--accent);background:rgba(0,237,100,0.04);}
+    .cmp-row{
+      display:grid;grid-template-columns:110px minmax(0,1fr) minmax(0,1fr);
+      border-top:1px solid var(--border-subtle);
+      opacity:0;transform:translateY(6px);
+      transition:opacity .35s ease,transform .35s ease;
+    }
+    .cmp-row.revealed{opacity:1;transform:translateY(0);}
+    .step-label-cell{
+      padding:14px;font-size:.7rem;font-weight:900;text-transform:uppercase;
+      letter-spacing:.6px;color:var(--text-muted);border-right:1px solid var(--border-subtle);
+      min-width:0;
+    }
+    .cmp-cell{
+      padding:12px 16px;font-family:'JetBrains Mono',monospace;
+      font-size:.78rem;line-height:1.55;display:flex;flex-direction:column;gap:3px;
+      min-width:0;overflow:visible;
+    }
+    .cmp-cell.before-cell{border-right:1px solid var(--border-subtle);background:rgba(255,123,114,0.02);}
+    .cmp-cell.after-cell{background:rgba(0,237,100,0.02);}
+    /* unified control bar */
+    .cmp-controls{display:flex;align-items:center;gap:10px;margin:20px 0 0;flex-wrap:wrap;}
+    .cmp-step-counter{font-size:.78rem;color:var(--text-muted);margin-left:auto;}
+
+    /* ── Question / memory-type picker ───────────────────────── */
+    .question-picker{margin-bottom:20px;}
+    .question-picker-label{
+      font-size:.7rem;font-weight:900;text-transform:uppercase;
+      letter-spacing:.7px;color:var(--text-muted);margin-bottom:10px;
+    }
+    .question-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;}
+    .q-card{
+      background:rgba(0,0,0,0.15);border:1px solid var(--border-subtle);
+      border-radius:12px;padding:12px 14px;text-align:left;cursor:pointer;
+      transition:all .2s ease;width:100%;
+    }
+    .q-card:hover{border-color:rgba(255,255,255,0.12);background:rgba(255,255,255,0.03);}
+    .q-card.active{border-color:rgba(0,237,100,0.28);background:rgba(0,237,100,0.05);}
+    .q-tag{font-size:.67rem;font-weight:900;color:var(--text-muted);margin-bottom:6px;letter-spacing:.3px;}
+    .q-card.active .q-tag{color:var(--accent);}
+    .q-text{
+      font-size:.77rem;font-weight:600;color:var(--text-primary);
+      line-height:1.4;margin-bottom:6px;font-family:'JetBrains Mono',monospace;
+    }
+    .q-sub{font-size:.65rem;color:var(--text-muted);}
+    .q-stress{
+      display:inline-block;margin-top:6px;padding:2px 8px;border-radius:999px;
+      font-size:.62rem;font-weight:900;letter-spacing:.4px;
+      background:rgba(255,123,114,0.10);color:var(--danger);
+      border:1px solid rgba(255,123,114,0.20);
+    }
+    /* ── BEFORE stack selectors ───────────────────────────────── */
+    .stack-selectors{
+      background:rgba(0,0,0,0.15);border:1px solid var(--border-subtle);
+      border-radius:14px;padding:14px 18px;margin-bottom:20px;
+      display:flex;flex-direction:column;gap:10px;
+    }
+    .stack-selectors-label{
+      font-size:.7rem;font-weight:900;text-transform:uppercase;
+      letter-spacing:.7px;color:var(--text-muted);margin-bottom:2px;
+    }
+    .stack-selector-group{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+    .stack-selector-cat{
+      font-size:.7rem;font-weight:900;color:var(--text-muted);
+      min-width:130px;white-space:nowrap;
+    }
+    .stack-pills{display:flex;gap:6px;flex-wrap:wrap;}
+    .stack-pill{
+      padding:5px 11px;border-radius:999px;font-size:.71rem;font-weight:900;
+      border:1px solid rgba(255,255,255,0.08);color:var(--text-muted);
+      background:rgba(255,255,255,0.03);cursor:pointer;
+      transition:all .18s ease;white-space:nowrap;
+    }
+    .stack-pill:hover{background:rgba(255,255,255,0.07);color:var(--text-secondary);}
+    .stack-pill.active{
+      background:rgba(255,123,114,0.12);color:var(--danger);
+      border-color:rgba(255,123,114,0.30);
+    }
+
+  </style>
+</head>
+
+<body>
+  <nav class="sticky-nav fixed w-full top-0 z-50 px-6 py-4">
+    <div class="max-w-6xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-2 text-mongo-textPri font-extrabold">
+        <span class="text-2xl">🍃</span>
+        <span>Agentic Persistence — Path Comparator</span>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        <a href="#overview">Overview</a>
+        <a href="#interactive">Interactive</a>
+        <a href="#takeaways">Takeaways</a>
+      </div>
+    </div>
+  </nav>
+
+  <section id="overview" class="relative hero-compact overflow-hidden">
+    <div class="hero-bg"><canvas id="neuralCanvas"></canvas></div>
+    <div class="relative z-10 text-center max-w-4xl mx-auto fade-in">
+      <div class="glow-badge mb-5 inline-flex">
+        <span>🍃</span>
+        <span>Agentic Persistence — BEFORE vs AFTER</span>
+      </div>
+      <h1 class="text-4xl md:text-5xl font-extrabold text-mongo-textPri mb-4 leading-tight">
+        Same agent. One persistence layer vs three.
+      </h1>
+      <p class="text-base md:text-lg text-mongo-textSec max-w-3xl mx-auto mb-6">
+        Watch both paths run <strong>side by side</strong>: the BEFORE path (Postgres + Chroma + Redis)
+        vs the AFTER path (MongoDB Atlas only). Toggle the framework to see LangChain or LangGraph.
+      </p>
+      <a href="#interactive" class="inline-block px-7 py-3 bg-mongo-accent text-mongo-bg font-extrabold rounded-xl hover:bg-mongo-accentDim transition-all text-sm">
+        See it side by side ↓
+      </a>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <section id="interactive" class="py-16 px-6">
+    <div class="max-w-7xl mx-auto">
+
+      <div class="text-center mb-8 fade-in">
+        <div class="glow-badge mb-4 inline-flex"><span>🎛️</span><span>Interactive</span></div>
+        <h2 class="text-3xl font-extrabold text-mongo-textPri mb-2">BEFORE vs AFTER — running side by side</h2>
+        <p class="text-base text-mongo-textSec max-w-3xl mx-auto">
+          Both paths run the same query. Toggle the framework below — it applies to both panels simultaneously.
+        </p>
+      </div>
+
+      <!-- Framework toggle -->
+      <div class="framework-bar fade-in fade-in-delay-1">
+        <span class="framework-bar-label">Framework</span>
+        <button class="tab-btn active" id="tab-framework-chain" onclick="setFramework('langchain')">🧰 LangChain</button>
+        <button class="tab-btn" id="tab-framework-graph" onclick="setFramework('langgraph')">🧠 LangGraph</button>
+      </div>
+
+      <!-- Memory-type question picker -->
+      <div class="question-picker fade-in fade-in-delay-1">
+        <div class="question-picker-label">🧠 Memory type — choose a question to simulate:</div>
+        <div class="question-cards" id="question-cards">
+          <button class="q-card active" data-key="procedural" onclick="setQuestion('procedural')">
+            <div class="q-tag">🔧 Procedural Memory</div>
+            <div class="q-text">"Show orders from the last 30 days with shipping delays."</div>
+            <div class="q-sub">Ops data / Tool use — agent executes a live DB query</div>
+            <span class="q-stress">Stresses: Ops layer</span>
+          </button>
+          <button class="q-card" data-key="semantic" onclick="setQuestion('semantic')">
+            <div class="q-tag">🔍 Semantic Memory</div>
+            <div class="q-text">"What's our SLA policy for orders delayed over 5 days?"</div>
+            <div class="q-sub">Knowledge retrieval / RAG — agent queries a document corpus</div>
+            <span class="q-stress">Stresses: Retrieval layer</span>
+          </button>
+          <button class="q-card" data-key="episodic" onclick="setQuestion('episodic')">
+            <div class="q-tag">📅 Episodic Memory</div>
+            <div class="q-text">"Recall the Portland shipments you analyzed last session."</div>
+            <div class="q-sub">Conversation history / Checkpoint — agent must resume prior context</div>
+            <span class="q-stress">Stresses: State layer</span>
+          </button>
+          <button class="q-card" data-key="multi" onclick="setQuestion('multi')">
+            <div class="q-tag">🧠 All Three Memories</div>
+            <div class="q-text">"Given our policy and last session, draft a response for Portland's delayed batch."</div>
+            <div class="q-sub">Semantic + Episodic + Procedural combined</div>
+            <span class="q-stress">Stresses: All layers</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- BEFORE stack selectors -->
+      <div class="stack-selectors fade-in fade-in-delay-1">
+        <div class="stack-selectors-label">❌ BEFORE stack — pick your point solutions:</div>
+        <div class="stack-selector-group">
+          <span class="stack-selector-cat">🗄️ OLTP / Ops DB</span>
+          <div class="stack-pills" id="sel-oltp">
+            <button class="stack-pill active" data-key="postgres"  onclick="setOltp('postgres')">Postgres</button>
+            <button class="stack-pill"        data-key="cosmos"    onclick="setOltp('cosmos')">Cosmos DB</button>
+            <button class="stack-pill"        data-key="spanner"   onclick="setOltp('spanner')">Spanner</button>
+            <button class="stack-pill"        data-key="dynamodb"  onclick="setOltp('dynamodb')">DynamoDB</button>
+            <button class="stack-pill"        data-key="aurora"    onclick="setOltp('aurora')">Aurora</button>
+          </div>
+        </div>
+        <div class="stack-selector-group">
+          <span class="stack-selector-cat">🔍 Vector DB</span>
+          <div class="stack-pills" id="sel-vectordb">
+            <button class="stack-pill active" data-key="chroma"    onclick="setVectorDb('chroma')">Chroma</button>
+            <button class="stack-pill"        data-key="pinecone"  onclick="setVectorDb('pinecone')">Pinecone</button>
+            <button class="stack-pill"        data-key="weaviate"  onclick="setVectorDb('weaviate')">Weaviate</button>
+            <button class="stack-pill"        data-key="qdrant"    onclick="setVectorDb('qdrant')">Qdrant</button>
+            <button class="stack-pill"        data-key="pgvector"  onclick="setVectorDb('pgvector')">pgvector</button>
+            <button class="stack-pill"        data-key="opensearch" onclick="setVectorDb('opensearch')">OpenSearch</button>
+          </div>
+        </div>
+        <div class="stack-selector-group">
+          <span class="stack-selector-cat">💾 Cache / State</span>
+          <div class="stack-pills" id="sel-cache">
+            <button class="stack-pill active" data-key="redis"       onclick="setCache('redis')">Redis</button>
+            <button class="stack-pill"        data-key="memcached"   onclick="setCache('memcached')">Memcached</button>
+            <button class="stack-pill"        data-key="dynamostate" onclick="setCache('dynamostate')">DynamoDB</button>
+            <button class="stack-pill"        data-key="elasticache" onclick="setCache('elasticache')">Elasticache</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture diagrams — keep topology view side by side -->
+      <div class="comparison-grid fade-in fade-in-delay-2">
+
+        <!-- BEFORE diagram -->
+        <div class="cmp-panel panel-before" id="panel-before">
+          <div class="cmp-panel-header">
+            <div>
+              <div class="panel-title">❌ BEFORE</div>
+              <div class="panel-subtitle">Postgres + Chroma + Redis — three systems for one agent</div>
+            </div>
+            <span class="pill bad">3 systems</span>
+          </div>
+          <div class="panel-stats">
+            <div class="panel-stat"><div class="panel-stat-value">3</div><div class="panel-stat-label">systems</div></div>
+            <div class="panel-stat"><div class="panel-stat-value">7</div><div class="panel-stat-label">calls</div></div>
+            <div class="panel-stat"><div class="panel-stat-value">2+</div><div class="panel-stat-label">failure pts</div></div>
+          </div>
+          <div class="flow-wrap" style="margin:12px;border-radius:12px;">
+            <canvas class="flow-canvas" id="flowCanvas-before"></canvas>
+            <div class="flow-grid" id="flowGrid-before"></div>
+          </div>
+        </div>
+
+        <!-- AFTER diagram -->
+        <div class="cmp-panel panel-after" id="panel-after">
+          <div class="cmp-panel-header">
+            <div>
+              <div class="panel-title">✅ AFTER</div>
+              <div class="panel-subtitle">MongoDB Atlas only — one persistence layer for everything</div>
+            </div>
+            <span class="pill good">1 system</span>
+          </div>
+          <div class="panel-stats">
+            <div class="panel-stat"><div class="panel-stat-value">1</div><div class="panel-stat-label">system</div></div>
+            <div class="panel-stat"><div class="panel-stat-value">4</div><div class="panel-stat-label">calls</div></div>
+            <div class="panel-stat"><div class="panel-stat-value">0</div><div class="panel-stat-label">failure pts</div></div>
+          </div>
+          <div class="flow-wrap" style="margin:12px;border-radius:12px;">
+            <canvas class="flow-canvas" id="flowCanvas-after"></canvas>
+            <div class="flow-grid" id="flowGrid-after"></div>
+          </div>
+        </div>
+
+      </div><!-- /comparison-grid -->
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <!-- Step-aligned comparison table -->
+  <section id="step-table" class="py-10 px-6">
+    <div class="max-w-7xl mx-auto">
+      <div class="cmp-controls" style="margin-bottom:16px;">
+        <button class="panel-btn primary" onclick="autoRunTable()">▶ Auto-run both</button>
+        <button class="panel-btn" onclick="stepTable()">Next step →</button>
+        <button class="panel-btn" onclick="resetTable()">↺ Reset</button>
+        <span class="cmp-step-counter" id="cmp-step-counter">Ready — click Auto-run or Next step</span>
+      </div>
+      <div class="cmp-table-wrap">
+        <div class="cmp-table-head">
+          <div class="cmp-th step-th">Step</div>
+          <div class="cmp-th before-th">❌ BEFORE — Postgres + Chroma + Redis</div>
+          <div class="cmp-th after-th">✅ AFTER — MongoDB Atlas</div>
+        </div>
+        <div id="cmp-table-body"></div>
+      </div>
+    </div>
+  </section>
+
+  <div class="section-divider"></div>
+
+  <section id="takeaways" class="py-24 px-6">
+    <div class="max-w-6xl mx-auto">
+      <div class="text-center mb-14 fade-in">
+        <div class="glow-badge mb-4">
+          <span>�</span>
+          <span>Business Case</span>
+        </div>
+        <h2 class="text-4xl font-extrabold text-mongo-textPri mb-3">Why this matters beyond the code</h2>
+        <p class="text-lg text-mongo-textSec max-w-3xl mx-auto">
+          The architecture decision you make at prototype stage determines your operational costs, delivery speed, and risk exposure at production scale.
+        </p>
+      </div>
+
+      <div class="grid lg:grid-cols-2 gap-8 fade-in fade-in-delay-1">
+        <div class="use-case-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-mongo-textPri font-extrabold text-lg">DevOps &amp; Platform Leaders</div>
+            <span class="pill warn">operational risk</span>
+          </div>
+
+          <ul class="take-list">
+            <li>
+              <span class="take-dot warn">1</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Every new agent capability is a new infrastructure dependency.</div>
+                <div class="text-mongo-textMuted text-sm">RAG needs vector indexes. Multi-turn needs durable state. Ops access needs governance. Each is a new system to operate.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot warn">2</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Integration complexity compounds engineering cost.</div>
+                <div class="text-mongo-textMuted text-sm">Every additional data store adds deployment pipelines, on-call runbooks, IAM policies, and SDK surface area your team must own indefinitely.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot warn">3</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Agent checkpointing creates sustained, write-heavy storage pressure.</div>
+                <div class="text-mongo-textMuted text-sm">At fleet scale, each agent thread writes state continuously. Redis eviction is not acceptable for audit-grade workloads.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot good">4</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">One data platform eliminates the integration tax entirely.</div>
+                <div class="text-mongo-textMuted text-sm">Atlas handles vector search, operational queries, and durable checkpointing behind a single connection string—one security review, one backup policy, one SLA.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot good">5</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Prototypes become production without a re-architecture sprint.</div>
+                <div class="text-mongo-textMuted text-sm">Teams that start on Atlas ship to production faster because the persistence layer doesn’t need replacing when compliance requirements land.</div>
+              </div>
+            </li>
+          </ul>
+
+          <div class="mt-5 text-mongo-textMuted text-sm">
+            <span class="text-mongo-accent font-extrabold">One-liner:</span>
+            "Fragmented persistence is a hidden engineering tax. MongoDB pays it off on day one."
+          </div>
+        </div>
+
+        <div class="use-case-card">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-mongo-textPri font-extrabold text-lg">Business &amp; Executive Leaders</div>
+            <span class="pill good">business outcomes</span>
+          </div>
+
+          <ul class="take-list">
+            <li>
+              <span class="take-dot warn">1</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Each additional data system multiplies compliance scope and audit surface.</div>
+                <div class="text-mongo-textMuted text-sm">Security reviews, SOC 2 controls, backup SLAs, and incident runbooks must be replicated for every store—a cost invisible until audit time.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot warn">2</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Stale AI context erodes customer trust and answer quality.</div>
+                <div class="text-mongo-textMuted text-sm">When the vector store falls behind the operational database, agents return outdated answers. These failures are invisible until a customer notices.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot warn">3</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">AI agent infrastructure costs scale non-linearly without consolidation.</div>
+                <div class="text-mongo-textMuted text-sm">Three separate managed services, each with its own pricing tier, support contract, and headcount requirement, compound as agent deployments grow.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot good">4</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">Consolidating on MongoDB Atlas compresses time-to-market.</div>
+                <div class="text-mongo-textMuted text-sm">Teams ship new agent capabilities without waiting on multi-team infrastructure approvals across three separate data platforms.</div>
+              </div>
+            </li>
+            <li>
+              <span class="take-dot good">5</span>
+              <div>
+                <div class="text-mongo-textPri font-extrabold">One platform means one security review, one vendor relationship, one bill.</div>
+                <div class="text-mongo-textMuted text-sm">Replace three procurement cycles, three support tiers, and three sets of runbooks with a single Atlas cluster your team already operates and trusts.</div>
+              </div>
+            </li>
+          </ul>
+
+          <div class="mt-5 text-mongo-textMuted text-sm">
+            <span class="text-mongo-accent font-extrabold">One-liner:</span>
+            "Every AI agent you ship on three data stores is three times the operational risk. Atlas brings that back to one."
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer px-6">
+    <div class="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">🍃</span>
+        <span>MongoDB — internal/demo value illustration</span>
+      </div>
+      <div class="text-xs text-mongo-textMuted">
+        File: <span class="text-mongo-textSec font-bold">mdbvalue.html</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Fade-in + nav active
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => { if (entry.isIntersecting) entry.target.classList.add('visible'); });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.sticky-nav a[href^="#"]');
+    const navObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        navLinks.forEach(link => link.classList.toggle('active', link.getAttribute('href') === '#' + entry.target.id));
+      });
+    }, { threshold: 0.35 });
+    sections.forEach(s => navObserver.observe(s));
+
+    // Neural background
+    (function () {
+      const canvas = document.getElementById('neuralCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      let nodes = [];
+      const nodeCount = 55;
+      const connectionDistance = 150;
+
+      function resize() { canvas.width = canvas.offsetWidth; canvas.height = canvas.offsetHeight; }
+      function initNodes() {
+        nodes = [];
+        for (let i = 0; i < nodeCount; i++) {
+          nodes.push({
+            x: Math.random()*canvas.width,
+            y: Math.random()*canvas.height,
+            vx:(Math.random()-0.5)*0.32,
+            vy:(Math.random()-0.5)*0.32,
+            r: Math.random()*2 + 1
+          });
+        }
+      }
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.strokeStyle = 'rgba(0, 237, 100, 0.07)';
+        ctx.lineWidth = 1;
+
+        for (let i = 0; i < nodes.length; i++) {
+          for (let j = i + 1; j < nodes.length; j++) {
+            const dx = nodes[i].x - nodes[j].x;
+            const dy = nodes[i].y - nodes[j].y;
+            const dist = Math.sqrt(dx*dx + dy*dy);
+            if (dist < connectionDistance) {
+              ctx.globalAlpha = 1 - (dist / connectionDistance);
+              ctx.beginPath();
+              ctx.moveTo(nodes[i].x, nodes[i].y);
+              ctx.lineTo(nodes[j].x, nodes[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(0, 237, 100, 0.55)';
+        for (const n of nodes) {
+          ctx.beginPath();
+          ctx.arc(n.x, n.y, n.r, 0, Math.PI*2);
+          ctx.fill();
+        }
+
+        for (const n of nodes) {
+          n.x += n.vx; n.y += n.vy;
+          if (n.x < 0 || n.x > canvas.width) n.vx *= -1;
+          if (n.y < 0 || n.y > canvas.height) n.vy *= -1;
+        }
+
+        requestAnimationFrame(draw);
+      }
+
+      window.addEventListener('resize', () => { resize(); initNodes(); });
+      resize(); initNodes(); draw();
+    })();
+
+    // Helpers
+    function $(id){ return document.getElementById(id); }
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll('&','&amp;')
+        .replaceAll('<','&lt;')
+        .replaceAll('>','&gt;')
+        .replaceAll('"','&quot;')
+        .replaceAll("'","&#039;");
+    }
+    function codeBlock(code, lang){
+      const safe = escapeHtml(code || "");
+      const label = escapeHtml((lang || "python").toUpperCase());
+      return `
+        <div class="term-block">
+          <div class="term-muted" style="font-size:0.72rem; font-weight:900; margin-bottom:6px;">
+            // code (${label})
+          </div>
+          <pre><code>${safe}</code></pre>
+        </div>
+      `;
+    }
+
+
+    // ── State ─────────────────────────────────────────────────────────
+    let framework = "langchain";
+    const tableState = { stepIdx: 0, autoTimer: null };
+    const STEP_LABELS = ["Query", "Agent Setup", "Retrieval", "Ops Data", "State / Result"];
+
+    const QUESTIONS = {
+      procedural: {
+        text:        "Show orders from the last 30 days with shipping delays.",
+        memory:      "Procedural Memory", icon: "🔧",
+        sub:         "Ops data / Tool use — agent executes a live DB query",
+        stress:      "ops",
+        beforeHint:  "Needs: live DB query + vector context + session persist — 3 systems",
+        afterHint:   "Text-to-MQL aggregation pipeline — read-only, governed, zero SQL grants",
+        beforeClose: "Answered it. SQL perms + index drift + eviction = 3 failure modes.",
+        afterClose:  "One aggregation pipeline. One system. One governance surface.",
+        // per-step after log overrides
+        r2ok: "OK \u2014 5 context docs retrieved",
+        r3ok: "Execute aggregation pipeline (read-only) \u2192 OK",
+        r4ok: "Checkpointer persisted. Delayed orders summary ready.",
+      },
+      semantic: {
+        text:        "What's our SLA policy for orders delayed over 5 days?",
+        memory:      "Semantic Memory", icon: "🔍",
+        sub:         "Knowledge retrieval / RAG — agent queries a document corpus for facts",
+        stress:      "retrieval",
+        beforeHint:  "Primary: vector index freshness. Stale index \u2192 wrong policy answer in prod",
+        afterHint:   "Atlas Vector Search reflects live index — no async ingestion gap to worry about",
+        beforeClose: "Answered — but with a 48hr stale index. Policy may already have changed.",
+        afterClose:  "SLA policy cited from always-current knowledge. No ingestion pipeline to babysit.",
+        r2ok: "OK \u2014 SLA policy retrieved: 5-day threshold \u2192 expedited re-ship",
+        r3ok: "Supporting order counts for policy context \u2192 OK",
+        r4ok: "Checkpointer persisted. SLA answer with citation ready.",
+      },
+      episodic: {
+        text:        "Recall the Portland shipments you analyzed in our last session.",
+        memory:      "Episodic Memory", icon: "📅",
+        sub:         "Conversation history / Checkpoint — agent must resume prior context",
+        stress:      "state",
+        beforeHint:  "Primary: state durability. Evicted key \u2192 agent forgets prior session entirely",
+        afterHint:   "MongoDBSaver: every thread is durable, resumable, and queryable by thread_id",
+        beforeClose: "Answered — if the session key survived eviction. No guarantee.",
+        afterClose:  "Full session resumed from checkpoint. Prior Portland analysis intact.",
+        r2ok: "Prior session context retrieved (thread_id lookup) \u2192 Portland analysis found",
+        r3ok: "Current Portland order status \u2192 OK",
+        r4ok: "Checkpointer updated. Prior context merged with live data.",
+      },
+      multi: {
+        text:        "Given our policy and last session, draft a response for Portland's delayed batch.",
+        memory:      "All Three Memories", icon: "🧠",
+        sub:         "Semantic + Episodic + Procedural — all three memory types at once",
+        stress:      "all",
+        beforeHint:  "All 3 systems must be healthy simultaneously — 3\u00d7 failure surface",
+        afterHint:   "Vector Search + Text-to-MQL + Checkpointer — same namespace, coherent reads",
+        beforeClose: "Answered — if all 3 cooperated. That\u2019s 3 on-call rotations.",
+        afterClose:  "Policy + history + live data. One system. Draft sent.",
+        r2ok: "OK \u2014 SLA policy docs + Portland shipment history retrieved",
+        r3ok: "Portland batch + delay metrics aggregation \u2192 OK",
+        r4ok: "Full context merged (policy + prior session + live data). Draft response ready.",
+      },
+    };
+    let selectedQuestion = "procedural";
+
+    const CODE = {
+      chroma_similarity_search: `
+from langchain_voyageai import VoyageAIEmbeddings
+from langchain_community.vectorstores import Chroma
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+
+vs = Chroma(
+    collection_name="adobe_agent_docs",
+    persist_directory=".chroma",
+    embedding_function=embeddings,
+)
+
+docs = vs.similarity_search("shipping delays last 30 days", k=5)
+`.trim(),
+
+      postgres_sql_tool: `
+from langchain_openai import ChatOpenAI
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+db = SQLDatabase.from_uri(POSTGRES_URI)
+
+toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+tools = toolkit.get_tools()
+`.trim(),
+
+      postgres_query_example: `
+-- Example generated query (read-only)
+SELECT order_id, created_at, carrier, delay_reason
+FROM orders
+WHERE created_at >= NOW() - interval '30 days'
+  AND shipped_late = true
+ORDER BY created_at DESC
+LIMIT 200;
+`.trim(),
+
+      redis_persist: `
+import json, redis
+
+r = redis.Redis.from_url(REDIS_URL, decode_responses=True)
+key = f"thread:{THREAD_ID}:messages"
+
+r.set(key, json.dumps(messages))
+`.trim(),
+
+      atlas_vector_search_retriever: `
+from pymongo import MongoClient
+from langchain_voyageai import VoyageAIEmbeddings
+from langchain_mongodb.vectorstores import MongoDBAtlasVectorSearch
+
+client = MongoClient(MONGODB_URI)
+collection = client["adobe"]["agent"]  # namespace adobe.agent
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+
+vs = MongoDBAtlasVectorSearch(
+    collection=collection,
+    embedding=embeddings,
+    index_name="vector_index",
+)
+
+retriever = vs.as_retriever(search_kwargs={"k": 5})
+docs = retriever.invoke("shipping delays last 30 days")
+`.trim(),
+
+      text_to_mql_toolkit: `
+from langchain_openai import ChatOpenAI
+from langchain_mongodb.agent_toolkit import MongoDBDatabase, MongoDBDatabaseToolkit
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+op_db = MongoDBDatabase.from_connection_string(MONGODB_URI, "adobe")
+toolkit = MongoDBDatabaseToolkit(db=op_db, llm=llm)
+tools = toolkit.get_tools()
+`.trim(),
+
+      checkpointer_mongodb: `
+from pymongo import MongoClient
+from langgraph.checkpoint.mongodb import MongoDBSaver
+
+client = MongoClient(MONGODB_URI)
+checkpointer = MongoDBSaver(client)
+
+# Invoke with:
+# app.invoke(..., {"configurable": {"thread_id": THREAD_ID}})
+`.trim(),
+
+      langchain_agent_w_tools: `
+from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+agent = create_react_agent(llm, tools, state_modifier=SYSTEM_PROMPT)
+result = agent.invoke({"messages": [("user", "question")]})
+`.trim(),
+
+      cosmos_sql_tool: `
+from langchain_openai import ChatOpenAI
+from langchain_community.utilities import CosmosDBSqlApiWrapper
+from langchain_community.agent_toolkits import CosmosDBSqlApiToolkit
+from azure.cosmos import CosmosClient
+
+llm     = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+client  = CosmosClient(url=COSMOS_URI, credential=COSMOS_KEY)
+wrapper = CosmosDBSqlApiWrapper(
+    cosmos_client=client, database_name="adobe", container_name="orders")
+toolkit = CosmosDBSqlApiToolkit(wrapper=wrapper, llm=llm)
+tools   = toolkit.get_tools()
+`.trim(),
+
+      cosmos_query_example: `
+-- Cosmos DB SQL API (read-only)
+SELECT c.order_id, c.created_at, c.carrier, c.delay_reason
+FROM   orders c
+WHERE  c.created_at >= DateTimeAdd("dd", -30, GetCurrentDateTime())
+  AND  c.shipped_late = true
+ORDER  BY c.created_at DESC OFFSET 0 LIMIT 200
+`.trim(),
+
+      spanner_sql_tool: `
+from langchain_openai import ChatOpenAI
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
+llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+db  = SQLDatabase.from_uri(
+    f"spanner+spanner:///projects/{GCP_PROJECT}"
+    f"/instances/{SPANNER_INSTANCE}/databases/{SPANNER_DB}")
+toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+tools   = toolkit.get_tools()
+`.trim(),
+
+      spanner_query_example: `
+-- Cloud Spanner SQL (read-only)
+SELECT order_id, created_at, carrier, delay_reason
+FROM   orders
+WHERE  created_at >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+  AND  shipped_late = TRUE
+ORDER  BY created_at DESC LIMIT 200
+`.trim(),
+
+      dynamodb_ops_tool: `
+import boto3
+from langchain_core.tools import tool
+
+dynamodb     = boto3.resource("dynamodb", region_name=AWS_REGION)
+orders_table = dynamodb.Table("orders")
+
+@tool
+def query_delayed_orders() -> list:
+    """Return orders with shipping delays in the last 30 days."""
+    # No declarative SQL toolkit — manual Scan required
+    response = orders_table.scan(
+        FilterExpression=
+            Attr("created_at").between(thirty_days_ago_iso, now_iso)
+            & Attr("shipped_late").eq(True))
+    return response["Items"]
+`.trim(),
+
+      dynamodb_query_example: `
+# DynamoDB Scan — no SQL; build FilterExpression by hand
+from boto3.dynamodb.conditions import Attr
+
+response = orders_table.scan(
+    FilterExpression=
+        Attr("created_at").between(thirty_days_ago_iso, now_iso)
+        & Attr("shipped_late").eq(True),
+    ProjectionExpression="order_id, created_at, carrier, delay_reason",
+)
+items = response["Items"]
+`.trim(),
+
+      aurora_sql_tool: `
+from langchain_openai import ChatOpenAI
+from langchain_community.utilities.sql_database import SQLDatabase
+from langchain_community.agent_toolkits.sql.toolkit import SQLDatabaseToolkit
+
+llm     = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+db      = SQLDatabase.from_uri(AURORA_URI)   # standard MySQL/Postgres dialect
+toolkit = SQLDatabaseToolkit(db=db, llm=llm)
+tools   = toolkit.get_tools()
+`.trim(),
+
+      aurora_query_example: `
+-- Amazon Aurora SQL (read-only)
+SELECT order_id, created_at, carrier, delay_reason
+FROM   orders
+WHERE  created_at >= NOW() - INTERVAL 30 DAY
+  AND  shipped_late = 1
+ORDER  BY created_at DESC LIMIT 200;
+`.trim(),
+
+      pinecone_search: `
+from langchain_pinecone import PineconeVectorStore
+from langchain_voyageai import VoyageAIEmbeddings
+from pinecone import Pinecone
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+pc    = Pinecone(api_key=PINECONE_API_KEY)
+index = pc.Index("adobe-agent-docs")
+vs    = PineconeVectorStore(index=index, embedding=embeddings)
+docs  = vs.similarity_search("shipping delays last 30 days", k=5)
+`.trim(),
+
+      weaviate_search: `
+import weaviate
+from langchain_weaviate.vectorstores import WeaviateVectorStore
+from langchain_voyageai import VoyageAIEmbeddings
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+client = weaviate.connect_to_wcs(
+    cluster_url=WEAVIATE_URL,
+    auth_credentials=weaviate.auth.AuthApiKey(WEAVIATE_KEY))
+vs   = WeaviateVectorStore(client=client, index_name="AdobeAgentDocs",
+                            text_key="text", embedding=embeddings)
+docs = vs.similarity_search("shipping delays last 30 days", k=5)
+`.trim(),
+
+      qdrant_search: `
+from qdrant_client import QdrantClient
+from langchain_qdrant import QdrantVectorStore
+from langchain_voyageai import VoyageAIEmbeddings
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+client = QdrantClient(url=QDRANT_URL, api_key=QDRANT_API_KEY)
+vs     = QdrantVectorStore(client=client,
+                            collection_name="adobe_agent_docs",
+                            embedding=embeddings)
+docs   = vs.similarity_search("shipping delays last 30 days", k=5)
+`.trim(),
+
+      pgvector_search: `
+from langchain_postgres import PGVector
+from langchain_voyageai import VoyageAIEmbeddings
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+vs   = PGVector(embeddings=embeddings,
+                collection_name="adobe_agent_docs",
+                connection=POSTGRES_URI)
+docs = vs.similarity_search("shipping delays last 30 days", k=5)
+`.trim(),
+
+
+      opensearch_search: `
+from langchain_community.vectorstores import OpenSearchVectorSearch
+from langchain_voyageai import VoyageAIEmbeddings
+
+embeddings = VoyageAIEmbeddings(model="voyage-large-2")
+
+vs = OpenSearchVectorSearch(
+    opensearch_url=OPENSEARCH_URL,
+    index_name="adobe_agent_docs",
+    embedding_function=embeddings,
+    http_auth=(OS_USER, OS_PASSWORD),
+    use_ssl=True,
+)
+# WARNING: cluster rebalancing — shard unavailable during index rotation
+docs = vs.similarity_search("shipping delays last 30 days", k=5)
+`.trim(),
+
+      memcached_persist: `
+import pickle
+from pymemcache.client.base import Client
+
+mc  = Client((MEMCACHED_HOST, 11211))
+key = f"thread:{THREAD_ID}:messages"
+# Hard 1 MB item limit — large threads will be silently truncated
+mc.set(key, pickle.dumps(messages), expire=3600)
+`.trim(),
+
+      dynamodb_state_persist: `
+import boto3, json
+from boto3.dynamodb.conditions import Attr
+
+dynamodb    = boto3.resource("dynamodb", region_name=AWS_REGION)
+state_table = dynamodb.Table("agent_state")
+
+state_table.put_item(
+    Item={"thread_id": THREAD_ID,
+          "messages":  json.dumps(messages),
+          "updated_at": now_iso},
+    ConditionExpression="attribute_not_exists(thread_id) OR updated_at = :prev",
+    ExpressionAttributeValues={":prev": prev_updated_at},
+)
+`.trim(),
+
+      elasticache_persist: `
+import json, redis
+
+r   = redis.Redis.from_url(ELASTICACHE_URL, decode_responses=True)
+key = f"thread:{THREAD_ID}:messages"
+r.set(key, json.dumps(messages))
+# maxmemory-policy=allkeys-lru: keys evicted silently under pressure
+`.trim(),
+
+      langgraph_assistant_toolnode: `
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import MessagesState
+from langgraph.prebuilt import ToolNode, tools_condition
+
+model = llm.bind_tools(tools)
+
+def assistant(state: MessagesState):
+    return {"messages": [model.invoke(state["messages"])]}
+
+g = StateGraph(MessagesState)
+g.add_node("assistant", assistant)
+g.add_node("tools", ToolNode(tools))
+g.add_edge(START, "assistant")
+g.add_conditional_edges("assistant", tools_condition)
+g.add_edge("tools", "assistant")
+g.add_edge("assistant", END)
+
+app = g.compile(checkpointer=checkpointer)
+`.trim(),
+    };
+
+    // ── BEFORE stack tool definitions ─────────────────────────────────────
+    const OLTP_DEFS = {
+      postgres: { label:"Postgres",  icon:"🐘", sub:"relational SQL",    codeKey:"postgres_sql_tool",  queryKey:"postgres_query_example", queryType:"SQL",  queryLang:"sql",    warning:"permission denied for relation orders (retry / ticket / role update)" },
+      cosmos:   { label:"Cosmos DB", icon:"🌐", sub:"multi-model API",   codeKey:"cosmos_sql_tool",    queryKey:"cosmos_query_example",   queryType:"SQL",  queryLang:"sql",    warning:"request rate too large (RU limit exceeded) — throttling" },
+      spanner:  { label:"Spanner",   icon:"🌀", sub:"global SQL",        codeKey:"spanner_sql_tool",   queryKey:"spanner_query_example",  queryType:"SQL",  queryLang:"sql",    warning:"RESOURCE_EXHAUSTED: session pool full — increase spanner.pool.max_size" },
+      dynamodb: { label:"DynamoDB",  icon:"⚡", sub:"key-value / NoSQL", codeKey:"dynamodb_ops_tool",  queryKey:"dynamodb_query_example", queryType:"Scan", queryLang:"python", warning:"ProvisionedThroughputExceededException — reduce request rate" },
+      aurora:   { label:"Aurora",    icon:"🌅", sub:"cloud SQL",         codeKey:"aurora_sql_tool",    queryKey:"aurora_query_example",   queryType:"SQL",  queryLang:"sql",    warning:"FATAL: too many connections (max_connections reached)" },
+    };
+    const VECTOR_DB_DEFS = {
+      chroma:   { label:"Chroma",   icon:"🧱", sub:"local vector store (point solution)",      codeKey:"chroma_similarity_search", warning:"index build is stale (possible drift)" },
+      pinecone: { label:"Pinecone", icon:"🌲", sub:"managed vector DB (point solution)",       codeKey:"pinecone_search",          warning:"pod capacity exceeded — query throttled (retry)" },
+      weaviate: { label:"Weaviate", icon:"🕸️", sub:"graph-native vector (point solution)",    codeKey:"weaviate_search",          warning:"connection timeout — no healthy node available" },
+      qdrant:   { label:"Qdrant",   icon:"🎯", sub:"vector search engine (point solution)",    codeKey:"qdrant_search",            warning:"collection locked during re-indexing — results may be stale" },
+      pgvector:    { label:"pgvector",    icon:"🗄️", sub:"Postgres extension (point solution)",      codeKey:"pgvector_search",    warning:"HNSW index rebuild in progress — fallback to exact scan" },
+      opensearch: { label:"OpenSearch", icon:"🔎", sub:"AWS managed search (point solution)",       codeKey:"opensearch_search", warning:"cluster rebalancing — shard unavailable, search degraded" },
+    };
+    const CACHE_DEFS = {
+      redis:       { label:"Redis",       icon:"🔴", sub:"in-memory cache (point solution)",        codeKey:"redis_persist",          warning:"key size 4.8MB (eviction risk)",                               shortWarn:"eviction risk" },
+      memcached:   { label:"Memcached",   icon:"💾", sub:"distributed cache (point solution)",      codeKey:"memcached_persist",      warning:"object too large (max 1MB) — truncated or dropped",            shortWarn:"1MB item limit" },
+      dynamostate: { label:"DynamoDB",    icon:"⚡", sub:"serverless state store (point solution)",  codeKey:"dynamodb_state_persist", warning:"ConditionalCheckFailedException (concurrent state update)",    shortWarn:"race condition" },
+      elasticache: { label:"Elasticache", icon:"☁️", sub:"managed Redis (point solution)",          codeKey:"elasticache_persist",    warning:"maxmemory-policy=allkeys-lru — keys silently evicted",         shortWarn:"silent eviction" },
+    };
+
+    // ── Selection state ────────────────────────────────────────────────────
+    let selectedOltp     = "postgres";
+    let selectedVectorDb = "chroma";
+    let selectedCache    = "redis";
+
+    // ── Dynamic BEFORE step builder ────────────────────────────────────────
+    function getBeforeSteps(fw){
+      const oltp  = OLTP_DEFS[selectedOltp];
+      const vdb   = VECTOR_DB_DEFS[selectedVectorDb];
+      const cache = CACHE_DEFS[selectedCache];
+      const q     = QUESTIONS[selectedQuestion];
+      const ag    = fw === "langchain" ? "LangChain" : "LangGraph";
+      const tl    = fw === "langchain" ? "[Tool]"    : "[ToolNode]";
+      const ac    = fw === "langchain" ? CODE.langchain_agent_w_tools : CODE.langgraph_assistant_toolnode;
+      const plan  = fw === "langchain"
+        ? "Plan: retrieval \u2192 " + oltp.label + " \u2192 persist thread"
+        : "Router \u2192 ToolNode (retrieval \u2192 " + oltp.label + " \u2192 persist)";
+      const stressRetrieval = q.stress === "retrieval" || q.stress === "all";
+      const stressOps       = q.stress === "ops"       || q.stress === "all";
+      const stressState     = q.stress === "state"     || q.stress === "all";
+      // Build retrieval step log — add CRITICAL line when retrieval is the primary stressor
+      const retriLogBase = [
+        {t:tl + " semantic_search \u2192 " + vdb.label + " similarity_search(k=5)", cls:"term-warn", code:CODE[vdb.codeKey], lang:"python"},
+        {t:tl + " WARNING: " + vdb.warning, cls:"term-bad"},
+      ];
+      if (stressRetrieval) retriLogBase.push(
+        {t:tl + " CRITICAL: stale index may return wrong knowledge for this query", cls:"term-bad"});
+      // Build ops step log
+      const opsLogBase = [
+        {t:tl + " " + oltp.label + " tools wiring", cls:"term-info", code:CODE[oltp.codeKey], lang:"python"},
+        {t:tl + " Generated " + oltp.queryType + " query", cls:"term-warn", code:CODE[oltp.queryKey], lang:oltp.queryLang||"sql"},
+        {t:tl + " ERROR: " + oltp.warning, cls:"term-bad"},
+      ];
+      if (stressOps) opsLogBase.push(
+        {t:tl + " CRITICAL: operational data unavailable — cannot complete this request", cls:"term-bad"});
+      // Build state step log
+      const stateLogBase = [
+        {t:tl + " Persist state \u2192 " + cache.label, cls:"term-warn", code:CODE[cache.codeKey], lang:"python"},
+        {t:tl + " WARNING: " + cache.warning, cls:"term-bad"},
+      ];
+      if (stressState) stateLogBase.push(
+        {t:tl + " CRITICAL: prior session context lost \u2014 agent cannot recall prior conversation", cls:"term-bad"});
+      return [
+        { log: [
+            {t:"> " + q.text, cls:"term-prompt"},
+            {t:"[" + q.icon + " " + q.memory + "] " + q.sub, cls:"term-muted"},
+          ], fx: [] },
+        { log: [
+            {t:"[" + ag + "] Agent + tools wiring", cls:"term-info", code:ac, lang:"python"},
+            {t:"[" + ag + "] " + plan, cls:"term-muted"},
+            {t:"[" + ag + "] NOTE: " + q.beforeHint, cls:"term-warn"},
+          ], fx: [{from:"user",to:"agent",color:"rgba(165,214,255,0.9)",ok:true}]
+        },
+        { log: retriLogBase, fx: [{from:"agent",to:"retrieval",color:"rgba(255,189,46,0.95)",ok:false}] },
+        { log: opsLogBase,   fx: [{from:"agent",to:"ops",color:"rgba(255,123,114,0.95)",ok:false}] },
+        { log: stateLogBase, fx: [{from:"agent",to:"state",color:"rgba(255,189,46,0.95)",ok:false}] },
+        { log: [
+            {t:"[Answer] Returned result (but you now operate 3 systems for 1 agent).", cls:"term-bad"},
+            {t:"[Reality] " + q.beforeClose, cls:"term-muted"},
+          ], fx: []
+        },
+      ];
+    }
+
+    function getAfterSteps(fw){
+      const q  = QUESTIONS[selectedQuestion];
+      const ag = fw === "langchain" ? "LangChain" : "LangGraph";
+      const tl = fw === "langchain" ? "[Tool]"    : "[ToolNode]";
+      const ac = fw === "langchain" ? CODE.langchain_agent_w_tools : CODE.langgraph_assistant_toolnode;
+      const plan = fw === "langchain"
+        ? "Plan: Atlas Vector Search \u2192 Text-to-MQL \u2192 Checkpointer"
+        : "Router \u2192 ToolNode (vector_search \u2192 text_to_mql) + checkpoint";
+      return [
+        { log: [
+            {t:"> " + q.text, cls:"term-prompt"},
+            {t:"[" + q.icon + " " + q.memory + "] " + q.sub, cls:"term-muted"},
+          ], fx: [] },
+        { log: [
+            {t:"[" + ag + "] Agent + tools wiring", cls:"term-info", code:ac, lang:"python"},
+            {t:"[" + ag + "] " + plan, cls:"term-muted"},
+            {t:"[" + ag + "] NOTE: " + q.afterHint, cls:"term-ok"},
+          ], fx: [{from:"user",to:"agent",color:"rgba(165,214,255,0.9)",ok:true}]
+        },
+        { log: [
+            {t:tl + " Atlas Vector Search retriever (k=5) in adobe.agent", cls:"term-warn", code:CODE.atlas_vector_search_retriever, lang:"python"},
+            {t:tl + " " + q.r2ok, cls:"term-ok"},
+          ], fx: [{from:"agent",to:"mongo",color:"rgba(0,237,100,0.95)",ok:true}]
+        },
+        { log: [
+            {t:tl + " Text-to-MQL toolkit (read-only)", cls:"term-info", code:CODE.text_to_mql_toolkit, lang:"python"},
+            {t:tl + " " + q.r3ok, cls:"term-ok"},
+          ], fx: [{from:"agent",to:"mongo",color:"rgba(165,214,255,0.95)",ok:true}]
+        },
+        { log: [
+            {t:"[State] MongoDB checkpointer (durable, resumable, auditable)", cls:"term-info", code:CODE.checkpointer_mongodb, lang:"python"},
+            {t:"[Answer] " + q.r4ok, cls:"term-ok"},
+            {t:"[Reality] " + q.afterClose, cls:"term-ok"},
+          ], fx: [{from:"agent",to:"mongo",color:"rgba(0,237,100,0.95)",ok:true}]
+        },
+        { log: [
+            {t:"[Done] One persistence layer. One governance surface. One system to secure.", cls:"term-ok"},
+          ], fx: []
+        },
+      ];
+    }
+
+    // ── BEFORE title + pill helpers ────────────────────────────────────────
+    function updateBeforeTitle(){
+      const o = OLTP_DEFS[selectedOltp], v = VECTOR_DB_DEFS[selectedVectorDb], c = CACHE_DEFS[selectedCache];
+      const combo = o.label + " + " + v.label + " + " + c.label;
+      const sub = document.querySelector("#panel-before .panel-subtitle");
+      if (sub) sub.textContent = combo + " \u2014 three systems for one agent";
+      const th = document.querySelector(".cmp-th.before-th");
+      if (th) th.textContent = "\u274C BEFORE \u2014 " + combo;
+    }
+    function setActivePill(groupId, key){
+      document.querySelectorAll("#" + groupId + " .stack-pill")
+        .forEach(btn => btn.classList.toggle("active", btn.dataset.key === key));
+    }
+
+    // ── Selector handlers ──────────────────────────────────────────────────
+    // ── Question / memory-type selector ───────────────────────────────────
+    function setActiveQCard(key){
+      document.querySelectorAll("#question-cards .q-card")
+        .forEach(btn => btn.classList.toggle("active", btn.dataset.key === key));
+    }
+    function setQuestion(key){
+      selectedQuestion = key;
+      setActiveQCard(key);
+      resetTable();
+    }
+
+    function setOltp(key){
+      selectedOltp = key; setActivePill("sel-oltp", key);
+      renderNodes("before"); updateBeforeTitle(); resetTable();
+    }
+    function setVectorDb(key){
+      selectedVectorDb = key; setActivePill("sel-vectordb", key);
+      renderNodes("before"); updateBeforeTitle(); resetTable();
+    }
+    function setCache(key){
+      selectedCache = key; setActivePill("sel-cache", key);
+      renderNodes("before"); updateBeforeTitle(); resetTable();
+    }
+
+    // ── Canvas references ─────────────────────────────────────────────
+    function getCanvas(side){ return document.getElementById("flowCanvas-" + side); }
+    function getCtx(side){ return getCanvas(side).getContext("2d"); }
+
+    function resizeFlowCanvas(side){
+      const canvas = getCanvas(side);
+      if (!canvas) return;
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width  = Math.floor(rect.width);
+      canvas.height = Math.floor(rect.height);
+    }
+    window.addEventListener("resize", () => {
+      resizeFlowCanvas("before");
+      resizeFlowCanvas("after");
+    });
+
+    // ── Node helpers ──────────────────────────────────────────────────
+    function nodeEl(id, side){
+      return document.querySelector("#panel-" + side + " [data-node=\"" + id + "\"]");
+    }
+    function nodeCenter(el, side){
+      const canvas = getCanvas(side);
+      const r = el.getBoundingClientRect();
+      const p = canvas.getBoundingClientRect();
+      return { x:(r.left + r.width/2) - p.left, y:(r.top + r.height/2) - p.top };
+    }
+
+    // ── Animations ────────────────────────────────────────────────────
+    function pulse(id, bad, side){
+      const el = nodeEl(id, side);
+      if (!el) return;
+      el.classList.remove("pulse","shake");
+      if (bad) el.classList.add("shake");
+      el.classList.add("pulse");
+      setTimeout(() => el.classList.remove("pulse","shake"), 650);
+    }
+    function drawParticle(fromId, toId, color, duration, side){
+      const canvas = getCanvas(side);
+      const ctx = getCtx(side);
+      const fromEl = nodeEl(fromId, side), toEl = nodeEl(toId, side);
+      if (!fromEl || !toEl) return;
+      const start = nodeCenter(fromEl, side);
+      const end   = nodeCenter(toEl,   side);
+      const startTime = performance.now();
+      const control = { x:(start.x+end.x)/2, y:Math.min(start.y,end.y) - 55 };
+
+      function frame(now){
+        const t = Math.min((now - startTime)/duration, 1);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = color; ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(start.x, start.y);
+        ctx.quadraticCurveTo(control.x, control.y, end.x, end.y);
+        ctx.stroke();
+        const x = (1-t)*(1-t)*start.x + 2*(1-t)*t*control.x + t*t*end.x;
+        const y = (1-t)*(1-t)*start.y + 2*(1-t)*t*control.y + t*t*end.y;
+        const fade = t < 0.1 ? t*10 : (t > 0.9 ? (1-t)*10 : 1);
+        ctx.globalAlpha = fade;
+        ctx.shadowBlur = 16; ctx.shadowColor = color; ctx.fillStyle = color;
+        ctx.beginPath(); ctx.arc(x, y, 4.2, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0; ctx.globalAlpha = 1;
+        if (t < 1) requestAnimationFrame(frame);
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+      }
+      requestAnimationFrame(frame);
+    }
+
+    // ── Table helpers ─────────────────────────────────────────────────────
+    function buildTableRows(){
+      const bSteps = getBeforeSteps(framework);
+      const aSteps = getAfterSteps(framework);
+      const count  = Math.max(bSteps.length, aSteps.length);
+      const body   = document.getElementById("cmp-table-body");
+      if (!body) return;
+      body.innerHTML = "";
+      for (let i = 0; i < count; i++){
+        const label = STEP_LABELS[i] || ("Step " + (i + 1));
+        const row   = document.createElement("div");
+        row.className = "cmp-row";
+        row.id        = "cmp-row-" + i;
+        row.innerHTML =
+          "<div class=\"step-label-cell\">" + escapeHtml(label) + "</div>" +
+          "<div class=\"cmp-cell before-cell\" id=\"cmp-before-" + i + "\"></div>" +
+          "<div class=\"cmp-cell after-cell\"  id=\"cmp-after-"  + i + "\"></div>";
+        body.appendChild(row);
+      }
+      updateTableCounter();
+    }
+    function fillCell(el, lines){
+      if (!el) return;
+      el.innerHTML = "";
+      for (const l of (lines || [])){
+        const txt  = escapeHtml(l.t || "");
+        const cls  = l.cls || "term-muted";
+        const code = l.code ? codeBlock(l.code, l.lang || "python") : "";
+        el.innerHTML += "<div class=\"" + cls + "\">" + txt + "</div>" + code;
+      }
+    }
+    function updateTableCounter(){
+      const total = getBeforeSteps(framework).length;
+      const el    = document.getElementById("cmp-step-counter");
+      if (!el) return;
+      if (tableState.stepIdx === 0)
+        el.textContent = "Ready — click Auto-run or Next step";
+      else if (tableState.stepIdx >= total)
+        el.textContent = "All steps complete ✓";
+      else
+        el.textContent = "Step " + tableState.stepIdx + " of " + total;
+    }
+
+    // ── Flow diagram ──────────────────────────────────────────────────
+    function nodeSpec(side){
+      const fw = framework;
+      const _o = OLTP_DEFS[selectedOltp], _v = VECTOR_DB_DEFS[selectedVectorDb], _c = CACHE_DEFS[selectedCache];
+      if (fw === "langchain"){
+        if (side === "before") return [
+          { id:"user",      col:"span 4",  cls:"",     icon:"👤",    title:"Developer",       sub:"prompt / request" },
+          { id:"agent",     col:"span 8",  cls:"",     icon:"🧰",    title:"LangChain Agent", sub:"plans + calls tools" },
+          { id:"retrieval", col:"span 4",  cls:"warn", icon:_v.icon, title:_v.label,          sub:_v.sub },
+          { id:"state",     col:"span 4",  cls:"warn", icon:_c.icon, title:_c.label,          sub:_c.sub },
+          { id:"ops",       col:"span 4",  cls:"",     icon:_o.icon, title:_o.label,          sub:_o.sub },
+        ];
+        return [
+          { id:"user",  col:"span 4",  cls:"",     icon:"👤", title:"Developer",       sub:"prompt / request" },
+          { id:"agent", col:"span 8",  cls:"",     icon:"🧰", title:"LangChain Agent", sub:"tools + memory/checkpoints" },
+          { id:"mongo", col:"span 12", cls:"good", icon:"🍃", title:"MongoDB Atlas",   sub:"Vector Search + Text-to-MQL + Checkpointer" },
+        ];
+      }
+      if (side === "before") return [
+        { id:"user",      col:"span 4",  cls:"",     icon:"👤",    title:"Developer",              sub:"input message" },
+        { id:"agent",     col:"span 8",  cls:"",     icon:"🧠",    title:"LangGraph assistant()",  sub:"plans + emits tool calls" },
+        { id:"retrieval", col:"span 4",  cls:"warn", icon:_v.icon, title:"ToolNode: " + _v.label,  sub:"retrieval step" },
+        { id:"ops",       col:"span 4",  cls:"",     icon:_o.icon, title:"ToolNode: " + _o.label,  sub:"query step" },
+        { id:"state",     col:"span 4",  cls:"warn", icon:_c.icon, title:"ToolNode: " + _c.label,  sub:"persist step" },
+      ];
+      return [
+        { id:"user",  col:"span 4",  cls:"",     icon:"👤", title:"Developer",            sub:"input message" },
+        { id:"agent", col:"span 8",  cls:"",     icon:"🧠", title:"LangGraph assistant()", sub:"routes tool calls" },
+        { id:"mongo", col:"span 12", cls:"good", icon:"🍃", title:"ToolNode: MongoDB Atlas", sub:"Vector Search + Text-to-MQL + Checkpointer" },
+      ];
+    }
+
+    function renderNodes(side){
+      const grid = document.getElementById("flowGrid-" + side);
+      if (!grid) return;
+      grid.innerHTML = nodeSpec(side).map(n => {
+        const cls = n.cls === "good" ? "node good" : n.cls === "warn" ? "node warn" : "node";
+        const extraBefore = side === "before" && n.id !== "user" && n.id !== "agent"
+          ? "<span class=\"pill warn\">extra surface area</span>" : "";
+        const extraAfter = side === "after" && n.id === "mongo"
+          ? "<span class=\"pill good\">unified</span><span class=\"pill info\">governed</span>" : "";
+        return "<div class=\"" + cls + "\" data-node=\"" + n.id + "\" style=\"grid-column:" + n.col + ";\">"
+          + "<div class=\"flex items-center gap-2\">"
+          + "<div class=\"text-xl\">" + escapeHtml(n.icon) + "</div>"
+          + "<div class=\"title\">" + escapeHtml(n.title) + "</div></div>"
+          + "<div class=\"sub\">" + escapeHtml(n.sub) + "</div>"
+          + "<div class=\"mt-2 flex flex-wrap gap-2\">" + extraBefore + extraAfter + "</div>"
+          + "</div>";
+      }).join("");
+      setTimeout(() => resizeFlowCanvas(side), 0);
+    }
+
+    // ── Effects ───────────────────────────────────────────────────────
+    function doFx(fxList, side){
+      for (const fx of (fxList || [])){
+        const ok    = fx.ok !== false;
+        const color = fx.color || (ok ? "rgba(0,237,100,0.95)" : "rgba(255,123,114,0.95)");
+        pulse(fx.from, !ok, side);
+        pulse(fx.to,   !ok, side);
+        drawParticle(fx.from, fx.to, color, ok ? 650 : 820, side);
+        if (side === "before" && !ok) setTimeout(() => pulse("agent", true, side), 240);
+      }
+    }
+
+    // ── Scenario controls (table-driven) ─────────────────────────────────
+    function stopAuto(){
+      if (tableState.autoTimer){ clearInterval(tableState.autoTimer); tableState.autoTimer = null; }
+    }
+    function resetTable(){
+      stopAuto();
+      tableState.stepIdx = 0;
+      ["before","after"].forEach(side => {
+        const canvas = getCanvas(side);
+        if (canvas) getCtx(side).clearRect(0,0,canvas.width,canvas.height);
+        document.querySelectorAll("#panel-" + side + " [data-node]")
+          .forEach(el => el.classList.remove("pulse","shake"));
+      });
+      buildTableRows();
+      const wrap = document.querySelector(".cmp-table-wrap");
+      if (wrap) wrap.scrollTop = 0;
+    }
+    function stepTable(){
+      const bSteps = getBeforeSteps(framework);
+      const aSteps = getAfterSteps(framework);
+      const total  = Math.max(bSteps.length, aSteps.length);
+      if (tableState.stepIdx >= total) return;
+      const i     = tableState.stepIdx;
+      const bStep = bSteps[i] || { log:[], fx:[] };
+      const aStep = aSteps[i] || { log:[], fx:[] };
+      fillCell(document.getElementById("cmp-before-" + i), bStep.log || []);
+      fillCell(document.getElementById("cmp-after-"  + i), aStep.log || []);
+      doFx(bStep.fx || [], "before");
+      doFx(aStep.fx || [], "after");
+      requestAnimationFrame(() => {
+        const row = document.getElementById("cmp-row-" + i);
+        if (row) {
+          row.classList.add("revealed");
+          // scroll the table wrap so the new row is visible
+          const wrap = document.querySelector(".cmp-table-wrap");
+          if (wrap) wrap.scrollTo({ top: row.offsetTop, behavior: "smooth" });
+        }
+      });
+      tableState.stepIdx++;
+      updateTableCounter();
+    }
+    function autoRunTable(){
+      stopAuto();
+      const total = getBeforeSteps(framework).length;
+      if (tableState.stepIdx >= total) resetTable();
+      tableState.autoTimer = setInterval(() => {
+        stepTable();
+        if (tableState.stepIdx >= getBeforeSteps(framework).length) stopAuto();
+      }, 1100);
+    }
+
+    // ── Framework toggle ──────────────────────────────────────────────────
+    function setFramework(next){
+      framework = next;
+      $("tab-framework-chain").classList.toggle("active", framework === "langchain");
+      $("tab-framework-graph").classList.toggle("active", framework === "langgraph");
+      ["before","after"].forEach(side => renderNodes(side));
+      resetTable();
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────
+    ["before","after"].forEach(side => { resizeFlowCanvas(side); renderNodes(side); });
+    updateBeforeTitle();
+    setActiveQCard("procedural");
+    resetTable();
+
+
+
+    window.setFramework  = setFramework;
+    window.autoRunTable  = autoRunTable;
+    window.stepTable     = stepTable;
+    window.resetTable    = resetTable;
+    window.setOltp       = setOltp;
+    window.setVectorDb   = setVectorDb;
+    window.setCache      = setCache;
+    window.setQuestion   = setQuestion;
+  </script>
+</body>
+</html>
