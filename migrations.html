@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex, nofollow">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at https://www.google.com https://www.gstatic.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://www.google.com https://cloudflare-dns.com https://us.i.posthog.com https://us-assets.i.posthog.com https://docs.google.com; frame-src https://www.google.com https://docs.google.com;">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/tw-prod.min.css">
+<title>MongoDB Migration Toolkit — Tool Comparison</title>
+<link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0e17;--bg2:#10141e;--bg-card:#151a27;--bg-card-h:#1b2133;
+  --border:#1e2a3d;--border2:#2a3a54;
+  --tx:#dfe5f0;--tx2:#7e8da4;--tx3:#4d5d74;
+  --mg:#00ed64;--rd:#f87171;--cy:#22d3ee;
+  --cl-dump:#a78bfa;--cl-sync:#22d3ee;--cl-live:#00ed64;--cl-mirror:#fbbf24;--cl-dms:#fb923c;--cl-export:#f472b6;
+}
+html{scroll-behavior:smooth;font-size:16px}
+body{background:var(--bg);color:var(--tx);font-family:'DM Sans',system-ui,sans-serif;line-height:1.6;overflow-x:hidden}
+
+/* ── NAV ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.92);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-in{max-width:1100px;margin:0 auto;padding:0 1.5rem;height:44px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{font-weight:700;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3);display:flex;align-items:center;gap:.5rem}
+.nav-brand svg{flex-shrink:0}
+.nav-links{display:flex;gap:.1rem;flex-wrap:wrap}
+.nav-links a{color:var(--tx2);text-decoration:none;font-size:.66rem;font-weight:500;padding:.25rem .5rem;border-radius:5px;transition:all .15s;white-space:nowrap}
+.nav-links a:hover,.nav-links a.active{color:var(--tx);background:var(--bg-card)}
+
+/* ── FILTER BAR ── */
+.filter-bar{max-width:1100px;margin:0 auto;padding:.55rem 1.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;position:sticky;top:44px;z-index:90;background:rgba(10,14,23,0.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.filter-bar .filter-label{font-size:.62rem;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:.08em}
+.ft{display:inline-flex;align-items:center;gap:.35rem;padding:.28rem .6rem;border-radius:99px;border:1px solid var(--border);background:rgba(255,255,255,0.02);cursor:pointer;transition:all .2s;user-select:none}
+.ft:hover{border-color:var(--border2)}
+.ft.active{border-color:currentColor;background:rgba(255,255,255,0.04)}
+.ft .dot{width:7px;height:7px;border-radius:50%;transition:all .2s}
+.ft .lbl{font-size:.68rem;font-weight:500;transition:all .2s}
+.ft.active .dot{box-shadow:0 0 6px currentColor}
+.ft:not(.active) .dot{opacity:.2}
+.ft:not(.active) .lbl{color:var(--tx3);opacity:.4}
+.ft[data-tool="dump"]{color:var(--cl-dump)}.ft[data-tool="sync"]{color:var(--cl-sync)}.ft[data-tool="live"]{color:var(--cl-live)}.ft[data-tool="mirror"]{color:var(--cl-mirror)}.ft[data-tool="dms"]{color:var(--cl-dms)}.ft[data-tool="export"]{color:var(--cl-export)}
+
+/* ── HIDE RULES ── */
+body.hide-dump .t-dump,body.hide-sync .t-sync,body.hide-live .t-live,body.hide-mirror .t-mirror,body.hide-dms .t-dms,body.hide-export .t-export{display:none}
+body.hide-dump .cmp th:nth-child(2),body.hide-dump .cmp td:nth-child(2){display:none}
+body.hide-sync .cmp th:nth-child(3),body.hide-sync .cmp td:nth-child(3){display:none}
+body.hide-live .cmp th:nth-child(4),body.hide-live .cmp td:nth-child(4){display:none}
+body.hide-mirror .cmp th:nth-child(5),body.hide-mirror .cmp td:nth-child(5){display:none}
+body.hide-dms .cmp th:nth-child(6),body.hide-dms .cmp td:nth-child(6){display:none}
+body.hide-export .cmp th:nth-child(7),body.hide-export .cmp td:nth-child(7){display:none}
+
+/* ── LAYOUT ── */
+.wrap{max-width:1100px;margin:0 auto;padding:0 1.5rem}
+section{padding:2.5rem 0 1.5rem;border-bottom:1px solid var(--border)}
+section:last-of-type{border-bottom:none;padding-bottom:3rem}
+h1{font-size:1.6rem;font-weight:800;line-height:1.15;margin-bottom:.25rem}
+h2{font-size:1.15rem;font-weight:700;margin-bottom:.6rem;color:var(--tx)}
+h3{font-size:.82rem;font-weight:700}
+.sub{color:var(--tx2);font-size:.8rem;margin-bottom:1rem;line-height:1.5}
+
+/* ── TABLES ── */
+.tw{overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin-bottom:.75rem}
+table{width:100%;border-collapse:collapse;font-size:.74rem}
+th{text-align:left;padding:.5rem .65rem;font-size:.6rem;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);background:var(--bg-card);border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:.45rem .65rem;border-bottom:1px solid var(--border);color:var(--tx2);vertical-align:top;line-height:1.4}
+tr:last-child td{border-bottom:none}
+td:first-child{color:var(--tx);font-weight:500;white-space:nowrap}
+td code{font-family:'JetBrains Mono',monospace;font-size:.65rem;background:rgba(255,255,255,0.06);padding:.08rem .25rem;border-radius:3px;color:var(--cy)}
+.ck{color:var(--mg);font-weight:700}.cx{color:var(--rd);font-weight:700;opacity:.7}.pt{color:#fbbf24;font-weight:500}
+
+/* ── GRIDS ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.75rem}
+.g5{display:grid;grid-template-columns:repeat(6,1fr);gap:.65rem}
+@media(max-width:1000px){.g5{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.g2,.g3,.g5{grid-template-columns:1fr}.nav-links{display:none}}
+
+/* ── CARDS ── */
+.card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:1rem;transition:border-color .2s}
+.card:hover{border-color:var(--border2)}
+.tool-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:1rem;position:relative;overflow:hidden}
+.tool-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.tool-card.t-dump::before{background:var(--cl-dump)}.tool-card.t-sync::before{background:var(--cl-sync)}.tool-card.t-live::before{background:var(--cl-live)}.tool-card.t-mirror::before{background:var(--cl-mirror)}.tool-card.t-dms::before{background:var(--cl-dms)}.tool-card.t-export::before{background:var(--cl-export)}
+.badge{display:inline-block;padding:.1rem .4rem;border-radius:99px;font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.badge-ok{background:rgba(0,237,100,0.1);color:var(--mg)}.badge-eol{background:rgba(248,113,113,0.1);color:var(--rd)}
+
+/* ── FLOW CARDS (How it works) ── */
+.flow-card{background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:.9rem;margin-bottom:.65rem}
+.flow-step{display:flex;align-items:flex-start;gap:.5rem;padding:.3rem 0}
+.flow-num{min-width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:700;flex-shrink:0}
+.flow-txt{font-size:.72rem;color:var(--tx2);line-height:1.4}
+.flow-txt strong{color:var(--tx)}
+.mech{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.58rem;font-weight:600;padding:.12rem .4rem;border-radius:3px;margin-left:.4rem}
+
+/* ── PROS/CONS ── */
+.pro,.con{font-size:.72rem;line-height:1.4;padding:.25rem 0 .25rem .85rem;position:relative}
+.pro::before{content:'✓';position:absolute;left:0;color:var(--mg);font-weight:700}
+.con::before{content:'✗';position:absolute;left:0;color:var(--rd);font-weight:700}
+
+/* ── CAVEATS ── */
+.caveat{font-size:.74rem;color:var(--tx2);line-height:1.45;padding:.4rem .65rem;border-radius:6px;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.03);margin-bottom:.4rem}
+.caveat strong{color:var(--tx)}
+
+/* ── DECISION TREE ── */
+.dec{background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.65rem .85rem;text-align:center;font-size:.74rem;color:var(--tx2)}
+.dec strong{color:var(--tx);display:block;margin-bottom:.15rem;font-size:.78rem}
+.arrow{text-align:center;color:var(--tx3);font-size:1rem;padding:.15rem 0}
+
+/* ── TIMELINE ── */
+.tl{display:flex;align-items:center;gap:.6rem;padding:.35rem 0;border-bottom:1px solid var(--border)}
+.tl:last-child{border-bottom:none}
+.tl-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.tl-date{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--tx3);min-width:80px}
+.tl-text{font-size:.72rem;color:var(--tx2)}
+.tl-text strong{color:var(--tx)}
+
+/* ── CALLOUT ── */
+.callout{background:var(--bg-card);border-radius:0 8px 8px 0;padding:.75rem 1rem;font-size:.76rem;color:var(--tx2);line-height:1.45;margin-top:.6rem}
+.callout strong{color:var(--tx)}
+
+/* ── REFS ── */
+.ref-links{display:flex;flex-direction:column;gap:.2rem}
+.ref-links a{font-size:.68rem;color:var(--cy);text-decoration:none}
+.ref-links a:hover{text-decoration:underline}
+
+/* ── HERO ── */
+.hero{padding:3rem 0 1.5rem;text-align:center;border-bottom:1px solid var(--border)}
+.hero p{color:var(--tx2);font-size:.85rem;max-width:620px;margin:.6rem auto 0;line-height:1.5}
+
+@media(max-width:700px){.wrap{padding:0 1rem}section{padding:1.5rem 0 1rem}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <div class="nav-brand">
+      <svg width="18" height="18" viewBox="0 0 32 32" fill="none"><path d="M16.2 1C16.2 1 16.8 7.5 16.8 10.5C16.8 13.5 18.5 15.3 20 17C21.5 18.7 22 20.5 22 22.5C22 26.5 18.7 30 15.5 31C15.5 31 16 27 16 25.5C16 24 14.5 22 13 20.5C11.5 19 10 17 10 14C10 9.5 13 5 16.2 1Z" fill="#00ED64"/></svg>
+      Migration Toolkit
+    </div>
+    <div class="nav-links">
+      <a href="#overview">Overview</a>
+      <a href="#hosting">Hosting</a>
+      <a href="#resilience">Resilience</a>
+      <a href="#how">How It Works</a>
+      <a href="#matrix">Matrix</a>
+      <a href="#platform">Platform</a>
+      <a href="#versions">Versions</a>
+      <a href="#filtering">Filtering</a>
+      <a href="#proscons">Pros/Cons</a>
+      <a href="#caveats">Caveats</a>
+      <a href="#timeline">Timeline</a>
+      <a href="#decide">Decide</a>
+      <a href="#mentions">Mentions</a>
+      <a href="#refs">Refs</a>
+    </div>
+  </div>
+</nav>
+
+<div class="filter-bar">
+  <span class="filter-label">Show:</span>
+  <div class="ft active" data-tool="dump"><div class="dot" style="background:var(--cl-dump)"></div><span class="lbl">mongodump</span></div>
+  <div class="ft active" data-tool="sync"><div class="dot" style="background:var(--cl-sync)"></div><span class="lbl">mongosync</span></div>
+  <div class="ft active" data-tool="live"><div class="dot" style="background:var(--cl-live)"></div><span class="lbl">Live Migration</span></div>
+  <div class="ft active" data-tool="mirror"><div class="dot" style="background:var(--cl-mirror)"></div><span class="lbl">mongomirror</span></div>
+  <div class="ft active" data-tool="dms"><div class="dot" style="background:var(--cl-dms)"></div><span class="lbl">AWS DMS</span></div>
+  <div class="ft active" data-tool="export"><div class="dot" style="background:var(--cl-export)"></div><span class="lbl">mongoexport</span></div>
+</div>
+
+<div class="wrap">
+
+<!-- ═══ HERO ═══ -->
+<div class="hero" id="top">
+  <h1>MongoDB Migration Toolkit</h1>
+  <p>Six tools compared: mongodump, mongosync, Atlas Live Migration, mongomirror, AWS DMS, and mongoexport — internal mechanisms, version compatibility, platform support, pros/cons, caveats, and a decision guide.</p>
+</div>
+
+<!-- ═══ OVERVIEW ═══ -->
+<section id="overview">
+  <h2>Tool Overview</h2>
+  <div class="g5">
+    <div class="tool-card t-dump">
+      <span class="badge badge-ok">Active</span>
+      <h3 style="color:var(--cl-dump);margin:.35rem 0 .15rem">mongodump / restore</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--tx3);margin-bottom:.35rem">v100.14.0 · Dec 2025</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">Offline binary export/import. Snapshot-based. Classic tool for backups and small-to-medium migrations.</p>
+    </div>
+    <div class="tool-card t-sync">
+      <span class="badge badge-ok">Active</span>
+      <h3 style="color:var(--cl-sync);margin:.35rem 0 .15rem">mongosync</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--tx3);margin-bottom:.35rem">v1.19 · Jan 2026 · aka Cluster-to-Cluster Sync</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">Live cluster-to-cluster sync with continuous CDC. Primary tool for zero-downtime migrations. Officially branded as <strong>MongoDB Cluster-to-Cluster Sync</strong>.</p>
+    </div>
+    <div class="tool-card t-live">
+      <span class="badge badge-ok">Active</span>
+      <h3 style="color:var(--cl-live);margin:.35rem 0 .15rem">Atlas Live Migration</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--tx3);margin-bottom:.35rem">Atlas-hosted mongosync</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">MongoDB-managed migration service. Same engine as mongosync, operated via Atlas UI. Best for ≤5 TB.</p>
+    </div>
+    <div class="tool-card t-mirror">
+      <span class="badge badge-eol">EOL</span>
+      <h3 style="color:var(--cl-mirror);margin:.35rem 0 .15rem">mongomirror</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--tx3);margin-bottom:.35rem">v0.13.2 · EOL Jul 2025</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">Legacy live migration. Oplog-based tailing. Replaced by mongosync. No new updates.</p>
+    </div>
+    <div class="tool-card t-dms">
+      <span class="badge badge-ok">Active</span>
+      <h3 style="color:var(--cl-dms);margin:.35rem 0 .15rem">AWS DMS</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--tx3);margin-bottom:.35rem">v3.6.1 · May 2025</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">AWS Database Migration Service. MongoDB as source/target. Oplog-based CDC via replication instance.</p>
+    </div>
+    <div class="tool-card t-export">
+      <span class="badge badge-ok">Active</span>
+      <h3 style="color:var(--cl-export);margin:.35rem 0 .15rem">mongoexport / import</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--tx3);margin-bottom:.35rem">v100.14.0 · Dec 2025</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">JSON/CSV export &amp; import. Human-readable format. Same package as mongodump. Best for small datasets or cross-format transfers.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOST RESOURCE REQUIREMENTS ═══ -->
+<section id="hosting">
+  <h2>Host Resource Requirements</h2>
+  <p class="sub">Self-hosted tools run on your infrastructure. Managed services (Atlas Live Migration, AWS DMS) handle provisioning for you.</p>
+  <div class="tw">
+    <table class="cmp">
+      <thead><tr><th>Requirement</th><th style="color:var(--cl-dump)">mongodump</th><th style="color:var(--cl-sync)">mongosync</th><th style="color:var(--cl-live)">Live Migrate</th><th style="color:var(--cl-mirror)">mongomirror</th><th style="color:var(--cl-dms)">AWS DMS</th><th style="color:var(--cl-export)">mongoexport</th></tr></thead>
+      <tbody>
+        <tr><td>Deployment Model</td><td>Self-hosted binary</td><td>Self-hosted binary</td><td>Atlas-managed</td><td>Self-hosted binary</td><td>AWS-managed replication instance</td><td>Self-hosted binary</td></tr>
+        <tr><td>CPU (minimum)</td><td>1–2 cores</td><td><strong>8 CPUs minimum</strong></td><td>N/A — Atlas provisions</td><td>2–4 cores (per shard)</td><td>N/A — select instance class (dms.r5.large+ recommended)</td><td>1 core</td></tr>
+        <tr><td>RAM (minimum)</td><td>1–2 GB</td><td><strong>24 GB minimum</strong></td><td>N/A</td><td>4–8 GB</td><td>N/A — instance class dependent (8–32 GB typical)</td><td>1 GB</td></tr>
+        <tr><td>Disk / Storage</td><td><strong>≥ source data size</strong> (BSON files written to disk; less with <code>--gzip</code>)</td><td>Minimal — streams data, doesn't store. Verifier uses ~0.5 GB per 1M source docs.</td><td>N/A</td><td>Minimal — streams data</td><td>N/A — but larger instance = larger storage for task logs &amp; sort buffers</td><td><strong>≥ source data size</strong> (JSON/CSV larger than BSON)</td></tr>
+        <tr><td>Network</td><td>Not critical (file-based)</td><td><strong>High bandwidth essential</strong> — streams all data over network. Low-latency link to both source and dest.</td><td>Atlas manages connectivity; you provide VPC peering / PrivateLink</td><td>High bandwidth to Atlas destination</td><td>Within AWS VPC; cross-region adds latency</td><td>Not critical (file-based)</td></tr>
+        <tr><td>Architecture</td><td>64-bit (x86_64, ARM)</td><td>64-bit (x86_64, ARM)</td><td>N/A</td><td>64-bit (x86_64, ARM, ppc64le, s390x)</td><td>N/A</td><td>64-bit (x86_64, ARM)</td></tr>
+        <tr><td>Scaling Guidance</td><td>Add <code>--numParallelCollections</code> (default 4) for faster dump. More CPU/RAM helps parallelism.</td><td>Single binary handles all. More CPU helps change stream processing and index builds.</td><td>Atlas auto-scales. ≤5 TB / ≤3 shards.</td><td>One instance per replica set migration.</td><td>Choose larger instance class (dms.r5.xlarge, 2xlarge) for high-throughput CDC.</td><td>Single-threaded per collection. Script parallel runs for multiple collections.</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout" style="border-left:3px solid var(--cy)">
+    <strong>mongosync is the most resource-hungry.</strong> MongoDB officially recommends a minimum of 8 CPUs and 24 GB RAM for the host running mongosync. The embedded verifier (enabled by default since v1.9) uses ~0.5 GB RAM per 1 million source documents. For mongodump, the bottleneck is disk space — you need enough room to store the full BSON export.
+  </div>
+</section>
+
+<!-- ═══ RESILIENCE ═══ -->
+<section id="resilience">
+  <h2>Resilience &amp; Failure Recovery</h2>
+  <p class="sub">What happens when things go wrong — and how each tool recovers. Covers self-hosted tools and managed services.</p>
+
+  <div class="g5">
+    <div class="card t-dump" style="border-top:2px solid var(--cl-dump)">
+      <h3 style="color:var(--cl-dump);margin-bottom:.35rem">mongodump / restore</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin-bottom:.2rem">ON FAILURE</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem">No resume. An interrupted mongodump produces a <strong>partial dump</strong> — some collections complete, others missing or truncated. mongorestore on a partial dump will insert whatever is there but the dataset is incomplete.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.2rem">RECOVERY</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem">Delete partial output and re-run. For huge datasets, dump individual databases/collections separately so a failure only requires re-dumping one piece.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--cy);margin-bottom:.2rem">RESILIENCE TIPS</div>
+      <div class="pro">Run on a machine with stable power/network</div>
+      <div class="pro">Use <code>--archive | gzip > backup.gz</code> to pipe directly — avoids running out of disk mid-dump</div>
+      <div class="pro">Split large migrations: <code>--db</code> per run</div>
+      <div class="pro">Script a checksum validation after dump completes</div>
+    </div>
+
+    <div class="card t-sync" style="border-top:2px solid var(--cl-sync)">
+      <h3 style="color:var(--cl-sync);margin-bottom:.35rem">mongosync</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin-bottom:.2rem">ON FAILURE</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>Built-in 30-minute retry window</strong> (v1.18+). Transient network/cluster errors are retried automatically. If mongosync process crashes, state is persisted on the destination cluster in <code>mongosync_reserved_for_internal_use</code> database.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.2rem">RECOVERY</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>Resume via API:</strong> Restart the mongosync binary and call <code>POST /api/v1/resume</code>. It picks up from where it left off using state on the destination. Takes ~2 min to re-enter RUNNING state. No data loss, no re-copy.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--cy);margin-bottom:.2rem">RESILIENCE TIPS</div>
+      <div class="pro">Run mongosync under <code>systemd</code> with <code>Restart=on-failure</code></div>
+      <div class="pro">Monitor <code>/api/v1/progress</code> — watch <code>estimatedOplogTimeRemaining</code></div>
+      <div class="pro">Size source oplog generously (2–3x expected copy duration)</div>
+      <div class="pro">Script health checks: if process exits, auto-restart + call <code>/resume</code></div>
+      <div class="pro">Set up alerts on the <code>warnings</code> field in progress API (v1.19)</div>
+    </div>
+
+    <div class="card t-mirror" style="border-top:2px solid var(--cl-mirror)">
+      <h3 style="color:var(--cl-mirror);margin-bottom:.35rem">mongomirror</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin-bottom:.2rem">ON FAILURE</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>No resume, no retry.</strong> If mongomirror crashes or loses connection, the migration stops. If the oplog rolls over before you restart, you must start from scratch — drop destination data and re-run.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.2rem">RECOVERY</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem">Restart mongomirror with same arguments. If initial sync had completed and oplog hasn't rolled over, it resumes tailing. Otherwise: clean destination, re-run from scratch.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--cy);margin-bottom:.2rem">RESILIENCE TIPS</div>
+      <div class="con" style="color:var(--rd);font-weight:600">Do not use for new migrations — EOL</div>
+      <div class="pro">If stuck on legacy: large oplog, stable host, fast network</div>
+      <div class="pro">Avoid <code>renameCollection</code> or <code>$out</code> during migration</div>
+      <div class="pro">Do not restart the primary during initial sync</div>
+    </div>
+
+    <div class="card t-live" style="border-top:2px solid var(--cl-live)">
+      <h3 style="color:var(--cl-live);margin-bottom:.35rem">Atlas Live Migration</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin-bottom:.2rem">ON FAILURE</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>Atlas manages retries internally</strong> using the same mongosync engine. Transient errors are retried automatically. However, you have <strong>zero visibility</strong> into retry logic — no logs, no retry count, no timeout configuration.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.2rem">RECOVERY</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>If migration fails:</strong> Atlas shows a failure banner in the UI. There is no resume — you must restart the migration from scratch via the Atlas UI. Destination data from the failed attempt must be cleaned up (Atlas handles this on restart).</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--cy);margin-bottom:.2rem">RESILIENCE TIPS</div>
+      <div class="pro">Verify network connectivity (VPC peering / PrivateLink) <em>before</em> starting — this is the #1 failure cause</div>
+      <div class="pro">Test with a small migration first to validate the network path end-to-end</div>
+      <div class="pro">Monitor progress in the Atlas UI — stalled percentage = likely network issue</div>
+      <div class="con">No pause/resume — a failure means starting over</div>
+      <div class="con">No direct log access — dependent on MongoDB support for debugging</div>
+      <div class="con">No configurable retry window or timeout tuning</div>
+    </div>
+
+    <div class="card t-dms" style="border-top:2px solid var(--cl-dms)">
+      <h3 style="color:var(--cl-dms);margin-bottom:.35rem">AWS DMS</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin-bottom:.2rem">ON FAILURE</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>Multi-AZ failover available.</strong> If the replication instance fails, Multi-AZ automatically provisions a standby and fails over. For CDC tasks, DMS stores a checkpoint — but if the source oplog rolls over before recovery, the CDC stream is broken and a full-load restart is required.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.2rem">RECOVERY</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>Stop and restart the task.</strong> CDC tasks resume from the last checkpoint. Full-load tasks restart from scratch. Use <code>cdc-start-position</code> to manually set oplog resume point if needed. Table statistics in the console show per-collection progress.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--cy);margin-bottom:.2rem">RESILIENCE TIPS</div>
+      <div class="pro">Enable <strong>Multi-AZ</strong> on the replication instance for automatic failover</div>
+      <div class="pro">Set up CloudWatch alarms on <code>CDCLatencyTarget</code> and <code>CDCIncomingChanges</code></div>
+      <div class="pro">Use DMS data validation task to verify row counts and data integrity post-migration</div>
+      <div class="pro">Size the replication instance generously — <code>dms.r5.xlarge</code>+ for production workloads</div>
+      <div class="con">Oplog rollover during extended outage = full-load restart</div>
+      <div class="con">No DDL replay — schema changes during recovery may cause task errors</div>
+    </div>
+
+    <div class="card t-export" style="border-top:2px solid var(--cl-export)">
+      <h3 style="color:var(--cl-export);margin-bottom:.35rem">mongoexport / import</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin-bottom:.2rem">ON FAILURE</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem"><strong>No resume.</strong> An interrupted mongoexport produces a truncated JSON/CSV file. mongoimport on a truncated file will fail on the malformed last line but import everything before it.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.2rem">RECOVERY</div>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.4rem">Delete partial output and re-run. For mongoimport, use <code>--mode=upsert</code> to safely re-import without duplicates. One collection at a time, so failures are scoped.</p>
+      <div style="font-size:.62rem;font-weight:600;color:var(--cy);margin-bottom:.2rem">RESILIENCE TIPS</div>
+      <div class="pro">Export one collection per command — failures are isolated</div>
+      <div class="pro">Use <code>--query</code> to break large collections into chunks</div>
+      <div class="pro">Pipe through <code>gzip</code> to reduce disk usage</div>
+      <div class="con">No parallelism — script it yourself</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ HOW IT WORKS ═══ -->
+<section id="how">
+  <h2>How Each Tool Works Internally</h2>
+  <p class="sub">The migration mechanism — oplog, change streams, or query cursor — determines capabilities and limitations.</p>
+
+  <div class="flow-card t-dump" style="border-left:3px solid var(--cl-dump)">
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem">
+      <h3 style="color:var(--cl-dump)">mongodump / mongorestore</h3>
+      <span class="mech" style="background:rgba(167,139,250,0.1);color:var(--cl-dump)">Query Cursor + Oplog (optional)</span>
+    </div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(167,139,250,0.12);color:var(--cl-dump)">1</div><div class="flow-txt"><strong>mongodump reads documents</strong> via standard query cursors (<code>find({})</code> scan). Each collection serialized to BSON files. Metadata stored as JSON sidecar files.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(167,139,250,0.12);color:var(--cl-dump)">2</div><div class="flow-txt"><strong>Optional <code>--oplog</code></strong> captures oplog entries during dump for point-in-time consistency. Without it, the dump is <em>not</em> consistent if writes are happening.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(167,139,250,0.12);color:var(--cl-dump)">3</div><div class="flow-txt"><strong>mongorestore reads BSON</strong> and inserts into target. Indexes rebuilt after data. <code>--oplogReplay</code> replays captured entries for point-in-time.</div></div>
+    <div style="font-size:.68rem;color:var(--tx3);margin-top:.3rem;padding-left:1.6rem">⚠ Not live. Source must be quiesced or <code>--oplog</code> used. Transfer is via files, not network streaming.</div>
+  </div>
+
+  <div class="flow-card t-sync" style="border-left:3px solid var(--cl-sync)">
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem">
+      <h3 style="color:var(--cl-sync)">mongosync</h3>
+      <span class="mech" style="background:rgba(34,211,238,0.1);color:var(--cl-sync)">Change Streams (CDC)</span>
+    </div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(34,211,238,0.12);color:var(--cl-sync)">1</div><div class="flow-txt"><strong>Opens a change stream</strong> on source and records resume token — marks the CDC start point.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(34,211,238,0.12);color:var(--cl-sync)">2</div><div class="flow-txt"><strong>Collection copy:</strong> Bulk-copies all docs from source to destination. Parallelized across collections. Indexes batched in parallel (v1.19+).</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(34,211,238,0.12);color:var(--cl-sync)">3</div><div class="flow-txt"><strong>CDC phase:</strong> Replays change stream events (inserts, updates, deletes, DDL). Continues until you call <code>commit</code> via API.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(34,211,238,0.12);color:var(--cl-sync)">4</div><div class="flow-txt"><strong>Commit / cutover:</strong> Final changes applied, source caught up. Switch connection string. Downtime: seconds to minutes.</div></div>
+    <div style="font-size:.68rem;color:var(--tx3);margin-top:.3rem;padding-left:1.6rem">Uses change streams (not raw oplog) — works across different topologies. Source oplog must survive initial copy duration.</div>
+  </div>
+
+  <div class="flow-card t-live" style="border-left:3px solid var(--cl-live)">
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem">
+      <h3 style="color:var(--cl-live)">Atlas Live Migration</h3>
+      <span class="mech" style="background:rgba(0,237,100,0.1);color:var(--cl-live)">Hosted mongosync</span>
+    </div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(0,237,100,0.12);color:var(--cl-live)">1</div><div class="flow-txt"><strong>Click "Migrate" in Atlas UI.</strong> Atlas provisions a mongosync instance and connects to your source (needs VPC peering or public IP).</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(0,237,100,0.12);color:var(--cl-live)">2</div><div class="flow-txt"><strong>Same mechanism as mongosync:</strong> Change stream → collection copy → CDC. Monitor via Atlas dashboard.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(0,237,100,0.12);color:var(--cl-live)">3</div><div class="flow-txt"><strong>Cutover:</strong> Atlas shows "Ready to cut over". Finalize migration, last changes applied, destination promoted.</div></div>
+    <div style="font-size:.68rem;color:var(--tx3);margin-top:.3rem;padding-left:1.6rem">Same engine, zero management. Limited to ≤5 TB / ≤3 shards. No tunable params, no pause/resume, no direct logs.</div>
+  </div>
+
+  <div class="flow-card t-mirror" style="border-left:3px solid var(--cl-mirror)">
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem">
+      <h3 style="color:var(--cl-mirror)">mongomirror</h3>
+      <span class="mech" style="background:rgba(251,191,36,0.1);color:var(--cl-mirror)">Direct Oplog Tailing</span>
+    </div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(251,191,36,0.12);color:var(--cl-mirror)">1</div><div class="flow-txt"><strong>Initial sync:</strong> Copies all collections from source to Atlas destination via standard queries.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(251,191,36,0.12);color:var(--cl-mirror)">2</div><div class="flow-txt"><strong>Oplog tailing:</strong> Directly tails <code>local.oplog.rs</code>. Replays oplog entries on destination in real-time.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(251,191,36,0.12);color:var(--cl-mirror)">3</div><div class="flow-txt"><strong>Cutover:</strong> When caught up, stop source writes and switch connection string. Manual coordination.</div></div>
+    <div style="font-size:.68rem;color:var(--rd);margin-top:.3rem;padding-left:1.6rem">⚠ EOL July 2025. No pause/resume, no filtering, no MongoDB 7.0+ support. Use mongosync.</div>
+  </div>
+
+  <div class="flow-card t-dms" style="border-left:3px solid var(--cl-dms)">
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem">
+      <h3 style="color:var(--cl-dms)">AWS DMS</h3>
+      <span class="mech" style="background:rgba(251,146,60,0.1);color:var(--cl-dms)">Query Scan + Oplog (CDC)</span>
+    </div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(251,146,60,0.12);color:var(--cl-dms)">1</div><div class="flow-txt"><strong>Replication instance provisioned</strong> in AWS. Source + target endpoints configured. Requires replica set for CDC.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(251,146,60,0.12);color:var(--cl-dms)">2</div><div class="flow-txt"><strong>Full-load:</strong> Reads via MongoDB queries. Transforms to <strong>document mode</strong> (single <code>_doc</code> JSON column) or <strong>table mode</strong> (flattened).</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(251,146,60,0.12);color:var(--cl-dms)">3</div><div class="flow-txt"><strong>CDC:</strong> Tails oplog on source. Applies inserts/updates/deletes through replication instance. Does <em>not</em> replicate DDL.</div></div>
+    <div style="font-size:.68rem;color:var(--tx3);margin-top:.3rem;padding-left:1.6rem">Extra network hop. Document mode preserves schema; table mode flattens it. Schema changes require a new task.</div>
+  </div>
+
+  <div class="flow-card t-export" style="border-left:3px solid var(--cl-export)">
+    <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.4rem">
+      <h3 style="color:var(--cl-export)">mongoexport / mongoimport</h3>
+      <span class="mech" style="background:rgba(244,114,182,0.1);color:var(--cl-export)">Query Cursor → JSON/CSV</span>
+    </div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(244,114,182,0.12);color:var(--cl-export)">1</div><div class="flow-txt"><strong>mongoexport queries documents</strong> via standard cursor (<code>find</code>). Outputs one document per line as <strong>Extended JSON</strong> or CSV. No BSON — human-readable text format.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(244,114,182,0.12);color:var(--cl-export)">2</div><div class="flow-txt"><strong>Transfer files</strong> via scp, S3, or any file transfer. JSON files are larger than BSON equivalents.</div></div>
+    <div class="flow-step"><div class="flow-num" style="background:rgba(244,114,182,0.12);color:var(--cl-export)">3</div><div class="flow-txt"><strong>mongoimport reads JSON/CSV</strong> and inserts into target. Supports <code>--mode=upsert</code> for idempotent re-imports. No index migration — manual rebuild required.</div></div>
+    <div style="font-size:.68rem;color:var(--tx3);margin-top:.3rem;padding-left:1.6rem">⚠ Not live. One collection at a time. Extended JSON can lose some BSON type fidelity (Decimal128, dates). Use mongodump for full-fidelity binary transfer.</div>
+  </div>
+</section>
+
+<!-- ═══ FEATURE MATRIX ═══ -->
+<section id="matrix">
+  <h2>Feature Matrix</h2>
+  <p class="sub">Toggle tools in the filter bar to focus your comparison.</p>
+  <div class="tw">
+    <table class="cmp">
+      <thead><tr><th>Capability</th><th style="color:var(--cl-dump)">mongodump</th><th style="color:var(--cl-sync)">mongosync</th><th style="color:var(--cl-live)">Live Migrate</th><th style="color:var(--cl-mirror)">mongomirror</th><th style="color:var(--cl-dms)">AWS DMS</th><th style="color:var(--cl-export)">mongoexport</th></tr></thead>
+      <tbody>
+        <tr><td>Mechanism</td><td>Query cursor + oplog</td><td>Change streams</td><td>Change streams (hosted)</td><td>Direct oplog tailing</td><td>Query scan + oplog</td><td>Query cursor → JSON/CSV</td></tr>
+        <tr><td>Zero-Downtime</td><td class="cx">✗ Offline</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="cx">✗ Offline</td></tr>
+        <tr><td>Continuous CDC</td><td class="cx">✗ Snapshot</td><td class="ck">✓ Until commit</td><td class="ck">✓ Until cutover</td><td class="ck">✓ Until stop</td><td class="ck">✓ Ongoing</td><td class="cx">✗ Snapshot</td></tr>
+        <tr><td>Collection Filtering</td><td class="ck">✓ <code>--db</code> <code>--collection</code> <code>--query</code></td><td class="ck">✓ <code>includeNamespaces</code> + regex</td><td class="ck">✓ Inherits mongosync</td><td class="cx">✗ Full cluster</td><td class="ck">✓ Table mappings</td><td class="ck">✓ <code>--db</code> <code>--collection</code> <code>--query</code></td></tr>
+        <tr><td>Sharded Clusters</td><td class="ck">✓ Per-shard or mongos</td><td class="ck">✓ Full (mismatched OK)</td><td class="ck">✓ ≤3 shards</td><td class="cx">✗ Replica sets only</td><td class="pt">△ Limited</td><td class="ck">✓ Via mongos</td></tr>
+        <tr><td>Pause / Resume</td><td class="cx">✗</td><td class="ck">✓ API</td><td class="cx">✗</td><td class="cx">✗</td><td class="ck">✓ Task stop/start</td><td class="cx">✗</td></tr>
+        <tr><td>Index Migration</td><td class="ck">✓ Metadata + rebuild</td><td class="ck">✓ Parallel batched</td><td class="ck">✓</td><td class="ck">✓</td><td class="cx">✗ Manual</td><td class="cx">✗ Manual</td></tr>
+        <tr><td>Queryable Encryption</td><td class="cx">✗</td><td class="cx">✗</td><td class="cx">✗</td><td class="cx">✗</td><td class="cx">✗</td><td class="cx">✗</td></tr>
+        <tr><td>Direction</td><td>Any → Any</td><td>Any → Any</td><td>Any → Atlas</td><td>Any → Atlas</td><td>Any → Any (AWS)</td><td>Any → Any</td></tr>
+        <tr><td>Multi-Cloud</td><td class="ck">✓ Portable files</td><td class="ck">✓ Cross-cloud</td><td class="pt">△ Dest = Atlas</td><td class="pt">△ Dest = Atlas</td><td class="cx">✗ AWS only</td><td class="ck">✓ Portable files</td></tr>
+        <tr><td>Compression</td><td class="ck">✓ <code>--gzip</code> / <code>--archive</code></td><td class="ck">✓ Wire</td><td class="ck">✓ Auto</td><td class="ck">✓ Wire</td><td class="pt">△ Depends</td><td class="cx">✗ Pipe to gzip</td></tr>
+        <tr><td>Monitoring</td><td class="cx">✗ Stdout</td><td class="ck">✓ <code>/progress</code> API</td><td class="ck">✓ Atlas UI</td><td class="pt">△ Stdout</td><td class="ck">✓ CloudWatch</td><td class="cx">✗ Stdout</td></tr>
+        <tr><td>Managed Service</td><td class="cx">✗ Self-run</td><td class="cx">✗ Self-run</td><td class="ck">✓ Atlas</td><td class="cx">✗ Self-run</td><td class="ck">✓ AWS</td><td class="cx">✗ Self-run</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══ PLATFORM SUPPORT ═══ -->
+<section id="platform">
+  <h2>Platform &amp; Target Support</h2>
+  <p class="sub">Which source → destination combinations each tool supports.</p>
+  <div class="tw">
+    <table class="cmp">
+      <thead><tr><th>Platform</th><th style="color:var(--cl-dump)">mongodump</th><th style="color:var(--cl-sync)">mongosync</th><th style="color:var(--cl-live)">Live Migrate</th><th style="color:var(--cl-mirror)">mongomirror</th><th style="color:var(--cl-dms)">AWS DMS</th><th style="color:var(--cl-export)">mongoexport</th></tr></thead>
+      <tbody>
+        <tr><td>MongoDB EA / Community</td><td class="ck">✓ Source &amp; Target</td><td class="ck">✓ Source &amp; Target</td><td class="ck">✓ Source only</td><td class="ck">✓ Source only</td><td class="ck">✓ Source &amp; Target</td><td class="ck">✓ Source &amp; Target</td></tr>
+        <tr><td>MongoDB Atlas</td><td class="ck">✓ Source &amp; Target</td><td class="ck">✓ Source &amp; Target</td><td class="ck">✓ Dest (required)</td><td class="ck">✓ Dest (required)</td><td class="ck">✓ Source &amp; Target</td><td class="ck">✓ Source &amp; Target</td></tr>
+        <tr><td>Amazon DocumentDB</td><td class="cx">✗ Not real MongoDB</td><td class="cx">✗ No change streams</td><td class="cx">✗</td><td class="cx">✗</td><td class="ck">✓ Via DMS endpoint</td><td class="pt">△ Partial API compat</td></tr>
+        <tr><td>Cosmos DB (vCore)</td><td class="pt">△ mongodump works; restore limited</td><td class="cx">✗ No change stream compat</td><td class="pt">△ vCore as source</td><td class="cx">✗</td><td class="cx">✗ No DMS endpoint</td><td class="pt">△ Export works; import limited</td></tr>
+        <tr><td>Cosmos DB (RU)</td><td class="pt">△ Partial API compat</td><td class="cx">✗ Wire protocol gaps</td><td class="cx">✗</td><td class="cx">✗</td><td class="cx">✗</td><td class="pt">△ Partial</td></tr>
+        <tr><td>Self-managed replica set</td><td class="ck">✓ Any (inc. standalone)</td><td class="ck">✓ Replica sets &amp; sharded</td><td class="ck">✓ Source</td><td class="ck">✓ Source (RS only)</td><td class="ck">✓ Source (RS for CDC)</td><td class="ck">✓ Any (inc. standalone)</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout" style="border-left:3px solid var(--cl-dms)">
+    <strong>Key takeaway:</strong> DocumentDB and Cosmos DB are <em>not</em> MongoDB — wire protocol gaps mean most native tools fail. AWS DMS is the only tool with a native DocumentDB endpoint.
+  </div>
+</section>
+
+<!-- ═══ VERSION COMPATIBILITY ═══ -->
+<section id="versions">
+  <h2>MongoDB Version Support</h2>
+  <div class="tw">
+    <table class="cmp">
+      <thead><tr><th>Version</th><th style="color:var(--cl-dump)">mongodump</th><th style="color:var(--cl-sync)">mongosync</th><th style="color:var(--cl-live)">Live Migrate</th><th style="color:var(--cl-mirror)">mongomirror</th><th style="color:var(--cl-dms)">AWS DMS</th><th style="color:var(--cl-export)">mongoexport</th></tr></thead>
+      <tbody>
+        <tr><td>4.2</td><td class="ck">✓</td><td class="cx">✗</td><td class="cx">✗</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td></tr>
+        <tr><td>4.4</td><td class="ck">✓</td><td class="cx">✗ (dropped v1.19)</td><td class="cx">✗</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td></tr>
+        <tr><td>5.0</td><td class="ck">✓</td><td class="cx">✗</td><td class="ck">✓ Source</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td></tr>
+        <tr><td>6.0</td><td class="ck">✓</td><td class="ck">✓ ≥6.0.17</td><td class="ck">✓</td><td class="pt">△ Max</td><td class="ck">✓</td><td class="ck">✓</td></tr>
+        <tr><td>7.0</td><td class="ck">✓</td><td class="ck">✓ ≥7.0.13</td><td class="ck">✓</td><td class="cx">✗</td><td class="ck">✓</td><td class="ck">✓</td></tr>
+        <tr><td>8.0</td><td class="ck">✓</td><td class="ck">✓</td><td class="ck">✓</td><td class="cx">✗ EOL</td><td class="ck">✓</td><td class="ck">✓</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="callout" style="border-left:3px solid var(--cy)">
+    <strong>Key constraint:</strong> mongosync v1.19 requires source <strong>6.0.17+</strong> or <strong>7.0.13+</strong>. mongodump and mongoexport have the broadest support (4.2–8.0). AWS DMS supports 3.6+ as source.
+  </div>
+</section>
+
+<!-- ═══ FILTERING ═══ -->
+<section id="filtering">
+  <h2>Collection &amp; Database-Level Migration</h2>
+  <p class="sub">Not every migration is a full cluster copy. Here's how each tool handles selective migration.</p>
+  <div class="g5">
+    <div class="flow-card t-dump" style="border-top:2px solid var(--cl-dump)">
+      <h3 style="color:var(--cl-dump);margin-bottom:.35rem">mongodump</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.64rem;background:var(--bg2);padding:.5rem;border-radius:5px;color:var(--tx2);line-height:1.45">
+        <span style="color:var(--cl-dump)">--db</span> myDatabase<br>
+        <span style="color:var(--cl-dump)">--collection</span> orders<br>
+        <span style="color:var(--cl-dump)">--query</span> '{"status":"active"}'<br>
+        <span style="color:var(--cl-dump)">--excludeCollection</span> logs
+      </div>
+      <p style="font-size:.64rem;color:var(--tx3);margin-top:.3rem">Filter by db, collection, or query predicate.</p>
+    </div>
+    <div class="flow-card t-sync" style="border-top:2px solid var(--cl-sync)">
+      <h3 style="color:var(--cl-sync);margin-bottom:.35rem">mongosync</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.64rem;background:var(--bg2);padding:.5rem;border-radius:5px;color:var(--tx2);line-height:1.45">
+        <span style="color:var(--cl-sync)">includeNamespaces</span>: [{<br>
+        &nbsp;&nbsp;"database": "prod",<br>
+        &nbsp;&nbsp;"collections": ["orders"]<br>
+        }]
+      </div>
+      <p style="font-size:.64rem;color:var(--tx3);margin-top:.3rem">Regex since v1.1/v1.6. Immutable after sync starts.</p>
+    </div>
+    <div class="flow-card t-live" style="border-top:2px solid var(--cl-live)">
+      <h3 style="color:var(--cl-live);margin-bottom:.35rem">Atlas Live Migration</h3>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4">Inherits mongosync filtering. Configured via Atlas UI during setup.</p>
+    </div>
+    <div class="flow-card t-mirror" style="border-top:2px solid var(--cl-mirror)">
+      <h3 style="color:var(--cl-mirror);margin-bottom:.35rem">mongomirror</h3>
+      <p style="font-size:.72rem;color:var(--rd);font-weight:600">No filtering.</p>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-top:.2rem">Full cluster only. Key reason it was replaced.</p>
+    </div>
+    <div class="flow-card t-dms" style="border-top:2px solid var(--cl-dms)">
+      <h3 style="color:var(--cl-dms);margin-bottom:.35rem">AWS DMS</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.64rem;background:var(--bg2);padding:.5rem;border-radius:5px;color:var(--tx2);line-height:1.45">
+        "rule-action": <span style="color:var(--cl-dms)">"include"</span>,<br>
+        "table-name": <span style="color:var(--cl-dms)">"%orders%"</span>
+      </div>
+      <p style="font-size:.64rem;color:var(--tx3);margin-top:.3rem">Wildcard table mapping rules + transformations.</p>
+    </div>
+    <div class="flow-card t-export" style="border-top:2px solid var(--cl-export)">
+      <h3 style="color:var(--cl-export);margin-bottom:.35rem">mongoexport</h3>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.64rem;background:var(--bg2);padding:.5rem;border-radius:5px;color:var(--tx2);line-height:1.45">
+        <span style="color:var(--cl-export)">--db</span> myDatabase<br>
+        <span style="color:var(--cl-export)">--collection</span> orders<br>
+        <span style="color:var(--cl-export)">--query</span> '{"status":"active"}'<br>
+        <span style="color:var(--cl-export)">--type</span> json|csv
+      </div>
+      <p style="font-size:.64rem;color:var(--tx3);margin-top:.3rem">One collection at a time. Filter by query. CSV requires <code>--fields</code>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PROS & CONS ═══ -->
+<section id="proscons">
+  <h2>Pros &amp; Cons</h2>
+  <div class="g5">
+    <div class="card t-dump" style="border-top:2px solid var(--cl-dump)">
+      <h3 style="color:var(--cl-dump);margin-bottom:.35rem">mongodump / restore</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.15rem">PROS</div>
+      <div class="pro">Broadest version support (4.2–8.0)</div>
+      <div class="pro">Works anywhere — no network dep</div>
+      <div class="pro">Granular filtering (<code>--query</code>)</div>
+      <div class="pro">Simple — one binary, no infra</div>
+      <div class="pro">Portable BSON backup artifact</div>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin:.4rem 0 .15rem">CONS</div>
+      <div class="con">Offline — requires downtime</div>
+      <div class="con">Slow for large datasets</div>
+      <div class="con">No CDC — snapshot only</div>
+      <div class="con">Index rebuild on restore is expensive</div>
+    </div>
+    <div class="card t-sync" style="border-top:2px solid var(--cl-sync)">
+      <h3 style="color:var(--cl-sync);margin-bottom:.35rem">mongosync</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.15rem">PROS</div>
+      <div class="pro">Zero-downtime live migration</div>
+      <div class="pro">Change-stream-based — topology agnostic</div>
+      <div class="pro">Pause/resume via API</div>
+      <div class="pro">Namespace filtering with regex</div>
+      <div class="pro">Parallel index builds (v1.19)</div>
+      <div class="pro">Progress API with ETA</div>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin:.4rem 0 .15rem">CONS</div>
+      <div class="con">Requires MongoDB 6.0+ source</div>
+      <div class="con">No standalone support</div>
+      <div class="con">Self-hosted — you manage it</div>
+      <div class="con">Oplog must survive initial copy</div>
+    </div>
+    <div class="card t-live" style="border-top:2px solid var(--cl-live)">
+      <h3 style="color:var(--cl-live);margin-bottom:.35rem">Atlas Live Migration</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.15rem">PROS</div>
+      <div class="pro">Fully managed — zero infra</div>
+      <div class="pro">Atlas UI monitoring</div>
+      <div class="pro">Zero-downtime</div>
+      <div class="pro">Network connectivity wizards</div>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin:.4rem 0 .15rem">CONS</div>
+      <div class="con">Destination must be Atlas</div>
+      <div class="con">Limited ≤5 TB / ≤3 shards</div>
+      <div class="con">No pause/resume</div>
+      <div class="con">No tunable parameters</div>
+      <div class="con">No direct log access</div>
+    </div>
+    <div class="card t-mirror" style="border-top:2px solid var(--cl-mirror)">
+      <h3 style="color:var(--cl-mirror);margin-bottom:.35rem">mongomirror</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.15rem">PROS</div>
+      <div class="pro">Simple oplog-based — battle-tested</div>
+      <div class="pro">Low resource footprint</div>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin:.4rem 0 .15rem">CONS</div>
+      <div class="con" style="color:var(--rd);font-weight:600">EOL — no updates since Jul 2025</div>
+      <div class="con">Max MongoDB 6.0</div>
+      <div class="con">No collection filtering</div>
+      <div class="con">No sharded cluster support</div>
+      <div class="con">No pause/resume</div>
+      <div class="con">Destination must be Atlas</div>
+    </div>
+    <div class="card t-dms" style="border-top:2px solid var(--cl-dms)">
+      <h3 style="color:var(--cl-dms);margin-bottom:.35rem">AWS DMS</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.15rem">PROS</div>
+      <div class="pro">Broadest source versions (3.6+)</div>
+      <div class="pro">Fully managed AWS service</div>
+      <div class="pro">CDC via oplog</div>
+      <div class="pro">Table mapping filtering</div>
+      <div class="pro">CloudWatch monitoring</div>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin:.4rem 0 .15rem">CONS</div>
+      <div class="con">No index migration</div>
+      <div class="con">Cannot handle DDL during CDC</div>
+      <div class="con">AWS-only infra</div>
+      <div class="con">Document mode loses schema fidelity</div>
+      <div class="con">Extra network hop</div>
+    </div>
+    <div class="card t-export" style="border-top:2px solid var(--cl-export)">
+      <h3 style="color:var(--cl-export);margin-bottom:.35rem">mongoexport / import</h3>
+      <div style="font-size:.62rem;font-weight:600;color:var(--mg);margin-bottom:.15rem">PROS</div>
+      <div class="pro">Human-readable JSON/CSV output</div>
+      <div class="pro">Works with non-MongoDB targets</div>
+      <div class="pro">Broadest version support (4.2–8.0)</div>
+      <div class="pro">Granular <code>--query</code> filtering</div>
+      <div class="pro">Upsert mode for idempotent imports</div>
+      <div style="font-size:.62rem;font-weight:600;color:var(--rd);margin:.4rem 0 .15rem">CONS</div>
+      <div class="con">Offline — requires downtime</div>
+      <div class="con">Loses BSON type fidelity (dates, Decimal128)</div>
+      <div class="con">No index migration</div>
+      <div class="con">One collection at a time</div>
+      <div class="con">JSON files larger than BSON</div>
+      <div class="con">No parallelism built-in</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ CAVEATS ═══ -->
+<section id="caveats">
+  <h2>Caveats &amp; Gotchas</h2>
+  <p class="sub">What catches people in production.</p>
+  <div class="g2">
+    <div class="caveat t-dump" style="border-left:3px solid var(--cl-dump)"><strong style="color:var(--cl-dump)">mongodump — Oplog window risk.</strong> Without <code>--oplog</code>, dump is inconsistent during writes. With it, oplog must not roll over before dump completes. Large DBs = high risk.</div>
+    <div class="caveat t-dump" style="border-left:3px solid var(--cl-dump)"><strong style="color:var(--cl-dump)">mongodump — BSON metadata is version-sensitive.</strong> Metadata files may not be compatible across major versions. Data BSON is safe; metadata restoration may fail silently.</div>
+    <div class="caveat t-sync" style="border-left:3px solid var(--cl-sync)"><strong style="color:var(--cl-sync)">mongosync — Oplog must survive initial copy.</strong> If oplog rolls over during collection copy, sync fails. Size your oplog for the expected copy duration.</div>
+    <div class="caveat t-sync" style="border-left:3px solid var(--cl-sync)"><strong style="color:var(--cl-sync)">mongosync — Filters are immutable.</strong> <code>includeNamespaces</code> / <code>excludeNamespaces</code> cannot be changed after sync starts. Must restart entirely.</div>
+    <div class="caveat t-live" style="border-left:3px solid var(--cl-live)"><strong style="color:var(--cl-live)">Live Migration — Network is the #1 blocker.</strong> Atlas must reach your source. VPC peering / PrivateLink / public IP required. Setup often takes longer than migration.</div>
+    <div class="caveat t-live" style="border-left:3px solid var(--cl-live)"><strong style="color:var(--cl-live)">Live Migration — No debugging tools.</strong> No direct mongosync log access. Dependent on Atlas support for troubleshooting.</div>
+    <div class="caveat t-mirror" style="border-left:3px solid var(--cl-mirror)"><strong style="color:var(--cl-mirror)">mongomirror — EOL = no security patches.</strong> Vulnerabilities after Jul 2025 won't be fixed. Security risk in production.</div>
+    <div class="caveat t-mirror" style="border-left:3px solid var(--cl-mirror)"><strong style="color:var(--cl-mirror)">mongomirror — Silent failures on 7.0+.</strong> Connection errors or silent data inconsistencies. Never tested against these versions.</div>
+    <div class="caveat t-dms" style="border-left:3px solid var(--cl-dms)"><strong style="color:var(--cl-dms)">AWS DMS — No DDL replication.</strong> <code>create</code>, <code>rename</code>, <code>drop collection</code> not replicated. Schema changes during migration require a new task.</div>
+    <div class="caveat t-dms" style="border-left:3px solid var(--cl-dms)"><strong style="color:var(--cl-dms)">AWS DMS — Document mode vs table mode.</strong> Document mode: single JSON column (no SQL). Table mode: flattened (loses arrays/nesting). Neither ideal for Mongo-to-Mongo.</div>
+    <div class="caveat t-export" style="border-left:3px solid var(--cl-export)"><strong style="color:var(--cl-export)">mongoexport — BSON type loss.</strong> Extended JSON preserves most types, but Decimal128, dates, and binary may not round-trip perfectly. Always validate after import. Use mongodump for full-fidelity Mongo-to-Mongo.</div>
+    <div class="caveat t-export" style="border-left:3px solid var(--cl-export)"><strong style="color:var(--cl-export)">mongoexport — No <code>--oplog</code> equivalent.</strong> Unlike mongodump, there is no way to capture ongoing writes during export. The dataset is only consistent if writes are paused.</div>
+  </div>
+</section>
+
+<!-- ═══ TIMELINE ═══ -->
+<section id="timeline">
+  <h2>Release Timeline</h2>
+  <div class="card" style="padding:1rem">
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-sync)"></div><div class="tl-date">Jan 2026</div><div class="tl-text"><strong>mongosync v1.19</strong> — Parallel index builds, dropped MongoDB 4.4 source</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-dump)"></div><div class="tl-date">Dec 2025</div><div class="tl-text"><strong>mongodump v100.14.0</strong> — MongoDB 8.2 support, security fixes</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-sync)"></div><div class="tl-date">Nov 2025</div><div class="tl-text"><strong>mongosync v1.18</strong> — Hot document ID handling, 30-min retry</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-mirror);box-shadow:0 0 0 2px var(--rd)"></div><div class="tl-date">Jul 2025</div><div class="tl-text" style="color:var(--rd)"><strong>mongomirror EOL</strong> — No further updates or support</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-dms)"></div><div class="tl-date">May 2025</div><div class="tl-text"><strong>AWS DMS v3.6.1</strong> — MongoDB 7.0/8.0 support</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-sync)"></div><div class="tl-date">2023</div><div class="tl-text"><strong>mongosync v1.1</strong> — Namespace filtering added</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-sync)"></div><div class="tl-date">2022</div><div class="tl-text"><strong>mongosync v1.0 GA</strong> — Replaces mongomirror</div></div>
+    <div class="tl"><div class="tl-dot" style="background:var(--cl-dump)"></div><div class="tl-date">2020</div><div class="tl-text"><strong>mongodump v100.0.0</strong> — Decoupled from server binary</div></div>
+  </div>
+</section>
+
+<!-- ═══ DECISION GUIDE ═══ -->
+<section id="decide">
+  <h2>Which Tool Should You Use?</h2>
+  <p class="sub">Start at the top. Follow the branches.</p>
+  <div style="max-width:680px;margin:0 auto">
+    <div class="dec" style="border-color:var(--cy)"><strong>Can you afford downtime?</strong></div>
+    <div class="g2" style="margin-top:.4rem">
+      <div>
+        <div class="arrow">↓ Yes</div>
+        <div class="dec"><strong>Dataset size?</strong></div>
+        <div class="g2" style="margin-top:.35rem;gap:.4rem">
+          <div>
+            <div class="arrow">↓ Small / need JSON</div>
+            <div class="dec" style="border-top:2px solid var(--cl-export)"><strong style="color:var(--cl-export)">mongoexport / import</strong>Human-readable. One collection at a time.</div>
+          </div>
+          <div>
+            <div class="arrow">↓ Medium / Large</div>
+            <div class="dec" style="border-top:2px solid var(--cl-dump)"><strong style="color:var(--cl-dump)">mongodump / restore</strong>Binary BSON. Full fidelity. Any version 4.2+.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="arrow">↓ No — zero-downtime</div>
+        <div class="dec"><strong>Source is MongoDB 6.0+?</strong></div>
+        <div class="g2" style="margin-top:.35rem;gap:.4rem">
+          <div>
+            <div class="arrow">↓ Yes</div>
+            <div class="dec"><strong>Destination is Atlas?</strong></div>
+            <div class="g2" style="margin-top:.35rem;gap:.4rem">
+              <div>
+                <div class="arrow">↓ Yes, ≤5 TB</div>
+                <div class="dec" style="border-top:2px solid var(--cl-live)"><strong style="color:var(--cl-live)">Atlas Live Migration</strong>Fully managed. No infra.</div>
+              </div>
+              <div>
+                <div class="arrow">↓ Any / &gt;5 TB</div>
+                <div class="dec" style="border-top:2px solid var(--cl-sync)"><strong style="color:var(--cl-sync)">mongosync</strong>Self-hosted. Full control.</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <div class="arrow">↓ No — 4.x / 5.x</div>
+            <div class="dec"><strong>Upgrade source, or:</strong></div>
+            <div class="arrow">↓</div>
+            <div class="dec" style="border-top:2px solid var(--cl-dms)"><strong style="color:var(--cl-dms)">AWS DMS</strong>3.6+ support. No indexes, no DDL.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="callout" style="border-left:3px solid var(--rd);margin-top:.8rem">
+      <strong style="color:var(--rd)">Do not use mongomirror.</strong> EOL since July 2025. No security patches, no 7.0+ support. Complete any in-progress migrations and switch to mongosync.
+    </div>
+  </div>
+</section>
+
+<!-- ═══ WORTHY MENTIONS ═══ -->
+<section id="mentions">
+  <h2>Worthy Mentions</h2>
+  <p class="sub">Not covered in depth here, but worth knowing about if you're evaluating the full landscape.</p>
+  <div class="g3">
+    <div class="card" style="border-top:2px solid var(--tx3)">
+      <h3 style="margin-bottom:.35rem">Azure Database Migration Service</h3>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.35rem">Azure's equivalent of AWS DMS. Supports MongoDB as a source via the MongoDB API for migrating to <strong>Cosmos DB vCore</strong>. Less relevant for Mongo-to-Mongo-Atlas, but the go-to path if your destination is Azure.</p>
+      <div class="ref-links">
+        <a href="https://learn.microsoft.com/en-us/azure/dms/tutorial-mongodb-cosmos-db" target="_blank">Azure DMS MongoDB Tutorial</a>
+      </div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--tx3)">
+      <h3 style="margin-bottom:.35rem">Debezium (MongoDB Connector) + Kafka</h3>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.35rem">Open-source CDC via change streams, streamed through Kafka. Not a migration "tool" per se, but some teams build custom migration pipelines with it — especially when they need to transform data in-flight or fan out to multiple destinations.</p>
+      <div class="ref-links">
+        <a href="https://debezium.io/documentation/reference/stable/connectors/mongodb.html" target="_blank">Debezium MongoDB Connector</a>
+      </div>
+    </div>
+    <div class="card" style="border-top:2px solid var(--tx3)">
+      <h3 style="margin-bottom:.35rem">MongoDB Relational Migrator</h3>
+      <p style="font-size:.72rem;color:var(--tx2);line-height:1.4;margin-bottom:.35rem">Purpose-built for migrating <strong>from relational databases</strong> (Oracle, SQL Server, PostgreSQL, MySQL) <strong>to MongoDB</strong>. Not for Mongo-to-Mongo migrations. Includes schema analysis, mapping rules, code conversion, and CDC sync.</p>
+      <div class="ref-links">
+        <a href="https://www.mongodb.com/docs/relational-migrator/" target="_blank">Relational Migrator Docs</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ REFERENCES ═══ -->
+<section id="refs">
+  <h2>References &amp; Documentation</h2>
+  <div class="g5">
+    <div class="card t-dump" style="border-top:2px solid var(--cl-dump)">
+      <h3 style="color:var(--cl-dump);margin-bottom:.35rem">mongodump / restore</h3>
+      <div class="ref-links">
+        <a href="https://www.mongodb.com/docs/database-tools/mongodump/" target="_blank">mongodump Docs</a>
+        <a href="https://www.mongodb.com/docs/database-tools/mongorestore/" target="_blank">mongorestore Docs</a>
+        <a href="https://www.mongodb.com/docs/database-tools/mongodump/mongodump-compatibility-and-installation/" target="_blank">Compatibility</a>
+        <a href="https://www.mongodb.com/docs/database-tools/release-notes/" target="_blank">Release Notes</a>
+      </div>
+    </div>
+    <div class="card t-sync" style="border-top:2px solid var(--cl-sync)">
+      <h3 style="color:var(--cl-sync);margin-bottom:.35rem">mongosync</h3>
+      <div class="ref-links">
+        <a href="https://www.mongodb.com/docs/mongosync/current/" target="_blank">mongosync Docs</a>
+        <a href="https://www.mongodb.com/docs/mongosync/current/reference/api/start/" target="_blank">Start API</a>
+        <a href="https://www.mongodb.com/docs/mongosync/current/reference/collection-level-filtering/" target="_blank">Filtered Sync</a>
+        <a href="https://www.mongodb.com/docs/mongosync/current/release-notes/" target="_blank">Release Notes</a>
+      </div>
+    </div>
+    <div class="card t-live" style="border-top:2px solid var(--cl-live)">
+      <h3 style="color:var(--cl-live);margin-bottom:.35rem">Atlas Live Migration</h3>
+      <div class="ref-links">
+        <a href="https://www.mongodb.com/docs/atlas/import/live-import/" target="_blank">Live Migration Guide</a>
+        <a href="https://www.mongodb.com/docs/atlas/import/live-migration-comparison-modes/" target="_blank">Live vs mongosync</a>
+        <a href="https://www.mongodb.com/docs/atlas/import/mongomirror/" target="_blank">mongomirror (legacy)</a>
+      </div>
+    </div>
+    <div class="card t-mirror" style="border-top:2px solid var(--cl-mirror)">
+      <h3 style="color:var(--cl-mirror);margin-bottom:.35rem">mongomirror (EOL)</h3>
+      <div class="ref-links">
+        <a href="https://www.mongodb.com/docs/atlas/import/mongomirror/" target="_blank">mongomirror Docs</a>
+        <a href="https://www.mongodb.com/docs/atlas/release-notes/mongomirror/" target="_blank">Changelog</a>
+      </div>
+    </div>
+    <div class="card t-dms" style="border-top:2px solid var(--cl-dms)">
+      <h3 style="color:var(--cl-dms);margin-bottom:.35rem">AWS DMS</h3>
+      <div class="ref-links">
+        <a href="https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html" target="_blank">MongoDB as Source</a>
+        <a href="https://docs.aws.amazon.com/dms/latest/userguide/dm-migrating-data-mongodb.html" target="_blank">Migration Guide</a>
+        <a href="https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReleaseNotes.html" target="_blank">Release Notes</a>
+      </div>
+    </div>
+    <div class="card t-export" style="border-top:2px solid var(--cl-export)">
+      <h3 style="color:var(--cl-export);margin-bottom:.35rem">mongoexport / import</h3>
+      <div class="ref-links">
+        <a href="https://www.mongodb.com/docs/database-tools/mongoexport/" target="_blank">mongoexport Docs</a>
+        <a href="https://www.mongodb.com/docs/database-tools/mongoimport/" target="_blank">mongoimport Docs</a>
+        <a href="https://www.mongodb.com/docs/database-tools/release-notes/" target="_blank">Release Notes</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<script>
+/* Nav active highlight on scroll */
+const sections = document.querySelectorAll('section[id]');
+const navLinks = document.querySelectorAll('.nav-links a');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => obs.observe(s));
+
+/* Filter toggles */
+const toolState = { dump: true, sync: true, live: true, mirror: true, dms: true, export: true };
+document.querySelectorAll('.ft').forEach(t => {
+  t.addEventListener('click', () => {
+    const k = t.dataset.tool;
+    toolState[k] = !toolState[k];
+    t.classList.toggle('active', toolState[k]);
+    document.body.classList.toggle('hide-' + k, !toolState[k]);
+  });
+});
+</script>
+<script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+<script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+    <script>window.SFAB_DISABLE_GATE=false</script>
+    <script src="subscribe.js?v=gform-2"></script>
+</body>
+</html>

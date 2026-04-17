@@ -1,0 +1,88 @@
+<h2>How deep should the Architecture portal go?</h2>
+<p class="subtitle">This is one of the four interactive hubs — choose the level of technical detail</p>
+
+<div class="cards" style="margin-top:2rem;">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:1.5rem;background:#001E2B;border-radius:8px;margin-bottom:1rem;border:1px solid rgba(0,237,100,0.08);">
+      <!-- High level diagram mockup -->
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;">
+        <div style="width:100%;padding:8px 12px;background:rgba(0,237,100,0.08);border:1px solid rgba(0,237,100,0.3);border-radius:6px;text-align:center;font-size:0.7rem;color:#00ED64;font-family:'JetBrains Mono',monospace;">YOUR ATLAS ORG</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;">
+          <div style="padding:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.3);border-radius:6px;text-align:center;font-size:0.65rem;color:#3b82f6;font-family:'JetBrains Mono',monospace;">MAGENTA<br>PLATFORM</div>
+          <div style="padding:8px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.3);border-radius:6px;text-align:center;font-size:0.65rem;color:#a855f7;font-family:'JetBrains Mono',monospace;">CUSTOMER<br>DATA STORE</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;width:100%;">
+          <div style="padding:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;text-align:center;font-size:0.6rem;color:#7fa8bc;">Memory</div>
+          <div style="padding:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;text-align:center;font-size:0.6rem;color:#7fa8bc;">Agents</div>
+          <div style="padding:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;text-align:center;font-size:0.6rem;color:#7fa8bc;">Tools</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Conceptual (5 layers)</h3>
+      <p>Atlas Org → Magenta Platform → Customer Data Store → Agent Runtime → Memory. Animated layers that reveal on scroll. Every audience understands it immediately.</p>
+      <p style="margin-top:0.5rem;font-size:0.8rem;color:#7fa8bc;">Hover reveals a one-line explanation per layer. No component names, no internals.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:1.5rem;background:#001E2B;border-radius:8px;margin-bottom:1rem;border:1px solid rgba(0,237,100,0.08);">
+      <!-- Full component diagram mockup -->
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+        <div style="width:100%;padding:6px 8px;background:rgba(0,237,100,0.08);border:1px solid rgba(0,237,100,0.3);border-radius:5px;text-align:center;font-size:0.6rem;color:#00ED64;font-family:'JetBrains Mono',monospace;">ORG → PROJECT → WORKSPACE</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;">
+          <div style="padding:6px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#3b82f6;">Orchestrator</div>
+          <div style="padding:6px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#3b82f6;">Agent Executor</div>
+          <div style="padding:6px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#a855f7;">Tool Executor</div>
+          <div style="padding:6px;background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#a855f7;">ExoMemory STM/LTM</div>
+          <div style="padding:6px;background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#14b8a6;">Customer Data Store</div>
+          <div style="padding:6px;background:rgba(20,184,166,0.08);border:1px solid rgba(20,184,166,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#14b8a6;">Secrets Store</div>
+          <div style="padding:6px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#eab308;">Image Registry</div>
+          <div style="padding:6px;background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.25);border-radius:4px;text-align:center;font-size:0.58rem;color:#eab308;">OTel Traces</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Full Component Map (8 components)</h3>
+      <p>All data plane components laid out and clickable: Orchestrator, Agent Executor, Tool Executor, ExoMemory STM/LTM, Customer Data Store, Secrets Store, Image Registry, OTel Traces.</p>
+      <p style="margin-top:0.5rem;font-size:0.8rem;color:#7fa8bc;">Click any component → slide-in panel with explanation, isolation guarantees, and real spec detail.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding:1.5rem;background:#001E2B;border-radius:8px;margin-bottom:1rem;border:1px solid rgba(0,237,100,0.08);">
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <div style="width:100%;padding:6px 8px;background:rgba(0,237,100,0.08);border:1px solid rgba(0,237,100,0.3);border-radius:5px;text-align:center;font-size:0.6rem;color:#00ED64;font-family:'JetBrains Mono',monospace;">CONCEPTUAL VIEW ↔ COMPONENT VIEW</div>
+        <div style="display:flex;gap:6px;">
+          <div style="flex:1;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;text-align:center;">
+            <div style="font-size:0.6rem;color:#7fa8bc;margin-bottom:4px;">Simplified</div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="height:5px;background:rgba(0,237,100,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(59,130,246,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(168,85,247,0.3);border-radius:2px;"></div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;color:#00ED64;font-size:0.9rem;">⇄</div>
+          <div style="flex:1;padding:8px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:4px;text-align:center;">
+            <div style="font-size:0.6rem;color:#7fa8bc;margin-bottom:4px;">Detailed</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;">
+              <div style="height:5px;background:rgba(59,130,246,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(59,130,246,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(168,85,247,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(168,85,247,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(20,184,166,0.3);border-radius:2px;"></div>
+              <div style="height:5px;background:rgba(234,179,8,0.3);border-radius:2px;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Toggle: Simple ↔ Full</h3>
+      <p>A toggle switch on the diagram. Default is the 5-layer conceptual view for executives. Engineers flip it to expose all 8 components with full spec detail. Same diagram, two depths.</p>
+      <p style="margin-top:0.5rem;font-size:0.8rem;color:#7fa8bc;">Best for multi-audience — nobody is overwhelmed, nobody is under-informed.</p>
+    </div>
+  </div>
+
+</div>

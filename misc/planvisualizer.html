@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at https://www.google.com https://www.gstatic.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://www.google.com https://cloudflare-dns.com https://us.i.posthog.com https://us-assets.i.posthog.com https://docs.google.com; frame-src https://www.google.com https://docs.google.com;">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MongoDB Plan Visualizer</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="../assets/mongodb-leaf.png">
+    <!-- Tailwind CSS (built) -->
+    <link rel="stylesheet" href="../assets/tw-prod.min.css">
+    
+    <!-- Google Fonts for a professional look -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Custom styles to enhance Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #111827; /* Tailwind gray-900 */
+        }
+        .font-fira {
+            font-family: 'Fira Code', monospace;
+        }
+        /* General Mermaid styling */
+        .mermaid .label {
+            color: #e5e7eb; /* gray-200 */
+        }
+        /* Styling for subgraph titles */
+        .mermaid .subgraph-title {
+            fill: #374151; /* gray-700 */
+            color: #d1d5db; /* gray-300 */
+            font-weight: 600;
+        }
+
+        /* --- Time Highlighting --- */
+        .time-high {
+            background-color: #7f1d1d; /* red-900 */
+            color: #fca5a5; /* red-300 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .time-medium {
+            background-color: #854d0e; /* amber-800 */
+            color: #fde68a; /* amber-200 */
+            padding: 2px 4px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        /* Loading spinner */
+        .loader {
+            width: 18px;
+            height: 18px;
+            border: 2px solid #FFF;
+            border-bottom-color: transparent;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="text-gray-200">
+
+    <div id="app" class="min-h-screen p-4 sm:p-6 lg:p-8">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white">MongoDB Plan Visualizer</h1>
+            <p class="text-gray-400 mt-2">Paste your `explain()` output from `mongosh` or a JSON export.</p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 max-w-7xl mx-auto">
+
+            <!-- Left Column: Input -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-semibold text-white">Explain Output</h2>
+                    <div class="flex gap-2">
+                        <button id="load-sample-btn" class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 py-1 px-3 rounded-md transition-colors">Load Agg Sample</button>
+                        <button id="load-sharded-sample-btn" class="text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 py-1 px-3 rounded-md transition-colors">Load Sharded Sample</button>
+                    </div>
+                </div>
+                <textarea id="json-input" class="font-fira text-sm bg-gray-900 border border-gray-700 rounded-lg w-full flex-grow p-4 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition" placeholder="Paste the full output from the explain command here..."></textarea>
+                <div class="flex items-center gap-4 mt-4">
+                    <button id="visualize-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200 shadow-md flex items-center justify-center gap-2 disabled:bg-blue-800 disabled:cursor-not-allowed">
+                        <span id="visualize-btn-text">Visualize Plan</span>
+                        <div id="visualize-btn-loader" class="loader hidden"></div>
+                    </button>
+                    <button id="clear-btn" class="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded-lg transition-colors duration-200">
+                        Clear
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Column: Output -->
+            <div class="space-y-6">
+                <!-- Error/Info Message Box -->
+                <div id="message-box" class="hidden p-4 rounded-lg"></div>
+
+                <!-- Query Info Panel -->
+                <div id="query-info-panel" class="bg-gray-800 p-6 rounded-xl shadow-lg hidden">
+                    <h2 class="text-xl font-semibold text-white mb-4">Query Information</h2>
+                    <div id="query-info-content" class="space-y-3 text-gray-300">
+                        <!-- Query info will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Analysis Panel -->
+                <div id="analysis-panel" class="bg-gray-800 p-6 rounded-xl shadow-lg hidden">
+                    <h2 class="text-xl font-semibold text-white mb-4">Analysis & Insights</h2>
+                    <div id="analysis-content" class="space-y-4 text-gray-300">
+                        <!-- Analysis content will be injected here -->
+                    </div>
+                </div>
+
+                <!-- Visual Plan Panel -->
+                <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                    <h2 class="text-xl font-semibold text-white mb-4">Visual Execution Plan</h2>
+                    <div id="graph-container" class="min-h-[300px] flex items-center justify-center bg-gray-900/50 rounded-lg p-4">
+                        <p class="text-gray-500">Your visual plan will appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mermaid.js library for diagrams -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js" integrity="sha384-enVdc7lTHDGtpROV85t9+VqPC2EyyB0hsRD0MrvQnHUsHmTHIz2D8SPP4EnBkstH" crossorigin="anonymous"></script>
+    
+    <script>
+        // --- DOM Element Selection ---
+        const visualizeBtn = document.getElementById('visualize-btn');
+        const visualizeBtnText = document.getElementById('visualize-btn-text');
+        const visualizeBtnLoader = document.getElementById('visualize-btn-loader');
+        const clearBtn = document.getElementById('clear-btn');
+        const loadSampleBtn = document.getElementById('load-sample-btn');
+        const loadShardedSampleBtn = document.getElementById('load-sharded-sample-btn');
+        const jsonInput = document.getElementById('json-input');
+        const graphContainer = document.getElementById('graph-container');
+        const messageBox = document.getElementById('message-box');
+        const queryInfoPanel = document.getElementById('query-info-panel');
+        const queryInfoContent = document.getElementById('query-info-content');
+        const analysisPanel = document.getElementById('analysis-panel');
+        const analysisContent = document.getElementById('analysis-content');
+
+        // --- Mermaid.js Configuration ---
+        mermaid.initialize({
+            startOnLoad: false,
+            theme: 'dark',
+            securityLevel: 'loose',
+            fontFamily: 'Inter, sans-serif',
+        });
+
+        // --- Utility Functions ---
+        const showMessage = (text, type = 'info') => {
+            messageBox.textContent = text;
+            messageBox.className = 'p-4 rounded-lg';
+            const styles = {
+                error: 'bg-red-900/50 text-red-300 border border-red-700',
+                success: 'bg-green-900/50 text-green-300 border border-green-700',
+                info: 'bg-blue-900/50 text-blue-300 border border-blue-700'
+            };
+            messageBox.classList.add(...(styles[type] || styles.info).split(' '));
+            messageBox.classList.remove('hidden');
+        };
+
+        const hideMessage = () => messageBox.classList.add('hidden');
+
+        const resetUI = () => {
+            hideMessage();
+            queryInfoPanel.classList.add('hidden');
+            analysisPanel.classList.add('hidden');
+            queryInfoContent.innerHTML = '';
+            analysisContent.innerHTML = '';
+            graphContainer.innerHTML = '<p class="text-gray-500">Your visual plan will appear here.</p>';
+        };
+        
+        const handleClear = () => {
+            jsonInput.value = '';
+            resetUI();
+        };
+
+        const setLoadingState = (isLoading) => {
+            visualizeBtn.disabled = isLoading;
+            if (isLoading) {
+                visualizeBtnText.classList.add('hidden');
+                visualizeBtnLoader.classList.remove('hidden');
+            } else {
+                visualizeBtnText.classList.remove('hidden');
+                visualizeBtnLoader.classList.add('hidden');
+            }
+        };
+
+        // --- Core Logic ---
+        const sanitizeMongoShellOutput = (text) => {
+            let sanitized = text.trim();
+            sanitized = sanitized.replace(/Timestamp\s*\([^)]*\)/g, '"BSON_Timestamp"');
+            sanitized = sanitized.replace(/Binary\.createFromBase64\s*\([^)]*\)/g, '"BSON_Binary"');
+            sanitized = sanitized.replace(/([{,])\s*([a-zA-Z0-9_$]+)\s*:/g, '$1"$2":');
+            sanitized = sanitized.replace(/'/g, '"');
+            return sanitized;
+        };
+
+        const displayQueryInfo = (data) => {
+            const planner = data.queryPlanner;
+            const command = data.command;
+            let content = '';
+
+            if (planner?.namespace) {
+                content += `<p><strong>Namespace:</strong> <span class="font-fira text-cyan-400">${planner.namespace}</span></p>`;
+            } else if (command?.aggregate) {
+                 content += `<p><strong>Namespace:</strong> <span class="font-fira text-cyan-400">${command['$db']}.${command.aggregate}</span></p>`;
+            }
+            
+            const query = planner?.parsedQuery || command?.pipeline || command;
+            if (query) {
+                content += `<p><strong>Query/Pipeline:</strong></p>
+                            <pre class="bg-gray-900 p-3 rounded-md font-fira text-sm text-yellow-300 overflow-x-auto">${JSON.stringify(query, null, 2)}</pre>`;
+            }
+            
+            if (content) {
+                queryInfoPanel.classList.remove('hidden');
+                queryInfoContent.innerHTML = content;
+            }
+        };
+
+        let nodeId = 0;
+        let mermaidGraph = '';
+
+        function findExecutionStages(obj) {
+            if (!obj || typeof obj !== 'object') return null;
+            if (obj.executionStages) return obj.executionStages;
+            for (const key in obj) {
+                if (obj.hasOwnProperty(key)) {
+                    const result = findExecutionStages(obj[key]);
+                    if (result) return result;
+                }
+            }
+            return null;
+        }
+        
+        function getInitialGraphDef() {
+            return `graph TD;
+    %% Style Definitions
+    classDef default fill:#4B5563,stroke:#6B7280,color:#fff;
+    classDef stage-IXSCAN fill:#059669,stroke:#10B981,color:#fff;
+    classDef stage-COLLSCAN fill:#DC2626,stroke:#EF4444,color:#fff;
+    classDef stage-FETCH fill:#2563EB,stroke:#3B82F6,color:#fff;
+    classDef stage-SORT fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-PROJECTION fill:#581C87,stroke:#7E22CE,color:#fff;
+    classDef stage-PROJECTIONSIMPLE fill:#581C87,stroke:#7E22CE,color:#fff;
+    classDef stage-UNWIND fill:#BE123C,stroke:#F43F5E,color:#fff;
+    classDef stage-SET fill:#EA580C,stroke:#F97316,color:#fff;
+    classDef stage-ADDFIELDS fill:#EA580C,stroke:#F97316,color:#fff;
+    classDef stage-REPLACEROOT fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-REPLACEWITH fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-UNSET fill:#4B5563,stroke:#6B7280,color:#fff;
+    classDef stage-GROUP fill:#65A30D,stroke:#84CC16,color:#fff;
+    classDef stage-BUCKET fill:#d02670,stroke:#f062a4,color:#fff;
+    classDef stage-BUCKETAUTOSUM fill:#d02670,stroke:#f062a4,color:#fff;
+    classDef stage-FACET fill:#334155,stroke:#475569,color:#fff;
+    classDef stage-SORTBYCOUNT fill:#D97706,stroke:#F59E0B,color:#fff;
+    classDef stage-COUNT fill:#7C3AED,stroke:#8B5CF6,color:#fff;
+    classDef stage-LOOKUP fill:#0369A1,stroke:#0EA5E9,color:#fff;
+    classDef stage-GRAPLOOKUP fill:#27272A,stroke:#3f3f46,color:#fff;
+    classDef stage-UNIONWITH fill:#be185d,stroke:#f472b6,color:#fff;
+    classDef stage-MATCH fill:#be185d,stroke:#f472b6,color:#fff;
+    classDef stage-LIMIT fill:#0D9488,stroke:#14B8A6,color:#fff;
+    classDef stage-SKIP fill:#4338CA,stroke:#6366F1,color:#fff;
+    classDef stage-SAMPLE fill:#65A30D,stroke:#84CC16,color:#fff;
+    classDef stage-REDACT fill:#171717,stroke:#262626,color:#fff;
+    classDef stage-CURSOR fill:#be185d,stroke:#f472b6,color:#fff;
+    classDef stage-SHARDMERGE fill:#0891B2,stroke:#06B6D4,color:#fff;
+    classDef stage-AGGPIPELINE fill:#166534,stroke:#22c55e,color:#fff;
+    classDef stage-GEONEAR fill:#78716C,stroke:#a8a29e,color:#fff;
+`;
+        }
+
+        function parseStage(stage, parentId) {
+            if (!stage) return;
+            const currentId = `node${nodeId++}`;
+            
+            const stageName = stage.stage || 'N/A';
+            const time = stage.executionTimeMillis ?? stage.executionTimeMillisEstimate ?? 0;
+            const returned = stage.nReturned ?? 'N/A';
+            const docsExamined = stage.docsExamined ?? 'N/A';
+            const keysExamined = stage.totalKeysExamined ?? stage.keysExamined ?? 'N/A';
+            
+            let timeHtml = `${time}ms`;
+            if (time > 100) {
+                timeHtml = `<span class='time-high'>${time}ms</span>`;
+            } else if (time > 10) {
+                timeHtml = `<span class='time-medium'>${time}ms</span>`;
+            }
+
+            let stageDetails = `<strong>${stageName}</strong><br/>` +
+                               (stage.hasOwnProperty('executionTimeMillis') || stage.hasOwnProperty('executionTimeMillisEstimate') ? `Time: ${timeHtml} | ` : '') +
+                               `Returned: ${returned}<br/>` +
+                               (stage.hasOwnProperty('docsExamined') ? `Docs Examined: ${docsExamined}<br/>` : '') +
+                               (stage.hasOwnProperty('keysExamined') || stage.hasOwnProperty('totalKeysExamined') ? `Keys Examined: ${keysExamined}`: '');
+            
+            if (stage.indexName) stageDetails += `<br/>Index: ${stage.indexName}`;
+
+            const stageClass = `stage-${stageName.replace(/_/g, '')}`;
+            mermaidGraph += `    ${currentId}["${stageDetails}"]:::${stageClass};\n`;
+
+            if (parentId) mermaidGraph += `    ${parentId} --> ${currentId};\n`;
+
+            if (stage.inputStage) parseStage(stage.inputStage, currentId);
+            if (stage.inputStages) stage.inputStages.forEach(child => parseStage(child, currentId));
+        }
+
+        // --- Main Parsing Functions ---
+        function parseAggregationPlan(explainData) {
+            const pipelineRootId = `node${nodeId++}`;
+            mermaidGraph += `    ${pipelineRootId}["<strong>AGG_PIPELINE</strong>"]:::stage-AGGPIPELINE;\n`;
+            let backboneLinkIds = [pipelineRootId];
+
+            explainData.stages.forEach(aggStage => {
+                const stageKey = Object.keys(aggStage)[0];
+                const stageContent = aggStage[stageKey];
+                const stageName = stageKey.substring(1).toUpperCase();
+                const entryNodeId = `node${nodeId++}`;
+                backboneLinkIds.push(entryNodeId);
+
+                mermaidGraph += `\n    subgraph "Stage: ${stageName}"\n`;
+                let details = `<strong>${stageName}</strong>`;
+                if (stageKey === '$unionWith') details += `<br/>Collection: ${stageContent.coll}`;
+                const stageClass = `stage-${stageName}`;
+                mermaidGraph += `        ${entryNodeId}["${details}"]:::${stageClass};\n`;
+                
+                const execStages = findExecutionStages(aggStage);
+                if (execStages) {
+                    parseStage(execStages, entryNodeId);
+                }
+                mermaidGraph += `    end\n`;
+            });
+            
+            mermaidGraph += `\n    ${backboneLinkIds.join(' --> ')};\n`;
+        }
+
+        function parseShardedPlan(explainData) {
+            const mergeStage = explainData.executionStats.executionStages;
+            parseStage(mergeStage, null); // Parse the merge stage first
+
+            const shardSubgraphs = [];
+            explainData.executionStats.shards.forEach(shard => {
+                const shardNameForId = shard.shardName.replace(/[-:]/g, '_');
+                const shardEntryId = `shard_entry_${shardNameForId}`;
+                shardSubgraphs.push(shardEntryId);
+
+                mermaidGraph += `\n    subgraph "Shard: ${shard.shardName}"\n`;
+                // Create a dummy entry node for linking
+                mermaidGraph += `        ${shardEntryId}[" "]; style ${shardEntryId} fill:transparent,stroke:transparent\n`;
+                parseStage(shard.executionStages, shardEntryId);
+                mermaidGraph += `    end\n`;
+            });
+            
+            const mergeNodeMatch = mermaidGraph.match(/(node\d+)\["<strong>SHARD_MERGE/);
+            if (mergeNodeMatch && mergeNodeMatch[1]) {
+                 mermaidGraph += `\n    ${shardSubgraphs.join(' & ')} --> ${mergeNodeMatch[1]};\n`;
+            }
+        }
+
+        function analyzePlan(explainData) {
+            const insights = {
+                totalExecutionTime: explainData.executionStats?.executionTimeMillis ?? null,
+                totalDocsExamined: 0,
+                totalReturned: 0,
+                collScans: [],
+                sorts: [],
+                timedStages: [],
+                isCoveredQuery: false,
+                rejectedPlans: explainData.queryPlanner?.rejectedPlans || [],
+                shards: [],
+                isScatterGather: false,
+            };
+
+            const seenIxScans = [];
+            const seenFetches = [];
+
+            function traverse(stage) {
+                if (!stage) return;
+                
+                if (stage.stage === 'COLLSCAN') insights.collScans.push(stage);
+                if (stage.stage === 'IXSCAN') seenIxScans.push(stage);
+                if (stage.stage === 'FETCH') seenFetches.push(stage);
+                if (stage.stage === 'SORT') insights.sorts.push(stage);
+
+                const time = stage.executionTimeMillis ?? stage.executionTimeMillisEstimate;
+                if (typeof time === 'number') {
+                    insights.timedStages.push({ name: stage.stage, time });
+                }
+
+                insights.totalDocsExamined += stage.docsExamined ?? 0;
+                insights.totalReturned += stage.nReturned ?? 0;
+
+                if (stage.inputStage) traverse(stage.inputStage);
+                if (stage.inputStages) stage.inputStages.forEach(traverse);
+            }
+            
+            if (explainData.executionStats) {
+                if (explainData.executionStats.shards) {
+                    insights.isScatterGather = explainData.executionStats.shards.length > 1;
+                    explainData.executionStats.shards.forEach(shard => {
+                        let shardDocsExamined = 0;
+                        let shardNReturned = 0;
+                        function traverseShard(s) {
+                            if (!s) return;
+                            shardDocsExamined += s.docsExamined ?? 0;
+                            shardNReturned += s.nReturned ?? 0;
+                            if (s.inputStage) traverseShard(s.inputStage);
+                            if (s.inputStages) s.inputStages.forEach(traverseShard);
+                        }
+                        traverseShard(shard.executionStages);
+                        insights.shards.push({ name: shard.shardName, docsExamined: shardDocsExamined, nReturned: shardNReturned });
+                        traverse(shard.executionStages);
+                    });
+                    traverse(explainData.executionStats.executionStages); // Also traverse the merge stage
+                } else {
+                    traverse(explainData.executionStats.executionStages);
+                }
+            } else if (explainData.stages) {
+                 explainData.stages.forEach(stage => traverse(findExecutionStages(stage)));
+            }
+
+            if (seenIxScans.length > 0 && seenFetches.length === 0) {
+                insights.isCoveredQuery = true;
+            }
+            
+            insights.timedStages = insights.timedStages.filter(t => t.time > 0).sort((a, b) => b.time - a.time);
+
+            return insights;
+        }
+
+        function displayAnalysis(insights) {
+            let content = '';
+
+            // --- Execution Summary ---
+            content += `<div><h3 class="text-lg font-semibold text-white mb-2">Execution Summary</h3>`;
+            if (insights.totalExecutionTime !== null) {
+                content += `<p><span class="font-semibold">Total Time:</span> <span class="font-fira font-bold text-xl text-cyan-300">${insights.totalExecutionTime}ms</span></p>`;
+                if (insights.totalDocsExamined > 0 && insights.totalReturned > 0) {
+                    const ratio = insights.totalDocsExamined / insights.totalReturned;
+                    const ratioColor = ratio > 10 ? 'text-yellow-300' : 'text-green-300';
+                    content += `<p class="text-sm mt-1"><span class="font-semibold">Work Ratio:</span> <strong class="${ratioColor}">${ratio.toFixed(1)}:1</strong> (Examined ${insights.totalDocsExamined} to return ${insights.totalReturned})</p>`;
+                }
+            } else {
+                 content += `<p class="text-sm text-gray-400">No execution time statistics available.</p>`;
+            }
+            content += `</div>`;
+            
+            // --- Indexing Insights ---
+            content += `<div><h3 class="text-lg font-semibold text-white mb-2">Indexing Insights</h3>`;
+            if (insights.collScans.length > 0) {
+                content += `<p class="text-sm text-red-400">🔴 Found ${insights.collScans.length} Collection Scan(s). Consider adding an index.</p>`;
+            } else {
+                content += `<p class="text-sm text-green-400">🟢 No Collection Scans found. Excellent!</p>`;
+            }
+            if (insights.isCoveredQuery) {
+                content += `<p class="text-sm text-green-400 mt-1">🟢 Covered Query detected. The index efficiently answered the query.</p>`;
+            }
+            content += `</div>`;
+
+            // --- Resource Warnings ---
+            content += `<div><h3 class="text-lg font-semibold text-white mb-2">Resource Warnings</h3>`;
+            if (insights.sorts.length > 0) {
+                let hasSortWarning = false;
+                insights.sorts.forEach(sort => {
+                    if (sort.usedDisk) {
+                         content += `<p class="text-sm text-red-400">🔴 A SORT stage spilled to disk, a major performance issue.</p>`;
+                         hasSortWarning = true;
+                    } else if ((sort.docsExamined ?? sort.nReturned ?? 0) > 10000) {
+                         content += `<p class="text-sm text-yellow-400">🟡 A large in-memory SORT was performed. An index could be more efficient.</p>`;
+                         hasSortWarning = true;
+                    }
+                });
+                if (!hasSortWarning) {
+                    content += `<p class="text-sm text-green-400">🟢 In-memory SORT stages appear efficient.</p>`;
+                }
+            } else {
+                content += `<p class="text-sm text-gray-400">No SORT stages found.</p>`;
+            }
+            content += `</div>`;
+            
+            // --- Sharding Insights ---
+            if (insights.shards.length > 0) {
+                content += `<div><h3 class="text-lg font-semibold text-white mb-2">Sharding Insights</h3>`;
+                if (insights.isScatterGather) {
+                    content += `<p class="text-sm text-blue-400">ℹ️ This was a **scatter-gather** query, sent to ${insights.shards.length} shards.</p>`;
+                } else {
+                     content += `<p class="text-sm text-green-400">🟢 Query was efficiently targeted to a single shard.</p>`;
+                }
+                const totalReturned = insights.shards.reduce((sum, s) => sum + s.nReturned, 0);
+                if (totalReturned > 0) {
+                    const maxReturned = Math.max(...insights.shards.map(s => s.nReturned));
+                    if (insights.shards.length > 1 && (maxReturned / totalReturned) > 0.8) {
+                        const hotShard = insights.shards.find(s => s.nReturned === maxReturned);
+                        content += `<p class="text-sm text-yellow-400 mt-2">🟡 **Shard Imbalance:** Shard <strong class="font-fira">${hotShard.name}</strong> returned ${Math.round((maxReturned/totalReturned)*100)}% of the documents.</p>`;
+                    }
+                }
+                content += `</div>`;
+            }
+
+            // --- Top Time-Consuming Stages ---
+            if (insights.timedStages.length > 0) {
+                content += `<div><h3 class="text-lg font-semibold text-white mb-2">Top Time-Consuming Stages</h3>`;
+                content += `<ul class="list-disc list-inside space-y-1">`;
+                insights.timedStages.slice(0, 3).forEach(stage => {
+                    content += `<li><span class="font-semibold">${stage.name}:</span> <span class="font-fira">${stage.time}ms</span></li>`;
+                });
+                content += `</ul></div>`;
+            }
+            
+            // --- Rejected Plans ---
+            if (insights.rejectedPlans.length > 0) {
+                content += `<div><h3 class="text-lg font-semibold text-white mb-2">Rejected Plans</h3>`;
+                content += `<p class="text-sm text-gray-400">MongoDB considered but rejected the following plans:</p>`;
+                content += `<ul class="list-disc list-inside space-y-1 mt-2">`;
+                insights.rejectedPlans.forEach(plan => {
+                     content += `<li class="font-fira text-sm">${plan.stage} (Reason: ${plan.rejectReason || 'N/A'})</li>`;
+                });
+                content += `</ul></div>`;
+            }
+
+            if (content) {
+                analysisPanel.classList.remove('hidden');
+                analysisContent.innerHTML = content;
+            }
+        }
+
+        const handleVisualize = async () => {
+            resetUI();
+            setLoadingState(true);
+            
+            await new Promise(resolve => setTimeout(resolve, 10));
+
+            const rawInput = jsonInput.value.trim();
+            if (!rawInput) {
+                showMessage('Input is empty. Please paste your explain output.', 'error');
+                setLoadingState(false);
+                return;
+            }
+
+            let explainData;
+            let sanitizedInput = '';
+            try {
+                sanitizedInput = sanitizeMongoShellOutput(rawInput);
+                explainData = JSON.parse(sanitizedInput);
+            } catch (error) {
+                showMessage(`Failed to parse input: ${error.message}. Please check if it's a valid explain output.`, 'error');
+                setLoadingState(false);
+                return;
+            }
+
+            displayQueryInfo(explainData);
+            mermaidGraph = getInitialGraphDef();
+            nodeId = 0;
+
+            const hasStats = sanitizedInput.includes('"executionStats"');
+            if (!hasStats) {
+                showMessage('Execution stats not found. Displaying planner output only.', 'info');
+            } else {
+                const analysis = analyzePlan(explainData);
+                displayAnalysis(analysis);
+            }
+
+            if (explainData.stages) {
+                parseAggregationPlan(explainData);
+            } else if (explainData.executionStats?.shards) {
+                parseShardedPlan(explainData);
+            } else if (explainData.executionStats?.executionStages) {
+                parseStage(explainData.executionStats.executionStages, null);
+            } else if (explainData.queryPlanner?.winningPlan) {
+                parseStage(explainData.queryPlanner.winningPlan, null);
+            } else {
+                showMessage('Could not find a valid plan. Please provide output from explain("executionStats") or a basic explain().', 'error');
+                setLoadingState(false);
+                return;
+            }
+            
+            graphContainer.innerHTML = '<div class="text-gray-400">Rendering diagram...</div>';
+            try {
+                const renderId = 'graphDiv-' + new Date().getTime();
+                const { svg } = await mermaid.render(renderId, mermaidGraph);
+                graphContainer.innerHTML = svg;
+                if (hasStats) {
+                    showMessage('Successfully generated the visual plan!', 'success');
+                }
+            } catch (e) {
+                showMessage(`Mermaid Render Error: ${e.message}`, 'error');
+                graphContainer.innerHTML = '<p class="text-red-400">Could not render the diagram.</p>';
+                console.error("Mermaid Render Error:", e);
+                console.error("Generated Graph Definition:", mermaidGraph);
+            } finally {
+                setLoadingState(false);
+            }
+        };
+
+        const loadSampleData = (type) => {
+            const aggSample = {
+              "explainVersion": "1",
+              "stages": [
+                { "$cursor": { "queryPlanner": { "namespace": "test.users", "winningPlan": { "stage": "COLLSCAN" } }, "executionStats": { "nReturned": 50, "executionTimeMillis": 120, "totalDocsExamined": 1000, "executionStages": { "stage": "COLLSCAN", "nReturned": 50, "executionTimeMillisEstimate": 115, "docsExamined": 1000 } } } },
+                { "$sort": { "usedDisk": true, "nReturned": 50, "executionTimeMillisEstimate": 150 } },
+                { "$group": { "_id": "$department", "averageAge": { "$avg": "$age" } } }
+              ], "serverInfo": { "host": "localhost", "port": 27017, "version": "5.0.3" }
+            };
+            const shardedSample = {
+              "explainVersion": "1",
+              "queryPlanner": { "namespace": "test.users" },
+              "executionStats": {
+                "executionSuccess": true, "nReturned": 200, "executionTimeMillis": 250,
+                "totalKeysExamined": 200, "totalDocsExamined": 200,
+                "executionStages": { "stage": "SHARD_MERGE", "nReturned": 200, "executionTimeMillis": 240 },
+                "shards": [
+                  { "shardName": "shard-01", "nReturned": 190, "executionTimeMillis": 100, "executionStages": { "stage": "IXSCAN", "nReturned": 190, "docsExamined": 190 } },
+                  { "shardName": "shard-02", "nReturned": 10, "executionTimeMillis": 235, "executionStages": { "stage": "IXSCAN", "nReturned": 10, "docsExamined": 10 } }
+                ]
+              }
+            };
+            jsonInput.value = JSON.stringify(type === 'sharded' ? shardedSample : aggSample, null, 2);
+        };
+
+        // --- Event Listeners ---
+        visualizeBtn.addEventListener('click', handleVisualize);
+        clearBtn.addEventListener('click', handleClear);
+        loadSampleBtn.addEventListener('click', () => loadSampleData('agg'));
+        loadShardedSampleBtn.addEventListener('click', () => loadSampleData('sharded'));
+
+    </script>
+<script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+<script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+    <script>window.SFAB_DISABLE_GATE=false</script>
+    <script src="../subscribe.js?v=gform-2"></script>
+</body>
+</html>

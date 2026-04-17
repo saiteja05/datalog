@@ -1,0 +1,248 @@
+%%{init: {'theme': 'base', 'flowchart': {'curve': 'basis'}, 'themeVariables': { 'fontFamily': 'Segoe UI', 'fontSize': '16px', 'lineColor': '#555' }}}%%
+flowchart TB
+    Start(["Start: Strategic Vision"]) --> WorkloadCheck{"**Workload Nature**<br>Transactional or<br>Analytical?"}
+    
+    %% Analytical Path
+    WorkloadCheck -- Analytical (OLAP) --> AnalyticCheck{"**Analytical Nuance**<br>Massive Joins (10+),<br>Full Table Scans, OR<br>Deep History (&gt;500TB active data set)?"}
+    AnalyticCheck -- Yes (Data Warehouse) --> DWH["**Data Warehouse / Lakehouse**<br>Snowflake / Databricks<br>(Cost Efficiency for Cold Data)"]
+    AnalyticCheck -- "No (Real-Time Analytics)" --> DevSkill{"**Team Skillset**<br>Code-First (Devs)<br>or SQL-First (DBAs)?"}
+    
+    %% Transactional Path
+    WorkloadCheck -- Transactional (OLTP) --> DevSkill
+    
+    %% Developer Skillset Branch
+    DevSkill -- "SQL-First" --> AcidCheck{"**ACID Nuance**<br>Multi-table transactions<br>across 10+ tables?"}
+    DevSkill -- "Code-First" --> ObjMatch["**Value: Dev Experience**<br>No ORM / Impedance Mismatch"]
+    
+    %% SQL-First Path & Normalization
+    AcidCheck -- Yes --> NormalizationCheck{"**Rigid Data Model**<br>Is data in 3rd or 4th<br>Normal form?"}
+    AcidCheck -- No --> VolCheck{"**Volume Nuance**<br>Writes &lt; 1k/sec?"}
+    
+    NormalizationCheck -- No --> RigidSQL{"**RigidSQL**<br>Is business logic embedded<br>in SQL / PLSQL?"}
+    NormalizationCheck -- "Datamodel Optimization" --> Migrator
+    
+    RigidSQL -- No --> RDBMS["**RDBMS**<br>SQL / Oracle"]
+    RigidSQL -- Yes --> Migrator["**Relational Migrator**<br>Schema Transformation"]
+    
+    Migrator -- extension --> AMP["**MongoDB AMP**"]
+    Migrator --> MongoCore["**MongoDB Core**<br>Flexible Schema"]
+    
+    VolCheck -- No --> RDBMS
+    VolCheck -- Yes --> MongoCore
+    
+    %% Code-First Path
+    ObjMatch --> DataNature{"**Data Nature**<br>Is the schema volatile<br>or hierarchical?"}
+    DataNature -- Yes (JSON) --> GraphCheck{"**Graph Nuance**<br>Unbounded depth<br>(&gt; 5 hops)?"}
+    DataNature -- No (Rigid) --> AcidCheck
+    GraphCheck -- Yes --> GraphDB["**Neo4j / Neptune**"]
+    GraphCheck -- No --> KVCheck{"**Key-Value Nuance**<br>Simple ID Lookup?"}
+    KVCheck -- Yes --> Latency{"**Latency Nuance**<br>Need &lt;1ms response<br>&amp; OK with data loss?"}
+    Latency -- Yes --> Redis["**Redis / Memcached**"]
+    Latency -- No --> MongoCore
+    KVCheck -- No (Complex) --> QueryCheck{"**Query Nuance**<br>Need robust filtering,<br>secondary indexes,<br>or aggregations?"}
+    QueryCheck -- Yes --> MongoCore
+    
+    %% MongoDB Core → Business Model
+    MongoCore --> BizModel{"**Business Model**<br>Internal Enterprise App<br>or B2B SaaS?"}
+    
+    %% B2B SaaS
+    BizModel -- B2B SaaS --> Tenancy{"**Multi-Tenancy Nuance**<br>Isolation Strategy?"}
+    Tenancy -- "Silo (1 Deployment per Tenant)" --> Silo["**Devops Nightmare**<br>Not enforced by MongoDB"]
+    Tenancy -- "Pool (Shared DB)" --> Isolation{"**Isolation Check**<br>Need strict data residency<br>per tenant?"}
+    Isolation -- "Logical Isolation" --> Logical["**Logical Sharding**<br>Standard Collections"]
+    Isolation -- "Physical Isolation" --> TenantShard["**Tenant-Aware Sharding**<br>Dedicate Nodes to VIPs"]
+    Logical --> Agility{"**Velocity Check**<br>Does schema change<br>frequently?"}
+    TenantShard --> Agility
+    Silo --> Agility
+    
+    %% Internal App
+    BizModel -- Internal App --> Agility
+    
+    %% Velocity & Scaling
+    Agility -- Yes --> AgileVal["**Value: High Agility**<br>Faster Time-to-Market"]
+    Agility -- No --> ScaleCheck{"**Scale Check**<br>Data &gt; 2TB OR<br>Writes &gt; 50k/s?"}
+    AgileVal --> ScaleCheck
+    ScaleCheck -- Yes --> ShardStrat{"**Sharding Strategy**<br>Access Pattern?"}
+    ShardStrat -- Distributed Writes --> HashShard["**Hashed Sharding**<br>Uniform Distribution"]
+    ShardStrat -- Location Based --> ZoneShard["**Zone Sharding**<br>Data Locality"]
+    ShardStrat -- Range Queries --> RangeShard["**Ranged Sharding**<br>Time/Alpha Grouping"]
+    ScaleCheck -- No --> Replica["**Replica Set**<br>High Availability"]
+    HashShard --> PlatCheck{"**Workload Nuance**<br>Need Search, AI,<br>Streams, or Time Series?"}
+    ZoneShard --> PlatCheck
+    RangeShard --> PlatCheck
+    Replica --> PlatCheck
+    
+    %% Platform Features
+    PlatCheck -- Just CRUD --> Integration{"**Ecosystem Check**<br>Need mature connectors<br>(Kafka/Spark)?"}
+    PlatCheck -- "Real-Time Streams" --> StreamCheck{"**Streaming Nuance**<br>Process data in-flight?"}
+    StreamCheck -- Yes (Kafka+Flink) --> Flink["**Manage Separate Infra**<br>Complex Glue Code"]
+    StreamCheck -- Yes (Unified) --> ASP["**Atlas Stream Processing**<br>Continuous Intelligence"]
+    PlatCheck -- Search --> SearchDec{"**ETL Tolerance**<br>Want to manage<br>sync pipelines?"}
+    SearchDec -- Yes --> Elastic["**Elasticsearch/SOLR**"]
+    SearchDec -- No --> AtlasSearch["**Atlas Search**<br>Lucene on Node"]
+    PlatCheck -- AI/Vector --> AIUse{"**AI Pattern**<br>How is Vector used?"}
+    AIUse -- Chat History --> AgentMem["**Agent Memory**<br>Long-Term Context"]
+    AIUse -- Reduce LLM Cost --> SemCache["**Semantic Cache**<br>Prevent Re-runs"]
+    AIUse -- Knowledge Base --> RAG["**Knowledge Graph**<br>RAG + Filters"]
+    PlatCheck -- IoT --> TimeSeries["**Time Series**<br>Columnar Store"]
+    AtlasSearch --> Consolidation["**Value: Consolidation**<br>Reduced Tech Debt"]
+    AgentMem --> Consolidation
+    SemCache --> Consolidation
+    RAG --> Consolidation
+    TimeSeries --> Consolidation
+    ASP --> Consolidation
+    Consolidation --> Integration
+    
+    %% Deployment Path
+    Integration -- No (Isolated) --> DeployCheck{"**Deployment**<br>Can data touch<br>public cloud?"}
+    Integration -- Yes --> Connectors["**Value: Ecosystem**<br>Official Drivers/Connectors"]
+    Connectors --> DeployCheck
+    DeployCheck -- "No (Air-gapped)" --> SelfMan{"**Self-Managed**<br>Infrastructure?"}
+    SelfMan -- Containers --> K8s["**Enterprise Operator**<br>OpenShift/K8s"]
+    SelfMan -- VM/Metal --> OpsMan["**Ops Manager**<br>Automation"]
+    
+    K8s --> Secure{"**Trust Level**<br>Need 'Eyes-Off'?"}
+    OpsMan --> Secure
+    
+    DeployCheck -- Yes (Cloud) --> Portability{"**Lock-In Check**<br>Need Cloud Agnostic<br>or Exit Strategy?"}
+    Portability -- "No (Specific Native)" --> Dynamo["**DynamoDB/Firestore**<br>Single Cloud Lock-in"]
+    Portability -- Yes (Portable) --> NetCheck{"**Network Security**<br>Connection Method?"}
+    NetCheck -- AWS/Azure Backbone --> PrivLink["**PrivateLink**<br>One-way Security"]
+    NetCheck -- VPC Peering --> Peering["**VPC Peering**<br>Bi-directional"]
+    NetCheck -- Public Internet --> IPList["**IP Whitelist**<br>Standard TLS"]
+    PrivLink --> RTOCheck{"**DR Strategy**<br>RTO/RPO Requirements?"}
+    Peering --> RTOCheck
+    IPList --> RTOCheck
+    RTOCheck -- "Near-Zero RPO<br>(Multi-Cloud Resilience)" --> MultiCloud["**Multi-Cloud Cluster**<br>AWS+Azure+GCP"]
+    RTOCheck -- Minutes (Standard)<br>(Single Region) --> Standard["**Standard Cluster**<br>3-Node Replica"]
+    Standard --> Lifecycle{"**Cost Efficiency**<br>Retain history &gt; 90 days?"}
+    MultiCloud --> Lifecycle
+    Lifecycle -- Yes --> Archive["**Online Archive**<br>Auto-Tiering to S3"]
+    Lifecycle -- No --> ObsCheck{"**Ops Nuance**<br>Need Automated<br>Performance Tuning?"}
+    Archive --> ObsCheck
+    
+    ObsCheck -- No (Manual) --> ManualOps["**Manual Tuning**<br>Query Analysis"]
+    ObsCheck -- Yes (Intelligent) --> PerfAdv["**Performance Advisor**<br>Templatized Deployments<br>Auto-Index Suggest"]
+    
+    PerfAdv --> Secure
+    ManualOps --> Secure
+    
+    Secure -- "Yes (Regulated)" --> CSFLE["**Queryable Encryption**<br>Client-Side Keys<br>Encryption-in-Use"]
+    Secure -- No --> Final(["**Final DB choice : MongoDB**"])
+    CSFLE --> Final
+    
+    AMP -.-> Consolidation
+
+    %% --- CLICK BINDINGS ---
+    click ObjMatch showInfo
+    click AgileVal showInfo
+    click Consolidation showInfo
+    click Logical showInfo
+    click TenantShard showInfo
+    click Migrator showInfo
+    click MongoCore showInfo
+    click HashShard showInfo
+    click ZoneShard showInfo
+    click RangeShard showInfo
+    click Replica showInfo
+    click ASP showInfo
+    click AtlasSearch showInfo
+    click Vector showInfo
+    click AgentMem showInfo
+    click SemCache showInfo
+    click RAG showInfo
+    click TimeSeries showInfo
+    click Connectors showInfo
+    click K8s showInfo
+    click OpsMan showInfo
+    click PrivLink showInfo
+    click Peering showInfo
+    click IPList showInfo
+    click MultiCloud showInfo
+    click Standard showInfo
+    click Archive showInfo
+    click PerfAdv showInfo
+    click CSFLE showInfo
+    click AMP showInfo
+    click Final "https://cloud.mongodb.com/" "Start with MongoDB Atlas" _blank
+
+    %% --- STYLING ---
+     Start:::startNode
+     BizModel:::techZone
+     WorkloadCheck:::techZone
+     Tenancy:::techZone
+     Silo:::exitNode
+     Isolation:::techZone
+     Logical:::valueNode
+     TenantShard:::valueNode
+     AnalyticCheck:::techZone
+     DWH:::exitNode
+     DevSkill:::techZone
+     AcidCheck:::techZone
+     ObjMatch:::valueNode
+     DataNature:::techZone
+     NormalizationCheck:::techZone
+     RigidSQL:::techZone
+     RDBMS:::exitNode
+     Migrator:::valueNode
+     AMP:::valueNode
+     MongoCore:::valueNode
+     VolCheck:::techZone
+     GraphCheck:::techZone
+     GraphDB:::exitNode
+     KVCheck:::techZone
+     Latency:::techZone
+     Redis:::exitNode
+     QueryCheck:::techZone
+     Agility:::techZone
+     AgileVal:::valueNode
+     ScaleCheck:::scaleZone
+     ShardStrat:::scaleZone
+     HashShard:::valueNode
+     ZoneShard:::valueNode
+     RangeShard:::valueNode
+     Replica:::valueNode
+     PlatCheck:::platZone
+     Integration:::platZone
+     StreamCheck:::platZone
+     Flink:::exitNode
+     ASP:::valueNode
+     SearchDec:::platZone
+     Elastic:::exitNode
+     AtlasSearch:::valueNode
+     AIUse:::platZone
+     AgentMem:::valueNode
+     SemCache:::valueNode
+     RAG:::valueNode
+     TimeSeries:::valueNode
+     Consolidation:::valueNode
+     DeployCheck:::deployZone
+     Connectors:::valueNode
+     SelfMan:::deployZone
+     K8s:::valueNode
+     OpsMan:::valueNode
+     Secure:::deployZone
+     Portability:::deployZone
+     Dynamo:::exitNode
+     NetCheck:::deployZone
+     PrivLink:::valueNode
+     Peering:::valueNode
+     IPList:::valueNode
+     RTOCheck:::deployZone
+     MultiCloud:::valueNode
+     Standard:::valueNode
+     Lifecycle:::deployZone
+     Archive:::valueNode
+     ObsCheck:::deployZone
+     ManualOps:::exitNode
+     PerfAdv:::valueNode
+     CSFLE:::valueNode
+     Final:::Aqua
+    classDef startNode fill:#333,stroke:#333,stroke-width:2px,color:#fff
+    classDef techZone fill:#E3F2FD,stroke:#1565C0,stroke-width:2px,color:#000
+    classDef scaleZone fill:#FFF3E0,stroke:#EF6C00,stroke-width:2px,color:#000
+    classDef platZone fill:#F3E5F5,stroke:#7B1FA2,stroke-width:2px,color:#000
+    classDef deployZone fill:#E8F5E9,stroke:#2E7D32,stroke-width:2px,color:#000
+    classDef valueNode fill:#00ED64,stroke:#00684A,stroke-width:3px,font-weight:bold,color:#000
+    classDef exitNode fill:#F5F5F5,stroke:#616161,stroke-width:1px,stroke-dasharray: 5 5,color:#666
+    classDef Aqua stroke-width:1px, stroke-dasharray:none, stroke:#46EDC8, fill:#DEFFF8, color:#378E7A

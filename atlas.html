@@ -1,0 +1,1788 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at https://www.google.com https://www.gstatic.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://www.google.com https://cloudflare-dns.com https://us.i.posthog.com https://us-assets.i.posthog.com https://docs.google.com; frame-src https://www.google.com https://docs.google.com;">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Guide: MongoDB Atlas Advanced Deployments</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+    
+    <link rel="stylesheet" href="assets/tw-prod.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #001E2B;
+            color: #d1d5db;
+        }
+
+        .component {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background-color:rgb(32, 37, 50);
+            border: 1px solid #444;
+        }
+
+        .component:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 25px rgba(19, 170, 82, 0.5);
+            border-color:  #00ED64;
+        }
+
+        .flow-line {
+            stroke-dasharray: 6 6;
+        }
+
+        .flow-line-solid {
+            stroke-dasharray: 0;
+        }
+
+        .icon-green {
+            color:  #00ED64;
+        }
+
+        .nav-link.active {
+            color: #00ED64;
+            font-weight: 600;
+        }
+
+        .section-heading {
+            border-bottom: 1px solid #374151;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .diagram-component {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .diagram-component:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+        }
+
+        .db-color-mongo {
+            color: #00ED64;
+            border-color: #00ED64;
+        }
+
+        .cloud-aws {
+            color: #ff9900;
+            border-color: #ff9900;
+        }
+
+        .cloud-gcp {
+            color: #4285f4;
+            border-color: #4285f4;
+        }
+
+        .cloud-azure {
+            color: #0078d4;
+            border-color: #0078d4;
+        }
+
+        .failover-node {
+            transition: all 0.5s ease-in-out;
+        }
+
+        .failover-node.failed {
+            opacity: 0.3;
+            border-color: #ef4444;
+            transform: scale(0.95);
+        }
+
+        .failover-node.failed .status-dot {
+            background-color: #ef4444;
+        }
+
+        .failover-node.primary .status-dot {
+            background-color: #00ED64;
+        }
+
+        .failover-node.secondary .status-dot {
+            background-color: #60a5fa;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+        }
+
+        .connection-line {
+            stroke-dasharray: 5;
+            animation: dashFlow 1s linear infinite;
+        }
+
+        @keyframes dashFlow {
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        @keyframes dash {
+            from {
+                stroke-dashoffset: 100;
+            }
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        .diagram-component:hover>rect,
+        .diagram-component:hover>path,
+        .diagram-component:hover>circle {
+            filter: brightness(1.2);
+        }
+
+        .shard-path,
+        .schema-path {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .highlight-path {
+            stroke-dasharray: 5;
+            animation: dash 1s linear forwards;
+        }
+
+        /* Tooltip for overview components — shown via JS to avoid overlap */
+        #overview-tooltip {
+            position: fixed;
+            background: #1e293b;
+            border: 1px solid #00ED64;
+            border-radius: 8px;
+            padding: 8px 14px;
+            font-size: 0.75rem;
+            color: #d1d5db;
+            white-space: nowrap;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.15s;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        }
+        #overview-tooltip.visible {
+            opacity: 1;
+        }
+        #overview-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-bottom-color: #00ED64;
+        }
+
+        /* Failover timeline */
+        .failover-timeline {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-top: 1.5rem;
+            padding: 0 1rem;
+        }
+        .timeline-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            opacity: 0.3;
+            transition: all 0.5s;
+        }
+        .timeline-step.active {
+            opacity: 1;
+        }
+        .timeline-step.completed {
+            opacity: 0.7;
+        }
+        .timeline-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #374151;
+            border: 2px solid #4b5563;
+            margin: 0 auto 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.7rem;
+            font-weight: 700;
+            transition: all 0.5s;
+        }
+        .timeline-step.active .timeline-dot {
+            background: #00ED64;
+            border-color: #00ED64;
+            color: #000;
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+        }
+        .timeline-step.completed .timeline-dot {
+            background: #065f46;
+            border-color: #00ED64;
+            color: #00ED64;
+        }
+        .timeline-step.failed .timeline-dot {
+            background: #ef4444;
+            border-color: #ef4444;
+            color: #fff;
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+        }
+        .timeline-label {
+            font-size: 0.65rem;
+            color: #9ca3af;
+            max-width: 100px;
+            margin: 0 auto;
+            line-height: 1.3;
+        }
+        .timeline-connector {
+            flex: 0.5;
+            height: 2px;
+            background: #374151;
+            transition: background 0.5s;
+        }
+        .timeline-connector.active {
+            background: #00ED64;
+        }
+
+        /* Replication pulse */
+        @keyframes replicationPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            50% { transform: scale(1.02); box-shadow: 0 0 15px rgba(34, 197, 94, 0.3); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .replicating-node {
+            animation: replicationPulse 0.6s ease-in-out;
+        }
+
+        /* Oplog replication indicator */
+        .oplog-indicator {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00ED64;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .oplog-indicator.syncing {
+            opacity: 1;
+            animation: replicationPulse 1s infinite;
+        }
+
+        /* Global cluster animated lines */
+        @keyframes globalFlow {
+            0% { stroke-dashoffset: 20; }
+            100% { stroke-dashoffset: 0; }
+        }
+        .global-flow-line {
+            stroke-dasharray: 5 5;
+            animation: globalFlow 0.8s linear infinite;
+        }
+        .global-region {
+            transition: all 0.3s;
+        }
+        .global-region:hover {
+            transform: translateY(-3px);
+        }
+        .global-region.region-active {
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+        }
+
+        /* Write/Read badges */
+        .io-badge {
+            display: inline-block;
+            font-size: 0.6rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .io-badge.write { background: rgba(34, 197, 94, 0.2); color: #00ED64; }
+        .io-badge.read { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+
+        /* Latency counter */
+        .latency-badge {
+            font-family: monospace;
+            font-size: 0.7rem;
+            color: #fbbf24;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .latency-badge.visible { opacity: 1; }
+
+        /* Network mode toggle */
+        .net-toggle {
+            display: inline-flex;
+            background: #003345;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            overflow: hidden;
+        }
+        .net-toggle-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            background: transparent;
+            color: #9ca3af;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .net-toggle-btn.active {
+            background: #00ED64;
+            color: #000;
+            font-weight: 600;
+        }
+
+        /* Overview section */
+        .ov-wrapper { position: relative; }
+        .ov-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 600px; height: 600px;
+            transform: translate(-50%, -50%);
+            background: radial-gradient(circle, rgba(34,197,94,0.08) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ov-hub {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 24px 32px 18px;
+            background: linear-gradient(145deg, rgba(22,101,52,0.35), rgba(5,46,22,0.55));
+            border: 1.5px solid rgba(34,197,94,0.45);
+            border-radius: 20px;
+            box-shadow: 0 0 40px rgba(34,197,94,0.12), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .ov-hub-title { font-size: 1.5rem; font-weight: 800; color: #fff; letter-spacing: -0.02em; }
+        .ov-hub-title span { color: #4ade80; }
+        .ov-hub-sub { font-size: 0.7rem; color: #86efac; text-transform: uppercase; letter-spacing: 0.15em; font-weight: 600; }
+
+        @keyframes ov-orbit { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .ov-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 200px; height: 200px;
+            margin: -100px 0 0 -100px;
+            border: 1px dashed rgba(34,197,94,0.18);
+            border-radius: 50%;
+            animation: ov-orbit 40s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .ov-ring:nth-child(2) { width: 320px; height: 320px; margin: -160px 0 0 -160px; animation-duration: 55s; animation-direction: reverse; }
+
+        .ov-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px 14px 16px;
+            background: linear-gradient(160deg, rgba(17,24,39,0.95), rgba(10,15,25,0.98));
+            border: 1px solid rgba(55,65,81,0.6);
+            border-radius: 16px;
+            transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+            overflow: hidden;
+            cursor: default;
+        }
+        .ov-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(160deg, rgba(34,197,94,0.06), transparent 60%);
+            opacity: 0;
+            transition: opacity 0.35s;
+            pointer-events: none;
+        }
+        .ov-card:hover {
+            border-color: rgba(34,197,94,0.5) !important;
+            transform: translateY(-6px) !important;
+            box-shadow: 0 12px 32px rgba(34,197,94,0.12), 0 0 0 1px rgba(34,197,94,0.15) !important;
+        }
+        .ov-card:hover::before { opacity: 1; }
+        .ov-card-icon {
+            width: 40px; height: 40px;
+            padding: 8px;
+            border-radius: 12px;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.2);
+            margin-bottom: 10px;
+            color: #4ade80;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .ov-card:hover .ov-card-icon {
+            background: rgba(34,197,94,0.18);
+            border-color: rgba(34,197,94,0.4);
+        }
+        .ov-card h4 { font-size: 0.82rem; font-weight: 700; color: #f1f5f9; margin-bottom: 3px; line-height: 1.3; }
+        .ov-card p { font-size: 0.68rem; color: #9ca3af; line-height: 1.4; }
+
+        .ov-card-tooltip {
+            position: fixed;
+            z-index: 9999;
+            pointer-events: none;
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            max-width: 340px;
+            width: max-content;
+            padding: 14px 18px;
+            background: rgba(10, 20, 30, 0.97);
+            border: 1px solid rgba(34,197,94,0.35);
+            border-radius: 14px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(34,197,94,0.1);
+        }
+        .ov-card-tooltip.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .ov-card-tooltip-title {
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: #4ade80;
+            margin-bottom: 6px;
+        }
+        .ov-card-tooltip-desc {
+            font-size: 0.75rem;
+            color: #cbd5e1;
+            line-height: 1.55;
+            margin-bottom: 10px;
+        }
+        .ov-card-tooltip-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #4ade80;
+            text-decoration: none;
+            padding: 5px 12px;
+            border-radius: 8px;
+            background: rgba(34,197,94,0.1);
+            border: 1px solid rgba(34,197,94,0.25);
+            transition: background 0.2s, border-color 0.2s;
+        }
+        .ov-card-tooltip-link:hover {
+            background: rgba(34,197,94,0.2);
+            border-color: rgba(34,197,94,0.5);
+        }
+
+        .zone-circle { transition: all 0.3s; }
+        #zone-us:hover .zone-circle { fill: rgba(255,153,0,0.15); r: 45; }
+        #zone-eu:hover .zone-circle { fill: rgba(66,133,244,0.15); r: 45; }
+        #zone-apac:hover .zone-circle { fill: rgba(0,120,212,0.15); r: 45; }
+
+        .sk-tab-btn { transition: all 0.2s; cursor: pointer; }
+        .sk-tab-btn:hover { opacity: 0.85; }
+
+        .ov-footer-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #166534, #15803d);
+            border: 1px solid rgba(34,197,94,0.3);
+            color: #dcfce7;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 8px 20px;
+            border-radius: 999px;
+            letter-spacing: 0.03em;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="bg-gray-900/80 backdrop-blur-sm sticky top-0 z-50 border-b border-gray-700">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <div class="text-xl font-bold text-white">MongoDB Atlas Guide</div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#Platform" class="nav-link text-slate-300 hover:text-green-400">Platform</a>
+                    <a href="#disaster-recovery" class="nav-link text-slate-300 hover:text-green-400">Disaster
+                        Recovery</a>
+                    <a href="#sharding" class="nav-link text-slate-300 hover:text-green-400">Sharding</a>
+                    <a href="#multi-region" class="nav-link text-slate-300 hover:text-green-400">Global clusters</a>
+                    <a href="#documentmodel" class="nav-link text-slate-300 hover:text-green-400">Document Model</a>
+                    <a href="#private-networking" class="nav-link text-slate-300 hover:text-green-400">Private
+                        Networking</a>
+
+
+
+                    <a href="#trial-env" class="nav-link text-slate-300 hover:text-green-400">Trial Environment</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-4 py-8 md:py-12">
+
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-bold text-white mb-4"><U>MongoDB Atlas DeveloperGuide</U></h1>
+        </header>
+
+        <main class="space-y-20">
+
+
+            <div id="diagram-container" class="relative w-full max-w-7xl mx-auto">
+
+                        <section id="Platform">
+                            <h2 class="section-heading">Overview</h2>
+                        </section>
+
+                        <div class="ov-wrapper">
+                            <div class="ov-ring"></div>
+                            <div class="ov-ring"></div>
+
+                            <div class="relative z-10 max-w-3xl mx-auto">
+                                <!-- Centered Atlas Hub -->
+                                <div class="flex flex-col items-center mb-8">
+                                    <div class="ov-hub">
+                                        <div class="ov-hub-sub">Developer Data Platform</div>
+                                        <div class="ov-hub-title">MongoDB <span>Atlas</span></div>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                                    <div class="ov-card" data-desc="Multi-cloud, fully managed MongoDB with 99.995% SLA. Deploy replica sets and sharded clusters on AWS, GCP, or Azure with automated backups and point-in-time recovery." data-docs="https://www.mongodb.com/docs/atlas/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"/></svg></div>
+                                        <h4>Atlas Database</h4>
+                                        <p>Fully managed multi-cloud storage</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Industry-first technology to run expressive queries — including equality, range, prefix, and more — on fully encrypted data. The server never sees plaintext." data-docs="https://www.mongodb.com/docs/manual/core/queryable-encryption/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
+                                        <h4>Queryable Encryption</h4>
+                                        <p>Query encrypted fields in-place</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Automatically scale compute and storage based on real-time utilization. Storage scales at 90% usage; compute scales with configurable min/max cluster tiers." data-docs="https://www.mongodb.com/docs/atlas/cluster-autoscaling/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg></div>
+                                        <h4>Auto-scaling</h4>
+                                        <p>Compute &amp; storage on demand</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Store and query high-dimensional vector embeddings alongside operational data. Build semantic search, RAG pipelines, and recommendation engines with HNSW and IVF indexes." data-docs="https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/">
+                                        <div class="ov-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 18.26L4.947 22.208l1.575-7.928L.588 8.792l8.027-.952L12 .5l3.386 7.34 8.027.952-5.934 5.488 1.575 7.928z"/></svg></div>
+                                        <h4>Vector Search</h4>
+                                        <p>HNSW &amp; IVF on embeddings</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Lucene-powered full-text search with fuzzy matching, autocomplete, facets, highlights, and scoring — all using the same MongoDB Query API. No separate search engine needed." data-docs="https://www.mongodb.com/docs/atlas/atlas-search/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg></div>
+                                        <h4>Atlas Search</h4>
+                                        <p>Lucene full-text, fuzzy, facets</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Pin data to specific regions using zone sharding for GDPR compliance and data sovereignty. Users read and write locally with single-digit ms latency — data never leaves the zone." data-docs="https://www.mongodb.com/docs/atlas/global-clusters/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2h8a2 2 0 002-2v-1a2 2 0 012-2h1.945M7.737 11a4 4 0 016.526 0M6 15a2 2 0 100 4 2 2 0 000-4zm12 0a2 2 0 100 4 2 2 0 000-4z"/></svg></div>
+                                        <h4>Global Clusters</h4>
+                                        <p>Zone sharding for sovereignty</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Execute serverless functions in response to database events, user authentication, or schedules. Atlas Stream Processing adds Apache Kafka-compatible real-time data pipelines." data-docs="https://www.mongodb.com/docs/atlas/app-services/triggers/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg></div>
+                                        <h4>Triggers &amp; Streams</h4>
+                                        <p>Event-driven + stream processing</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Multi-document, multi-collection ACID transactions with snapshot isolation — even across sharded clusters. Same consistency guarantees as relational databases." data-docs="https://www.mongodb.com/docs/manual/core/transactions/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v.01"/></svg></div>
+                                        <h4>ACID Transactions</h4>
+                                        <p>Multi-doc distributed guarantees</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Automatically tier aged data to low-cost S3-backed cloud storage based on rules you define. Archived data remains fully queryable through the same Atlas connection." data-docs="https://www.mongodb.com/docs/atlas/online-archive/manage-online-archive/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg></div>
+                                        <h4>Online Archive</h4>
+                                        <p>Tier cold data, still queryable</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="Purpose-built collections optimized for time-stamped data like IoT sensor readings, financial ticks, and application metrics. Automatic bucketing, columnar compression, and sorted indexes deliver up to 90% storage reduction and faster time-range queries." data-docs="https://www.mongodb.com/docs/manual/core/timeseries-collections/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg></div>
+                                        <h4>Time Series</h4>
+                                        <p>Optimized time-stamped storage</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="A powerful data processing pipeline framework for transformations, computations, grouping, and reshaping — all server-side. Supports $lookup joins, $graphLookup, $bucket, window functions, and 200+ operators." data-docs="https://www.mongodb.com/docs/manual/aggregation/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h8m-8 5h16"/></svg></div>
+                                        <h4>Aggregation Framework</h4>
+                                        <p>Server-side data pipelines</p>
+                                    </div>
+                                    <div class="ov-card" data-desc="MongoDB's native embedding and reranking models. Generate high-quality vector embeddings and contextual reranking directly within your Atlas pipeline — no external ML infra required." data-docs="https://www.mongodb.com/docs/atlas/atlas-vector-search/tutorials/reciprocal-rank-fusion/">
+                                        <div class="ov-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></div>
+                                        <h4>VoyageAI</h4>
+                                        <p>Embeddings &amp; reranking models</p>
+                                    </div>
+                                </div>
+
+                                <!-- Shared hover tooltip for overview cards -->
+                                <div id="ov-card-tip" class="ov-card-tooltip">
+                                    <div class="ov-card-tooltip-title"></div>
+                                    <div class="ov-card-tooltip-desc"></div>
+                                    <a class="ov-card-tooltip-link" href="#" target="_blank" rel="noopener noreferrer">
+                                        <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                        View Documentation
+                                    </a>
+                                </div>
+
+                                <div class="flex justify-center mt-8">
+                                    <div class="ov-footer-pill">
+                                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        Flexible document model &amp; unified query API
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 sm:p-6 lg:p-8 mt-12">
+                            <div>
+                                <section id="home">
+                                    <h2 class="section-heading">Granular Details</h2>
+                                   
+                            </div>
+                            <div class="flex flex-col lg:flex-row gap-8">
+                                <!-- Main Diagram Area -->
+                                <div class="flex-grow">
+                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+                                        <!-- Application Drivers -->
+                                        <div class="flex flex-col items-center gap-4">
+                                            <h3 class="font-bold text-lg text-center mb-2">MongoDB Application Drivers
+                                            </h3>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div data-info="csharp"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    C#</div>
+                                                <div data-info="go"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Go</div>
+                                                <div data-info="java"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Java</div>
+                                                <div data-info="nodejs"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    JS</div>
+                                                <div data-info="python"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Python</div>
+                                                <div data-info="php"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    PHP</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Core Atlas Cluster -->
+                                        <div data-info="atlas"
+                                            class="diagram-component bg-gray-800 p-6 rounded-xl border-2 border-green-500 relative">
+                                            <h3 class="text-center font-bold text-green-400 mb-2">MongoDB Atlas</h3>
+                                            <div data-info="api"
+                                                class="diagram-component bg-gray-700 p-2 rounded-md text-center text-sm mb-4">
+                                                MongoDB Universal Query API
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <!-- Electable Nodes -->
+                                                <div class="col-span-1 space-y-4">
+                                                    <div data-info="primary"
+                                                        class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        P</div>
+                                                    <div data-info="secondary"
+                                                        class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        S</div>
+                                                    <div data-info="secondary"
+                                                        class="diagram-component bg-blue-900/50 border border-blue-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        S</div>
+                                                </div>
+                                                <!-- Workload Isolation Nodes -->
+                                                <div class="col-span-1 space-y-4">
+                                                    <div data-info="analytics"
+                                                        class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        A</div>
+                                                    <div data-info="readonly"
+                                                        class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        R</div>
+                                                    <div data-info="search"
+                                                        class="diagram-component bg-purple-900/50 border border-purple-500 rounded-full w-12 h-12 flex items-center justify-center font-bold mx-auto">
+                                                        🔍</div>
+                                                </div>
+                                            </div>
+                                            <div class="text-xs text-gray-400 mt-4 text-center">
+                                                Multi-region, Multi-cloud on AWS, Azure, and GCP
+                                            </div>
+                                        </div>
+
+                                        <!-- Data Ecosystem -->
+                                        <div class="flex flex-col items-center gap-4">
+                                            <h3 class="font-bold text-lg text-center mb-2">Data Ecosystem</h3>
+                                            <div class="space-y-4 w-full max-w-xs">
+                                                <div data-info="datascience"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Data Science Platforms</div>
+                                                <div data-info="charts"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    MongoDB Charts</div>
+                                                <div data-info="cdc"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Change Data Capture</div>
+                                                <div data-info="bi"
+                                                    class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                    Third-party BI & Reporting</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- Tools -->
+                                    <div class="mt-12">
+                                        <h3 class="font-bold text-lg text-center mb-4">Developer Tools</h3>
+                                        <div class="flex justify-center gap-4 flex-wrap">
+                                            <div data-info="compass"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                MongoDB Compass</div>
+                                            <div data-info="shell"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                MongoDB Shell</div>
+                                            <div data-info="vscode"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                VS Code Extension</div>
+                                            <div data-info="explorer"
+                                                class="diagram-component bg-gray-800 p-4 rounded-lg border border-gray-700 text-center">
+                                                Data Explorer</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Details Panel -->
+                                <div class="lg:w-1/3 lg:max-w-sm flex-shrink-0">
+                                    <div id="details-panel"
+                                        class="sticky top-24 bg-gray-800 p-6 rounded-xl border border-gray-700 min-h-[300px]">
+                                        <h3 id="details-title" class="text-xl font-bold text-green-400 mb-4">Select a
+                                            Component</h3>
+                                        <div id="details-content" class="text-gray-300 space-y-2">
+                                            <p>Click on any part of the diagram to see more information here.</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <section id="disaster-recovery" class="mt-16">
+                            <h2 class="section-heading">Disaster Recovery & Automated Failover</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">High availability is built into
+                                the core of MongoDB's replica set architecture. In the event of a primary node failure,
+                                Atlas automatically triggers an election to promote a healthy secondary to become the
+                                new primary, typically within seconds.</p>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <div id="failover-diagram"
+                                    class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center items-center">
+                                    <div id="node-1"
+                                        class="failover-node diagram-component p-4 rounded-lg border db-color-mongo primary relative">
+                                        <div id="oplog-1" class="oplog-indicator syncing"></div>
+                                        <h4 class="font-bold"><span class="status-dot"></span>Node 1 (Primary)</h4>
+                                        <p class="text-sm">Region: us-east-1</p>
+                                        <div class="mt-2"><span class="io-badge write">Writes</span> <span class="io-badge read">Reads</span></div>
+                                    </div>
+                                    <div id="node-2"
+                                        class="failover-node diagram-component p-4 rounded-lg border secondary relative">
+                                        <div id="oplog-2" class="oplog-indicator syncing"></div>
+                                        <h4 class="font-bold"><span class="status-dot"></span>Node 2 (Secondary)</h4>
+                                        <p class="text-sm">Region: us-east-2</p>
+                                        <div class="mt-2"><span class="io-badge read">Reads</span></div>
+                                    </div>
+                                    <div id="node-3"
+                                        class="failover-node diagram-component p-4 rounded-lg border secondary relative">
+                                        <div id="oplog-3" class="oplog-indicator syncing"></div>
+                                        <h4 class="font-bold"><span class="status-dot"></span>Node 3 (Secondary)</h4>
+                                        <p class="text-sm">Region: us-west-1</p>
+                                        <div class="mt-2"><span class="io-badge read">Reads</span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Failover Timeline -->
+                                <div id="failover-timeline" class="failover-timeline" style="display:none;">
+                                    <div class="timeline-step" id="ts-1"><div class="timeline-dot">1</div><div class="timeline-label">Primary fails</div></div>
+                                    <div class="timeline-connector" id="tc-1"></div>
+                                    <div class="timeline-step" id="ts-2"><div class="timeline-dot">2</div><div class="timeline-label">Heartbeat timeout (10s)</div></div>
+                                    <div class="timeline-connector" id="tc-2"></div>
+                                    <div class="timeline-step" id="ts-3"><div class="timeline-dot">3</div><div class="timeline-label">Election called</div></div>
+                                    <div class="timeline-connector" id="tc-3"></div>
+                                    <div class="timeline-step" id="ts-4"><div class="timeline-dot">4</div><div class="timeline-label">Votes cast</div></div>
+                                    <div class="timeline-connector" id="tc-4"></div>
+                                    <div class="timeline-step" id="ts-5"><div class="timeline-dot">5</div><div class="timeline-label">New primary elected</div></div>
+                                    <div class="timeline-connector" id="tc-5"></div>
+                                    <div class="timeline-step" id="ts-6"><div class="timeline-dot">6</div><div class="timeline-label">Drivers reconnect</div></div>
+                                </div>
+
+                                <div class="text-center mt-6">
+                                    <button id="failover-btn"
+                                        class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Simulate
+                                        Primary Failure</button>
+                                    <p id="failover-status" class="mt-4 text-lg text-green-400 h-6"></p>
+                                </div>
+                                <p class="text-center mt-4 text-slate-400">This automated failover ensures your
+                                    application remains available with minimal disruption. For disaster recovery,
+                                    placing a secondary node in a separate geographic region (like Node 2 and 3) ensures
+                                    data durability and availability for reads and writes even in the event of a full
+                                    regional outage. <a href="https://www.mongodb.com/docs/manual/replication/"
+                                        target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Replication
+                                        Docs]</a></p>
+                            </div>
+                        </section>
+
+
+                        <section id="sharding" class="mt-16">
+                            <h2 class="section-heading">Sharding for Horizontal Scaling</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">When a dataset outgrows the
+                                capacity of a single server (vertical scaling), MongoDB uses sharding to distribute data
+                                across multiple servers (horizontal scaling). This allows for near-limitless
+                                scalability.</p>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <!-- Interactive Topology -->
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center mb-8">
+                                    <!-- Application -->
+                                    <div class="md:col-span-5 flex justify-center">
+                                        <div id="shard-app" class="diagram-component p-4 rounded-lg border border-indigo-400 w-52 text-center cursor-pointer transition-all" onclick="shardInsertDoc()">
+                                            <div class="text-sm text-gray-400 mb-1">Application</div>
+                                            <div class="text-xs text-green-400">Click to insert a document</div>
+                                        </div>
+                                    </div>
+                                    <!-- Arrow down -->
+                                    <div class="md:col-span-5 flex justify-center"><svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#6366f1" stroke-width="2"/><polygon points="6,24 12,32 18,24" fill="#6366f1"/></svg></div>
+                                    <!-- Mongos -->
+                                    <div class="md:col-span-5 flex justify-center">
+                                        <div id="shard-mongos" class="diagram-component p-4 rounded-lg border border-indigo-400 w-52 text-center transition-all">
+                                            <div class="font-bold text-indigo-300">mongos</div>
+                                            <div class="text-xs text-gray-500">Query Router</div>
+                                            <div id="mongos-status" class="text-[10px] text-green-400 mt-1 h-4"></div>
+                                        </div>
+                                    </div>
+                                    <!-- Arrows to shards -->
+                                    <div class="md:col-span-5 flex justify-center gap-24">
+                                        <svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4"/><polygon points="6,24 12,32 18,24" fill="#4f46e5"/></svg>
+                                        <svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4"/><polygon points="6,24 12,32 18,24" fill="#4f46e5"/></svg>
+                                        <svg width="24" height="32"><line x1="12" y1="0" x2="12" y2="28" stroke="#4f46e5" stroke-width="2" stroke-dasharray="4 4"/><polygon points="6,24 12,32 18,24" fill="#4f46e5"/></svg>
+                                    </div>
+                                    <!-- 3 Shards -->
+                                    <div class="md:col-start-1 md:col-span-1"></div>
+                                    <div id="shard-a" class="diagram-component p-4 rounded-lg border border-green-700 bg-gray-800 text-center transition-all">
+                                        <h4 class="font-bold text-green-400 text-sm">Shard A</h4>
+                                        <div class="text-[10px] text-gray-500 mb-2">Key range: A–I</div>
+                                        <div class="flex justify-center gap-1">
+                                            <span class="w-6 h-6 bg-blue-900 border border-blue-500 rounded-full text-[10px] flex items-center justify-center font-bold">P</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                        </div>
+                                        <div id="shard-a-bar" class="mt-2 h-2 rounded-full bg-gray-700 overflow-hidden"><div class="h-full bg-green-500 transition-all duration-500" style="width:0%"></div></div>
+                                        <div id="shard-a-count" class="text-[10px] text-gray-500 mt-1">0 docs</div>
+                                    </div>
+                                    <div id="shard-b" class="diagram-component p-4 rounded-lg border border-green-700 bg-gray-800 text-center transition-all">
+                                        <h4 class="font-bold text-green-400 text-sm">Shard B</h4>
+                                        <div class="text-[10px] text-gray-500 mb-2">Key range: J–R</div>
+                                        <div class="flex justify-center gap-1">
+                                            <span class="w-6 h-6 bg-blue-900 border border-blue-500 rounded-full text-[10px] flex items-center justify-center font-bold">P</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                        </div>
+                                        <div id="shard-b-bar" class="mt-2 h-2 rounded-full bg-gray-700 overflow-hidden"><div class="h-full bg-green-500 transition-all duration-500" style="width:0%"></div></div>
+                                        <div id="shard-b-count" class="text-[10px] text-gray-500 mt-1">0 docs</div>
+                                    </div>
+                                    <div id="shard-c" class="diagram-component p-4 rounded-lg border border-green-700 bg-gray-800 text-center transition-all">
+                                        <h4 class="font-bold text-green-400 text-sm">Shard C</h4>
+                                        <div class="text-[10px] text-gray-500 mb-2">Key range: S–Z</div>
+                                        <div class="flex justify-center gap-1">
+                                            <span class="w-6 h-6 bg-blue-900 border border-blue-500 rounded-full text-[10px] flex items-center justify-center font-bold">P</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                            <span class="w-6 h-6 bg-blue-900/40 border border-blue-400/50 rounded-full text-[10px] flex items-center justify-center">S</span>
+                                        </div>
+                                        <div id="shard-c-bar" class="mt-2 h-2 rounded-full bg-gray-700 overflow-hidden"><div class="h-full bg-green-500 transition-all duration-500" style="width:0%"></div></div>
+                                        <div id="shard-c-count" class="text-[10px] text-gray-500 mt-1">0 docs</div>
+                                    </div>
+                                    <div class="md:col-span-1"></div>
+                                    <!-- Config Server -->
+                                    <div class="md:col-span-5 flex justify-center mt-4">
+                                        <div class="diagram-component p-3 rounded-lg border border-purple-600 bg-gray-800 text-center w-64">
+                                            <div class="font-bold text-purple-400 text-sm">Config Server RS</div>
+                                            <div class="text-[10px] text-gray-500">Chunk map &amp; metadata</div>
+                                            <div class="flex justify-center gap-1 mt-1">
+                                                <span class="w-5 h-5 bg-purple-900/40 border border-purple-500/50 rounded-full text-[9px] flex items-center justify-center">P</span>
+                                                <span class="w-5 h-5 bg-purple-900/30 border border-purple-400/30 rounded-full text-[9px] flex items-center justify-center">S</span>
+                                                <span class="w-5 h-5 bg-purple-900/30 border border-purple-400/30 rounded-full text-[9px] flex items-center justify-center">S</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p id="shard-insert-status" class="text-center text-sm text-green-400 h-6 mb-4"></p>
+
+                                <div class="flex justify-center gap-3 mb-6">
+                                    <button onclick="shardInsertDoc()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors">Insert Random Document</button>
+                                    <button onclick="shardBulkInsert()" class="bg-gray-700 hover:bg-gray-600 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-colors">Bulk Insert (20 docs)</button>
+                                    <button onclick="shardReset()" class="bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm py-2 px-4 rounded-lg transition-colors border border-gray-600">Reset</button>
+                                </div>
+
+                                <div class="text-slate-300 pt-4 border-t border-gray-700">
+                                    <h4 class="font-bold text-lg text-white mb-2">Key Components:</h4>
+                                    <ul class="list-disc list-inside space-y-2 text-sm">
+                                        <li><strong class="text-green-400">Shards:</strong> Each shard is an independent replica set storing a subset of the data, determined by shard key ranges.</li>
+                                        <li><strong class="text-green-400">mongos (Query Router):</strong> The application connects to <code class="text-green-400">mongos</code>, not individual shards. It routes queries to the correct shard(s) based on the shard key.</li>
+                                        <li><strong class="text-green-400">Config Servers:</strong> A dedicated replica set storing the cluster's metadata — the chunk map that tells mongos which shard holds which key ranges.</li>
+                                    </ul>
+                                    <h4 class="font-bold text-lg text-white mt-6 mb-2">The Shard Key is Critical</h4>
+                                    <p class="text-sm">The choice of a <span class="font-semibold text-green-400">shard key</span> determines how data is distributed. A poor key leads to "hot shards" (bottlenecks), while a good key ensures even distribution.
+                                        <a href="https://www.mongodb.com/docs/manual/sharding/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Sharding Docs]</a></p>
+                                </div>
+                            </div>
+                        </section>
+                        <div class="space-y-8 mt-8">
+                            <!-- Shard Key Strategy Comparison -->
+                            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                                <div class="p-8">
+                                    <h2 class="text-2xl font-bold text-green-400 mb-3">Shard Key Strategy Comparison</h2>
+                                    <p class="text-gray-400 mb-6">The choice of shard key defines how evenly data and queries spread across shards. Compare three common strategies below — click each tab to see the trade-offs.</p>
+                                    <div class="flex gap-2 mb-6 flex-wrap">
+                                        <button class="sk-tab-btn bg-green-600 text-white text-sm font-semibold py-2 px-4 rounded-lg" onclick="selectSkTab('ranged')">Ranged</button>
+                                        <button class="sk-tab-btn bg-gray-700 text-gray-300 text-sm font-semibold py-2 px-4 rounded-lg" onclick="selectSkTab('hashed')">Hashed</button>
+                                        <button class="sk-tab-btn bg-gray-700 text-gray-300 text-sm font-semibold py-2 px-4 rounded-lg" onclick="selectSkTab('compound')">Compound</button>
+                                    </div>
+                                    <div id="sk-ranged" class="sk-panel">
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h3 class="font-bold text-white mb-2">Ranged Shard Key</h3>
+                                                <p class="text-sm text-gray-400 mb-3">Data is partitioned into contiguous ranges based on the shard key value. Documents with "close" shard key values are likely on the same chunk/shard.</p>
+                                                <div class="text-sm space-y-1">
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Efficient range queries — one shard for sequential scans</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Good for time-series or alphabetical lookups</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Monotonic keys (timestamps) cause "hot shard" — all writes go to one shard</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Uneven distribution if key values cluster</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-black rounded-lg p-4">
+                                                <div class="text-xs text-gray-500 mb-2 font-mono">// Ranged on "lastName"</div>
+                                                <div class="flex flex-col gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 0</div>
+                                                        <div class="flex-1 h-6 bg-green-800/40 rounded flex items-center px-2 text-[10px] text-green-300 border border-green-700/40">A — F</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 1</div>
+                                                        <div class="flex-1 h-6 bg-green-800/40 rounded flex items-center px-2 text-[10px] text-green-300 border border-green-700/40">G — N</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 2</div>
+                                                        <div class="flex-1 h-6 bg-green-800/40 rounded flex items-center px-2 text-[10px] text-green-300 border border-green-700/40">O — Z</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="sk-hashed" class="sk-panel" style="display:none">
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h3 class="font-bold text-white mb-2">Hashed Shard Key</h3>
+                                                <p class="text-sm text-gray-400 mb-3">MongoDB hashes the shard key value and distributes chunks based on hash ranges. This gives near-perfect uniformity.</p>
+                                                <div class="text-sm space-y-1">
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Even write distribution — no hot shards</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Great for high-write, point-lookup workloads</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Range queries scatter across all shards (broadcast)</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">No natural ordering — sorted results require merge sort</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-black rounded-lg p-4">
+                                                <div class="text-xs text-gray-500 mb-2 font-mono">// Hashed on "_id"</div>
+                                                <div class="flex flex-col gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 0</div>
+                                                        <div class="flex-1 h-6 bg-indigo-800/40 rounded flex items-center px-2 text-[10px] text-indigo-300 border border-indigo-700/40">hash: MinKey — -3074457...</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 1</div>
+                                                        <div class="flex-1 h-6 bg-indigo-800/40 rounded flex items-center px-2 text-[10px] text-indigo-300 border border-indigo-700/40">hash: -3074457... — 3074457...</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 2</div>
+                                                        <div class="flex-1 h-6 bg-indigo-800/40 rounded flex items-center px-2 text-[10px] text-indigo-300 border border-indigo-700/40">hash: 3074457... — MaxKey</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div id="sk-compound" class="sk-panel" style="display:none">
+                                        <div class="grid md:grid-cols-2 gap-6">
+                                            <div>
+                                                <h3 class="font-bold text-white mb-2">Compound Shard Key</h3>
+                                                <p class="text-sm text-gray-400 mb-3">Combines multiple fields (e.g., <code class="text-green-400">{tenantId: 1, createdAt: 1}</code>) for the best of both worlds — tenant isolation + time ordering.</p>
+                                                <div class="text-sm space-y-1">
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Targeted queries when prefix (tenantId) is included</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Fine-grained distribution — avoids monotonic hot spots</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-green-400">✓</span> <span class="text-gray-300">Supports range scans on suffix field within a tenant</span></div>
+                                                    <div class="flex items-center gap-2"><span class="text-red-400">✗</span> <span class="text-gray-300">Queries missing prefix hit all shards (broadcast)</span></div>
+                                                </div>
+                                            </div>
+                                            <div class="bg-black rounded-lg p-4">
+                                                <div class="text-xs text-gray-500 mb-2 font-mono">// Compound: {tenantId: 1, createdAt: 1}</div>
+                                                <div class="flex flex-col gap-2">
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 0</div>
+                                                        <div class="flex-1 h-6 bg-amber-800/30 rounded flex items-center px-2 text-[10px] text-amber-300 border border-amber-700/40">tenant_A, 2024-01 → 2024-06</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 1</div>
+                                                        <div class="flex-1 h-6 bg-amber-800/30 rounded flex items-center px-2 text-[10px] text-amber-300 border border-amber-700/40">tenant_A, 2024-07+ | tenant_B, 2024-01→04</div>
+                                                    </div>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="w-24 text-right text-xs text-gray-400">Shard 2</div>
+                                                        <div class="flex-1 h-6 bg-amber-800/30 rounded flex items-center px-2 text-[10px] text-amber-300 border border-amber-700/40">tenant_B, 2024-05+ | tenant_C, ...</div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <p class="text-sm text-gray-500 mt-4"><a href="https://www.mongodb.com/docs/manual/core/sharding-shard-key/" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline">[Ref: Shard Key Selection]</a></p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <section id="multi-region" class="mt-16">
+                            <h2 class="section-heading">Global Deployments — Zone Sharding</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas Global Clusters use
+                                <strong class="text-green-400">zone sharding</strong> to partition data across regions
+                                by a location field in the shard key. Each region owns its shard — writes are local to that
+                                zone and never cross the network. This gives you data sovereignty and single-digit
+                                millisecond latency for every user, everywhere.
+                            </p>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700">
+                                <!-- Interactive world map -->
+                                <p class="text-center text-sm text-gray-500 mb-2">Click a region to simulate a local write to that zone's shard</p>
+                                <div class="relative max-w-4xl mx-auto">
+                                    <svg viewBox="0 0 800 380" class="w-full" id="zone-map-svg">
+                                        <!-- Simplified world map outline -->
+                                        <rect x="0" y="0" width="800" height="380" fill="#0a1628" rx="12"/>
+                                        <!-- Grid lines -->
+                                        <line x1="0" y1="190" x2="800" y2="190" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="4 4"/>
+                                        <line x1="400" y1="0" x2="400" y2="380" stroke="#1e293b" stroke-width="0.5" stroke-dasharray="4 4"/>
+                                        <!-- Continent shapes (simplified polygons) -->
+                                        <!-- North America -->
+                                        <path d="M80,60 L190,45 L220,70 L230,110 L210,140 L190,170 L160,180 L130,175 L100,190 L90,170 L70,130 L60,90 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- South America -->
+                                        <path d="M160,200 L200,185 L220,210 L230,250 L220,290 L200,320 L175,330 L155,310 L145,270 L140,230 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Europe -->
+                                        <path d="M360,55 L420,45 L440,60 L450,90 L430,110 L400,115 L380,100 L370,80 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Africa -->
+                                        <path d="M380,130 L430,120 L450,150 L460,200 L450,250 L430,280 L400,290 L380,270 L370,230 L365,180 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Asia -->
+                                        <path d="M460,50 L580,40 L650,60 L680,90 L690,130 L670,160 L620,170 L560,165 L500,140 L470,110 L450,80 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+                                        <!-- Australia -->
+                                        <path d="M620,230 L680,220 L710,240 L720,270 L700,290 L660,295 L630,280 L615,255 Z" fill="#162033" stroke="#2d4a2e" stroke-width="1"/>
+
+                                        <!-- Zone Circles (clickable) -->
+                                        <!-- US Zone -->
+                                        <g id="zone-us" class="cursor-pointer" onclick="simulateZoneWrite('us')">
+                                            <circle cx="160" cy="120" r="40" fill="rgba(255,153,0,0.08)" stroke="#ff9900" stroke-width="1.5" stroke-dasharray="4 4" class="zone-circle"/>
+                                            <circle cx="160" cy="120" r="6" fill="#ff9900" id="zone-us-dot"/>
+                                            <text x="160" y="105" text-anchor="middle" fill="#ff9900" font-size="11" font-weight="700">US</text>
+                                            <text x="160" y="145" text-anchor="middle" fill="#888" font-size="8">AWS us-east-1</text>
+                                            <text x="160" y="156" text-anchor="middle" fill="#666" font-size="7" id="zone-us-latency"></text>
+                                        </g>
+                                        <!-- EU Zone -->
+                                        <g id="zone-eu" class="cursor-pointer" onclick="simulateZoneWrite('eu')">
+                                            <circle cx="410" cy="85" r="40" fill="rgba(66,133,244,0.08)" stroke="#4285f4" stroke-width="1.5" stroke-dasharray="4 4" class="zone-circle"/>
+                                            <circle cx="410" cy="85" r="6" fill="#4285f4" id="zone-eu-dot"/>
+                                            <text x="410" y="70" text-anchor="middle" fill="#4285f4" font-size="11" font-weight="700">EU</text>
+                                            <text x="410" y="110" text-anchor="middle" fill="#888" font-size="8">GCP europe-west1</text>
+                                            <text x="410" y="121" text-anchor="middle" fill="#666" font-size="7" id="zone-eu-latency"></text>
+                                        </g>
+                                        <!-- APAC Zone -->
+                                        <g id="zone-apac" class="cursor-pointer" onclick="simulateZoneWrite('apac')">
+                                            <circle cx="650" cy="120" r="40" fill="rgba(0,120,212,0.08)" stroke="#0078d4" stroke-width="1.5" stroke-dasharray="4 4" class="zone-circle"/>
+                                            <circle cx="650" cy="120" r="6" fill="#0078d4" id="zone-apac-dot"/>
+                                            <text x="650" y="105" text-anchor="middle" fill="#0078d4" font-size="11" font-weight="700">APAC</text>
+                                            <text x="650" y="145" text-anchor="middle" fill="#888" font-size="8">Azure japaneast</text>
+                                            <text x="650" y="156" text-anchor="middle" fill="#666" font-size="7" id="zone-apac-latency"></text>
+                                        </g>
+
+                                        <!-- Animated pulse lines (hidden until triggered) -->
+                                        <circle id="zone-pulse" cx="0" cy="0" r="0" fill="none" stroke="#00ED64" stroke-width="2" opacity="0"/>
+
+                                        <!-- Shard boxes at bottom -->
+                                        <rect x="80" y="300" width="160" height="55" rx="8" fill="#1a2332" stroke="#ff9900" stroke-width="1"/>
+                                        <text x="160" y="320" text-anchor="middle" fill="#ff9900" font-size="10" font-weight="600">Shard 1 (3-node RS)</text>
+                                        <text x="160" y="335" text-anchor="middle" fill="#666" font-size="8">location: "US"</text>
+                                        <text x="160" y="348" text-anchor="middle" fill="#444" font-size="7" id="zone-us-count">0 writes</text>
+
+                                        <rect x="320" y="300" width="160" height="55" rx="8" fill="#1a2332" stroke="#4285f4" stroke-width="1"/>
+                                        <text x="400" y="320" text-anchor="middle" fill="#4285f4" font-size="10" font-weight="600">Shard 2 (3-node RS)</text>
+                                        <text x="400" y="335" text-anchor="middle" fill="#666" font-size="8">location: "EU"</text>
+                                        <text x="400" y="348" text-anchor="middle" fill="#444" font-size="7" id="zone-eu-count">0 writes</text>
+
+                                        <rect x="560" y="300" width="160" height="55" rx="8" fill="#1a2332" stroke="#0078d4" stroke-width="1"/>
+                                        <text x="640" y="320" text-anchor="middle" fill="#0078d4" font-size="10" font-weight="600">Shard 3 (3-node RS)</text>
+                                        <text x="640" y="335" text-anchor="middle" fill="#666" font-size="8">location: "APAC"</text>
+                                        <text x="640" y="348" text-anchor="middle" fill="#444" font-size="7" id="zone-apac-count">0 writes</text>
+
+                                        <!-- Routing lines (zone dot → shard box) -->
+                                        <line x1="160" y1="160" x2="160" y2="300" stroke="#ff9900" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" class="zone-route-line"/>
+                                        <line x1="410" y1="125" x2="400" y2="300" stroke="#4285f4" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" class="zone-route-line"/>
+                                        <line x1="650" y1="160" x2="640" y2="300" stroke="#0078d4" stroke-width="1" stroke-dasharray="3 3" opacity="0.3" class="zone-route-line"/>
+
+                                        <!-- Legend -->
+                                        <text x="400" y="375" text-anchor="middle" fill="#555" font-size="8">✕ No cross-region replication — each shard is independent, data stays in its zone</text>
+                                    </svg>
+                                </div>
+
+                                <p id="zone-write-status" class="text-center mt-4 text-green-400 text-sm h-6"></p>
+
+                                <div class="flex justify-center gap-3 mt-3">
+                                    <button onclick="simulateZoneWrite('us')" class="text-xs font-semibold py-2 px-4 rounded-lg border transition-all" style="color:#ff9900;border-color:#ff9900;background:rgba(255,153,0,0.05)">Write to US Zone</button>
+                                    <button onclick="simulateZoneWrite('eu')" class="text-xs font-semibold py-2 px-4 rounded-lg border transition-all" style="color:#4285f4;border-color:#4285f4;background:rgba(66,133,244,0.05)">Write to EU Zone</button>
+                                    <button onclick="simulateZoneWrite('apac')" class="text-xs font-semibold py-2 px-4 rounded-lg border transition-all" style="color:#0078d4;border-color:#0078d4;background:rgba(0,120,212,0.05)">Write to APAC Zone</button>
+                                </div>
+
+                                <!-- Zone details grid -->
+                                <div class="grid md:grid-cols-3 gap-4 mt-8">
+                                    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                        <h4 class="font-bold text-sm" style="color:#ff9900">US Zone</h4>
+                                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                                            <div class="flex justify-between"><span>Cloud</span><span class="text-gray-300">AWS us-east-1</span></div>
+                                            <div class="flex justify-between"><span>Shard</span><span class="text-gray-300">Shard 1</span></div>
+                                            <div class="flex justify-between"><span>Zone Key</span><span class="text-green-400">location: "US"</span></div>
+                                            <div class="flex justify-between"><span>Local Latency</span><span class="text-green-400">~2ms</span></div>
+                                            <div class="flex justify-between"><span>Data Sovereignty</span><span class="text-green-400">US only</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                        <h4 class="font-bold text-sm" style="color:#4285f4">EU Zone</h4>
+                                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                                            <div class="flex justify-between"><span>Cloud</span><span class="text-gray-300">GCP europe-west1</span></div>
+                                            <div class="flex justify-between"><span>Shard</span><span class="text-gray-300">Shard 2</span></div>
+                                            <div class="flex justify-between"><span>Zone Key</span><span class="text-green-400">location: "EU"</span></div>
+                                            <div class="flex justify-between"><span>Local Latency</span><span class="text-green-400">~3ms</span></div>
+                                            <div class="flex justify-between"><span>Data Sovereignty</span><span class="text-green-400">GDPR compliant</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-800 rounded-xl p-4 border border-gray-700">
+                                        <h4 class="font-bold text-sm" style="color:#0078d4">APAC Zone</h4>
+                                        <div class="text-xs text-gray-400 mt-2 space-y-1">
+                                            <div class="flex justify-between"><span>Cloud</span><span class="text-gray-300">Azure japaneast</span></div>
+                                            <div class="flex justify-between"><span>Shard</span><span class="text-gray-300">Shard 3</span></div>
+                                            <div class="flex justify-between"><span>Zone Key</span><span class="text-green-400">location: "APAC"</span></div>
+                                            <div class="flex justify-between"><span>Local Latency</span><span class="text-green-400">~2ms</span></div>
+                                            <div class="flex justify-between"><span>Data Sovereignty</span><span class="text-green-400">APAC only</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <p class="text-center mt-6 text-slate-400 text-sm">
+                                    The <code class="text-green-400">mongos</code> router uses the
+                                    <code class="text-green-400">location</code> field in the shard key to route
+                                    each document to the correct zone's shard. Data never leaves the zone. Each shard is a 3-member replica set for HA within the zone.
+                                    <a href="https://www.mongodb.com/docs/atlas/global-clusters/" target="_blank" rel="noopener noreferrer"
+                                        class="text-indigo-400 hover:underline">[Ref: Global Clusters Docs]</a>
+                                </p>
+                            </div>
+                        </section>
+                        <!-- Section 2: From 4NF to Document Model -->
+                        <section id="documentmodel" class="mt-16">
+                            <h2 class="section-heading">Simplicity of Document Model</h2>
+                            <div class="bg-gray-900 border border-green-900 rounded-xl shadow-lg overflow-hidden">
+                                <div class="p-8">
+                                    <h2 class="text-2xl font-bold text-green-400 mb-3">From 3NF to Document Model</h2>
+                                    <p class="text-gray-400 mb-6">Relational databases typically use 3rd Normal Form (3NF) schemas
+                                        with multiple tables and foreign-key joins to reduce data redundancy. The
+                                        document model simplifies this by embedding related data in a single document.
+                                        Click a relational table to see how it maps to the intuitive document structure.
+                                    </p>
+                                    <div class="mt-4 p-4 rounded-lg bg-black">
+                                        <svg id="schema-svg" viewBox="0 0 600 450" class="w-full">
+                                            <!-- SVG content for schema diagram will be inserted here by JS -->
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section id="private-networking" class="mt-16">
+                            <h2 class="section-heading">Private Network Routing Across Clouds</h2>
+                            <p class="mb-8 text-slate-400 max-w-3xl mx-auto text-center">Atlas enables secure, private
+                                connections between your application's virtual network and your Atlas cluster, even
+                                across different cloud providers. This is achieved through VPC/VNet Peering
+                                and cloud-native Private Endpoints (AWS PrivateLink, Azure Private Link, GCP Private Service Connect).</p>
+                            <div class="grid md:grid-cols-2 gap-12">
+                                <!-- VPC Peering Diagram -->
+                                <div>
+                                    <h3 class="text-xl font-bold text-center mb-4 text-white">VPC/VNet Peering</h3>
+                                    <div
+                                        class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="flex justify-around items-center">
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border cloud-aws">App VPC
+                                            </div>
+                                            <div class="text-2xl font-bold text-white">↔</div>
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border" style="color: #00ED64; border-color: #00ED64;">Atlas VPC</div>
+                                        </div>
+                                        <p class="text-sm mt-4 text-slate-400">Creates a direct, bi-directional private network
+                                            connection between your application's VPC/VNet and the Atlas VPC. Traffic does
+                                            not traverse the public internet. Supported on <strong>AWS, Azure, and GCP</strong>.</p>
+                                        <a href="https://www.mongodb.com/docs/atlas/security-vpc-peering/"
+                                            target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
+                                            Peering Docs]</a>
+                                    </div>
+                                </div>
+                                <!-- Private Endpoints Diagram -->
+                                <div>
+                                    <h3 class="text-xl font-bold text-center mb-4 text-white">Private Endpoints</h3>
+                                    <div
+                                        class="diagram-component bg-gray-900 p-6 rounded-lg border border-gray-700 text-center space-y-4">
+                                        <div class="flex justify-around items-center">
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border border-gray-500">Your VPC/VNet
+                                            </div>
+                                            <div class="text-2xl font-bold text-white">→</div>
+                                            <div class="w-2/5 p-4 bg-gray-800 rounded-lg border" style="color: #00ED64; border-color: #00ED64;">Atlas Cluster</div>
+                                        </div>
+                                        <div class="grid grid-cols-3 gap-2 mt-4">
+                                            <div class="p-2 bg-gray-800 rounded text-xs border cloud-aws">AWS PrivateLink</div>
+                                            <div class="p-2 bg-gray-800 rounded text-xs border cloud-azure">Azure Private Link</div>
+                                            <div class="p-2 bg-gray-800 rounded text-xs border cloud-gcp">GCP Private Service Connect</div>
+                                        </div>
+                                        <p class="text-sm mt-4 text-slate-400">Creates a secure, one-way endpoint from
+                                            your network to the Atlas cluster. No CIDR management or firewall rules needed.
+                                            Each cloud provider offers its native private endpoint service.</p>
+                                        <a href="https://www.mongodb.com/docs/atlas/security-private-endpoint/"
+                                            target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:underline text-sm">[Ref: Atlas
+                                            Private Endpoint Docs]</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <section id="trial-env" class="mt-16">
+                            <h2 class="section-heading">Getting Started: Trial Environment</h2>
+                            <div class="bg-gray-900 p-8 rounded-2xl border border-gray-700 max-w-2xl mx-auto">
+                                <h3 class="text-2xl font-bold mb-4 text-white">M0 Free Tier</h3>
+                                <p class="text-slate-400 mb-4">Atlas offers a perpetual free tier called "M0 Sandbox."
+                                    It's ideal for learning, prototyping, and early development.</p>
+                                <ul class="list-disc list-inside space-y-2 text-slate-300">
+                                    <li>512 MB of storage</li>
+                                    <li>Shared RAM and vCPU</li>
+                                    <li>Basic monitoring and security features</li>
+                                    <li>Available on AWS, GCP, and Azure</li>
+                                </ul>
+                                <a href="https://www.mongodb.com/cloud/atlas/register" target="_blank" rel="noopener noreferrer"
+                                    class="mt-6 inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg">Start
+                                    Free</a>
+                            </div>
+                        </section>
+
+        </main>
+
+        <footer class="text-center mt-16 text-slate-500 text-sm">
+            <p>Interactive guide to MongoDB Atlas Advanced Deployment Concepts.</p>
+        </footer>
+    </div>
+
+    <div id="overview-tooltip"></div>
+
+    <script>
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // Overview card hover: lift effect + tooltip with description & docs link
+            const ovTip = document.getElementById('ov-card-tip');
+            const ovTipTitle = ovTip.querySelector('.ov-card-tooltip-title');
+            const ovTipDesc = ovTip.querySelector('.ov-card-tooltip-desc');
+            const ovTipLink = ovTip.querySelector('.ov-card-tooltip-link');
+            let ovTipTimer = null;
+
+            document.querySelectorAll('.ov-card').forEach(card => {
+                card.style.cursor = 'pointer';
+                card.addEventListener('mouseenter', function(e) {
+                    this.style.transform = 'translateY(-6px)';
+                    this.style.borderColor = 'rgba(34,197,94,0.5)';
+                    this.style.boxShadow = '0 12px 32px rgba(34,197,94,0.15), 0 0 0 1px rgba(34,197,94,0.2)';
+                    const icon = this.querySelector('.ov-card-icon');
+                    if (icon) {
+                        icon.style.background = 'rgba(34,197,94,0.2)';
+                        icon.style.borderColor = 'rgba(34,197,94,0.45)';
+                    }
+
+                    const desc = this.dataset.desc;
+                    const docs = this.dataset.docs;
+                    if (!desc) return;
+
+                    clearTimeout(ovTipTimer);
+                    const title = this.querySelector('h4');
+                    ovTipTitle.textContent = title ? title.textContent : '';
+                    ovTipDesc.textContent = desc;
+                    if (docs) {
+                        ovTipLink.href = docs;
+                        ovTipLink.style.display = '';
+                    } else {
+                        ovTipLink.style.display = 'none';
+                    }
+
+                    ovTip.classList.add('visible');
+
+                    const rect = this.getBoundingClientRect();
+                    const tipW = ovTip.offsetWidth;
+                    const tipH = ovTip.offsetHeight;
+                    let left = rect.left + rect.width / 2 - tipW / 2;
+                    let top = rect.bottom + 10;
+
+                    if (top + tipH > window.innerHeight - 12) {
+                        top = rect.top - tipH - 10;
+                    }
+                    if (left < 8) left = 8;
+                    if (left + tipW > window.innerWidth - 8) left = window.innerWidth - tipW - 8;
+
+                    ovTip.style.left = left + 'px';
+                    ovTip.style.top = top + 'px';
+                });
+                card.addEventListener('mouseleave', function() {
+                    this.style.transform = '';
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                    const icon = this.querySelector('.ov-card-icon');
+                    if (icon) {
+                        icon.style.background = '';
+                        icon.style.borderColor = '';
+                    }
+                    ovTipTimer = setTimeout(() => ovTip.classList.remove('visible'), 150);
+                });
+
+                card.addEventListener('click', function() {
+                    const docs = this.dataset.docs;
+                    if (docs) window.open(docs, '_blank');
+                });
+            });
+
+            ovTip.addEventListener('mouseenter', () => clearTimeout(ovTipTimer));
+            ovTip.addEventListener('mouseleave', () => {
+                ovTipTimer = setTimeout(() => ovTip.classList.remove('visible'), 150);
+            });
+            // Overview grid tooltip (single shared element, positioned via JS)
+            const overviewTip = document.getElementById('overview-tooltip');
+            document.querySelectorAll('.component[data-tip]').forEach(el => {
+                el.addEventListener('mouseenter', (e) => {
+                    overviewTip.textContent = el.dataset.tip;
+                    overviewTip.classList.add('visible');
+                    const rect = el.getBoundingClientRect();
+                    overviewTip.style.left = (rect.left + rect.width / 2 - overviewTip.offsetWidth / 2) + 'px';
+                    overviewTip.style.top = (rect.bottom + 8) + 'px';
+                    // Keep within viewport
+                    const tipRect = overviewTip.getBoundingClientRect();
+                    if (tipRect.right > window.innerWidth - 8) {
+                        overviewTip.style.left = (window.innerWidth - tipRect.width - 8) + 'px';
+                    }
+                    if (tipRect.left < 8) {
+                        overviewTip.style.left = '8px';
+                    }
+                });
+                el.addEventListener('mouseleave', () => {
+                    overviewTip.classList.remove('visible');
+                });
+            });
+
+            const components = document.querySelectorAll('.diagram-component');
+            const detailsTitle = document.getElementById('details-title');
+            const detailsContent = document.getElementById('details-content');
+            let activeComponent = null;
+
+            const infoMap = {
+                // Default
+                default: {
+                    title: 'Select a Component',
+                    content: '<p>Click on any part of the diagram to see more information here.</p>'
+                },
+                // Drivers
+                csharp: { title: 'C# / .NET Driver', content: '<p>Provides an interface for .NET applications to connect and interact with MongoDB, supporting LINQ and asynchronous operations.</p>' },
+                go: { title: 'Go Driver', content: '<p>A modern, idiomatic driver for Go applications, designed for high performance and concurrency.</p>' },
+                java: { title: 'Java Driver', content: '<p>A robust driver for the JVM ecosystem, supporting synchronous and asynchronous operations for enterprise applications.</p>' },
+                nodejs: { title: 'Node.js Driver', content: '<p>The official driver for Node.js, enabling JavaScript and TypeScript applications to work with MongoDB in an asynchronous, non-blocking manner.</p>' },
+                python: { title: 'Python Driver (PyMongo)', content: '<p>The standard driver for Python, widely used in web applications (Django, Flask) and data science workflows.</p>' },
+                php: { title: 'PHP Driver', content: '<p>Allows PHP applications to connect to MongoDB, commonly used in web development with frameworks like Laravel and Symfony.</p>' },
+                // Core Atlas
+                atlas: { title: 'MongoDB Atlas', content: '<p>MongoDB\'s fully managed, multi-cloud developer data platform. It automates deployment, scaling, and maintenance, allowing developers to focus on building applications.</p>' },
+                api: { title: 'Universal Query API', content: '<p>A single, unified interface that allows applications to perform queries for transactional, analytical, and search workloads without needing different APIs for different data types.</p>' },
+                primary: { title: 'Electable Node: Primary (P)', content: '<h4>Transactional/Operational Workload</h4><p>The Primary node in a replica set receives all write operations. It provides strong data consistency and is the main point of interaction for transactional workloads. Part of a high-availability setup with a 99.995% uptime SLA.</p>' },
+                secondary: { title: 'Electable Node: Secondary (S)', content: '<h4>Transactional/Operational Workload</h4><p>Secondary nodes replicate data from the Primary node. They ensure data redundancy and high availability. If the Primary node fails, a Secondary is automatically elected to become the new Primary.</p>' },
+                analytics: { title: 'Workload Isolation: Analytics Node (A)', content: '<h4>Analytical/Ad-hoc Workload</h4><p>A dedicated node optimized for reporting, business intelligence, and complex analytical queries. It isolates analytical workloads from transactional traffic, ensuring that long-running queries do not impact application performance.</p>' },
+                readonly: { title: 'Workload Isolation: Read-only Node (R)', content: '<h4>Read Only Node</h4><p>A read-only node used for scaling read operations for local reads. It helps distribute the read load from the main electable nodes.</p>' },
+                search: { title: 'Workload Isolation: Search Node', content: '<h4>Search and Vector Search</h4><p>A specialized node that powers Atlas Search for full-text search and Atlas Vector Search for semantic search. It offloads complex search operations, providing high-performance search without impacting the core database.</p>' },
+                // Data Ecosystem
+                datascience: { title: 'Data Science Platforms', content: '<p>Integrates with popular data science tools and platforms like Iguazio, TensorFlow, and cloud services from AWS and Google Cloud. Enables building and deploying machine learning models using data stored in Atlas.</p>' },
+                charts: { title: 'MongoDB Charts', content: '<p>A native data visualization tool for MongoDB. It allows users to create, share, and embed real-time dashboards and charts based on their Atlas data without complex data movement.</p>' },
+                cdc: { title: 'Change Data Capture', content: '<p>Using Change Streams or integrations with tools like Kafka, applications can react to data changes in real-time. This is crucial for building event-driven architectures, real-time analytics, and data synchronization pipelines.</p>' },
+                bi: { title: 'Third-party BI & Reporting', content: '<p>The Atlas SQL Interface allows standard BI and reporting tools like Tableau, Power BI, Qlik, and MicroStrategy to connect to and query MongoDB data using familiar SQL syntax, bridging the gap between NoSQL data and traditional analytics.</p>' },
+                // Tools
+                compass: { title: 'MongoDB Compass', content: '<p>The official GUI for MongoDB. It provides a graphical way to explore data, run queries, manage indexes, and analyze performance.</p>' },
+                shell: { title: 'MongoDB Shell (mongosh)', content: '<p>A modern command-line interface for MongoDB. It offers a powerful scripting environment for interacting with and managing your databases.</p>' },
+                vscode: { title: 'VS Code Extension', content: '<p>An extension for Visual Studio Code that allows developers to connect to Atlas, browse databases and collections, and create playgrounds for running queries directly within their editor.</p>' },
+                explorer: { title: 'Data Explorer', content: '<p>A web-based tool within the MongoDB Atlas UI that allows for browsing, querying, and managing data directly in your browser without needing to install any tools.</p>' },
+            };
+
+            function updateDetails(infoKey) {
+                const info = infoMap[infoKey] || infoMap.default;
+                detailsTitle.textContent = info.title;
+                detailsContent.innerHTML = info.content;
+            }
+
+            components.forEach(component => {
+                component.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const infoKey = component.dataset.info;
+
+                    if (activeComponent) {
+                        activeComponent.classList.remove('active');
+                    }
+                    component.classList.add('active');
+                    activeComponent = component;
+
+                    updateDetails(infoKey);
+                });
+            });
+
+            // Reset when clicking outside
+            document.body.addEventListener('click', () => {
+                if (activeComponent) {
+                    activeComponent.classList.remove('active');
+                    activeComponent = null;
+                }
+                updateDetails('default');
+            });
+
+            const failoverBtn = document.getElementById('failover-btn');
+            const failoverStatus = document.getElementById('failover-status');
+            const failoverTimeline = document.getElementById('failover-timeline');
+            const node1 = document.getElementById('node-1');
+            const node2 = document.getElementById('node-2');
+            const node3 = document.getElementById('node-3');
+
+            let isFailedOver = false;
+            let failoverRunning = false;
+
+            function resetTimeline() {
+                failoverTimeline.style.display = 'none';
+                for (let i = 1; i <= 6; i++) {
+                    const step = document.getElementById('ts-' + i);
+                    step.classList.remove('active', 'completed', 'failed');
+                }
+                for (let i = 1; i <= 5; i++) {
+                    const conn = document.getElementById('tc-' + i);
+                    conn.classList.remove('active');
+                }
+            }
+
+            function activateStep(stepNum, isFailed) {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        if (stepNum > 1) {
+                            document.getElementById('ts-' + (stepNum - 1)).classList.remove('active');
+                            document.getElementById('ts-' + (stepNum - 1)).classList.add(stepNum === 2 && isFailed ? 'failed' : 'completed');
+                            document.getElementById('tc-' + (stepNum - 1)).classList.add('active');
+                        }
+                        document.getElementById('ts-' + stepNum).classList.add('active');
+                        resolve();
+                    }, stepNum === 1 ? 0 : 700);
+                });
+            }
+
+            failoverBtn.addEventListener('click', async () => {
+                if (failoverRunning) return;
+
+                if (isFailedOver) {
+                    resetTimeline();
+                    failoverStatus.textContent = '';
+                    node1.classList.remove('failed');
+                    node1.classList.add('primary');
+                    node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Primary)';
+                    node1.querySelector('.mt-2').innerHTML = '<span class="io-badge write">Writes</span> <span class="io-badge read">Reads</span>';
+                    document.getElementById('oplog-1').classList.add('syncing');
+
+                    node2.classList.remove('primary');
+                    node2.classList.add('secondary');
+                    node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Secondary)';
+                    node2.querySelector('.mt-2').innerHTML = '<span class="io-badge read">Reads</span>';
+                    document.getElementById('oplog-2').classList.add('syncing');
+                    document.getElementById('oplog-3').classList.add('syncing');
+
+                    failoverBtn.textContent = 'Simulate Primary Failure';
+                    failoverBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    failoverBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                    isFailedOver = false;
+                    return;
+                }
+
+                failoverRunning = true;
+                failoverBtn.disabled = true;
+                failoverBtn.style.opacity = '0.5';
+                failoverTimeline.style.display = 'flex';
+
+                // Step 1: Primary fails
+                await activateStep(1, true);
+                failoverStatus.textContent = '⚠ Primary node failed!';
+                node1.classList.add('failed');
+                node1.classList.remove('primary');
+                node1.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 1 (Failed)';
+                node1.querySelector('.mt-2').innerHTML = '<span class="io-badge" style="background:rgba(239,68,68,0.2);color:#ef4444;">DOWN</span>';
+                document.getElementById('oplog-1').classList.remove('syncing');
+
+                // Step 2: Heartbeat timeout
+                await activateStep(2);
+                failoverStatus.textContent = '⏱ Heartbeat timeout — secondaries detect primary is unreachable...';
+
+                // Step 3: Election called
+                await activateStep(3);
+                failoverStatus.textContent = '🗳 Election initiated by Node 2 (highest priority survivor)...';
+                node2.classList.add('replicating-node');
+                node3.classList.add('replicating-node');
+
+                // Step 4: Votes cast
+                await activateStep(4);
+                failoverStatus.textContent = '✓ Node 3 votes for Node 2. Majority achieved (2 of 3).';
+                setTimeout(() => { node2.classList.remove('replicating-node'); node3.classList.remove('replicating-node'); }, 300);
+
+                // Step 5: New primary
+                await activateStep(5);
+                node2.classList.remove('secondary');
+                node2.classList.add('primary');
+                node2.querySelector('h4').innerHTML = '<span class="status-dot"></span>Node 2 (Primary)';
+                node2.querySelector('.mt-2').innerHTML = '<span class="io-badge write">Writes</span> <span class="io-badge read">Reads</span>';
+                failoverStatus.textContent = '✅ Node 2 elected as new primary!';
+
+                // Step 6: Drivers reconnect
+                await activateStep(6);
+                failoverStatus.textContent = '🔗 Drivers reconnected. Writes flowing to Node 2. Total time: ~12s.';
+                document.getElementById('ts-6').classList.remove('active');
+                document.getElementById('ts-6').classList.add('completed');
+                document.getElementById('tc-5').classList.add('active');
+
+                failoverBtn.textContent = 'Restore System';
+                failoverBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                failoverBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                failoverBtn.disabled = false;
+                failoverBtn.style.opacity = '1';
+                isFailedOver = true;
+                failoverRunning = false;
+            });
+
+            // Active nav link scrolling
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            window.addEventListener('scroll', () => {
+                let current = '';
+                sections.forEach(section => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 100) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href').includes(current)) {
+                        link.classList.add('active');
+                    }
+                });
+            });
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            // --- Interactive Sharding Simulation ---
+            const shardCounts = { a: 0, b: 0, c: 0 };
+            const words = ['Alpha','Bravo','Charlie','Delta','Echo','Foxtrot','Golf','Hotel','India','Juliet','Kilo','Lima','Mike','November','Oscar','Papa','Quebec','Romeo','Sierra','Tango','Uniform','Victor','Whiskey','Xray','Yankee','Zulu'];
+
+            function getShardForKey(word) {
+                const c = word.charAt(0).toUpperCase();
+                if (c >= 'A' && c <= 'I') return 'a';
+                if (c >= 'J' && c <= 'R') return 'b';
+                return 'c';
+            }
+            function updateShardUI() {
+                const total = Math.max(shardCounts.a + shardCounts.b + shardCounts.c, 1);
+                ['a','b','c'].forEach(s => {
+                    const pct = Math.round((shardCounts[s] / total) * 100);
+                    const bar = document.querySelector('#shard-' + s + '-bar div');
+                    const count = document.getElementById('shard-' + s + '-count');
+                    if (bar) bar.style.width = pct + '%';
+                    if (count) count.textContent = shardCounts[s] + ' docs';
+                });
+            }
+            function flashElement(el, color) {
+                el.style.boxShadow = '0 0 20px ' + color;
+                setTimeout(() => { el.style.boxShadow = ''; }, 500);
+            }
+            window.shardInsertDoc = function() {
+                const word = words[Math.floor(Math.random() * words.length)];
+                const shard = getShardForKey(word);
+                shardCounts[shard]++;
+                const mongosEl = document.getElementById('shard-mongos');
+                const shardEl = document.getElementById('shard-' + shard);
+                const statusEl = document.getElementById('shard-insert-status');
+                const mongosStatus = document.getElementById('mongos-status');
+
+                mongosStatus.textContent = 'Routing "' + word + '" → Shard ' + shard.toUpperCase();
+                flashElement(mongosEl, 'rgba(99,102,241,0.5)');
+                setTimeout(() => {
+                    flashElement(shardEl, 'rgba(0,237,100,0.4)');
+                    mongosStatus.textContent = '';
+                    statusEl.textContent = '✅ { name: "' + word + '" } → Shard ' + shard.toUpperCase() + ' (range ' + (shard === 'a' ? 'A–I' : shard === 'b' ? 'J–R' : 'S–Z') + ')';
+                    updateShardUI();
+                    setTimeout(() => { statusEl.textContent = ''; }, 2500);
+                }, 400);
+            };
+            window.shardBulkInsert = function() {
+                let i = 0;
+                const interval = setInterval(() => {
+                    if (i >= 20) { clearInterval(interval); return; }
+                    shardInsertDoc();
+                    i++;
+                }, 150);
+            };
+            window.shardReset = function() {
+                shardCounts.a = 0; shardCounts.b = 0; shardCounts.c = 0;
+                updateShardUI();
+                document.getElementById('shard-insert-status').textContent = '';
+            };
+
+            // --- Shard Key Tab Selector ---
+            window.selectSkTab = function(tab) {
+                document.querySelectorAll('.sk-panel').forEach(p => p.style.display = 'none');
+                document.querySelectorAll('.sk-tab-btn').forEach(b => { b.classList.remove('bg-green-600','text-white'); b.classList.add('bg-gray-700','text-gray-300'); });
+                const panel = document.getElementById('sk-' + tab);
+                if (panel) panel.style.display = '';
+                event.target.classList.remove('bg-gray-700','text-gray-300');
+                event.target.classList.add('bg-green-600','text-white');
+            };
+
+            // --- Zone Sharding Simulation ---
+            const zoneCounts = { us: 0, eu: 0, apac: 0 };
+            const zoneColors = { us: '#ff9900', eu: '#4285f4', apac: '#0078d4' };
+            const zoneNames = { us: 'US', eu: 'EU', apac: 'APAC' };
+            const zoneShards = { us: 'Shard 1', eu: 'Shard 2', apac: 'Shard 3' };
+            const zoneDotCoords = { us: {cx:160,cy:120}, eu: {cx:410,cy:85}, apac: {cx:650,cy:120} };
+            const zoneLatencies = { us: '~2ms', eu: '~3ms', apac: '~2ms' };
+            let zoneWriteRunning = false;
+
+            window.simulateZoneWrite = function(zone) {
+                if (zoneWriteRunning) return;
+                zoneWriteRunning = true;
+                zoneCounts[zone]++;
+
+                const statusEl = document.getElementById('zone-write-status');
+                const dot = document.getElementById('zone-' + zone + '-dot');
+                const latLabel = document.getElementById('zone-' + zone + '-latency');
+                const countLabel = document.getElementById('zone-' + zone + '-count');
+                const pulse = document.getElementById('zone-pulse');
+                const coords = zoneDotCoords[zone];
+
+                // Animate pulse
+                pulse.setAttribute('cx', coords.cx);
+                pulse.setAttribute('cy', coords.cy);
+                pulse.setAttribute('r', '6');
+                pulse.setAttribute('stroke', zoneColors[zone]);
+                pulse.setAttribute('opacity', '1');
+                pulse.style.transition = 'none';
+                requestAnimationFrame(() => {
+                    pulse.style.transition = 'all 0.6s ease-out';
+                    pulse.setAttribute('r', '50');
+                    pulse.setAttribute('opacity', '0');
+                });
+
+                // Animate dot scale
+                dot.setAttribute('r', '10');
+                setTimeout(() => dot.setAttribute('r', '6'), 300);
+
+                latLabel.textContent = zoneLatencies[zone] + ' local';
+                statusEl.textContent = '🔀 mongos routes { location: "' + zoneNames[zone] + '" } → ' + zoneShards[zone];
+
+                setTimeout(() => {
+                    statusEl.textContent = '✅ Write acknowledged on ' + zoneShards[zone] + ' in ' + zoneLatencies[zone] + ' — data stays in ' + zoneNames[zone] + ' zone';
+                    countLabel.textContent = zoneCounts[zone] + ' writes';
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                        latLabel.textContent = '';
+                        zoneWriteRunning = false;
+                    }, 2500);
+                }, 800);
+            };
+
+            // --- Schema Diagram Logic ---
+            const schemaSVG = document.getElementById('schema-svg');
+            if (schemaSVG) {
+                const tables = {
+                    users: { x: 50, y: 50, width: 120, height: 80, label: 'Users', docPart: 'userDoc' },
+                    user_skills: { x: 50, y: 180, width: 120, height: 60, label: 'User_Skills', docPart: 'skillsArray' },
+                    skills: { x: 50, y: 290, width: 120, height: 60, label: 'Skills', docPart: 'skillsArray' },
+                };
+                const docElements = {
+                    userDoc: { x: 350, y: 50, width: 220, height: 350, color: '#2d3748' },
+                    skillsArray: { x: 370, y: 150, width: 180, height: 100, color: '#4a5568' },
+                }
+
+                const renderSchemaDiagram = (highlightedPart = null) => {
+                    let svgContent = `
+                        <text x="110" y="20" font-size="14" fill="#a0aec0" text-anchor="middle">Relational Schema (3NF)</text>
+                        <text x="460" y="20" font-size="16" fill="#a0aec0" text-anchor="middle">Document Model</text>
+                    `;
+
+                    // Render Tables
+                    Object.values(tables).forEach(t => {
+                        svgContent += `<g class="diagram-component" onclick="renderSchemaDiagram('${t.docPart}')"><rect x="${t.x}" y="${t.y}" width="${t.width}" height="${t.height}" rx="5" fill="#4a5568" stroke="${highlightedPart === t.docPart ? '#4ade80' : '#a0aec0'}" stroke-width="2" /><text x="${t.x + t.width / 2}" y="${t.y + t.height / 2 + 5}" text-anchor="middle" fill="#e2e8f0">${t.label}</text></g>`;
+                    });
+
+                    // Render Relationships
+                    svgContent += `
+                        <line x1="${tables.users.x + 60}" y1="${tables.users.y + 80}" x2="${tables.user_skills.x + 60}" y2="${tables.user_skills.y}" stroke="#a0aec0" stroke-width="1.5" />
+                        <line x1="${tables.skills.x + 60}" y1="${tables.skills.y}" x2="${tables.user_skills.x + 60}" y2="${tables.user_skills.y + 60}" stroke="#a0aec0" stroke-width="1.5" />
+                        <text x="120" y="160" font-size="12" fill="#a0aec0">user_id (FK)</text>
+                        <text x="120" y="270" font-size="12" fill="#a0aec0">skill_id (FK)</text>
+                    `;
+
+                    // Render Document
+                    svgContent += `<rect x="${docElements.userDoc.x}" y="${docElements.userDoc.y}" width="${docElements.userDoc.width}" height="${docElements.userDoc.height}" rx="8" fill="${highlightedPart === 'userDoc' ? '#38a169' : docElements.userDoc.color}" stroke="#a0aec0" />`;
+                    svgContent += `<text x="360" y="80" fill="#e2e8f0" font-family="monospace">{ _id: "...",</text>`;
+                    svgContent += `<text x="360" y="100" fill="#e2e8f0" font-family="monospace">  name: "Alex",</text>`;
+                    svgContent += `<text x="360" y="120" fill="#e2e8f0" font-family="monospace">  email: "...",</text>`;
+                    svgContent += `<text x="360" y="140" fill="#e2e8f0" font-family="monospace">  skills: [</text>`;
+                    svgContent += `<rect x="${docElements.skillsArray.x}" y="${docElements.skillsArray.y}" width="${docElements.skillsArray.width}" height="${docElements.skillsArray.height}" rx="5" fill="${highlightedPart === 'skillsArray' ? '#38a169' : docElements.skillsArray.color}" />`;
+                    svgContent += `<text x="370" y="170" fill="#e2e8f0" font-family="monospace" font-size="7.5">{ name: "Python", level: "Expert" },</text>`;
+                    svgContent += `<text x="370" y="190" fill="#e2e8f0" font-family="monospace" font-size="7.5">{ name: "Java", level: "Intermediate" },</text>`;
+                    svgContent += `<text x="370" y="210" fill="#e2e8f0" font-family="monospace">...</text>`;
+                    svgContent += `<text x="360" y="270" fill="#e2e8f0" font-family="monospace">  ]</text>`;
+                    svgContent += `<text x="350" y="390" fill="#e2e8f0" font-family="monospace">}</text>`;
+
+                    // Render Paths
+                    if (highlightedPart) {
+                        const tableArray = Object.values(tables).filter(t => t.docPart === highlightedPart);
+                        const docPart = docElements[highlightedPart];
+                        tableArray.forEach(table => {
+                            svgContent += `<path class="schema-path highlight-path" d="M ${table.x + table.width} ${table.y + table.height / 2} C 250 ${table.y + table.height / 2}, 250 ${docPart.y + docPart.height / 2}, ${docPart.x} ${docPart.y + docPart.height / 2}" stroke="#4ade80" stroke-width="2" fill="none" />`;
+                        });
+                    }
+
+                    schemaSVG.innerHTML = svgContent;
+                };
+
+                renderSchemaDiagram();
+                window.renderSchemaDiagram = renderSchemaDiagram;
+            }
+
+        });
+
+        
+    </script>
+    <script>if(window.top!==window.self){window.top.location=window.self.location;}</script>
+    <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
+    <script>window.SFAB_DISABLE_GATE=false</script>
+    <script src="subscribe.js?v=gform-2"></script>
+</body>
+
+</html>

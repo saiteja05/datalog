@@ -1,0 +1,1571 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="robots" content="noindex, nofollow">
+    <!-- Security Headers -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com https://gc.zgo.at https://www.google.com https://www.gstatic.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://www.google-analytics.com https://mongodbunboxed.goatcounter.com https://www.google.com https://cloudflare-dns.com https://us.i.posthog.com https://us-assets.i.posthog.com https://docs.google.com; frame-src https://www.google.com https://docs.google.com;">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="assets/tw-prod.min.css">
+    <title>MongoDB Unpacked</title>
+    <link rel="icon" type="image/png" href="assets/mongodb-leaf.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-primary: #001E2B;
+            --bg-secondary: #002838;
+            --bg-card: #003345;
+            --bg-card-hover: #004058;
+            --border-subtle: rgba(255, 255, 255, 0.06);
+            --border-accent: rgba(0, 237, 100, 0.2);
+            --text-primary: #fafafa;
+            --text-secondary: #b8d8e8;
+            --text-muted: #7fa8bc;
+            --accent: #00ed64;
+            --accent-dim: #00c853;
+            --accent-glow: rgba(0, 237, 100, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Geometric Background Pattern */
+        .bg-pattern {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .bg-pattern::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background:
+                radial-gradient(ellipse 80% 50% at 20% 40%, rgba(0, 237, 100, 0.03) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 80% 60%, rgba(0, 200, 83, 0.02) 0%, transparent 50%);
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 20%, transparent 70%);
+        }
+
+        /* Container */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            margin-bottom: 5rem;
+            padding-top: 2rem;
+            animation: fadeIn 0.8s ease-out;
+            position: relative;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Hero visual wrapper */
+        .hero-visual {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Pulsing glow behind logo */
+        .hero-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 237, 100, 0.15) 0%, rgba(0, 237, 100, 0.05) 40%, transparent 70%);
+            animation: pulseGlow 3s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* Orbital rings */
+        .hero-orbit {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            border-radius: 50%;
+            border: 1px dashed rgba(0, 237, 100, 0.15);
+            pointer-events: none;
+        }
+
+        .hero-orbit-1 {
+            width: 140px;
+            height: 140px;
+            margin-top: -70px;
+            margin-left: -70px;
+            animation: orbitSpin 12s linear infinite;
+        }
+
+        .hero-orbit-2 {
+            width: 200px;
+            height: 200px;
+            margin-top: -100px;
+            margin-left: -100px;
+            animation: orbitSpin 20s linear infinite reverse;
+            border-style: dotted;
+            border-color: rgba(0, 237, 100, 0.08);
+        }
+
+        @keyframes orbitSpin {
+            from {
+                transform: rotate(0deg);
+            }
+
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Floating particles on the orbits */
+        .hero-particle {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 8px rgba(0, 237, 100, 0.6);
+        }
+
+        .hero-orbit-1 .hero-particle {
+            top: -3px;
+            left: calc(50% - 3px);
+        }
+
+        .hero-orbit-2 .hero-particle {
+            bottom: -3px;
+            right: calc(50% - 3px);
+        }
+
+        .logo-mark {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(0, 237, 100, 0.12), rgba(0, 237, 100, 0.03));
+            border: 1px solid rgba(0, 237, 100, 0.25);
+            border-radius: 20px;
+            z-index: 2;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 0 40px rgba(0, 237, 100, 0.1), inset 0 0 20px rgba(0, 237, 100, 0.05);
+        }
+
+        .logo-mark svg {
+            width: 38px;
+            height: 38px;
+        }
+
+        /* Title wrapper with flanking sparkles and underline glow */
+        .hero-title-wrap {
+            position: relative;
+            display: inline-block;
+            padding: 0 1rem;
+        }
+
+        h1 {
+            position: relative;
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+            margin-bottom: 0.25rem;
+            background: linear-gradient(135deg, var(--text-primary) 0%, var(--accent) 50%, var(--text-primary) 100%);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                background-position: 0% center;
+            }
+
+            50% {
+                background-position: 100% center;
+            }
+        }
+
+        /* Glowing underline beneath the title */
+        .hero-title-underline {
+            display: block;
+            margin: 0 auto 1.25rem;
+            width: 70%;
+            height: 2px;
+            border-radius: 2px;
+            background: linear-gradient(90deg, transparent 0%, var(--accent) 30%, var(--accent) 70%, transparent 100%);
+            opacity: 0.5;
+            position: relative;
+        }
+
+        .hero-title-underline::after {
+            content: '';
+            position: absolute;
+            inset: -3px 20%;
+            height: 8px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, transparent, rgba(0, 237, 100, 0.3), transparent);
+            filter: blur(4px);
+        }
+
+        /* Flanking sparkle/star decorations */
+        .hero-sparkle {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+            opacity: 0.7;
+            animation: sparklePulse 2s ease-in-out infinite;
+        }
+
+        .hero-sparkle-left {
+            left: -32px;
+            animation-delay: 0s;
+        }
+
+        .hero-sparkle-right {
+            right: -32px;
+            animation-delay: 1s;
+        }
+
+        @keyframes sparklePulse {
+
+            0%,
+            100% {
+                opacity: 0.3;
+                transform: translateY(-50%) scale(0.8);
+            }
+
+            50% {
+                opacity: 1;
+                transform: translateY(-50%) scale(1.1);
+            }
+        }
+
+        /* Floating accent dots near title */
+        .hero-dot {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--accent);
+            pointer-events: none;
+        }
+
+        .hero-dot-1 {
+            width: 4px;
+            height: 4px;
+            top: 0;
+            left: -16px;
+            opacity: 0.5;
+            animation: floatDot 3s ease-in-out infinite;
+        }
+
+        .hero-dot-2 {
+            width: 3px;
+            height: 3px;
+            bottom: 2px;
+            right: -12px;
+            opacity: 0.4;
+            animation: floatDot 3.5s ease-in-out infinite reverse;
+        }
+
+        .hero-dot-3 {
+            width: 5px;
+            height: 5px;
+            top: -8px;
+            right: 20%;
+            opacity: 0.3;
+            animation: floatDot 4s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes floatDot {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        .subtitle {
+            font-size: 1.125rem;
+            color: var(--text-muted);
+            margin-bottom: 1.25rem;
+        }
+
+        /* Decorative divider line */
+        .hero-divider {
+            display: inline-block;
+            width: 60px;
+            height: 3px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            margin-bottom: 1.25rem;
+            opacity: 0.6;
+        }
+
+
+        .author-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            padding: 0.5rem 1rem;
+            border-radius: 100px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            transition: all 0.2s ease;
+            margin-top: 0.5rem;
+        }
+
+        .author-link:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-accent);
+            color: var(--accent);
+        }
+
+        .author-link svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Section Groups */
+        .section-group {
+            margin-bottom: 4rem;
+        }
+
+        .section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: var(--accent);
+            margin-bottom: 1.5rem;
+            padding-left: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent);
+            border-radius: 2px;
+            opacity: 0.8;
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .card {
+            position: relative;
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 1.75rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: var(--border-accent);
+            transform: translateY(-4px);
+            box-shadow:
+                0 20px 40px -15px rgba(0, 0, 0, 0.5),
+                0 0 60px -20px var(--accent-glow);
+        }
+
+        .card:hover::before {
+            opacity: 1;
+        }
+
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--accent-glow);
+            border-radius: 10px;
+            margin-bottom: 1.25rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover .card-icon {
+            background: var(--accent);
+        }
+
+        .card-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--accent);
+            transition: color 0.3s ease;
+        }
+
+        .card:hover .card-icon svg {
+            color: var(--bg-primary);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.625rem;
+            letter-spacing: -0.01em;
+        }
+
+        .card-description {
+            font-size: 0.9375rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            flex-grow: 1;
+        }
+
+        .card-arrow {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover .card-arrow {
+            color: var(--accent);
+            gap: 0.75rem;
+        }
+
+        .card-arrow svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* Card Footer with Actions */
+        .card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+            gap: 1rem;
+        }
+
+        .card-footer .card-arrow {
+            margin-top: 0;
+        }
+
+        /* README Badge */
+        .readme-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.6875rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-subtle);
+            padding: 0.375rem 0.625rem;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .readme-link:hover {
+            color: var(--accent);
+            border-color: var(--border-accent);
+            background: var(--accent-glow);
+        }
+
+        .readme-link svg {
+            width: 12px;
+            height: 12px;
+        }
+
+        /* Dual Links Layout */
+        .card-links-dual {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            gap: 2rem;
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+
+        .card-link-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.5rem;
+            flex: 1;
+        }
+
+        .card-link-group .card-arrow {
+            margin-top: 0;
+        }
+
+        .card-link-group .readme-link {
+            margin-left: 0;
+        }
+
+        /* Card as div (with multiple links) */
+        div.card {
+            cursor: default;
+        }
+
+        div.card:hover .card-arrow {
+            color: var(--accent);
+            gap: 0.75rem;
+        }
+
+        /* Featured Card */
+        .card.featured {
+            grid-column: span 2;
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(0, 237, 100, 0.03) 100%);
+            border-color: var(--border-accent);
+        }
+
+        @media (max-width: 768px) {
+            .card.featured {
+                grid-column: span 1;
+            }
+
+            .card-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            border-top: 1px solid var(--border-subtle);
+            margin-top: 2rem;
+        }
+
+        .footer-text {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+        }
+
+        /* Stagger Animation */
+        .card {
+            opacity: 0;
+            animation: cardIn 0.5s ease-out forwards;
+        }
+
+        @keyframes cardIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Overview - 3 cards */
+        .section-group:nth-child(1) .card:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .section-group:nth-child(1) .card:nth-child(2) {
+            animation-delay: 0.15s;
+        }
+
+        .section-group:nth-child(1) .card:nth-child(3) {
+            animation-delay: 0.2s;
+        }
+
+        /* Availability & Scalability - 3 cards */
+        .section-group:nth-child(2) .card:nth-child(1) {
+            animation-delay: 0.25s;
+        }
+
+        .section-group:nth-child(2) .card:nth-child(2) {
+            animation-delay: 0.3s;
+        }
+
+        .section-group:nth-child(2) .card:nth-child(3) {
+            animation-delay: 0.35s;
+        }
+
+        /* Core Capabilities - 5 cards */
+        .section-group:nth-child(3) .card:nth-child(1) {
+            animation-delay: 0.4s;
+        }
+
+        .section-group:nth-child(3) .card:nth-child(2) {
+            animation-delay: 0.45s;
+        }
+
+        .section-group:nth-child(3) .card:nth-child(3) {
+            animation-delay: 0.5s;
+        }
+
+        .section-group:nth-child(3) .card:nth-child(4) {
+            animation-delay: 0.55s;
+        }
+
+        .section-group:nth-child(3) .card:nth-child(5) {
+            animation-delay: 0.6s;
+        }
+
+        /* AI & Search - 3 cards */
+        .section-group:nth-child(4) .card:nth-child(1) {
+            animation-delay: 0.65s;
+        }
+
+        .section-group:nth-child(4) .card:nth-child(2) {
+            animation-delay: 0.7s;
+        }
+
+        .section-group:nth-child(4) .card:nth-child(3) {
+            animation-delay: 0.75s;
+        }
+
+        /* Floating Section Index */
+        .section-index {
+            position: fixed;
+            left: 2rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .section-index-link {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.8125rem;
+            font-weight: 500;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            background: transparent;
+            border-left: 2px solid transparent;
+        }
+
+        .section-index-link:hover {
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            border-left-color: var(--accent);
+        }
+
+        .section-index-link.active {
+            color: var(--accent);
+            background: var(--accent-glow);
+            border-left-color: var(--accent);
+        }
+
+        .section-index-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0.5;
+            transition: all 0.2s ease;
+        }
+
+        .section-index-link:hover .section-index-dot,
+        .section-index-link.active .section-index-dot {
+            opacity: 1;
+            transform: scale(1.3);
+        }
+
+        @media (max-width: 1400px) {
+            .section-index {
+                display: none;
+            }
+        }
+
+        /* Search Bar */
+        .search-wrapper {
+            position: relative;
+            max-width: 560px;
+            margin: 0 auto 3.5rem;
+            animation: fadeIn 0.8s ease-out 0.3s both;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 0.875rem 1.25rem 0.875rem 3rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            color: var(--text-primary);
+            background: var(--bg-card);
+            border: 1px solid var(--border-subtle);
+            border-radius: 14px;
+            outline: none;
+            transition: all 0.25s ease;
+        }
+
+        .search-bar::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-bar:focus {
+            border-color: var(--border-accent);
+            box-shadow: 0 0 0 3px var(--accent-glow), 0 8px 24px -8px rgba(0, 0, 0, 0.4);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 18px;
+            height: 18px;
+            color: var(--text-muted);
+            pointer-events: none;
+            transition: color 0.25s ease;
+        }
+
+        .search-bar:focus~.search-icon {
+            color: var(--accent);
+        }
+
+        .search-clear {
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            border-radius: 8px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .search-clear:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--text-primary);
+        }
+
+        .search-clear.visible {
+            display: flex;
+        }
+
+        .search-count {
+            text-align: center;
+            margin-top: 0.75rem;
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .search-count.visible {
+            opacity: 1;
+        }
+
+        .search-count span {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        /* Hide cards/sections during search */
+        .card.search-hidden {
+            display: none;
+        }
+
+        .section-group.search-hidden {
+            display: none;
+        }
+
+        .search-no-results {
+            display: none;
+            text-align: center;
+            padding: 4rem 1rem;
+            color: var(--text-muted);
+            font-size: 1.125rem;
+        }
+
+        .search-no-results.visible {
+            display: block;
+        }
+
+        .search-no-results svg {
+            width: 48px;
+            height: 48px;
+            color: var(--text-muted);
+            opacity: 0.4;
+            margin-bottom: 1rem;
+        }
+
+        /* Highlight matched text */
+        mark.search-highlight {
+            background: transparent;
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- Floating Section Index -->
+    <nav class="section-index">
+        <a href="#overview" class="section-index-link active">
+            <span class="section-index-dot"></span>
+            Overview
+        </a>
+        <a href="#availability" class="section-index-link">
+            <span class="section-index-dot"></span>
+            Availability & Scale
+        </a>
+        <a href="#capabilities" class="section-index-link">
+            <span class="section-index-dot"></span>
+            Core Capabilities
+        </a>
+        <a href="#competitive" class="section-index-link">
+            <span class="section-index-dot"></span>
+            Competitive
+        </a>
+        <a href="#tools" class="section-index-link">
+            <span class="section-index-dot"></span>
+            Tools
+        </a>
+    </nav>
+
+    <div class="bg-pattern">
+        <div class="grid-overlay"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <div class="hero-visual">
+                <div class="hero-glow"></div>
+                <div class="hero-orbit hero-orbit-1"><span class="hero-particle"></span></div>
+                <div class="hero-orbit hero-orbit-2"><span class="hero-particle"></span></div>
+                <div class="logo-mark">
+                    <img src="assets/mongodb-leaf.png" alt="MongoDB" style="width:44px;height:44px;border-radius:6px;">
+                </div>
+            </div>
+            <div class="hero-title-wrap">
+                <svg class="hero-sparkle hero-sparkle-left" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z" /></svg>
+                <svg class="hero-sparkle hero-sparkle-right" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 0L14.59 8.41L23 12L14.59 15.59L12 24L9.41 15.59L1 12L9.41 8.41Z" /></svg>
+                <span class="hero-dot hero-dot-1"></span>
+                <span class="hero-dot hero-dot-2"></span>
+                <span class="hero-dot hero-dot-3"></span>
+                <h1>MongoDB Unpacked</h1>
+            </div>
+            <span class="hero-title-underline"></span>
+            <p class="subtitle">The interactive guide to understand what makes MongoDB tick.</p>
+            <a href="https://www.linkedin.com/in/saitejab/" target="_blank" rel="noopener noreferrer" class="author-link">
+                <svg fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77Z" /></svg>
+                Curated by Sai Teja Boddapati
+            </a>
+            <span style="display:inline-flex;flex-direction:column;align-items:center;margin-left:.5rem;">
+                <a href="https://mongodbunboxed.goatcounter.com" target="_blank" rel="noopener noreferrer" class="author-link" style="margin-left:0;">
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:16px;height:16px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                    Analytics
+                </a>
+                <span style="font-size:.55rem;opacity:.35;color:var(--text-muted);margin-top:.1rem;">@GoatCounter</span>
+            </span>
+        </header>
+
+        <!--
+            ╔══════════════════════════════════════════════════════════════════╗
+            ║  SEARCH & KEYWORDS — INSTRUCTIONS FOR AGENTS / FUTURE EDITS    ║
+            ╠══════════════════════════════════════════════════════════════════╣
+            ║                                                                ║
+            ║  The search bar below filters cards by matching user input     ║
+            ║  against THREE sources on each card:                           ║
+            ║    1. .card-title  text                                        ║
+            ║    2. .card-description  text                                  ║
+            ║    3. data-keywords  attribute on the .card element            ║
+            ║                                                                ║
+            ║  data-keywords holds comma-separated synonyms, abbreviations,  ║
+            ║  and related terms that don't appear in the visible text but   ║
+            ║  should still surface the card in search results.              ║
+            ║                                                                ║
+            ║  ► WHEN ADDING A NEW CARD:                                     ║
+            ║    1. Add a data-keywords="..." attribute to the .card div.    ║
+            ║    2. Include synonyms, acronyms, related technologies, and    ║
+            ║       common misspellings users might search for.              ║
+            ║    3. Keep keywords lowercase, comma-separated.                ║
+            ║                                                                ║
+            ║  Example:                                                      ║
+            ║    <div class="card"                                           ║
+            ║         data-keywords="change streams, cdc, real-time,         ║
+            ║         event-driven, oplog, triggers">                        ║
+            ║                                                                ║
+            ║  ► WHEN RENAMING / UPDATING A CARD:                            ║
+            ║    Review its data-keywords and update to stay accurate.       ║
+            ║                                                                ║
+            ║  ► WHEN ADDING OR UPDATING A PAGE:                             ║
+            ║    Also add an entry to changelog.html with:                   ║
+            ║    1. Date (e.g. "Mar 5")                                      ║
+            ║    2. Badge: badge-new (new page) or badge-update (update)     ║
+            ║    3. Author name in entry-author span                         ║
+            ║    4. Title, description, and link to the page                 ║
+            ║    Place the entry at the top of the current month section.    ║
+            ║    See existing entries in changelog.html for the exact HTML   ║
+            ║    structure to follow.                                        ║
+            ║                                                                ║
+            ╚══════════════════════════════════════════════════════════════════╝
+        -->
+
+        <!-- Search Bar -->
+        <div class="search-wrapper">
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search topics… e.g. sharding, vector search, CRUD" autocomplete="off" spellcheck="false">
+            <svg class="search-icon" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <button class="search-clear" id="searchClear" aria-label="Clear search">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div class="search-count" id="searchCount"></div>
+        </div>
+
+        <div class="search-no-results" id="noResults">
+            <svg fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+            <p>No topics match your search.</p>
+        </div>
+
+        <!-- Overview -->
+        <div class="section-group" id="overview">
+            <h2 class="section-title">Overview</h2>
+            <div class="card-grid">
+                <div class="card" data-keywords="atlas, cloud, managed, dbaas, multi-cloud, aws, azure, gcp, serverless, developer data platform, ddp, cluster, deployment">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" /></svg>
+                    </div>
+                    <h3 class="card-title">MongoDB Atlas</h3>
+                    <p class="card-description">The fully managed, multi-cloud developer data platform. Automates operations and simplifies building modern applications at any scale.</p>
+                    <div class="card-links-dual">
+                        <div class="card-link-group">
+                            <a href="https://saiteja05.github.io/datalog/ddp.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                                Executive View
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            </a>
+                            <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-ddp.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                                README
+                            </a>
+                        </div>
+                        <div class="card-link-group">
+                            <a href="https://saiteja05.github.io/datalog/atlas.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                                Developer View
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                            </a>
+                            <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-atlas.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                                README
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="card" data-keywords="decision matrix, comparison, relational, nosql, sql, postgres, mysql, dynamo, evaluation, selection, choose, picking">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" /></svg>
+                    </div>
+                    <h3 class="card-title">How to Choose a Database?</h3>
+                    <p class="card-description">Decision framework to help your teams choose the right database technology for your application needs.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-matrix.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/matrix.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="enterprise, ops manager, backup, restore, encryption, monitoring, kubernetes, k8s, bare metal, on-prem, on-premise, disaster recovery, dr">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5.25 14.25h13.5m-13.5 0a3 3 0 01-3-3m3 3a3 3 0 100 6h13.5a3 3 0 100-6m-16.5-3a3 3 0 013-3h13.5a3 3 0 013 3m-19.5 0a4.5 4.5 0 01.9-2.7L5.737 5.1a3.375 3.375 0 012.7-1.35h7.126c1.062 0 2.062.5 2.7 1.35l2.587 3.45a4.5 4.5 0 01.9 2.7m0 0a3 3 0 01-3 3m0 3h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008zm-3 6h.008v.008h-.008v-.008zm0-6h.008v.008h-.008v-.008z" /></svg>
+                    </div>
+                    <h3 class="card-title">Enterprise Advanced Architecture</h3>
+                    <p class="card-description">Deep dive into Ops Manager, backup & recovery, encryption, monitoring, HA architecture, and deployment models (K8s vs bare metal).</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/ea-architecture.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Explore architecture
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Availability & Scalability -->
+        <div class="section-group" id="availability">
+            <h2 class="section-title">Availability & Scalability</h2>
+            <div class="card-grid">
+                <div class="card" data-keywords="scaling, sharding, shard key, replica set, horizontal scaling, partitioning, chunks, balancer, mongos, config server, large workloads">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    </div>
+                    <h3 class="card-title">Running MongoDB at Scale</h3>
+                    <p class="card-description">Discover how MongoDB handles massive workloads with horizontal scaling, sharding, and high availability.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-mongoatscalev2.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/mongoatscalev2.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="ha, failover, election, replica set, primary, secondary, arbiter, multi-region, resilience, uptime, rto, rpo">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" /></svg>
+                    </div>
+                    <h3 class="card-title">High Availability Demo</h3>
+                    <p class="card-description">Interactive demonstration of MongoDB's replica set failover, elections, and multi-region high availability.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-ha-demo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/ha-demo.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="multi-tenant, saas, isolation, tenant, namespace, database-per-tenant, collection-per-tenant, shared cluster, tenant isolation">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3H21m-3.75 3H21" /></svg>
+                    </div>
+                    <h3 class="card-title">Multi-Tenancy Strategies</h3>
+                    <p class="card-description">Explore different architectural patterns for building multi-tenant applications with MongoDB.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-multitenancy.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/multitenancy.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Core Capabilities -->
+        <div class="section-group" id="capabilities">
+            <h2 class="section-title">Core Capabilities</h2>
+            <div class="card-grid">
+                <div class="card" data-keywords="crud, create, read, update, delete, insert, find, query, upsert, bulkwrite, documents, driver, api">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
+                    </div>
+                    <h3 class="card-title">CRUD Operations</h3>
+                    <p class="card-description">Master MongoDB's intuitive and powerful API for creating, reading, updating, and deleting documents.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-crud.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/crud.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="aggregation, pipeline, stages, match, group, lookup, unwind, project, sort, facet, analytics, etl, data transformation">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m5.231 13.481L15 17.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v16.5c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9zm3.75 11.625a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z" /></svg>
+                    </div>
+                    <h3 class="card-title">Aggregation Pipeline</h3>
+                    <p class="card-description">Visualize and understand MongoDB's powerful aggregation framework for data transformation and analytics.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-aggregations.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/aggregations.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="ai, artificial intelligence, llm, rag, vector search, embeddings, agents, semantic search, atlas search, machine learning, ml, genai, generative">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    </div>
+                    <h3 class="card-title">State of AI with MongoDB</h3>
+                    <p class="card-description">Discover how Atlas Search plays a critical role in building intelligent AI agents and modern applications.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-aimongo.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/aimongo.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="agentic memory, agent memory, working memory, episodic memory, semantic memory, procedural memory, long-term memory, taxonomic memory, entity memory, shared memory, short term memory, ai agents, rag, langchain, langgraph, llamaindex, vector search, embeddings, llm memory, context window, agent lifecycle, crewai, exomemory, atlas vector search, change streams, ttl index, graph lookup, mcp, model context protocol, mcp server, mongodb mcp, mongodb-mcp-server, voyage ai, voyage embedding, reranking, reranker">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c-.251.023-.501.05-.75.082m.75-.082a24.301 24.301 0 014.5 0m0 0v5.714a2.25 2.25 0 00.659 1.591L19 14.5M14.25 3.104c.251.023.501.05.75.082M19 14.5l-2.47 2.47a2.25 2.25 0 01-1.591.659H9.061a2.25 2.25 0 01-1.591-.659L5 14.5m14 0V17a2.25 2.25 0 01-2.25 2.25H7.25A2.25 2.25 0 015 17v-2.5" /></svg>
+                    </div>
+                    <h3 class="card-title">Agentic Memory on MongoDB</h3>
+                    <p class="card-description">Explore how MongoDB Atlas powers all 8 layers of AI agent memory — working, episodic, semantic, procedural, long-term, taxonomic, entity, and shared — in a single unified platform.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-agenticmemory.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/agenticmemory.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="time series, timeseries, iot, sensors, metrics, telemetry, bucketing, expireAfterSeconds, granularity, event data, monitoring, observability">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" /></svg>
+                    </div>
+                    <h3 class="card-title">Time Series Collections</h3>
+                    <p class="card-description">Deep dive into MongoDB's optimized time series collections for IoT, metrics, and event data workloads.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-timeseries.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/timeseries.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="security, auth, authentication, authorization, rbac, ldap, kerberos, tls, ssl, encryption at rest, csfle, queryable encryption, audit, network isolation, vpc peering, private endpoints, privatelink, byok, kms, x509, oidc, saml, sso, mfa, siem, splunk, soc 2, iso 27001, hipaa, pci dss, gdpr, fedramp, compliance, defense in depth, hashicorp vault, field level redaction, scram, aws iam">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                    </div>
+                    <h3 class="card-title">Security</h3>
+                    <p class="card-description">Defense in depth — five security layers from network isolation to field-level encryption to auditing, with code examples, compliance certifications, and the shared responsibility model.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=README-security.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/security.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competitive Landscape -->
+        <div class="section-group" id="competitive">
+            <h2 class="section-title">Competitive Landscape</h2>
+            <div style="padding:2rem;background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;text-align:center;">
+                <p style="color:var(--text-secondary);font-size:1.05rem;margin-bottom:1rem;">This section has moved to a dedicated site.</p>
+                <a href="https://mongodbunpacked.com" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:.5rem;color:var(--accent);font-weight:600;font-size:1.1rem;text-decoration:none;padding:.6rem 1.25rem;border:1.5px solid var(--border-accent);border-radius:10px;background:var(--accent-glow);transition:all .2s;">
+                    Visit mongodbunpacked.com
+                    <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="width:18px;height:18px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                </a>
+            </div>
+        </div>
+
+        <!-- Tools -->
+        <div class="section-group" id="tools">
+            <h2 class="section-title">Tools</h2>
+            <div class="card-grid">
+                <div class="card" data-keywords="benchmark, performance, latency, p50, p95, p99, rpm, throughput, vector search, read, ann, knn, load test, python">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h9.75m4.5-4.5v12m0 0l-3.75-3.75M17.25 21l3.75-3.75" /></svg>
+                    </div>
+                    <h3 class="card-title">Vector Search Benchmark (Read)</h3>
+                    <p class="card-description">Multi-threaded benchmarking framework for MongoDB vector search. Test aggregation pipelines with configurable RPMs, thread counts, and get P50/P70/P95/P99 latency metrics.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?url=https://raw.githubusercontent.com/saiteja05/CodeandLearn/main/python/Vector_search_read_benchmark/readme.md&name=README-vector-search-benchmark.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://github.com/saiteja05/CodeandLearn/tree/main/python/Vector_search_read_benchmark" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            View on GitHub
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="benchmark, write, insert_many, batch, bulk, tps, throughput, multiprocessing, performance, load test, python, ingestion">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h14.25M3 9h9.75M3 13.5h5.25m5.25-.75L17.25 9m0 0L21 12.75M17.25 9v12" /></svg>
+                    </div>
+                    <h3 class="card-title">Write Benchmark Tool</h3>
+                    <p class="card-description">Batch write benchmarking using MongoDB's insert_many with multiprocessing. Auto-generates test data, configurable document sizes, and reports TPS throughput metrics.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?url=https://raw.githubusercontent.com/saiteja05/CodeandLearn/main/python/Write_benchmarker/readme.md&name=README-write-benchmark.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://github.com/saiteja05/CodeandLearn/tree/main/python/Write_benchmarker" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            View on GitHub
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <div class="card" data-keywords="health check, cluster review, checklist, audit, ops, operations, dba, production readiness, replication, sharding, storage, memory, connections, indexing, security, backup, alerts, monitoring, schema, network, best practices, runbook">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="card-title">Atlas Health Check</h3>
+                    <p class="card-description">Health check across — cluster config, replication, storage, memory, connections, indexing, query performance, security, backups, alerts, sharding, schema, and network. Fill status, assign owners, and export CSV.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/readme/readme.html?file=healthcheck-README.md" target="_blank" rel="noopener noreferrer" class="readme-link">
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" /></svg>
+                            README
+                        </a>
+                        <a href="https://saiteja05.github.io/datalog/clusterreview.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Open checklist
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+                <!-- KEYWORD HINT: When adding a new page, add a card here with data-keywords covering relevant search terms. -->
+                <div class="card" data-keywords="migration, migrate, mongodump, mongorestore, mongosync, mongomirror, live migration, atlas live migrate, aws dms, database migration service, oplog, change streams, cdc, zero downtime, cluster sync, cutover, replication, backup, restore, bson, online migration, offline migration, version upgrade, mongo to mongo">
+                    <div class="card-icon">
+                        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                    </div>
+                    <h3 class="card-title">Migration Toolkit</h3>
+                    <p class="card-description">MongoDB-to-MongoDB migration deep dive — mongodump, mongosync, Atlas Live Migration, mongomirror, and AWS DMS. Internal mechanisms, version compatibility, pros/cons, and a decision flowchart.</p>
+                    <div class="card-footer">
+                        <a href="https://saiteja05.github.io/datalog/migrations.html" target="_blank" rel="noopener noreferrer" class="card-arrow">
+                            Learn more
+                            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p class="footer-text">
+                © <script>
+                    document.write(new Date().getFullYear())
+                </script> MongoDB, Inc. — Internal Use Only
+                <span style="margin:0 .75rem;opacity:.3;">|</span>
+                <a href="https://saiteja05.github.io/datalog/changelog.html" style="color:var(--text-muted);text-decoration:none;font-size:.85rem;" target="_blank" rel="noopener noreferrer">Changelog</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Keyword Search
+        const searchBar = document.getElementById('searchBar');
+        const searchClear = document.getElementById('searchClear');
+        const searchCount = document.getElementById('searchCount');
+        const noResults = document.getElementById('noResults');
+        const allCards = document.querySelectorAll('.card');
+        const sectionGroups = document.querySelectorAll('.section-group');
+
+        const originalTexts = new Map();
+        allCards.forEach(card => {
+            const titleEl = card.querySelector('.card-title');
+            const descEl = card.querySelector('.card-description');
+            const keywords = card.getAttribute('data-keywords') || '';
+            originalTexts.set(card, {
+                title: titleEl ? titleEl.textContent : '',
+                titleHtml: titleEl ? titleEl.innerHTML : '',
+                desc: descEl ? descEl.textContent : '',
+                descHtml: descEl ? descEl.innerHTML : '',
+                keywords: keywords
+            });
+        });
+
+        function highlightText(text, terms) {
+            if (!terms.length) return text;
+            const escaped = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+            const regex = new RegExp('(' + escaped.join('|') + ')', 'gi');
+            return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+        }
+
+        function performSearch() {
+            const raw = searchBar.value.trim().toLowerCase();
+            const terms = raw.split(/\s+/).filter(Boolean);
+
+            searchClear.classList.toggle('visible', raw.length > 0);
+
+            if (!terms.length) {
+                allCards.forEach(card => {
+                    card.classList.remove('search-hidden');
+                    const orig = originalTexts.get(card);
+                    const titleEl = card.querySelector('.card-title');
+                    const descEl = card.querySelector('.card-description');
+                    if (titleEl) titleEl.innerHTML = orig.titleHtml;
+                    if (descEl) descEl.innerHTML = orig.descHtml;
+                });
+                sectionGroups.forEach(sg => sg.classList.remove('search-hidden'));
+                searchCount.classList.remove('visible');
+                noResults.classList.remove('visible');
+                return;
+            }
+
+            let visibleCount = 0;
+
+            allCards.forEach(card => {
+                const orig = originalTexts.get(card);
+                const haystack = (orig.title + ' ' + orig.desc + ' ' + orig.keywords).toLowerCase();
+                const matches = terms.every(t => haystack.includes(t));
+
+                card.classList.toggle('search-hidden', !matches);
+                if (matches) {
+                    visibleCount++;
+                    const titleEl = card.querySelector('.card-title');
+                    const descEl = card.querySelector('.card-description');
+                    if (titleEl) titleEl.innerHTML = highlightText(orig.title, terms);
+                    if (descEl) descEl.innerHTML = highlightText(orig.desc, terms);
+                }
+            });
+
+            sectionGroups.forEach(sg => {
+                const hasVisible = sg.querySelectorAll('.card:not(.search-hidden)').length > 0;
+                sg.classList.toggle('search-hidden', !hasVisible);
+            });
+
+            searchCount.innerHTML = '<span>' + visibleCount + '</span> topic' + (visibleCount !== 1 ? 's' : '') + ' found';
+            searchCount.classList.add('visible');
+            noResults.classList.toggle('visible', visibleCount === 0);
+        }
+
+        searchBar.addEventListener('input', performSearch);
+
+        searchClear.addEventListener('click', () => {
+            searchBar.value = '';
+            performSearch();
+            searchBar.focus();
+        });
+
+        // Section Index - Active State on Scroll
+        const sections = document.querySelectorAll('.section-group[id]');
+        const navLinks = document.querySelectorAll('.section-index-link');
+
+        function updateActiveSection() {
+            const scrollPos = window.scrollY + 200;
+            const windowHeight = window.innerHeight;
+            const documentHeight = document.documentElement.scrollHeight;
+
+            // Check if scrolled to bottom - activate last section
+            if (window.scrollY + windowHeight >= documentHeight - 50) {
+                navLinks.forEach(link => link.classList.remove('active'));
+                const lastLink = document.querySelector('.section-index-link[href="#tools"]');
+                if (lastLink) lastLink.classList.add('active');
+                return;
+            }
+
+            let currentSection = '';
+
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionId = section.getAttribute('id');
+
+                if (scrollPos >= sectionTop) {
+                    currentSection = sectionId;
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === '#' + currentSection) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Also update on click
+        navLinks.forEach(link => {
+            link.addEventListener('click', function() {
+                navLinks.forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        window.addEventListener('scroll', updateActiveSection);
+        window.addEventListener('load', updateActiveSection);
+    </script>
+    <script>
+        if (window.top !== window.self) {
+            window.top.location = window.self.location;
+        }
+    </script>
+    <script data-goatcounter="https://mongodbunboxed.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+    <script>window.SFAB_DISABLE_GATE=false</script>
+    <script src="subscribe.js?v=gform-2"></script>
+</body>
+
+</html>
